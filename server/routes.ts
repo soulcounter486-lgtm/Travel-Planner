@@ -70,36 +70,42 @@ export async function registerRoutes(
       }
 
       // 2. Vehicle Calculation
-      if (input.vehicle?.enabled && input.vehicle.type) {
-        const prices = vehiclePrices[input.vehicle.type];
-        if (prices) {
-          let basePrice = 0;
-          let description = "";
-          const days = input.vehicle.days || 1;
+      if (input.vehicle?.enabled && input.vehicle.selections) {
+        let vehicleTotalPrice = 0;
+        const vehicleDescriptions: string[] = [];
 
-          switch (input.vehicle.route) {
-            case "city":
-              basePrice = prices.city;
-              description = `City Tour (${days} days)`;
-              break;
-            case "oneway":
-              basePrice = prices.oneway;
-              description = `One Way (${days} trips)`;
-              break;
-            case "roundtrip":
-              basePrice = prices.roundtrip;
-              description = `Round Trip (${days} trips)`;
-              break;
-            case "city_pickup_drop":
-              // "Pickup, drop + City use is city amount + 50%"
-              basePrice = prices.city * 1.5;
-              description = `Pickup/Drop + City Tour (${days} days)`;
-              break;
+        for (const selection of input.vehicle.selections) {
+          const prices = vehiclePrices[selection.type];
+          if (prices) {
+            let basePrice = 0;
+            let routeDesc = "";
+
+            switch (selection.route) {
+              case "city":
+                basePrice = prices.city;
+                routeDesc = "City Tour";
+                break;
+              case "oneway":
+                basePrice = prices.oneway;
+                routeDesc = "One Way";
+                break;
+              case "roundtrip":
+                basePrice = prices.roundtrip;
+                routeDesc = "Round Trip";
+                break;
+              case "city_pickup_drop":
+                basePrice = prices.city * 1.5;
+                routeDesc = "Pickup/Drop + City";
+                break;
+            }
+
+            vehicleTotalPrice += basePrice;
+            vehicleDescriptions.push(`${selection.date}: ${selection.type.replace(/_/g, " ")} (${routeDesc})`);
           }
-
-          breakdown.vehicle.price = basePrice * days;
-          breakdown.vehicle.description = `${input.vehicle.type.replace(/_/g, " ")} - ${description}`;
         }
+
+        breakdown.vehicle.price = vehicleTotalPrice;
+        breakdown.vehicle.description = vehicleDescriptions.join(" | ");
       }
 
       // 3. Eco Girl Calculation

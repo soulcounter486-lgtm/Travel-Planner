@@ -26,17 +26,19 @@ export const calculateQuoteSchema = z.object({
   // Vehicle
   vehicle: z.object({
     enabled: z.boolean(),
-    type: z.enum([
-      "7_seater",
-      "16_seater",
-      "9_limo",
-      "9_lux_limo",
-      "12_lux_limo",
-      "16_lux_limo",
-      "29_seater"
-    ]),
-    route: z.enum(["city", "oneway", "roundtrip", "city_pickup_drop"]),
-    days: z.number().min(1).default(1),
+    selections: z.array(z.object({
+      date: z.string(), // YYYY-MM-DD
+      type: z.enum([
+        "7_seater",
+        "16_seater",
+        "9_limo",
+        "9_lux_limo",
+        "12_lux_limo",
+        "16_lux_limo",
+        "29_seater"
+      ]),
+      route: z.enum(["city", "oneway", "roundtrip", "city_pickup_drop"]),
+    })).optional(),
   }).optional(),
 
   // Eco Girl

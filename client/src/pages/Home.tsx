@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-import { Plane, Car, Users, User, CalendarIcon, Check } from "lucide-react";
+import { Plane, Car, Users, User, CalendarIcon, Check, Plus } from "lucide-react";
 
 export default function Home() {
   const { toast } = useToast();
@@ -31,7 +31,7 @@ export default function Home() {
     resolver: zodResolver(calculateQuoteSchema),
     defaultValues: {
       villa: { enabled: true },
-      vehicle: { enabled: false, type: "7_seater", route: "city", days: 1 },
+      vehicle: { enabled: false, selections: [] },
       ecoGirl: { enabled: false, count: 0, nights: 0 },
       guide: { enabled: false, days: 0, groupSize: 1 },
     },
@@ -42,6 +42,29 @@ export default function Home() {
 
   // Watch for changes to recalculate
   const values = form.watch();
+
+  const handleAddVehicleDay = () => {
+    const currentSelections = form.getValues("vehicle.selections") || [];
+    const lastDate = currentSelections.length > 0 
+      ? new Date(currentSelections[currentSelections.length - 1].date)
+      : (values.villa?.checkIn ? new Date(values.villa.checkIn) : new Date());
+    
+    const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
+    
+    form.setValue("vehicle.selections", [
+      ...currentSelections,
+      {
+        date: format(nextDate, "yyyy-MM-dd"),
+        type: "7_seater",
+        route: "city"
+      }
+    ]);
+  };
+
+  const handleRemoveVehicleDay = (index: number) => {
+    const currentSelections = form.getValues("vehicle.selections") || [];
+    form.setValue("vehicle.selections", currentSelections.filter((_, i) => i !== index));
+  };
 
   useEffect(() => {
     const subscription = form.watch((value) => {
@@ -156,11 +179,17 @@ export default function Home() {
                                 {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0 z-[9999]" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value ? new Date(field.value) : undefined}
-                                onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                                onSelect={(date) => {
+                                  field.onChange(date ? format(date, "yyyy-MM-dd") : "");
+                                  // Find the active element (the trigger) and blur it to close popover
+                                  if (document.activeElement instanceof HTMLElement) {
+                                    document.activeElement.blur();
+                                  }
+                                }}
                                 initialFocus
                               />
                             </PopoverContent>
@@ -187,11 +216,17 @@ export default function Home() {
                                 {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0 z-[9999]" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value ? new Date(field.value) : undefined}
-                                onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                                onSelect={(date) => {
+                                  field.onChange(date ? format(date, "yyyy-MM-dd") : "");
+                                  // Find the active element (the trigger) and blur it to close popover
+                                  if (document.activeElement instanceof HTMLElement) {
+                                    document.activeElement.blur();
+                                  }
+                                }}
                                 initialFocus
                               />
                             </PopoverContent>
@@ -200,7 +235,7 @@ export default function Home() {
                       />
                     </div>
                   </div>
-                  <div className="bg-blue-50/50 p-4 rounded-xl text-sm text-muted-foreground border border-blue-100">
+                  <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm">
                     <p><strong>Weekday:</strong> $350 | <strong>Friday:</strong> $380 | <strong>Saturday:</strong> $500</p>
                   </div>
                 </SectionCard>
@@ -213,72 +248,92 @@ export default function Home() {
               name="vehicle.enabled"
               render={({ field }) => (
                 <SectionCard
-                  title="Private Transportation"
+                  title="Private Transportation (Daily)"
                   icon={Car}
                   isEnabled={field.value ?? false}
                   onToggle={field.onChange}
                   gradient="from-indigo-500/10"
                 >
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label>Vehicle Type</Label>
-                      <Controller
-                        control={form.control}
-                        name="vehicle.type"
-                        render={({ field }) => (
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger className="h-12 rounded-xl">
-                              <SelectValue placeholder="Select vehicle" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="7_seater">7 Seater SUV</SelectItem>
-                              <SelectItem value="16_seater">16 Seater Van</SelectItem>
-                              <SelectItem value="9_limo">9 Seater Limousine</SelectItem>
-                              <SelectItem value="9_lux_limo">9 Seater Luxury Limo</SelectItem>
-                              <SelectItem value="12_lux_limo">12 Seater Luxury Limo</SelectItem>
-                              <SelectItem value="16_lux_limo">16 Seater Luxury Limo</SelectItem>
-                              <SelectItem value="29_seater">29 Seater Bus</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Route Plan</Label>
-                      <Controller
-                        control={form.control}
-                        name="vehicle.route"
-                        render={({ field }) => (
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <SelectTrigger className="h-12 rounded-xl">
-                              <SelectValue placeholder="Select route" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="city">Vung Tau City Tour (12-14h)</SelectItem>
-                              <SelectItem value="oneway">HCMC ↔ Vung Tau (One way)</SelectItem>
-                              <SelectItem value="roundtrip">HCMC ↔ Vung Tau (Round trip)</SelectItem>
-                              <SelectItem value="city_pickup_drop">Pickup/Drop + City Tour (+50%)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Number of Days</Label>
-                      <Controller
-                        control={form.control}
-                        name="vehicle.days"
-                        render={({ field }) => (
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            className="h-12 rounded-xl"
+                  <div className="space-y-4">
+                    {values.vehicle?.selections?.map((selection, index) => (
+                      <div key={index} className="grid md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 relative group">
+                        <div className="space-y-2">
+                          <Label className="text-xs">Date</Label>
+                          <Controller
+                            control={form.control}
+                            name={`vehicle.selections.${index}.date`}
+                            render={({ field }) => (
+                              <Input 
+                                type="date"
+                                {...field}
+                                className="h-10 rounded-lg text-sm"
+                              />
+                            )}
                           />
-                        )}
-                      />
-                    </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Vehicle Type</Label>
+                          <Controller
+                            control={form.control}
+                            name={`vehicle.selections.${index}.type`}
+                            render={({ field }) => (
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger className="h-10 rounded-lg text-sm">
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="7_seater">7 Seater</SelectItem>
+                                  <SelectItem value="16_seater">16 Seater</SelectItem>
+                                  <SelectItem value="9_limo">9 Limo</SelectItem>
+                                  <SelectItem value="9_lux_limo">9 Lux Limo</SelectItem>
+                                  <SelectItem value="12_lux_limo">12 Lux Limo</SelectItem>
+                                  <SelectItem value="16_lux_limo">16 Lux Limo</SelectItem>
+                                  <SelectItem value="29_seater">29 Seater</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs">Route</Label>
+                          <Controller
+                            control={form.control}
+                            name={`vehicle.selections.${index}.route`}
+                            render={({ field }) => (
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <SelectTrigger className="h-10 rounded-lg text-sm">
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="city">City Tour</SelectItem>
+                                  <SelectItem value="oneway">One Way</SelectItem>
+                                  <SelectItem value="roundtrip">Round Trip</SelectItem>
+                                  <SelectItem value="city_pickup_drop">City+Pickup/Drop</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+                        <div className="flex items-end justify-end">
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             className="text-slate-400 hover:text-rose-500 h-10 w-10"
+                             onClick={() => handleRemoveVehicleDay(index)}
+                           >
+                             <div className="w-4 h-0.5 bg-current rounded-full" />
+                           </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all"
+                      onClick={handleAddVehicleDay}
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> Add Vehicle Day
+                    </Button>
                   </div>
                 </SectionCard>
               )}

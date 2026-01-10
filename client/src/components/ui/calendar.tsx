@@ -11,12 +11,18 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  onSelect,
   ...props
 }: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-3 bg-white border border-border rounded-xl shadow-xl", className)}
+      onSelect={(...args) => {
+        // Find the popover close element or blur active element if needed
+        // but simple onSelect override is cleaner
+        onSelect?.(...args);
+      }}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
