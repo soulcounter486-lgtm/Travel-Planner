@@ -26,6 +26,8 @@ export default function Home() {
   const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
+  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
+  const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
 
   const form = useForm<CalculateQuoteRequest>({
     resolver: zodResolver(calculateQuoteSchema),
@@ -166,7 +168,7 @@ export default function Home() {
                         control={form.control}
                         name="villa.checkIn"
                         render={({ field }) => (
-                          <Popover>
+                          <Popover open={isCheckInOpen} onOpenChange={setIsCheckInOpen}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant={"outline"}
@@ -185,13 +187,7 @@ export default function Home() {
                                 selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={(date) => {
                                   field.onChange(date ? format(date, "yyyy-MM-dd") : "");
-                                  // Trigger a mouse down event to close the popover
-                                  const event = new MouseEvent('mousedown', {
-                                    bubbles: true,
-                                    cancelable: true,
-                                    view: window
-                                  });
-                                  document.body.dispatchEvent(event);
+                                  setIsCheckInOpen(false);
                                 }}
                                 initialFocus
                               />
@@ -206,7 +202,7 @@ export default function Home() {
                         control={form.control}
                         name="villa.checkOut"
                         render={({ field }) => (
-                          <Popover>
+                          <Popover open={isCheckOutOpen} onOpenChange={setIsCheckOutOpen}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant={"outline"}
@@ -225,13 +221,7 @@ export default function Home() {
                                 selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={(date) => {
                                   field.onChange(date ? format(date, "yyyy-MM-dd") : "");
-                                  // Trigger a mouse down event to close the popover
-                                  const event = new MouseEvent('mousedown', {
-                                    bubbles: true,
-                                    cancelable: true,
-                                    view: window
-                                  });
-                                  document.body.dispatchEvent(event);
+                                  setIsCheckOutOpen(false);
                                 }}
                                 initialFocus
                               />
@@ -262,9 +252,9 @@ export default function Home() {
                 >
                   <div className="space-y-4">
                     {values.vehicle?.selections?.map((selection, index) => (
-                      <div key={index} className="grid md:grid-cols-4 gap-4 p-4 bg-white rounded-xl border border-slate-100 relative group shadow-sm">
-                        <div className="space-y-2">
-                          <Label className="text-xs">날짜</Label>
+                      <div key={index} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
+                        <div className="md:col-span-2 space-y-1.5">
+                          <Label className="text-xs font-semibold text-slate-500">날짜</Label>
                           <Controller
                             control={form.control}
                             name={`vehicle.selections.${index}.date`}
@@ -272,13 +262,13 @@ export default function Home() {
                               <Input 
                                 type="date"
                                 {...field}
-                                className="h-10 rounded-lg text-sm"
+                                className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20"
                               />
                             )}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs">차량 종류</Label>
+                        <div className="md:col-span-2 space-y-1.5">
+                          <Label className="text-xs font-semibold text-slate-500">차량 종류</Label>
                           <Controller
                             control={form.control}
                             name={`vehicle.selections.${index}.type`}
@@ -292,7 +282,7 @@ export default function Home() {
                                 }} 
                                 defaultValue={field.value}
                               >
-                                <SelectTrigger className="h-10 rounded-lg text-sm bg-white">
+                                <SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200">
                                   <SelectValue placeholder="선택" />
                                 </SelectTrigger>
                                 <SelectContent className="z-[9999]">
@@ -308,8 +298,8 @@ export default function Home() {
                             )}
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs">이동 경로</Label>
+                        <div className="md:col-span-2 space-y-1.5">
+                          <Label className="text-xs font-semibold text-slate-500">이동 경로</Label>
                           <Controller
                             control={form.control}
                             name={`vehicle.selections.${index}.route`}
@@ -323,24 +313,24 @@ export default function Home() {
                                 }} 
                                 defaultValue={field.value}
                               >
-                                <SelectTrigger className="h-10 rounded-lg text-sm bg-white">
+                                <SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200">
                                   <SelectValue placeholder="선택" />
                                 </SelectTrigger>
                                 <SelectContent className="z-[9999]">
                                   <SelectItem value="city">붕따우 시내투어</SelectItem>
                                   <SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem>
                                   <SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem>
-                                  <SelectItem value="city_pickup_drop">픽업/드랍 + 시내 (+50%)</SelectItem>
+                                  <SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
                           />
                         </div>
-                        <div className="flex items-end justify-end">
+                        <div className="md:col-span-1 flex justify-end">
                            <Button 
                              variant="ghost" 
                              size="icon" 
-                             className="text-slate-400 hover:text-rose-500 h-10 w-10"
+                             className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg"
                              onClick={() => handleRemoveVehicleDay(index)}
                              type="button"
                            >
