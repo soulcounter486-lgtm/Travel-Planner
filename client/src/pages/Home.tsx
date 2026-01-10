@@ -132,10 +132,10 @@ export default function Home() {
             className="max-w-3xl"
           >
             <h1 className="text-4xl md:text-5xl font-display font-bold text-primary mb-4">
-              Vietnam Travel Calculator
+              베트남 여행 견적 계산기
             </h1>
             <p className="text-xl text-muted-foreground font-light leading-relaxed">
-              Plan your perfect trip with real-time pricing for villas, transport, and premium services in Vung Tau & Ho Chi Minh City.
+              풀빌라, 차량, 가이드 서비스 등 나만의 맞춤 여행 견적을 실시간으로 확인하세요. (붕따우 & 호치민)
             </p>
           </motion.div>
         </div>
@@ -153,7 +153,7 @@ export default function Home() {
               name="villa.enabled"
               render={({ field }) => (
                 <SectionCard
-                  title="Luxury Villa Stay"
+                  title="럭셔리 풀빌라 숙박"
                   icon={Plane}
                   isEnabled={field.value ?? false}
                   onToggle={field.onChange}
@@ -161,7 +161,7 @@ export default function Home() {
                 >
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label>Check-in Date</Label>
+                      <Label>체크인 날짜</Label>
                       <Controller
                         control={form.control}
                         name="villa.checkIn"
@@ -176,7 +176,7 @@ export default function Home() {
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                {field.value ? format(new Date(field.value), "PPP") : <span>날짜 선택</span>}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 z-[9999]" align="start">
@@ -185,7 +185,7 @@ export default function Home() {
                                 selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={(date) => {
                                   field.onChange(date ? format(date, "yyyy-MM-dd") : "");
-                                  // Find the active element (the trigger) and blur it to close popover
+                                  // Close popover
                                   if (document.activeElement instanceof HTMLElement) {
                                     document.activeElement.blur();
                                   }
@@ -198,7 +198,7 @@ export default function Home() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Check-out Date</Label>
+                      <Label>체크아웃 날짜</Label>
                       <Controller
                         control={form.control}
                         name="villa.checkOut"
@@ -213,7 +213,7 @@ export default function Home() {
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                {field.value ? format(new Date(field.value), "PPP") : <span>날짜 선택</span>}
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0 z-[9999]" align="start">
@@ -222,7 +222,7 @@ export default function Home() {
                                 selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={(date) => {
                                   field.onChange(date ? format(date, "yyyy-MM-dd") : "");
-                                  // Find the active element (the trigger) and blur it to close popover
+                                  // Close popover
                                   if (document.activeElement instanceof HTMLElement) {
                                     document.activeElement.blur();
                                   }
@@ -236,7 +236,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm">
-                    <p><strong>Weekday:</strong> $350 | <strong>Friday:</strong> $380 | <strong>Saturday:</strong> $500</p>
+                    <p><strong>평일(일-목):</strong> $350 | <strong>금요일:</strong> $380 | <strong>토요일:</strong> $500</p>
                   </div>
                 </SectionCard>
               )}
@@ -248,7 +248,7 @@ export default function Home() {
               name="vehicle.enabled"
               render={({ field }) => (
                 <SectionCard
-                  title="Private Transportation (Daily)"
+                  title="프라이빗 차량 (일자별 선택)"
                   icon={Car}
                   isEnabled={field.value ?? false}
                   onToggle={field.onChange}
@@ -256,9 +256,9 @@ export default function Home() {
                 >
                   <div className="space-y-4">
                     {values.vehicle?.selections?.map((selection, index) => (
-                      <div key={index} className="grid md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 relative group">
+                      <div key={index} className="grid md:grid-cols-4 gap-4 p-4 bg-white rounded-xl border border-slate-100 relative group shadow-sm">
                         <div className="space-y-2">
-                          <Label className="text-xs">Date</Label>
+                          <Label className="text-xs">날짜</Label>
                           <Controller
                             control={form.control}
                             name={`vehicle.selections.${index}.date`}
@@ -272,43 +272,43 @@ export default function Home() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs">Vehicle Type</Label>
+                          <Label className="text-xs">차량 종류</Label>
                           <Controller
                             control={form.control}
                             name={`vehicle.selections.${index}.type`}
                             render={({ field }) => (
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <SelectTrigger className="h-10 rounded-lg text-sm">
-                                  <SelectValue placeholder="Select" />
+                                <SelectTrigger className="h-10 rounded-lg text-sm bg-white">
+                                  <SelectValue placeholder="선택" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="7_seater">7 Seater</SelectItem>
-                                  <SelectItem value="16_seater">16 Seater</SelectItem>
-                                  <SelectItem value="9_limo">9 Limo</SelectItem>
-                                  <SelectItem value="9_lux_limo">9 Lux Limo</SelectItem>
-                                  <SelectItem value="12_lux_limo">12 Lux Limo</SelectItem>
-                                  <SelectItem value="16_lux_limo">16 Lux Limo</SelectItem>
-                                  <SelectItem value="29_seater">29 Seater</SelectItem>
+                                <SelectContent className="z-[9999]">
+                                  <SelectItem value="7_seater">7인승 SUV</SelectItem>
+                                  <SelectItem value="16_seater">16인승 밴</SelectItem>
+                                  <SelectItem value="9_limo">9인승 리무진</SelectItem>
+                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="29_seater">29인승 버스</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs">Route</Label>
+                          <Label className="text-xs">이동 경로</Label>
                           <Controller
                             control={form.control}
                             name={`vehicle.selections.${index}.route`}
                             render={({ field }) => (
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <SelectTrigger className="h-10 rounded-lg text-sm">
-                                  <SelectValue placeholder="Select" />
+                                <SelectTrigger className="h-10 rounded-lg text-sm bg-white">
+                                  <SelectValue placeholder="선택" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="city">City Tour</SelectItem>
-                                  <SelectItem value="oneway">One Way</SelectItem>
-                                  <SelectItem value="roundtrip">Round Trip</SelectItem>
-                                  <SelectItem value="city_pickup_drop">City+Pickup/Drop</SelectItem>
+                                <SelectContent className="z-[9999]">
+                                  <SelectItem value="city">붕따우 시내투어</SelectItem>
+                                  <SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem>
+                                  <SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem>
+                                  <SelectItem value="city_pickup_drop">픽업/드랍 + 시내 (+50%)</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
@@ -320,6 +320,7 @@ export default function Home() {
                              size="icon" 
                              className="text-slate-400 hover:text-rose-500 h-10 w-10"
                              onClick={() => handleRemoveVehicleDay(index)}
+                             type="button"
                            >
                              <div className="w-4 h-0.5 bg-current rounded-full" />
                            </Button>
@@ -329,10 +330,10 @@ export default function Home() {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all"
+                      className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white"
                       onClick={handleAddVehicleDay}
                     >
-                      <Plus className="mr-2 h-4 w-4" /> Add Vehicle Day
+                      <Plus className="mr-2 h-4 w-4" /> 차량 이용일 추가
                     </Button>
                   </div>
                 </SectionCard>
@@ -345,7 +346,7 @@ export default function Home() {
               name="ecoGirl.enabled"
               render={({ field }) => (
                 <SectionCard
-                  title="Eco Girl Service"
+                  title="에코 가이드 서비스"
                   icon={User}
                   isEnabled={field.value ?? false}
                   onToggle={field.onChange}
@@ -353,7 +354,7 @@ export default function Home() {
                 >
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label>Number of Companions</Label>
+                      <Label>인원 수</Label>
                       <Controller
                         control={form.control}
                         name="ecoGirl.count"
@@ -369,7 +370,7 @@ export default function Home() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Number of Nights</Label>
+                      <Label>숙박 일수 (박)</Label>
                       <Controller
                         control={form.control}
                         name="ecoGirl.nights"
@@ -386,7 +387,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-rose-600 font-medium">
-                    Rate: $220 / night per person
+                    요금: 1박당 $220 (1인 기준)
                   </div>
                 </SectionCard>
               )}
@@ -398,7 +399,7 @@ export default function Home() {
               name="guide.enabled"
               render={({ field }) => (
                 <SectionCard
-                  title="Tour Guide"
+                  title="한국어 투어 가이드"
                   icon={Users}
                   isEnabled={field.value ?? false}
                   onToggle={field.onChange}
@@ -406,7 +407,7 @@ export default function Home() {
                 >
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label>Service Days</Label>
+                      <Label>이용 일수 (일)</Label>
                       <Controller
                         control={form.control}
                         name="guide.days"
@@ -422,7 +423,7 @@ export default function Home() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Group Size</Label>
+                      <Label>그룹 인원</Label>
                       <Controller
                         control={form.control}
                         name="guide.groupSize"
@@ -439,7 +440,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-emerald-600 font-medium">
-                    Base: $120/day (up to 4 pax) + $20/person extra
+                    요금: 1일 $120 (4인 기준) + 4인 초과 시 1인당 $20 추가
                   </div>
                 </SectionCard>
               )}
@@ -464,26 +465,26 @@ export default function Home() {
       <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
         <DialogContent className="sm:max-w-[425px] rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Save Quotation</DialogTitle>
+            <DialogTitle>견적 저장하기</DialogTitle>
             <DialogDescription>
-              Enter the customer's name to save this estimate for later reference.
+              이 견적을 나중에 다시 확인하려면 고객 이름을 입력하세요.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="name" className="text-right">Customer Name</Label>
+            <Label htmlFor="name" className="text-right">고객 이름</Label>
             <Input
               id="name"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="e.g. John Doe"
+              placeholder="예: 홍길동"
               className="mt-2 h-12 rounded-xl"
               autoFocus
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCustomerDialogOpen(false)} className="rounded-xl">Cancel</Button>
+            <Button variant="outline" onClick={() => setIsCustomerDialogOpen(false)} className="rounded-xl">취소</Button>
             <Button onClick={confirmSaveQuote} className="rounded-xl">
-              <Check className="mr-2 h-4 w-4" /> Save Quote
+              <Check className="mr-2 h-4 w-4" /> 견적 저장
             </Button>
           </DialogFooter>
         </DialogContent>

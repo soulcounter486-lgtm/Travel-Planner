@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, Send, Plane, Car, Users, User } from "lucide-react";
-import { type QuoteBreakdown, type CalculateQuoteRequest } from "@shared/schema";
+import { Loader2, Save, FileText, Info } from "lucide-react";
+import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface QuoteSummaryProps {
@@ -15,8 +15,9 @@ interface QuoteSummaryProps {
 export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSummaryProps) {
   if (isLoading && !breakdown) {
     return (
-      <div className="flex h-full items-center justify-center p-8 bg-white/50 backdrop-blur-sm rounded-xl border border-dashed border-primary/20">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-full flex-col items-center justify-center p-12 text-center bg-white/50 backdrop-blur-sm rounded-xl border border-dashed border-primary/20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">견적을 계산하고 있습니다...</p>
       </div>
     );
   }
@@ -25,11 +26,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
     return (
       <div className="flex h-full flex-col items-center justify-center p-12 text-center bg-white/50 backdrop-blur-sm rounded-xl border border-dashed border-primary/20">
         <div className="h-16 w-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
-          <Plane className="h-8 w-8 text-primary/40" />
+          <FileText className="h-8 w-8 text-primary/40" />
         </div>
-        <h3 className="text-lg font-medium text-foreground">Ready to Plan?</h3>
+        <h3 className="text-lg font-medium text-foreground">준비되셨나요?</h3>
         <p className="text-muted-foreground mt-2 max-w-xs">
-          Adjust the options on the left to see your custom travel estimate in real-time.
+          왼쪽 옵션을 조정하여 맞춤 여행 견적을 실시간으로 확인하세요.
         </p>
       </div>
     );
@@ -37,11 +38,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
 
   return (
     <Card className="sticky top-6 overflow-hidden border-0 shadow-xl shadow-primary/5 bg-white/90 backdrop-blur-md">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" />
+      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-indigo-500 to-primary" />
       <CardHeader className="bg-primary/5 pb-6">
-        <CardTitle className="flex items-center justify-between text-2xl">
-          <span>Trip Estimate</span>
-          <span className="text-3xl text-primary font-bold">
+        <CardTitle className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-muted-foreground">예상 견적 금액</span>
+          <span className="text-4xl text-primary font-bold">
             ${breakdown.total.toLocaleString()}
           </span>
         </CardTitle>
@@ -55,23 +56,18 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3"
             >
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                  <Plane className="w-5 h-5" />
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between font-semibold text-slate-800">
+                  <span>풀빌라 숙박</span>
+                  <span>${breakdown.villa.price}</span>
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex justify-between font-medium">
-                    <span>Villa Stay</span>
-                    <span>${breakdown.villa.price}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground space-y-0.5">
-                    {breakdown.villa.details.map((detail, idx) => (
-                      <p key={idx} className="flex items-center gap-2">
-                        <span className="w-1 h-1 rounded-full bg-primary/40" />
-                        {detail}
-                      </p>
-                    ))}
-                  </div>
+                <div className="text-xs text-muted-foreground space-y-0.5 pl-1">
+                  {breakdown.villa.details.map((detail, idx) => (
+                    <p key={idx} className="flex items-center gap-2">
+                      <span className="w-1 h-1 rounded-full bg-primary/40" />
+                      {detail}
+                    </p>
+                  ))}
                 </div>
               </div>
               <Separator className="bg-border/50" />
@@ -85,17 +81,14 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3"
             >
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600">
-                  <Car className="w-5 h-5" />
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between font-semibold text-slate-800">
+                  <span>차량 서비스</span>
+                  <span>${breakdown.vehicle.price}</span>
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex justify-between font-medium">
-                    <span>Transportation</span>
-                    <span>${breakdown.vehicle.price}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{breakdown.vehicle.description}</p>
-                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed italic pl-1">
+                  {breakdown.vehicle.description}
+                </p>
               </div>
               <Separator className="bg-border/50" />
             </motion.div>
@@ -108,17 +101,14 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3"
             >
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-rose-50 rounded-lg text-rose-600">
-                  <User className="w-5 h-5" />
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between font-semibold text-slate-800">
+                  <span>에코 가이드</span>
+                  <span>${breakdown.ecoGirl.price}</span>
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex justify-between font-medium">
-                    <span>Eco Girl Service</span>
-                    <span>${breakdown.ecoGirl.price}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{breakdown.ecoGirl.description}</p>
-                </div>
+                <p className="text-xs text-muted-foreground italic pl-1">
+                  {breakdown.ecoGirl.description}
+                </p>
               </div>
               <Separator className="bg-border/50" />
             </motion.div>
@@ -131,44 +121,42 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               exit={{ opacity: 0, height: 0 }}
               className="space-y-3"
             >
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                  <Users className="w-5 h-5" />
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between font-semibold text-slate-800">
+                  <span>한국어 가이드</span>
+                  <span>${breakdown.guide.price}</span>
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex justify-between font-medium">
-                    <span>Tour Guide</span>
-                    <span>${breakdown.guide.price}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{breakdown.guide.description}</p>
-                </div>
+                <p className="text-xs text-muted-foreground italic pl-1">
+                  {breakdown.guide.description}
+                </p>
               </div>
               <Separator className="bg-border/50" />
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="pt-4 space-y-3">
-          <Button 
-            className="w-full h-12 text-lg font-medium shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all" 
-            onClick={onSave}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-5 w-5" /> Save Quote
-              </>
-            )}
-          </Button>
-          <Button variant="outline" className="w-full border-dashed border-2 hover:border-solid hover:bg-secondary/50">
-            <Send className="mr-2 h-4 w-4" /> Email Quote
-          </Button>
+        <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+          <div className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            실제 가격은 현지 상황에 따라 다를 수 있습니다.
+          </div>
         </div>
       </CardContent>
+
+      <CardFooter className="bg-slate-50/80 p-6 border-t border-slate-100">
+        <Button 
+          className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
+          onClick={onSave}
+          disabled={!breakdown || isSaving}
+        >
+          {isSaving ? (
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-5 w-5" />
+          )}
+          견적서 저장하기
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
