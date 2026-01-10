@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -277,7 +277,15 @@ export default function Home() {
                             control={form.control}
                             name={`vehicle.selections.${index}.type`}
                             render={({ field }) => (
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  if (document.activeElement instanceof HTMLElement) {
+                                    document.activeElement.blur();
+                                  }
+                                }} 
+                                defaultValue={field.value}
+                              >
                                 <SelectTrigger className="h-10 rounded-lg text-sm bg-white">
                                   <SelectValue placeholder="선택" />
                                 </SelectTrigger>
@@ -300,7 +308,15 @@ export default function Home() {
                             control={form.control}
                             name={`vehicle.selections.${index}.route`}
                             render={({ field }) => (
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  if (document.activeElement instanceof HTMLElement) {
+                                    document.activeElement.blur();
+                                  }
+                                }} 
+                                defaultValue={field.value}
+                              >
                                 <SelectTrigger className="h-10 rounded-lg text-sm bg-white">
                                   <SelectValue placeholder="선택" />
                                 </SelectTrigger>
