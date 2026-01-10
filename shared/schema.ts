@@ -1,18 +1,81 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+// === TABLE DEFINITIONS ===
+export const quotes = pgTable("quotes", {
+  id: serial("id").primaryKey(),
+  customerName: text("customer_name").notNull(),
+  totalPrice: integer("total_price").notNull(),
+  breakdown: jsonb("breakdown").notNull(), // Stores the detailed calculation result
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+// === SCHEMAS ===
+export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true });
+
+// Input schema for calculation
+export const calculateQuoteSchema = z.object({
+  // Villa
+  villa: z.object({
+    enabled: z.boolean(),
+    checkIn: z.string(), // YYYY-MM-DD
+    checkOut: z.string(), // YYYY-MM-DD
+  }).optional(),
+
+  // Vehicle
+  vehicle: z.object({
+    enabled: z.boolean(),
+    type: z.enum([
+      "7_seater",
+      "16_seater",
+      "9_limo",
+      "9_lux_limo",
+      "12_lux_limo",
+      "16_lux_limo",
+      "29_seater"
+    ]),
+    route: z.enum(["city", "oneway", "roundtrip", "city_pickup_drop"]),
+    days: z.number().min(1).default(1),
+  }).optional(),
+
+  // Eco Girl
+  ecoGirl: z.object({
+    enabled: z.boolean(),
+    count: z.number().min(0).default(0),
+    nights: z.number().min(0).default(0),
+  }).optional(),
+
+  // Guide
+  guide: z.object({
+    enabled: z.boolean(),
+    days: z.number().min(0).default(0),
+    groupSize: z.number().min(1).default(1),
+  }).optional(),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// Output schema for calculation result
+export const quoteBreakdownSchema = z.object({
+  villa: z.object({
+    price: z.number(),
+    details: z.array(z.string()), // e.g., "Friday: $380"
+  }),
+  vehicle: z.object({
+    price: z.number(),
+    description: z.string(),
+  }),
+  ecoGirl: z.object({
+    price: z.number(),
+    description: z.string(),
+  }),
+  guide: z.object({
+    price: z.number(),
+    description: z.string(),
+  }),
+  total: z.number(),
+});
+
+export type Quote = typeof quotes.$inferSelect;
+export type InsertQuote = z.infer<typeof insertQuoteSchema>;
+export type CalculateQuoteRequest = z.infer<typeof calculateQuoteSchema>;
+export type QuoteBreakdown = z.infer<typeof quoteBreakdownSchema>;
