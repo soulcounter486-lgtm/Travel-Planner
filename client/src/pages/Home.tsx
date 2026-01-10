@@ -47,20 +47,23 @@ export default function Home() {
 
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
-    const lastDate = currentSelections.length > 0 
-      ? new Date(currentSelections[currentSelections.length - 1].date)
-      : (values.villa?.checkIn ? new Date(values.villa.checkIn) : new Date());
+    const lastDateStr = currentSelections.length > 0 
+      ? currentSelections[currentSelections.length - 1].date
+      : (values.villa?.checkIn ? values.villa.checkIn : format(new Date(), "yyyy-MM-dd"));
     
+    const lastDate = new Date(lastDateStr);
     const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
     
-    form.setValue("vehicle.selections", [
+    const newSelections = [
       ...currentSelections,
       {
         date: format(nextDate, "yyyy-MM-dd"),
-        type: "7_seater",
-        route: "city"
+        type: "7_seater" as const,
+        route: "city" as const
       }
-    ]);
+    ];
+    
+    form.setValue("vehicle.selections", newSelections, { shouldValidate: true });
   };
 
   const handleRemoveVehicleDay = (index: number) => {
@@ -72,19 +75,24 @@ export default function Home() {
     const subscription = form.watch((value) => {
       // Debounce slightly to avoid too many requests
       const timer = setTimeout(() => {
-        if (value.villa?.enabled && (!value.villa?.checkIn || !value.villa?.checkOut)) {
-            // Wait for full date range
-            return;
-        }
-        
-        // Ensure proper types for calculation
-        const payload = calculateQuoteSchema.parse(value);
-        calculateMutation.mutate(payload, {
-          onSuccess: (data) => setBreakdown(data),
-          onError: (error) => {
-             console.error("Calculation error", error);
+        try {
+          if (value.villa?.enabled && (!value.villa?.checkIn || !value.villa?.checkOut)) {
+              // Wait for full date range
+              return;
           }
-        });
+          
+          // Ensure proper types for calculation
+          const payload = calculateQuoteSchema.parse(value);
+          calculateMutation.mutate(payload, {
+            onSuccess: (data) => setBreakdown(data),
+            onError: (error) => {
+               console.error("Calculation error", error);
+            }
+          });
+        } catch (e) {
+          // Silently ignore validation errors during typing/editing
+          // console.debug("Validation error", e);
+        }
       }, 300);
       return () => clearTimeout(timer);
     });
@@ -252,7 +260,7 @@ export default function Home() {
                 >
                   <div className="space-y-4">
                     {values.vehicle?.selections?.map((selection, index) => (
-                      <div key={index} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
+                      <div key={`${index}-${selection.date}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
                         <div className="md:col-span-2 space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-500">날짜</Label>
                           <Controller
