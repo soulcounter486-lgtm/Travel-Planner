@@ -185,10 +185,13 @@ export default function Home() {
                                 selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={(date) => {
                                   field.onChange(date ? format(date, "yyyy-MM-dd") : "");
-                                  // Close popover
-                                  if (document.activeElement instanceof HTMLElement) {
-                                    document.activeElement.blur();
-                                  }
+                                  // Trigger a mouse down event to close the popover
+                                  const event = new MouseEvent('mousedown', {
+                                    bubbles: true,
+                                    cancelable: true,
+                                    view: window
+                                  });
+                                  document.body.dispatchEvent(event);
                                 }}
                                 initialFocus
                               />
@@ -222,10 +225,13 @@ export default function Home() {
                                 selected={field.value ? new Date(field.value) : undefined}
                                 onSelect={(date) => {
                                   field.onChange(date ? format(date, "yyyy-MM-dd") : "");
-                                  // Close popover
-                                  if (document.activeElement instanceof HTMLElement) {
-                                    document.activeElement.blur();
-                                  }
+                                  // Trigger a mouse down event to close the popover
+                                  const event = new MouseEvent('mousedown', {
+                                    bubbles: true,
+                                    cancelable: true,
+                                    view: window
+                                  });
+                                  document.body.dispatchEvent(event);
                                 }}
                                 initialFocus
                               />
