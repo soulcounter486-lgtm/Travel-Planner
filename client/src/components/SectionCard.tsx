@@ -49,7 +49,7 @@ export function SectionCard({
       <CardContent className="relative z-10">
         <div className={cn(
           "transition-all duration-300 grid gap-6",
-          isEnabled ? "opacity-100 max-h-[500px]" : "opacity-50 pointer-events-none max-h-0 overflow-hidden"
+          isEnabled ? "opacity-100 max-h-[2000px]" : "opacity-50 pointer-events-none max-h-0 overflow-hidden"
         )}>
           {children}
         </div>

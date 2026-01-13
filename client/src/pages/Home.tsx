@@ -294,23 +294,21 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="flex flex-col max-h-[600px]">
-                    <div className="space-y-4 overflow-y-auto p-1 pr-2 custom-scrollbar">
-                      <div className="mb-2 p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100 shadow-sm">
-                        <p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p>
-                        <p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p>
-                        <p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p>
-                      </div>
-                      <div className="space-y-4">
-                        {values.golf?.selections?.map((selection, index) => (
-                          <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
-                            <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`golf.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />)} /></div>
-                            <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">골프장 선택</Label><Controller control={form.control} name={`golf.selections.${index}.course`} render={({ field }) => (<Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem><SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem><SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem></SelectContent></Select>)} /></div>
-                            <div className="md:col-span-1 flex justify-end"><Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" onClick={() => handleRemoveGolfDay(index)} type="button"><div className="w-4 h-0.5 bg-current rounded-full" /></Button></div>
-                          </div>
-                        ))}
-                        <Button type="button" variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white" onClick={handleAddGolfDay}><Plus className="mr-2 h-4 w-4" /> 라운딩 일정 추가</Button>
-                      </div>
+                  <div className="max-h-[600px] overflow-y-auto p-1 pr-2 custom-scrollbar flex flex-col gap-4">
+                    <div className="p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100 shadow-sm sticky top-0 z-20">
+                      <p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p>
+                      <p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p>
+                      <p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p>
+                    </div>
+                    <div className="space-y-4">
+                      {values.golf?.selections?.map((selection, index) => (
+                        <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
+                          <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`golf.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20 w-full" />)} /></div>
+                          <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">골프장 선택</Label><Controller control={form.control} name={`golf.selections.${index}.course`} render={({ field }) => (<Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200 w-full"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem><SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem><SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem></SelectContent></Select>)} /></div>
+                          <div className="md:col-span-1 flex justify-end"><Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" onClick={() => handleRemoveGolfDay(index)} type="button"><div className="w-4 h-0.5 bg-current rounded-full" /></Button></div>
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white" onClick={handleAddGolfDay}><Plus className="mr-2 h-4 w-4" /> 라운딩 일정 추가</Button>
                     </div>
                   </div>
                 </SectionCard>
