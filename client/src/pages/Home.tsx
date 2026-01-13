@@ -89,7 +89,7 @@ export default function Home() {
     const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
     const newSelections = [
       ...currentSelections,
-      { date: format(nextDate, "yyyy-MM-dd"), course: "paradise" as const }
+      { date: format(nextDate, "yyyy-MM-dd"), course: "paradise" as const, players: 1 }
     ];
     form.setValue("golf.selections", [...newSelections], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
@@ -117,7 +117,9 @@ export default function Home() {
           golf: value.golf?.enabled && value.golf.selections && value.golf.selections.length > 0
             ? { 
                 enabled: true, 
-                selections: value.golf.selections.filter(s => s && s.date && s.course) 
+                selections: value.golf.selections
+                  .filter((s): s is NonNullable<typeof s> => !!(s && s.date && s.course))
+                  .map(s => ({ ...s, players: Number(s.players) || 1 }))
               }
             : { enabled: false },
           ecoGirl: value.ecoGirl?.enabled 
@@ -302,9 +304,10 @@ export default function Home() {
                     </div>
                     <div className="space-y-4">
                       {values.golf?.selections?.map((selection, index) => (
-                        <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
-                          <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`golf.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20 w-full" />)} /></div>
-                          <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">골프장 선택</Label><Controller control={form.control} name={`golf.selections.${index}.course`} render={({ field }) => (<Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200 w-full"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem><SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem><SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem></SelectContent></Select>)} /></div>
+                        <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-9 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end overflow-hidden">
+                          <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`golf.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20 w-full" />)} /></div>
+                          <div className="md:col-span-4 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">골프장 선택</Label><Controller control={form.control} name={`golf.selections.${index}.course`} render={({ field }) => (<Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200 w-full"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem><SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem><SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem></SelectContent></Select>)} /></div>
+                          <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">인원수</Label><Controller control={form.control} name={`golf.selections.${index}.players`} render={({ field }) => (<Input type="number" min="1" {...field} onChange={(e) => field.onChange(parseInt(e.target.value) || 1)} className="h-10 rounded-lg text-sm border-slate-200 w-full" />)} /></div>
                           <div className="md:col-span-1 flex justify-end"><Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" onClick={() => handleRemoveGolfDay(index)} type="button"><div className="w-4 h-0.5 bg-current rounded-full" /></Button></div>
                         </div>
                       ))}

@@ -99,6 +99,7 @@ export async function registerRoutes(
             if (isNaN(date.getTime())) continue;
             const dayOfWeek = getDay(date);
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const players = Number(selection.players) || 1;
             let price = 0;
             let tip = "";
             let courseName = "";
@@ -119,8 +120,9 @@ export async function registerRoutes(
                 courseName = "호짬";
                 break;
             }
-            golfTotalPrice += price;
-            golfDescriptions.push(`${selection.date}: ${courseName} ($${price}, 캐디팁: ${tip})`);
+            const subtotal = price * players;
+            golfTotalPrice += subtotal;
+            golfDescriptions.push(`${selection.date}: ${courseName} ($${price} x ${players}명 = $${subtotal}, 캐디팁: ${tip}/인)`);
           } catch (e) {
             console.error("Golf selection calculation error:", e);
           }

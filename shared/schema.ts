@@ -47,6 +47,7 @@ export const calculateQuoteSchema = z.object({
     selections: z.array(z.object({
       date: z.string(), // YYYY-MM-DD
       course: z.enum(["paradise", "chouduc", "hocham"]),
+      players: z.number().min(1).default(1),
     })).optional(),
   }).optional(),
 
