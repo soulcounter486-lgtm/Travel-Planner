@@ -269,16 +269,103 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-4 max-h-[800px] overflow-y-auto p-1 pr-2 custom-scrollbar">
+                  <div className="space-y-4 p-1 pr-2">
                     {values.vehicle?.selections?.map((selection, index) => (
-                      <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
-                        <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`vehicle.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />)} /></div>
-                        <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">차량 종류</Label><Controller control={form.control} name={`vehicle.selections.${index}.type`} render={({ field }) => (<Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="7_seater">7인승 SUV</SelectItem><SelectItem value="16_seater">16인승 밴</SelectItem><SelectItem value="9_limo">9인승 리무진</SelectItem><SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem><SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem><SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem><SelectItem value="29_seater">29인승 버스</SelectItem></SelectContent></Select>)} /></div>
-                        <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">이동 경로</Label><Controller control={form.control} name={`vehicle.selections.${index}.route`} render={({ field }) => (<Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="city">붕따우 시내투어</SelectItem><SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem><SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem><SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem></SelectContent></Select>)} /></div>
-                        <div className="md:col-span-1 flex justify-end"><Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" onClick={() => handleRemoveVehicleDay(index)} type="button"><div className="w-4 h-0.5 bg-current rounded-full" /></Button></div>
+                      <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-sm font-semibold text-slate-600">이용 날짜</Label>
+                          <Controller
+                            control={form.control}
+                            name={`vehicle.selections.${index}.date`}
+                            render={({ field }) => (
+                              <Input 
+                                type="date"
+                                {...field}
+                                className="h-12 rounded-lg text-base border-slate-200 focus:ring-primary/20"
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-sm font-semibold text-slate-600">차량 종류 선택</Label>
+                          <Controller
+                            control={form.control}
+                            name={`vehicle.selections.${index}.type`}
+                            render={({ field }) => (
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  if (document.activeElement instanceof HTMLElement) {
+                                    document.activeElement.blur();
+                                  }
+                                }} 
+                                defaultValue={field.value}
+                              >
+                                <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
+                                  <SelectValue placeholder="선택" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                  <SelectItem value="7_seater">7인승 SUV</SelectItem>
+                                  <SelectItem value="16_seater">16인승 밴</SelectItem>
+                                  <SelectItem value="9_limo">9인승 리무진</SelectItem>
+                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="29_seater">29인승 버스</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-sm font-semibold text-slate-600">이동 경로 선택</Label>
+                          <Controller
+                            control={form.control}
+                            name={`vehicle.selections.${index}.route`}
+                            render={({ field }) => (
+                              <Select 
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  if (document.activeElement instanceof HTMLElement) {
+                                    document.activeElement.blur();
+                                  }
+                                }} 
+                                defaultValue={field.value}
+                              >
+                                <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
+                                  <SelectValue placeholder="선택" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                  <SelectItem value="city">붕따우 시내투어</SelectItem>
+                                  <SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem>
+                                  <SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem>
+                                  <SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-1 flex justify-end">
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-12 w-12 rounded-lg"
+                             onClick={() => handleRemoveVehicleDay(index)}
+                             type="button"
+                           >
+                             <Plus className="w-5 h-5 rotate-45" />
+                           </Button>
+                        </div>
                       </div>
                     ))}
-                    <Button type="button" variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white" onClick={handleAddVehicleDay}><Plus className="mr-2 h-4 w-4" /> 차량 이용일 추가</Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full h-14 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white text-base font-semibold"
+                      onClick={handleAddVehicleDay}
+                    >
+                      <Plus className="mr-2 h-5 w-5" /> 차량 이용일 추가
+                    </Button>
                   </div>
                 </SectionCard>
               )}
@@ -289,15 +376,66 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="space-y-4 max-h-[800px] overflow-y-auto p-1 pr-2 custom-scrollbar">
+                  <div className="space-y-4 p-1 pr-2">
                     {values.golf?.selections?.map((selection, index) => (
-                      <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
-                        <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`golf.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />)} /></div>
-                        <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">골프장 선택</Label><Controller control={form.control} name={`golf.selections.${index}.course`} render={({ field }) => (<Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem><SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem><SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem></SelectContent></Select>)} /></div>
-                        <div className="md:col-span-1 flex justify-end"><Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" onClick={() => handleRemoveGolfDay(index)} type="button"><div className="w-4 h-0.5 bg-current rounded-full" /></Button></div>
+                      <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
+                        <div className="md:col-span-3 space-y-2">
+                          <Label className="text-sm font-semibold text-slate-600">라운딩 날짜</Label>
+                          <Controller
+                            control={form.control}
+                            name={`golf.selections.${index}.date`}
+                            render={({ field }) => (
+                              <Input 
+                                type="date"
+                                {...field}
+                                className="h-12 rounded-lg text-base border-slate-200 focus:ring-primary/20"
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-3 space-y-2">
+                          <Label className="text-sm font-semibold text-slate-600">골프장 선택</Label>
+                          <Controller
+                            control={form.control}
+                            name={`golf.selections.${index}.course`}
+                            render={({ field }) => (
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                              >
+                                <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
+                                  <SelectValue placeholder="선택" />
+                                </SelectTrigger>
+                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                  <SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem>
+                                  <SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem>
+                                  <SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-1 flex justify-end">
+                           <Button 
+                             variant="ghost" 
+                             size="icon" 
+                             className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-12 w-12 rounded-lg"
+                             onClick={() => handleRemoveGolfDay(index)}
+                             type="button"
+                           >
+                             <Plus className="w-5 h-5 rotate-45" />
+                           </Button>
+                        </div>
                       </div>
                     ))}
-                    <Button type="button" variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white" onClick={handleAddGolfDay}><Plus className="mr-2 h-4 w-4" /> 라운딩 일정 추가</Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full h-14 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white text-base font-semibold"
+                      onClick={handleAddGolfDay}
+                    >
+                      <Plus className="mr-2 h-5 w-5" /> 라운딩 일정 추가
+                    </Button>
                   </div>
                   <div className="mt-4 p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100"><p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p><p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p><p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p></div>
                 </SectionCard>
