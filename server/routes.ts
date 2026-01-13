@@ -77,7 +77,8 @@ export async function registerRoutes(
             let routeDesc = "";
             switch (selection.route) {
               case "city": basePrice = prices.city; routeDesc = "City Tour"; break;
-              case "oneway": basePrice = prices.oneway; routeDesc = "One Way"; break;
+              case "oneway": basePrice = prices.oneway; routeDesc = "One Way (Vung Tau)"; break;
+              case "hocham_oneway": basePrice = prices.oneway; routeDesc = "One Way (Ho Tram)"; break;
               case "roundtrip": basePrice = prices.roundtrip; routeDesc = "Round Trip"; break;
               case "city_pickup_drop": basePrice = prices.city * 1.5; routeDesc = "Pickup/Drop + City"; break;
             }

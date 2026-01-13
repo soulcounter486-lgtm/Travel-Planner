@@ -315,14 +315,14 @@ export default function Home() {
                                         if (!type || !route) return "-";
                                         
                                         const prices: Record<string, any> = {
-                                          "7_seater": { city: 100, oneway: 80, roundtrip: 150, city_pickup_drop: 150 },
-                                          "16_seater": { city: 130, oneway: 130, roundtrip: 250, city_pickup_drop: 195 },
-                                          "9_limo": { city: 160, oneway: 160, roundtrip: 300, city_pickup_drop: 240 },
-                                          "9_lux_limo": { city: 210, oneway: 210, roundtrip: 400, city_pickup_drop: 315 },
-                                          "12_lux_limo": { city: 250, oneway: 250, roundtrip: 480, city_pickup_drop: 375 },
-                                          "16_lux_limo": { city: 280, oneway: 280, roundtrip: 530, city_pickup_drop: 420 },
-                                          "29_seater": { city: 230, oneway: 230, roundtrip: 430, city_pickup_drop: 345 },
-                                          "45_seater": { city: 280, oneway: 290, roundtrip: 550, city_pickup_drop: 420 },
+                                          "7_seater": { city: 100, oneway: 80, hocham_oneway: 80, roundtrip: 150, city_pickup_drop: 150 },
+                                          "16_seater": { city: 130, oneway: 130, hocham_oneway: 130, roundtrip: 250, city_pickup_drop: 195 },
+                                          "9_limo": { city: 160, oneway: 160, hocham_oneway: 160, roundtrip: 300, city_pickup_drop: 240 },
+                                          "9_lux_limo": { city: 210, oneway: 210, hocham_oneway: 210, roundtrip: 400, city_pickup_drop: 315 },
+                                          "12_lux_limo": { city: 250, oneway: 250, hocham_oneway: 250, roundtrip: 480, city_pickup_drop: 375 },
+                                          "16_lux_limo": { city: 280, oneway: 280, hocham_oneway: 280, roundtrip: 530, city_pickup_drop: 420 },
+                                          "29_seater": { city: 230, oneway: 230, hocham_oneway: 230, roundtrip: 430, city_pickup_drop: 345 },
+                                          "45_seater": { city: 280, oneway: 290, hocham_oneway: 290, roundtrip: 550, city_pickup_drop: 420 },
                                         };
                                         
                                         const price = prices[type]?.[route];
@@ -392,7 +392,7 @@ export default function Home() {
                               )}
                             </div>
                           )} /></div>
-                          <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">이동 경로</Label><Controller control={form.control} name={`vehicle.selections.${index}.route`} render={({ field }) => (<Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="city">붕따우 시내투어</SelectItem><SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem><SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem><SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem></SelectContent></Select>)} /></div>
+                          <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">이동 경로</Label><Controller control={form.control} name={`vehicle.selections.${index}.route`} render={({ field }) => (<Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="city">붕따우 시내투어</SelectItem><SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem><SelectItem value="hocham_oneway">호치민 ↔ 호짬 (편도)</SelectItem><SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem><SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem></SelectContent></Select>)} /></div>
                           <div className="md:col-span-1 flex justify-end"><Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" onClick={() => handleRemoveVehicleDay(index)} type="button"><div className="w-4 h-0.5 bg-current rounded-full" /></Button></div>
                         </div>
                       ))}
