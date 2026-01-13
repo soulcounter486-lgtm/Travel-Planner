@@ -269,9 +269,9 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-4 overflow-y-auto p-4 custom-scrollbar border-2 border-slate-200 bg-slate-100 rounded-xl relative z-10 my-4 shadow-inner" style={{ maxHeight: "400px", minHeight: "200px" }}>
+                  <div className="space-y-4 overflow-y-auto p-4 custom-scrollbar border border-slate-200 bg-white rounded-xl relative z-10 my-4 shadow-sm overflow-x-hidden" style={{ maxHeight: "500px", minHeight: "200px" }}>
                     {values.vehicle?.selections?.map((selection, index) => (
-                      <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
+                      <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-slate-50 rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
                         <div className="md:col-span-2 space-y-2">
                           <Label className="text-sm font-semibold text-slate-600">이용 날짜</Label>
                           <Controller
@@ -376,9 +376,9 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="space-y-4 overflow-y-auto p-4 custom-scrollbar border-2 border-slate-200 bg-slate-100 rounded-xl relative z-10 my-4 shadow-inner" style={{ maxHeight: "400px", minHeight: "200px" }}>
+                  <div className="space-y-4 overflow-y-auto p-4 custom-scrollbar border border-slate-200 bg-white rounded-xl relative z-10 my-4 shadow-sm overflow-x-hidden" style={{ maxHeight: "500px", minHeight: "200px" }}>
                     {values.golf?.selections?.map((selection, index) => (
-                      <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
+                      <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-slate-50 rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
                         <div className="md:col-span-3 space-y-2">
                           <Label className="text-sm font-semibold text-slate-600">라운딩 날짜</Label>
                           <Controller
