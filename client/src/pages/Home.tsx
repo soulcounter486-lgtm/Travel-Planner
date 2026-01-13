@@ -293,18 +293,43 @@ export default function Home() {
                               <Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}>
                                 <SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger>
                                 <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
-                                  <SelectItem value="7_seater">7인승 SUV ($150~)</SelectItem>
-                                  <SelectItem value="16_seater">16인승 밴 ($170~)</SelectItem>
-                                  <SelectItem value="9_limo">9인승 리무진 ($200~)</SelectItem>
-                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진 ($220~)</SelectItem>
-                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진 ($250~)</SelectItem>
-                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진 ($280~)</SelectItem>
-                                  <SelectItem value="29_seater">29인승 버스 ($350~)</SelectItem>
-                                  <SelectItem value="45_seater">45인승 버스 ($280~)</SelectItem>
+                                  <SelectItem value="7_seater">7인승 SUV</SelectItem>
+                                  <SelectItem value="16_seater">16인승 밴</SelectItem>
+                                  <SelectItem value="9_limo">9인승 리무진</SelectItem>
+                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="29_seater">29인승 버스</SelectItem>
+                                  <SelectItem value="45_seater">45인승 버스</SelectItem>
                                 </SelectContent>
                               </Select>
                               {field.value && (
                                 <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[10px] leading-relaxed text-slate-600 space-y-1">
+                                  {/* Pricing display for selected vehicle */}
+                                  <div className="flex justify-between items-center mb-2 pb-1 border-b border-slate-200">
+                                    <span className="font-bold text-slate-700">이용 금액 (예상):</span>
+                                    <span className="text-lg font-bold text-primary">
+                                      {(() => {
+                                        const type = values.vehicle?.selections?.[index]?.type;
+                                        const route = values.vehicle?.selections?.[index]?.route;
+                                        if (!type || !route) return "-";
+                                        
+                                        const prices: Record<string, any> = {
+                                          "7_seater": { city: 100, oneway: 80, roundtrip: 150, city_pickup_drop: 150 },
+                                          "16_seater": { city: 130, oneway: 130, roundtrip: 250, city_pickup_drop: 195 },
+                                          "9_limo": { city: 160, oneway: 160, roundtrip: 300, city_pickup_drop: 240 },
+                                          "9_lux_limo": { city: 210, oneway: 210, roundtrip: 400, city_pickup_drop: 315 },
+                                          "12_lux_limo": { city: 250, oneway: 250, roundtrip: 480, city_pickup_drop: 375 },
+                                          "16_lux_limo": { city: 280, oneway: 280, roundtrip: 530, city_pickup_drop: 420 },
+                                          "29_seater": { city: 230, oneway: 230, roundtrip: 430, city_pickup_drop: 345 },
+                                          "45_seater": { city: 280, oneway: 290, roundtrip: 550, city_pickup_drop: 420 },
+                                        };
+                                        
+                                        const price = prices[type]?.[route];
+                                        return price ? `$${price}` : "-";
+                                      })()}
+                                    </span>
+                                  </div>
                                   {field.value === "7_seater" && (
                                     <>
                                       <p className="font-bold text-slate-700">- 7인승 SUV 차량(2,3인 추천)</p>
