@@ -6,6 +6,7 @@ import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 interface QuoteSummaryProps {
   breakdown: QuoteBreakdown | null;
@@ -15,6 +16,7 @@ interface QuoteSummaryProps {
 }
 
 export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSummaryProps) {
+  const { t } = useLanguage();
   const summaryRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadImage = async () => {
@@ -29,7 +31,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
       
       const image = canvas.toDataURL("image/png", 1.0);
       const link = document.createElement("a");
-      link.download = `붕따우_도깨비_견적서_${new Date().getTime()}.png`;
+      link.download = `${t("file.quoteName")}_${new Date().getTime()}.png`;
       link.href = image;
       link.click();
     } catch (error) {
@@ -41,7 +43,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
     return (
       <div className="flex h-full flex-col items-center justify-center p-12 text-center bg-white/50 backdrop-blur-sm rounded-xl border border-dashed border-primary/20">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">견적을 계산하고 있습니다...</p>
+        <p className="text-muted-foreground">{t("quote.calculating")}</p>
       </div>
     );
   }
@@ -52,9 +54,9 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         <div className="h-16 w-16 rounded-full bg-primary/5 flex items-center justify-center mb-4">
           <FileText className="h-8 w-8 text-primary/40" />
         </div>
-        <h3 className="text-lg font-medium text-foreground">준비되셨나요?</h3>
+        <h3 className="text-lg font-medium text-foreground">{t("quote.ready")}</h3>
         <p className="text-muted-foreground mt-2 max-w-xs">
-          왼쪽 옵션을 조정하여 맞춤 여행 견적을 실시간으로 확인하세요.
+          {t("quote.readyDesc")}
         </p>
       </div>
     );
@@ -67,7 +69,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-indigo-500 to-primary" />
           <CardHeader className="bg-primary/5 pb-6">
             <CardTitle className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-muted-foreground">예상 견적 금액</span>
+              <span className="text-sm font-medium text-muted-foreground">{t("quote.title")}</span>
               <span className="text-4xl text-primary font-bold">
                 ${breakdown.total.toLocaleString()}
               </span>
@@ -84,7 +86,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
-                      <span>풀빌라 숙박</span>
+                      <span>{t("quote.villa")}</span>
                       <span>${breakdown.villa.price}</span>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-0.5 pl-1">
@@ -109,7 +111,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
-                      <span>차량 서비스</span>
+                      <span>{t("quote.vehicle")}</span>
                       <span>${breakdown.vehicle.price}</span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed italic pl-1">
@@ -129,7 +131,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
-                      <span>골프 라운딩</span>
+                      <span>{t("quote.golf")}</span>
                       <span>${breakdown.golf.price}</span>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-0.5 pl-1 italic">
@@ -154,7 +156,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
-                      <span>에코 가이드</span>
+                      <span>{t("quote.ecoGirl")}</span>
                       <span>${breakdown.ecoGirl.price}</span>
                     </div>
                     <p className="text-xs text-muted-foreground italic pl-1">
@@ -174,7 +176,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
-                      <span>한국어 가이드</span>
+                      <span>{t("quote.guide")}</span>
                       <span>${breakdown.guide.price}</span>
                     </div>
                     <p className="text-xs text-muted-foreground italic pl-1">
@@ -189,7 +191,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
             <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <Info className="w-3 h-3" />
-                실제 가격은 현지 상황에 따라 다를 수 있습니다.
+                {t("quote.note")}
               </div>
             </div>
           </CardContent>
@@ -202,7 +204,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         disabled={!breakdown}
       >
         <Save className="mr-2 h-6 w-6" />
-        견적서 저장
+        {t("quote.save")}
       </Button>
     </div>
   );

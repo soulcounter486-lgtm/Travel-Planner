@@ -81,6 +81,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.notIncludedItems": "캐디팁 (1인당 $15~20 권장)|식사 및 음료",
     "golf.date": "날짜",
     "golf.course": "골프장",
+    "golf.courseSelect": "골프장 선택",
     "golf.players": "인원",
     "golf.addDay": "골프 일정 추가",
     "golf.person": "명",
@@ -142,6 +143,39 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Language
     "language.select": "언어 선택",
+    
+    // Vehicle Descriptions
+    "vehicle.desc.7_seater": "- 7인승 SUV 차량(2,3인 추천)|• 최대 4인+캐리어 4개|• 골프백 이용 시 최대 3인(골프백3개 + 캐리어 3개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    "vehicle.desc.16_seater": "- 16인승 미니밴 차량(4~6인 추천, 최대 8인)|• 6인(골프백 6개 + 캐리어 6개)|• 9인(캐리어 9개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    "vehicle.desc.9_limo": "- 9인승 미니밴 차량(4~6인 추천, 최대 6인)|• 4인(골프백 4개 + 캐리어 4개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    "vehicle.desc.9_lux_limo": "- 9인승 럭셔리 리무진 차량(4~6인 추천, 최대 6인)|• VIP 인테리어, 편안한 좌석|• 4인(골프백 4개 + 캐리어 4개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    "vehicle.desc.12_lux_limo": "- 12인승 VIP리무진 밴 차량(6~8인 추천, 최대 8인)|• 6인(골프백 6개 + 캐리어 6개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    "vehicle.desc.16_lux_limo": "- 16인승 미니밴 차량(10인 이상 추천, 최대 16인)|• 16인(골프백 16개 + 캐리어 16개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    "vehicle.desc.29_seater": "- 29인승 미니밴 차량(10인 이상 추천, 최대 25인)|• 15인(골프백 15개 + 캐리어 15개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    "vehicle.desc.45_seater": "- 45인승 대형 버스 차량(20인 이상 추천, 최대 40인)|• 20인(골프백 20개 + 캐리어 20개)|• 요청 주신 픽업,드랍장소로 진행|• 기사 포함, 추가금 없음(지연, 대기, 야간 일체)",
+    
+    // Golf Info
+    "golf.info.included": "* 포함사항: 그린피, 카트피(2인 1카트), 캐디피",
+    "golf.info.notIncluded": "* 불포함(현장지불): 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)",
+    "golf.info.weekend": "* 주말요금 적용: 토요일, 일요일",
+    "golf.course.paradise_price": "파라다이스 (평일 $80 / 주말 $100)",
+    "golf.course.chouduc_price": "쩌우득 (평일 $80 / 주말 $120)",
+    "golf.course.hocham_price": "호짬 (평일 $130 / 주말 $200)",
+    
+    // Footer
+    "footer.connect": "채널 연결",
+    "footer.visit": "방문하기",
+    "footer.terms": "이용약관",
+    "footer.privacy": "개인정보처리방침",
+    
+    // File name
+    "file.quoteName": "붕따우_도깨비_견적서",
+    
+    // Toast messages
+    "toast.saved": "저장 완료",
+    "toast.savedDesc": "견적서가 성공적으로 저장되었습니다",
+    "toast.error": "오류",
+    "toast.errorDesc": "문제가 발생했습니다. 다시 시도해주세요",
   },
   
   en: {
@@ -204,6 +238,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.notIncludedItems": "Caddy tip ($15-20 per person recommended)|Meals and beverages",
     "golf.date": "Date",
     "golf.course": "Golf Course",
+    "golf.courseSelect": "Select Golf Course",
     "golf.players": "Players",
     "golf.addDay": "Add Golf Day",
     "golf.person": "person(s)",
@@ -265,6 +300,39 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Language
     "language.select": "Select Language",
+    
+    // Vehicle Descriptions
+    "vehicle.desc.7_seater": "- 7-Seater SUV (Recommended for 2-3 people)|• Max 4 passengers + 4 suitcases|• With golf bags: max 3 passengers (3 golf bags + 3 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    "vehicle.desc.16_seater": "- 16-Seater Minivan (Recommended for 4-6 people, max 8)|• 6 passengers (6 golf bags + 6 suitcases)|• 9 passengers (9 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    "vehicle.desc.9_limo": "- 9-Seater Minivan (Recommended for 4-6 people, max 6)|• 4 passengers (4 golf bags + 4 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    "vehicle.desc.9_lux_limo": "- 9-Seater Luxury Limousine (Recommended for 4-6 people, max 6)|• VIP interior, comfortable seating|• 4 passengers (4 golf bags + 4 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    "vehicle.desc.12_lux_limo": "- 12-Seater VIP Limousine (Recommended for 6-8 people, max 8)|• 6 passengers (6 golf bags + 6 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    "vehicle.desc.16_lux_limo": "- 16-Seater Minivan (Recommended for 10+ people, max 16)|• 16 passengers (16 golf bags + 16 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    "vehicle.desc.29_seater": "- 29-Seater Bus (Recommended for 10+ people, max 25)|• 15 passengers (15 golf bags + 15 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    "vehicle.desc.45_seater": "- 45-Seater Bus (Recommended for 20+ people, max 40)|• 20 passengers (20 golf bags + 20 suitcases)|• Pickup/drop-off at your requested location|• Driver included, no extra charges (delays, waiting, night)",
+    
+    // Golf Info
+    "golf.info.included": "* Included: Green fee, cart fee (2 per cart), caddy fee",
+    "golf.info.notIncluded": "* Not included (pay on-site): Caddy tip (Paradise 400k VND / Chouduc/Ho Tram 500k VND)",
+    "golf.info.weekend": "* Weekend rate applies: Saturday, Sunday",
+    "golf.course.paradise_price": "Paradise (Weekday $80 / Weekend $100)",
+    "golf.course.chouduc_price": "Chouduc (Weekday $80 / Weekend $120)",
+    "golf.course.hocham_price": "Ho Tram (Weekday $130 / Weekend $200)",
+    
+    // Footer
+    "footer.connect": "Connect Channel",
+    "footer.visit": "Visit",
+    "footer.terms": "Terms of Service",
+    "footer.privacy": "Privacy Policy",
+    
+    // File name
+    "file.quoteName": "VungTau_Dokkaebi_Quote",
+    
+    // Toast messages
+    "toast.saved": "Saved",
+    "toast.savedDesc": "Your quote has been saved successfully",
+    "toast.error": "Error",
+    "toast.errorDesc": "Something went wrong. Please try again",
   },
   
   zh: {
@@ -327,6 +395,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.notIncludedItems": "球童小费（建议每人$15-20）|餐饮",
     "golf.date": "日期",
     "golf.course": "高尔夫球场",
+    "golf.courseSelect": "选择高尔夫球场",
     "golf.players": "人数",
     "golf.addDay": "添加高尔夫日程",
     "golf.person": "人",
@@ -388,6 +457,39 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Language
     "language.select": "选择语言",
+    
+    // Vehicle Descriptions
+    "vehicle.desc.7_seater": "- 7座SUV（推荐2-3人）|• 最多4人+4个行李箱|• 带高尔夫球包：最多3人（3个球包+3个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    "vehicle.desc.16_seater": "- 16座面包车（推荐4-6人，最多8人）|• 6人（6个球包+6个行李箱）|• 9人（9个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    "vehicle.desc.9_limo": "- 9座面包车（推荐4-6人，最多6人）|• 4人（4个球包+4个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    "vehicle.desc.9_lux_limo": "- 9座豪华轿车（推荐4-6人，最多6人）|• VIP内饰，舒适座椅|• 4人（4个球包+4个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    "vehicle.desc.12_lux_limo": "- 12座VIP豪华车（推荐6-8人，最多8人）|• 6人（6个球包+6个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    "vehicle.desc.16_lux_limo": "- 16座面包车（推荐10人以上，最多16人）|• 16人（16个球包+16个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    "vehicle.desc.29_seater": "- 29座巴士（推荐10人以上，最多25人）|• 15人（15个球包+15个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    "vehicle.desc.45_seater": "- 45座巴士（推荐20人以上，最多40人）|• 20人（20个球包+20个行李箱）|• 按您要求的地点接送|• 含司机，无额外费用（延误、等待、夜间）",
+    
+    // Golf Info
+    "golf.info.included": "* 包含：果岭费、球车费（2人1车）、球童费",
+    "golf.info.notIncluded": "* 不包含（现场支付）：球童小费（天堂40万越南盾/쩌우득·胡襄50万越南盾）",
+    "golf.info.weekend": "* 周末价格适用：周六、周日",
+    "golf.course.paradise_price": "天堂（平日$80/周末$100）",
+    "golf.course.chouduc_price": "쩌우득（平日$80/周末$120）",
+    "golf.course.hocham_price": "胡襄（平日$130/周末$200）",
+    
+    // Footer
+    "footer.connect": "连接频道",
+    "footer.visit": "访问",
+    "footer.terms": "服务条款",
+    "footer.privacy": "隐私政策",
+    
+    // File name
+    "file.quoteName": "头顿_Dokkaebi_报价",
+    
+    // Toast messages
+    "toast.saved": "已保存",
+    "toast.savedDesc": "报价已成功保存",
+    "toast.error": "错误",
+    "toast.errorDesc": "出现问题，请重试",
   },
   
   vi: {
@@ -450,6 +552,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.notIncludedItems": "Tiền tip caddy (khuyến nghị $15-20/người)|Ăn uống",
     "golf.date": "Ngày",
     "golf.course": "Sân golf",
+    "golf.courseSelect": "Chọn sân golf",
     "golf.players": "Số người",
     "golf.addDay": "Thêm lịch golf",
     "golf.person": "người",
@@ -511,6 +614,39 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Language
     "language.select": "Chọn ngôn ngữ",
+    
+    // Vehicle Descriptions
+    "vehicle.desc.7_seater": "- SUV 7 chỗ (Khuyến nghị 2-3 người)|• Tối đa 4 hành khách + 4 vali|• Có túi golf: tối đa 3 người (3 túi golf + 3 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    "vehicle.desc.16_seater": "- Xe van 16 chỗ (Khuyến nghị 4-6 người, tối đa 8)|• 6 người (6 túi golf + 6 vali)|• 9 người (9 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    "vehicle.desc.9_limo": "- Xe van 9 chỗ (Khuyến nghị 4-6 người, tối đa 6)|• 4 người (4 túi golf + 4 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    "vehicle.desc.9_lux_limo": "- Limousine sang trọng 9 chỗ (Khuyến nghị 4-6 người, tối đa 6)|• Nội thất VIP, ghế thoải mái|• 4 người (4 túi golf + 4 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    "vehicle.desc.12_lux_limo": "- Limousine VIP 12 chỗ (Khuyến nghị 6-8 người, tối đa 8)|• 6 người (6 túi golf + 6 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    "vehicle.desc.16_lux_limo": "- Xe van 16 chỗ (Khuyến nghị 10+ người, tối đa 16)|• 16 người (16 túi golf + 16 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    "vehicle.desc.29_seater": "- Xe buýt 29 chỗ (Khuyến nghị 10+ người, tối đa 25)|• 15 người (15 túi golf + 15 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    "vehicle.desc.45_seater": "- Xe buýt 45 chỗ (Khuyến nghị 20+ người, tối đa 40)|• 20 người (20 túi golf + 20 vali)|• Đón/trả tại địa điểm yêu cầu|• Bao gồm tài xế, không phụ thu (chậm trễ, chờ đợi, đêm)",
+    
+    // Golf Info
+    "golf.info.included": "* Bao gồm: Phí green, phí xe điện (2 người/xe), phí caddy",
+    "golf.info.notIncluded": "* Không bao gồm (trả tại chỗ): Tiền tip caddy (Paradise 400k VND / Chouduc/Ho Tram 500k VND)",
+    "golf.info.weekend": "* Giá cuối tuần áp dụng: Thứ Bảy, Chủ Nhật",
+    "golf.course.paradise_price": "Paradise (Ngày thường $80 / Cuối tuần $100)",
+    "golf.course.chouduc_price": "Chouduc (Ngày thường $80 / Cuối tuần $120)",
+    "golf.course.hocham_price": "Ho Tram (Ngày thường $130 / Cuối tuần $200)",
+    
+    // Footer
+    "footer.connect": "Kết nối kênh",
+    "footer.visit": "Truy cập",
+    "footer.terms": "Điều khoản dịch vụ",
+    "footer.privacy": "Chính sách bảo mật",
+    
+    // File name
+    "file.quoteName": "VungTau_Dokkaebi_BaoGia",
+    
+    // Toast messages
+    "toast.saved": "Đã lưu",
+    "toast.savedDesc": "Báo giá của bạn đã được lưu thành công",
+    "toast.error": "Lỗi",
+    "toast.errorDesc": "Có lỗi xảy ra. Vui lòng thử lại",
   },
   
   ru: {
@@ -573,6 +709,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.notIncludedItems": "Чаевые кэдди (рекомендуется $15-20 на человека)|Питание и напитки",
     "golf.date": "Дата",
     "golf.course": "Гольф-поле",
+    "golf.courseSelect": "Выберите гольф-поле",
     "golf.players": "Игроков",
     "golf.addDay": "Добавить день гольфа",
     "golf.person": "чел.",
@@ -634,6 +771,39 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Language
     "language.select": "Выберите язык",
+    
+    // Vehicle Descriptions
+    "vehicle.desc.7_seater": "- 7-местный внедорожник (Рекомендуется для 2-3 чел.)|• Макс. 4 пассажира + 4 чемодана|• С сумками для гольфа: макс. 3 чел. (3 сумки + 3 чемодана)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    "vehicle.desc.16_seater": "- 16-местный микроавтобус (Рекомендуется для 4-6 чел., макс. 8)|• 6 чел. (6 сумок для гольфа + 6 чемоданов)|• 9 чел. (9 чемоданов)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    "vehicle.desc.9_limo": "- 9-местный микроавтобус (Рекомендуется для 4-6 чел., макс. 6)|• 4 чел. (4 сумки для гольфа + 4 чемодана)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    "vehicle.desc.9_lux_limo": "- 9-местный люкс-лимузин (Рекомендуется для 4-6 чел., макс. 6)|• VIP интерьер, комфортные сиденья|• 4 чел. (4 сумки для гольфа + 4 чемодана)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    "vehicle.desc.12_lux_limo": "- 12-местный VIP лимузин (Рекомендуется для 6-8 чел., макс. 8)|• 6 чел. (6 сумок для гольфа + 6 чемоданов)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    "vehicle.desc.16_lux_limo": "- 16-местный микроавтобус (Рекомендуется для 10+ чел., макс. 16)|• 16 чел. (16 сумок для гольфа + 16 чемоданов)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    "vehicle.desc.29_seater": "- 29-местный автобус (Рекомендуется для 10+ чел., макс. 25)|• 15 чел. (15 сумок для гольфа + 15 чемоданов)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    "vehicle.desc.45_seater": "- 45-местный автобус (Рекомендуется для 20+ чел., макс. 40)|• 20 чел. (20 сумок для гольфа + 20 чемоданов)|• Трансфер по вашему адресу|• Водитель включён, без доплат (задержки, ожидание, ночь)",
+    
+    // Golf Info
+    "golf.info.included": "* Включено: Грин-фи, плата за гольф-кар (2 чел./кар), плата за кэдди",
+    "golf.info.notIncluded": "* Не включено (оплата на месте): Чаевые кэдди (Paradise 400 тыс. VND / Chouduc/Ho Tram 500 тыс. VND)",
+    "golf.info.weekend": "* Тариф выходного дня: Суббота, Воскресенье",
+    "golf.course.paradise_price": "Paradise (Будни $80 / Выходные $100)",
+    "golf.course.chouduc_price": "Chouduc (Будни $80 / Выходные $120)",
+    "golf.course.hocham_price": "Ho Tram (Будни $130 / Выходные $200)",
+    
+    // Footer
+    "footer.connect": "Подключить канал",
+    "footer.visit": "Посетить",
+    "footer.terms": "Условия использования",
+    "footer.privacy": "Политика конфиденциальности",
+    
+    // File name
+    "file.quoteName": "VungTau_Dokkaebi_Расчёт",
+    
+    // Toast messages
+    "toast.saved": "Сохранено",
+    "toast.savedDesc": "Ваш расчёт успешно сохранён",
+    "toast.error": "Ошибка",
+    "toast.errorDesc": "Произошла ошибка. Попробуйте ещё раз",
   },
   
   ja: {
@@ -696,6 +866,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.notIncludedItems": "キャディチップ（1人$15〜20推奨）|食事・飲料",
     "golf.date": "日付",
     "golf.course": "ゴルフ場",
+    "golf.courseSelect": "ゴルフ場を選択",
     "golf.players": "人数",
     "golf.addDay": "ゴルフ日程を追加",
     "golf.person": "名",
@@ -757,6 +928,39 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Language
     "language.select": "言語選択",
+    
+    // Vehicle Descriptions
+    "vehicle.desc.7_seater": "- 7人乗りSUV（2-3名推奨）|• 最大4名＋スーツケース4個|• ゴルフバッグあり：最大3名（3バッグ＋3スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    "vehicle.desc.16_seater": "- 16人乗りミニバン（4-6名推奨、最大8名）|• 6名（6ゴルフバッグ＋6スーツケース）|• 9名（9スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    "vehicle.desc.9_limo": "- 9人乗りミニバン（4-6名推奨、最大6名）|• 4名（4ゴルフバッグ＋4スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    "vehicle.desc.9_lux_limo": "- 9人乗りラグジュアリーリムジン（4-6名推奨、最大6名）|• VIPインテリア、快適なシート|• 4名（4ゴルフバッグ＋4スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    "vehicle.desc.12_lux_limo": "- 12人乗りVIPリムジン（6-8名推奨、最大8名）|• 6名（6ゴルフバッグ＋6スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    "vehicle.desc.16_lux_limo": "- 16人乗りミニバン（10名以上推奨、最大16名）|• 16名（16ゴルフバッグ＋16スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    "vehicle.desc.29_seater": "- 29人乗りバス（10名以上推奨、最大25名）|• 15名（15ゴルフバッグ＋15スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    "vehicle.desc.45_seater": "- 45人乗りバス（20名以上推奨、最大40名）|• 20名（20ゴルフバッグ＋20スーツケース）|• ご指定の場所で送迎|• ドライバー込み、追加料金なし（遅延、待機、夜間）",
+    
+    // Golf Info
+    "golf.info.included": "* 含まれるもの：グリーンフィー、カート代（2名1台）、キャディフィー",
+    "golf.info.notIncluded": "* 含まれないもの（現地払い）：キャディチップ（Paradise 40万VND / Chouduc/Ho Tram 50万VND）",
+    "golf.info.weekend": "* 週末料金適用：土曜日、日曜日",
+    "golf.course.paradise_price": "パラダイス（平日$80 / 週末$100）",
+    "golf.course.chouduc_price": "チョウドゥック（平日$80 / 週末$120）",
+    "golf.course.hocham_price": "ホーチャム（平日$130 / 週末$200）",
+    
+    // Footer
+    "footer.connect": "チャンネル接続",
+    "footer.visit": "訪問",
+    "footer.terms": "利用規約",
+    "footer.privacy": "プライバシーポリシー",
+    
+    // File name
+    "file.quoteName": "ブンタウ_ドッケビ_見積書",
+    
+    // Toast messages
+    "toast.saved": "保存完了",
+    "toast.savedDesc": "見積書が正常に保存されました",
+    "toast.error": "エラー",
+    "toast.errorDesc": "問題が発生しました。もう一度お試しください",
   },
 };
 
