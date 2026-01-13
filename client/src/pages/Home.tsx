@@ -293,14 +293,14 @@ export default function Home() {
                               <Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}>
                                 <SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger>
                                 <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
-                                  <SelectItem value="7_seater">7인승 SUV</SelectItem>
-                                  <SelectItem value="16_seater">16인승 밴</SelectItem>
-                                  <SelectItem value="9_limo">9인승 리무진</SelectItem>
-                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem>
-                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem>
-                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem>
-                                  <SelectItem value="29_seater">29인승 버스</SelectItem>
-                                  <SelectItem value="45_seater">45인승 버스</SelectItem>
+                                  <SelectItem value="7_seater">7인승 SUV ($150~)</SelectItem>
+                                  <SelectItem value="16_seater">16인승 밴 ($170~)</SelectItem>
+                                  <SelectItem value="9_limo">9인승 리무진 ($200~)</SelectItem>
+                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진 ($220~)</SelectItem>
+                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진 ($250~)</SelectItem>
+                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진 ($280~)</SelectItem>
+                                  <SelectItem value="29_seater">29인승 버스 ($350~)</SelectItem>
+                                  <SelectItem value="45_seater">45인승 버스 ($280~)</SelectItem>
                                 </SelectContent>
                               </Select>
                               {field.value && (
