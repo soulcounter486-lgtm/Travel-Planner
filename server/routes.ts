@@ -135,7 +135,7 @@ export async function registerRoutes(
         const count = Number(input.ecoGirl.count) || 0;
         const nights = Number(input.ecoGirl.nights) || 0;
         breakdown.ecoGirl.price = rate * count * nights;
-        breakdown.ecoGirl.description = `${count} Girls x ${nights} Nights @ $${rate}`;
+        breakdown.ecoGirl.description = `${count} Escort x ${nights} Nights @ $${rate}`;
       }
 
       // 5. Guide Calculation
