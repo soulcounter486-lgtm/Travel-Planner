@@ -19,6 +19,7 @@ export async function registerRoutes(
     "12_lux_limo": { city: 250, oneway: 250, roundtrip: 480 },
     "16_lux_limo": { city: 280, oneway: 280, roundtrip: 530 },
     "29_seater": { city: 230, oneway: 230, roundtrip: 430 },
+    "45_seater": { city: 280, oneway: 290, roundtrip: 550 },
   };
 
   app.post(api.quotes.calculate.path, (req, res) => {

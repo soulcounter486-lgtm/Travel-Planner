@@ -35,7 +35,8 @@ export const calculateQuoteSchema = z.object({
         "9_lux_limo",
         "12_lux_limo",
         "16_lux_limo",
-        "29_seater"
+        "29_seater",
+        "45_seater"
       ]),
       route: z.enum(["city", "oneway", "roundtrip", "city_pickup_drop"]),
     })).optional(),
