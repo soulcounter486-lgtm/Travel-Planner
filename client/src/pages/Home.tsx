@@ -523,66 +523,85 @@ export default function Home() {
       </Dialog>
 
       {/* Contact Information Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-20 pb-20 pt-12">
+      <footer className="bg-slate-900 text-white mt-24 pb-12 pt-16">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <h3 className="font-display font-bold text-lg text-primary">연락처 (베트남)</h3>
-              <div className="space-y-2">
-                <a href="tel:0899326273" className="flex items-center text-slate-600 hover:text-primary transition-colors gap-2">
-                  <Phone className="w-4 h-4" />
-                  <span>089-932-6273</span>
-                </a>
+          <div className="flex flex-col items-center text-center mb-16 space-y-4">
+            <h2 className="text-3xl font-display font-bold">도움이 필요하신가요?</h2>
+            <p className="text-slate-400 max-w-xl">
+              베트남 여행 전문가가 실시간으로 상담해 드립니다. 궁금한 점이 있다면 언제든 문의주세요.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Contact Card 1 */}
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 hover:bg-slate-800 transition-all group">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Phone className="w-6 h-6 text-blue-400" />
               </div>
+              <h3 className="font-bold text-lg mb-2 text-slate-100">베트남 현지 연락처</h3>
+              <a href="tel:0899326273" className="text-2xl font-mono text-slate-300 hover:text-blue-400 transition-colors">
+                089.932.6273
+              </a>
+              <p className="text-sm text-slate-500 mt-4 italic">현지 긴급 연락 및 상담 가능</p>
             </div>
             
-            <div className="space-y-4">
-              <h3 className="font-display font-bold text-lg text-primary">연락처 (한국)</h3>
-              <div className="space-y-2">
-                <a href="tel:01090774860" className="flex items-center text-slate-600 hover:text-primary transition-colors gap-2">
-                  <Phone className="w-4 h-4" />
-                  <span>010-9077-4860</span>
-                </a>
+            {/* Contact Card 2 */}
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 hover:bg-slate-800 transition-all group">
+              <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Phone className="w-6 h-6 text-indigo-400" />
               </div>
+              <h3 className="font-bold text-lg mb-2 text-slate-100">한국 직통 연락처</h3>
+              <a href="tel:01090774860" className="text-2xl font-mono text-slate-300 hover:text-indigo-400 transition-colors">
+                010.9077.4860
+              </a>
+              <p className="text-sm text-slate-500 mt-4 italic">국내 예약 및 상세 문의</p>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="font-display font-bold text-lg text-primary">SNS & 메신저</h3>
-              <div className="space-y-2">
-                <div className="flex items-center text-slate-600 gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>카톡 ID: vungtau</span>
-                </div>
+            {/* Contact Card 3 */}
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 hover:bg-slate-800 transition-all group">
+              <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <MessageSquare className="w-6 h-6 text-yellow-500" />
+              </div>
+              <h3 className="font-bold text-lg mb-2 text-slate-100">카카오톡 상담</h3>
+              <div className="space-y-3">
+                <div className="text-xl font-bold text-slate-300">ID: vungtau</div>
                 <a 
                   href="http://pf.kakao.com/_TuxoxfG" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center text-blue-600 hover:underline gap-2"
+                  className="inline-flex items-center text-sm font-semibold bg-yellow-500 text-slate-900 px-4 py-2 rounded-full hover:bg-yellow-400 transition-colors gap-2"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>카카오톡 채널</span>
+                  카카오 채널 연결
                 </a>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h3 className="font-display font-bold text-lg text-primary">공식 채널</h3>
-              <div className="space-y-2">
-                <a 
-                  href="https://m.blog.naver.com/vungtausaver" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex items-center text-green-600 hover:underline gap-2"
-                >
-                  <Globe className="w-4 h-4" />
-                  <span>네이버 블로그</span>
-                </a>
+            {/* Contact Card 4 */}
+            <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 hover:bg-slate-800 transition-all group">
+              <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Globe className="w-6 h-6 text-emerald-400" />
               </div>
+              <h3 className="font-bold text-lg mb-2 text-slate-100">공식 네이버 블로그</h3>
+              <a 
+                href="https://m.blog.naver.com/vungtausaver" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-emerald-400 hover:text-emerald-300 transition-colors gap-2 text-lg font-semibold"
+              >
+                vungtausaver 블로그
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <p className="text-sm text-slate-500 mt-4 italic">실시간 여행 정보 및 후기</p>
             </div>
           </div>
           
-          <div className="mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm">
-            © 2026 Vung Tau Travel Saver. All rights reserved.
+          <div className="mt-20 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
+            <div>© 2026 Vung Tau Travel Saver. All rights reserved.</div>
+            <div className="flex gap-6">
+              <span className="hover:text-slate-300 cursor-pointer transition-colors">이용약관</span>
+              <span className="hover:text-slate-300 cursor-pointer transition-colors">개인정보처리방침</span>
+            </div>
           </div>
         </div>
       </footer>
