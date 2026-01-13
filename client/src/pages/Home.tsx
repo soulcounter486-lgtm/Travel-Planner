@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
-import stockVillaImg from "@assets/stock_images/luxury_villa_with_pr_3e579b70.jpg";
+import villaImg from "@assets/900＿IMG＿1762947034771＿1762948444789_1768281401898.jpg";
 
 import { 
   Plane, 
@@ -180,7 +180,7 @@ export default function Home() {
                   <div className="grid md:grid-cols-2 gap-6 mb-6">
                     <div className="relative group overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video">
                       <img 
-                        src={stockVillaImg} 
+                        src={villaImg} 
                         alt="럭셔리 풀빌라" 
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
