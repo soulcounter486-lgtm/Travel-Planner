@@ -148,6 +148,20 @@ export default function Home() {
     }
   }, [values.golf?.enabled, values.golf?.selections, t]);
 
+  const guideEstimate = useMemo(() => {
+    if (!values.guide?.enabled) {
+      return { price: 0, days: 0, groupSize: 0, baseRate: 0, extraRate: 0, extraPeople: 0 };
+    }
+    const baseRate = 120;
+    const extraRate = 20;
+    const days = Number(values.guide.days) || 0;
+    const groupSize = Number(values.guide.groupSize) || 1;
+    const extraPeople = Math.max(0, groupSize - 4);
+    const dailyTotal = baseRate + (extraPeople * extraRate);
+    const totalPrice = dailyTotal * days;
+    return { price: totalPrice, days, groupSize, baseRate, extraRate, extraPeople, dailyTotal };
+  }, [values.guide?.enabled, values.guide?.days, values.guide?.groupSize]);
+
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
     const lastDateStr = currentSelections.length > 0 
@@ -503,7 +517,32 @@ export default function Home() {
               )}
             />
 
-            <Controller control={form.control} name="guide.enabled" render={({ field }) => (<SectionCard title={t("guide.title")} icon={Users} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-500/10"><div className="grid md:grid-cols-2 gap-6"><div className="space-y-2"><Label>{t("guide.days")}</Label><Controller control={form.control} name="guide.days" render={({ field }) => (<Input type="number" min="0" {...field} value={field.value ?? ""} onChange={(e) => { const val = e.target.value; field.onChange(val === "" ? "" : parseInt(val)); }} className="h-12 rounded-xl" />)} /></div><div className="space-y-2"><Label>{t("guide.groupSize")}</Label><Controller control={form.control} name="guide.groupSize" render={({ field }) => (<Input type="number" min="1" {...field} value={field.value ?? ""} onChange={(e) => { const val = e.target.value; field.onChange(val === "" ? "" : parseInt(val)); }} className="h-12 rounded-xl" />)} /></div></div><div className="mt-2 text-sm text-emerald-600 font-medium">{t("guide.infoText")}</div></SectionCard>)} />
+            <Controller control={form.control} name="guide.enabled" render={({ field }) => (<SectionCard title={t("guide.title")} icon={Users} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-500/10"><div className="grid md:grid-cols-2 gap-6"><div className="space-y-2"><Label>{t("guide.days")}</Label><Controller control={form.control} name="guide.days" render={({ field }) => (<Input type="number" min="0" {...field} value={field.value ?? ""} onChange={(e) => { const val = e.target.value; field.onChange(val === "" ? "" : parseInt(val)); }} className="h-12 rounded-xl" />)} /></div><div className="space-y-2"><Label>{t("guide.groupSize")}</Label><Controller control={form.control} name="guide.groupSize" render={({ field }) => (<Input type="number" min="1" {...field} value={field.value ?? ""} onChange={(e) => { const val = e.target.value; field.onChange(val === "" ? "" : parseInt(val)); }} className="h-12 rounded-xl" />)} /></div></div><div className="mt-2 text-sm text-emerald-600 font-medium">{t("guide.infoText")}</div>
+                  {guideEstimate.price > 0 && (
+                    <div className="mt-4 bg-gradient-to-r from-teal-600 to-teal-500 text-white p-4 rounded-xl shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">{t("guide.estimatedPrice")}</span>
+                        <span className="text-2xl font-bold">${guideEstimate.price}</span>
+                      </div>
+                      <div className="text-xs text-teal-100 space-y-1">
+                        <div className="flex justify-between">
+                          <span>{t("guide.baseRate")}</span>
+                          <span>${guideEstimate.baseRate}/{t("guide.perDay")}</span>
+                        </div>
+                        {guideEstimate.extraPeople > 0 && (
+                          <div className="flex justify-between">
+                            <span>{t("guide.extraCharge")} ({guideEstimate.extraPeople}{t("golf.person")})</span>
+                            <span>+${guideEstimate.extraPeople * guideEstimate.extraRate}/{t("guide.perDay")}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between pt-1 border-t border-teal-400/30">
+                          <span>{guideEstimate.days}{t("guide.daysTotal")}</span>
+                          <span>${guideEstimate.dailyTotal} × {guideEstimate.days} = ${guideEstimate.price}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </SectionCard>)} />
           </div>
           <div className="lg:col-span-4"><QuoteSummary breakdown={breakdown} isLoading={calculateMutation.isPending} onSave={handleSaveQuote} isSaving={createQuoteMutation.isPending} /></div>
         </div>
