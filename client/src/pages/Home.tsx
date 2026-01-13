@@ -294,6 +294,11 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
+                  <div className="mb-4 p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100 shadow-sm">
+                    <p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p>
+                    <p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p>
+                    <p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p>
+                  </div>
                   <div className="space-y-4 max-h-[400px] overflow-y-auto p-1 pr-2 custom-scrollbar">
                     {values.golf?.selections?.map((selection, index) => (
                       <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
@@ -304,7 +309,6 @@ export default function Home() {
                     ))}
                     <Button type="button" variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white" onClick={handleAddGolfDay}><Plus className="mr-2 h-4 w-4" /> 라운딩 일정 추가</Button>
                   </div>
-                  <div className="mt-4 p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100"><p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p><p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p><p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p></div>
                 </SectionCard>
               )}
             />
