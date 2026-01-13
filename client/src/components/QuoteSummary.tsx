@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Loader2, Save, FileText, Info, ImageIcon } from "lucide-react";
+import { Loader2, FileText, Info, Save } from "lucide-react";
 import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
@@ -196,29 +196,14 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Button 
-          variant="outline"
-          className="h-14 text-sm font-bold rounded-2xl border-slate-200 bg-white shadow-sm transition-all hover:bg-slate-50" 
-          onClick={handleDownloadImage}
-          disabled={!breakdown}
-        >
-          <ImageIcon className="mr-2 h-5 w-5 text-emerald-500" />
-          이미지 저장
-        </Button>
-        <Button 
-          className="h-14 text-sm font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
-          onClick={onSave}
-          disabled={!breakdown || isSaving}
-        >
-          {isSaving ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-5 w-5" />
-          )}
-          견적 저장
-        </Button>
-      </div>
+      <Button 
+        className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
+        onClick={handleDownloadImage}
+        disabled={!breakdown}
+      >
+        <Save className="mr-2 h-6 w-6" />
+        견적서 저장
+      </Button>
     </div>
   );
 }
