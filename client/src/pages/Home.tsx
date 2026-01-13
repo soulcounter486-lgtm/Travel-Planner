@@ -440,13 +440,15 @@ export default function Home() {
                       </Button>
                     </div>
                   </div>
-                  <div className="mt-6 p-6 bg-emerald-50 rounded-2xl text-xs text-emerald-800 space-y-2 border border-emerald-100 shadow-sm relative z-0">
-                    <p className="font-semibold flex items-center gap-2 text-sm text-emerald-900 mb-1">
-                      <Check className="w-4 h-4" /> 이용 안내 사항
+                  <div className="mt-6 p-6 bg-emerald-50 rounded-2xl text-xs text-emerald-800 space-y-2 border border-emerald-100 shadow-sm relative z-0 w-full overflow-hidden">
+                    <p className="font-semibold flex items-center gap-2 text-sm text-emerald-900 mb-1 flex-wrap">
+                      <Check className="w-4 h-4 shrink-0" /> 이용 안내 사항
                     </p>
-                    <p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p>
-                    <p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p>
-                    <p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p>
+                    <div className="space-y-1.5 break-keep">
+                      <p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p>
+                      <p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p>
+                      <p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p>
+                    </div>
                   </div>
                 </SectionCard>
               )}
