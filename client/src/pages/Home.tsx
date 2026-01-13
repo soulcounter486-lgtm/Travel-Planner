@@ -52,8 +52,8 @@ export default function Home() {
       villa: { enabled: true },
       vehicle: { enabled: false, selections: [] },
       golf: { enabled: false, selections: [] },
-      ecoGirl: { enabled: false, count: 0, nights: 0 },
-      guide: { enabled: false, days: 0, groupSize: 1 },
+      ecoGirl: { enabled: false, count: "" as any, nights: "" as any },
+      guide: { enabled: false, days: "" as any, groupSize: 4 },
     },
   });
 
