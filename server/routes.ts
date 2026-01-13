@@ -79,7 +79,7 @@ export async function registerRoutes(
               case "city": basePrice = prices.city; routeDesc = "City Tour"; break;
               case "oneway": basePrice = prices.oneway; routeDesc = "One Way (Vung Tau)"; break;
               case "hocham_oneway": basePrice = prices.oneway; routeDesc = "One Way (Ho Tram)"; break;
-              case "phanthiet_oneway": basePrice = prices.oneway * 1.6; routeDesc = "One Way (Phan Thiet)"; break;
+              case "phanthiet_oneway": basePrice = prices.oneway * 1.6 * 0.85; routeDesc = "One Way (Phan Thiet)"; break;
               case "roundtrip": basePrice = prices.roundtrip; routeDesc = "Round Trip"; break;
               case "city_pickup_drop": basePrice = prices.city * 1.5; routeDesc = "Pickup/Drop + City"; break;
             }
