@@ -460,11 +460,11 @@ export default function Home() {
                                   {/* Pricing display for selected vehicle */}
                                   <div className="flex justify-between items-center mb-2 pb-1 border-b border-slate-200">
                                     <span className="font-bold text-slate-700">{t("vehicle.estimatedPrice")}:</span>
-                                    <span className="text-lg font-bold text-primary">
+                                    <div className="text-right">
                                       {(() => {
                                         const type = values.vehicle?.selections?.[index]?.type;
                                         const route = values.vehicle?.selections?.[index]?.route;
-                                        if (!type || !route) return "-";
+                                        if (!type || !route) return <span className="text-lg font-bold text-primary">-</span>;
                                         
                                         const prices: Record<string, any> = {
                                           "7_seater": { city: 100, oneway: 80, hocham_oneway: 80, phanthiet_oneway: 130, roundtrip: 150, city_pickup_drop: 150 },
@@ -478,9 +478,17 @@ export default function Home() {
                                         };
                                         
                                         const price = prices[type]?.[route];
-                                        return price ? `$${price}` : "-";
+                                        if (!price) return <span className="text-lg font-bold text-primary">-</span>;
+                                        return (
+                                          <>
+                                            <span className="text-lg font-bold text-primary">${price}</span>
+                                            {currencyInfo.code !== "USD" && (
+                                              <div className="text-xs text-indigo-600">≈ {formatLocalCurrency(price)}</div>
+                                            )}
+                                          </>
+                                        );
                                       })()}
-                                    </span>
+                                    </div>
                                   </div>
                                   {field.value && (
                                     <div className="space-y-0.5">
