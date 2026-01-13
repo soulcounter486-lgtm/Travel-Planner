@@ -19,6 +19,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
+import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+
 import { 
   Plane, 
   Car, 
@@ -151,14 +153,17 @@ export default function Home() {
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl"
+            className="max-w-3xl flex items-center gap-6"
           >
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-primary mb-4">
-              베트남 여행 견적 계산기
-            </h1>
-            <p className="text-xl text-muted-foreground font-light leading-relaxed">
-              풀빌라, 차량, 가이드 서비스 등 나만의 맞춤 여행 견적을 실시간으로 확인하세요. (붕따우 & 호치민)
-            </p>
+            <img src={logoImg} alt="붕따우 도깨비 로고" className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-md" />
+            <div>
+              <h1 className="text-3xl md:text-5xl font-display font-bold text-primary mb-4 leading-tight">
+                붕따우 도깨비<br className="md:hidden" /> 견적 계산기
+              </h1>
+              <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">
+                풀빌라, 차량, 가이드 서비스 등 나만의 맞춤 여행 견적을 실시간으로 확인하세요.
+              </p>
+            </div>
           </motion.div>
         </div>
       </div>
