@@ -23,7 +23,7 @@ export async function registerRoutes(
 
   app.post(api.quotes.calculate.path, (req, res) => {
     try {
-      const input = calculateQuoteSchema.parse(req.body);
+      const input = req.body;
       
       const breakdown = {
         villa: { price: 0, details: [] as string[] },
@@ -39,23 +39,25 @@ export async function registerRoutes(
         try {
           let current = parseISO(input.villa.checkIn);
           const end = parseISO(input.villa.checkOut);
-          while (current < end) {
-            const dayOfWeek = getDay(current);
-            let dailyPrice = 350;
-            let dayName = "Weekday";
-            if (dayOfWeek === 5) {
-              dailyPrice = 380;
-              dayName = "Friday";
-            } else if (dayOfWeek === 6) {
-              dailyPrice = 500;
-              dayName = "Saturday";
-            } else if (dayOfWeek === 0) {
-              dailyPrice = 350;
-              dayName = "Sunday (Weekday rate)";
+          if (!isNaN(current.getTime()) && !isNaN(end.getTime())) {
+            while (current < end) {
+              const dayOfWeek = getDay(current);
+              let dailyPrice = 350;
+              let dayName = "Weekday";
+              if (dayOfWeek === 5) {
+                dailyPrice = 380;
+                dayName = "Friday";
+              } else if (dayOfWeek === 6) {
+                dailyPrice = 500;
+                dayName = "Saturday";
+              } else if (dayOfWeek === 0) {
+                dailyPrice = 350;
+                dayName = "Sunday (Weekday rate)";
+              }
+              breakdown.villa.price += dailyPrice;
+              breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
+              current = addDays(current, 1);
             }
-            breakdown.villa.price += dailyPrice;
-            breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
-            current = addDays(current, 1);
           }
         } catch (e) {
           console.error("Villa calculation error:", e);
@@ -63,11 +65,11 @@ export async function registerRoutes(
       }
 
       // 2. Vehicle Calculation
-      if (input.vehicle?.enabled && input.vehicle.selections && input.vehicle.selections.length > 0) {
+      if (input.vehicle?.enabled && Array.isArray(input.vehicle.selections)) {
         let vehicleTotalPrice = 0;
         const vehicleDescriptions: string[] = [];
         for (const selection of input.vehicle.selections) {
-          if (!selection.date || !selection.type || !selection.route) continue;
+          if (!selection || !selection.date || !selection.type || !selection.route) continue;
           const prices = vehiclePrices[selection.type];
           if (prices) {
             let basePrice = 0;
@@ -87,13 +89,14 @@ export async function registerRoutes(
       }
 
       // 3. Golf Calculation
-      if (input.golf?.enabled && input.golf.selections && input.golf.selections.length > 0) {
+      if (input.golf?.enabled && Array.isArray(input.golf.selections)) {
         let golfTotalPrice = 0;
         const golfDescriptions: string[] = [];
         for (const selection of input.golf.selections) {
-          if (!selection.date || !selection.course) continue;
+          if (!selection || !selection.date || !selection.course) continue;
           try {
             const date = parseISO(selection.date);
+            if (isNaN(date.getTime())) continue;
             const dayOfWeek = getDay(date);
             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
             let price = 0;
@@ -129,8 +132,8 @@ export async function registerRoutes(
       // 4. Eco Girl Calculation
       if (input.ecoGirl?.enabled) {
         const rate = 220;
-        const count = input.ecoGirl.count;
-        const nights = input.ecoGirl.nights;
+        const count = Number(input.ecoGirl.count) || 0;
+        const nights = Number(input.ecoGirl.nights) || 0;
         breakdown.ecoGirl.price = rate * count * nights;
         breakdown.ecoGirl.description = `${count} Girls x ${nights} Nights @ $${rate}`;
       }
@@ -139,8 +142,8 @@ export async function registerRoutes(
       if (input.guide?.enabled) {
         const baseRate = 120;
         const extraRate = 20;
-        const days = input.guide.days;
-        const groupSize = input.guide.groupSize;
+        const days = Number(input.guide.days) || 0;
+        const groupSize = Number(input.guide.groupSize) || 1;
         let dailyTotal = baseRate;
         if (groupSize > 4) { dailyTotal += (groupSize - 4) * extraRate; }
         breakdown.guide.price = dailyTotal * days;
@@ -150,8 +153,8 @@ export async function registerRoutes(
       breakdown.total = breakdown.villa.price + breakdown.vehicle.price + breakdown.golf.price + breakdown.ecoGirl.price + breakdown.guide.price;
       res.json(breakdown);
     } catch (err) {
-      if (err instanceof z.ZodError) { res.status(400).json({ message: err.errors[0].message }); }
-      else { res.status(500).json({ message: "Internal server error" }); }
+      console.error("Calculation route error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

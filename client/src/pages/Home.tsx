@@ -100,35 +100,36 @@ export default function Home() {
   useEffect(() => {
     const subscription = form.watch((value) => {
       const timer = setTimeout(() => {
-        try {
-          // Send exactly what's in the form, the backend should handle missing fields
-          const payload = calculateQuoteSchema.parse(value);
-          calculateMutation.mutate(payload, {
-            onSuccess: (data) => setBreakdown(data),
-            onError: (error) => console.error("Calculation error", error)
-          });
-        } catch (e) {
-          // If Zod validation fails (e.g. required fields missing in enabled sections), 
-          // we still try to send a partial payload by disabling incomplete sections
-          try {
-            const partialValue = JSON.parse(JSON.stringify(value));
-            if (partialValue.villa?.enabled && (!partialValue.villa?.checkIn || !partialValue.villa?.checkOut)) {
-              partialValue.villa.enabled = false;
-            }
-            if (partialValue.vehicle?.enabled && (!partialValue.vehicle.selections || partialValue.vehicle.selections.length === 0)) {
-              partialValue.vehicle.enabled = false;
-            }
-            if (partialValue.golf?.enabled && (!partialValue.golf.selections || partialValue.golf.selections.length === 0)) {
-              partialValue.golf.enabled = false;
-            }
-            
-            const payload = calculateQuoteSchema.parse(partialValue);
-            calculateMutation.mutate(payload, {
-              onSuccess: (data) => setBreakdown(data),
-              onError: (error) => console.error("Calculation error", error)
-            });
-          } catch (innerE) {}
-        }
+        // Manually build a valid payload for calculation
+        // This avoids Zod validation errors blocking the update
+        const payload: any = {
+          villa: value.villa?.enabled && value.villa.checkIn && value.villa.checkOut 
+            ? { enabled: true, checkIn: value.villa.checkIn, checkOut: value.villa.checkOut } 
+            : { enabled: false },
+          vehicle: value.vehicle?.enabled && value.vehicle.selections && value.vehicle.selections.length > 0
+            ? { 
+                enabled: true, 
+                selections: value.vehicle.selections.filter(s => s && s.date && s.type && s.route) 
+              }
+            : { enabled: false },
+          golf: value.golf?.enabled && value.golf.selections && value.golf.selections.length > 0
+            ? { 
+                enabled: true, 
+                selections: value.golf.selections.filter(s => s && s.date && s.course) 
+              }
+            : { enabled: false },
+          ecoGirl: value.ecoGirl?.enabled 
+            ? { enabled: true, count: value.ecoGirl.count || 0, nights: value.ecoGirl.nights || 0 }
+            : { enabled: false },
+          guide: value.guide?.enabled
+            ? { enabled: true, days: value.guide.days || 0, groupSize: value.guide.groupSize || 1 }
+            : { enabled: false }
+        };
+
+        calculateMutation.mutate(payload, {
+          onSuccess: (data) => setBreakdown(data),
+          onError: (error) => console.error("Calculation error", error)
+        });
       }, 300);
       return () => clearTimeout(timer);
     });
