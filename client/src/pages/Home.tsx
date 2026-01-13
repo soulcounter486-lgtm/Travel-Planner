@@ -288,7 +288,85 @@ export default function Home() {
                       {values.vehicle?.selections?.map((selection, index) => (
                         <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
                           <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`vehicle.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />)} /></div>
-                          <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">차량 종류</Label><Controller control={form.control} name={`vehicle.selections.${index}.type`} render={({ field }) => (<Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="7_seater">7인승 SUV</SelectItem><SelectItem value="16_seater">16인승 밴</SelectItem><SelectItem value="9_limo">9인승 리무진</SelectItem><SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem><SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem><SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem><SelectItem value="29_seater">29인승 버스</SelectItem><SelectItem value="45_seater">45인승 버스</SelectItem></SelectContent></Select>)} /></div>
+                          <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">차량 종류</Label><Controller control={form.control} name={`vehicle.selections.${index}.type`} render={({ field }) => (
+                            <div className="space-y-2">
+                              <Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}>
+                                <SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger>
+                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                  <SelectItem value="7_seater">7인승 SUV</SelectItem>
+                                  <SelectItem value="16_seater">16인승 밴</SelectItem>
+                                  <SelectItem value="9_limo">9인승 리무진</SelectItem>
+                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem>
+                                  <SelectItem value="29_seater">29인승 버스</SelectItem>
+                                  <SelectItem value="45_seater">45인승 버스</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              {field.value && (
+                                <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[10px] leading-relaxed text-slate-600 space-y-1">
+                                  {field.value === "7_seater" && (
+                                    <>
+                                      <p className="font-bold text-slate-700">- 7인승 SUV 차량(2,3인 추천)</p>
+                                      <p>- 최대 4인+캐리어 4개</p>
+                                      <p>- 골프백 이용 시 최대 3인(골프백3개 + 캐리어 3개)</p>
+                                      <p>- 요청 주신 픽업,드랍장소로 진행</p>
+                                      <p>- 기사 포함, 추가금 없음(지연, 대기, 야간 일체)</p>
+                                    </>
+                                  )}
+                                  {field.value === "16_seater" && (
+                                    <>
+                                      <p className="font-bold text-slate-700">- 16인승 미니밴 차량(4~6인 추천, 최대 8인)</p>
+                                      <p>- 6인(골프백 6개 + 캐리어 6개)</p>
+                                      <p>- 9인(캐리어 9개)</p>
+                                      <p>- 요청 주신 픽업,드랍장소로 진행</p>
+                                      <p>- 기사 포함, 추가금 없음(지연, 대기, 야간 일체)</p>
+                                    </>
+                                  )}
+                                  {(field.value === "9_limo" || field.value === "9_lux_limo") && (
+                                    <>
+                                      <p className="font-bold text-slate-700">- 9인승 미니밴 차량(4~6인 추천, 최대 6인)</p>
+                                      <p>- 4인(골프백 4개 + 캐리어 4개)</p>
+                                      <p>- 요청 주신 픽업,드랍장소로 진행</p>
+                                      <p>- 기사 포함, 추가금 없음(지연, 대기, 야간 일체)</p>
+                                    </>
+                                  )}
+                                  {field.value === "12_lux_limo" && (
+                                    <>
+                                      <p className="font-bold text-slate-700">- 12인승 VIP리무진 밴 차량(6~8인 추천, 최대 8인)</p>
+                                      <p>- 6인(골프백 6개 + 캐리어 6개)</p>
+                                      <p>- 요청 주신 픽업,드랍장소로 진행</p>
+                                      <p>- 기사 포함, 추가금 없음(지연, 대기, 야간 일체)</p>
+                                    </>
+                                  )}
+                                  {field.value === "16_lux_limo" && (
+                                    <>
+                                      <p className="font-bold text-slate-700">- 16인승 미니밴 차량(10인 이상 추천, 최대 16인)</p>
+                                      <p>- 16인(골프백 16개 + 캐리어 16개)</p>
+                                      <p>- 요청 주신 픽업,드랍장소로 진행</p>
+                                      <p>- 기사 포함, 추가금 없음(지연, 대기, 야간 일체)</p>
+                                    </>
+                                  )}
+                                  {field.value === "29_seater" && (
+                                    <>
+                                      <p className="font-bold text-slate-700">- 29인승 미니밴 차량(10인 이상 추천, 최대 25인)</p>
+                                      <p>- 15인(골프백 15개 + 캐리어 15개)</p>
+                                      <p>- 요청 주신 픽업,드랍장소로 진행</p>
+                                      <p>- 기사 포함, 추가금 없음(지연, 대기, 야간 일체)</p>
+                                    </>
+                                  )}
+                                  {field.value === "45_seater" && (
+                                    <>
+                                      <p className="font-bold text-slate-700">- 45인승 대형 버스 차량(20인 이상 추천, 최대 40인)</p>
+                                      <p>- 20인(골프백 20개 + 캐리어 20개)</p>
+                                      <p>- 요청 주신 픽업,드랍장소로 진행</p>
+                                      <p>- 기사 포함, 추가금 없음(지연, 대기, 야간 일체)</p>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )} /></div>
                           <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">이동 경로</Label><Controller control={form.control} name={`vehicle.selections.${index}.route`} render={({ field }) => (<Select onValueChange={(value) => { field.onChange(value); if (document.activeElement instanceof HTMLElement) { document.activeElement.blur(); } }} defaultValue={field.value}><SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200"><SelectValue placeholder="선택" /></SelectTrigger><SelectContent className="z-[9999] bg-white border shadow-lg opacity-100"><SelectItem value="city">붕따우 시내투어</SelectItem><SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem><SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem><SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem></SelectContent></Select>)} /></div>
                           <div className="md:col-span-1 flex justify-end"><Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" onClick={() => handleRemoveVehicleDay(index)} type="button"><div className="w-4 h-0.5 bg-current rounded-full" /></Button></div>
                         </div>
