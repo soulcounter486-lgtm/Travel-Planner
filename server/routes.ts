@@ -76,7 +76,7 @@ export async function registerRoutes(
             let basePrice = 0;
             let routeDesc = "";
             if (selection.type === "7_seater" && selection.route === "phanthiet_oneway") {
-              basePrice = 150;
+              basePrice = 130;
             } else {
               switch (selection.route) {
                 case "city": basePrice = prices.city; routeDesc = "City Tour"; break;
