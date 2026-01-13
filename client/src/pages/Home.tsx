@@ -269,7 +269,7 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-4 p-1 pr-2">
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto p-1 pr-2 custom-scrollbar">
                     {values.vehicle?.selections?.map((selection, index) => (
                       <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
                         <div className="md:col-span-2 space-y-2">
@@ -376,7 +376,7 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="space-y-4 p-1 pr-2">
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto p-1 pr-2 custom-scrollbar">
                     {values.golf?.selections?.map((selection, index) => (
                       <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
                         <div className="md:col-span-3 space-y-2">
