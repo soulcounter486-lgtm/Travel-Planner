@@ -12,7 +12,7 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   const vehiclePrices: Record<string, { city: number; oneway: number; roundtrip: number }> = {
-    "7_seater": { city: 100, oneway: 80, roundtrip: 150 },
+    "7_seater": { city: 100, oneway: 110, roundtrip: 150 },
     "16_seater": { city: 130, oneway: 130, roundtrip: 250 },
     "9_limo": { city: 160, oneway: 160, roundtrip: 300 },
     "9_lux_limo": { city: 210, oneway: 210, roundtrip: 400 },
@@ -75,13 +75,27 @@ export async function registerRoutes(
           if (prices) {
             let basePrice = 0;
             let routeDesc = "";
-            switch (selection.route) {
-              case "city": basePrice = prices.city; routeDesc = "City Tour"; break;
-              case "oneway": basePrice = prices.oneway; routeDesc = "One Way (Vung Tau)"; break;
-              case "hocham_oneway": basePrice = prices.oneway; routeDesc = "One Way (Ho Tram)"; break;
-              case "phanthiet_oneway": basePrice = prices.oneway * 1.6 * 0.85; routeDesc = "One Way (Phan Thiet)"; break;
-              case "roundtrip": basePrice = prices.roundtrip; routeDesc = "Round Trip"; break;
-              case "city_pickup_drop": basePrice = prices.city * 1.5; routeDesc = "Pickup/Drop + City"; break;
+            if (selection.type === "7_seater" && selection.route === "phanthiet_oneway") {
+              basePrice = 150;
+            } else {
+              switch (selection.route) {
+                case "city": basePrice = prices.city; routeDesc = "City Tour"; break;
+                case "oneway": basePrice = prices.oneway; routeDesc = "One Way (Vung Tau)"; break;
+                case "hocham_oneway": basePrice = prices.oneway; routeDesc = "One Way (Ho Tram)"; break;
+                case "phanthiet_oneway": basePrice = Math.round(prices.oneway * 1.6 * 0.85); routeDesc = "One Way (Phan Thiet)"; break;
+                case "roundtrip": basePrice = prices.roundtrip; routeDesc = "Round Trip"; break;
+                case "city_pickup_drop": basePrice = prices.city * 1.5; routeDesc = "Pickup/Drop + City"; break;
+              }
+            }
+            if (!routeDesc) {
+              switch (selection.route) {
+                case "city": routeDesc = "City Tour"; break;
+                case "oneway": routeDesc = "One Way (Vung Tau)"; break;
+                case "hocham_oneway": routeDesc = "One Way (Ho Tram)"; break;
+                case "phanthiet_oneway": routeDesc = "One Way (Phan Thiet)"; break;
+                case "roundtrip": routeDesc = "Round Trip"; break;
+                case "city_pickup_drop": routeDesc = "Pickup/Drop + City"; break;
+              }
             }
             vehicleTotalPrice += basePrice;
             vehicleDescriptions.push(`${selection.date}: ${selection.type.replace(/_/g, " ")} (${routeDesc})`);
