@@ -268,8 +268,8 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="relative border-2 border-slate-200 bg-slate-100 rounded-2xl my-4 shadow-inner overflow-hidden">
-                    <div className="space-y-6 overflow-y-auto p-6 custom-scrollbar isolate" style={{ maxHeight: "400px", minHeight: "240px", position: "relative" }}>
+                  <div className="relative border-2 border-slate-200 bg-slate-100 rounded-2xl my-4 overflow-hidden shadow-inner isolate">
+                    <div className="space-y-6 overflow-y-auto p-6 custom-scrollbar" style={{ maxHeight: "500px", minHeight: "240px" }}>
                       {values.vehicle?.selections?.map((selection, index) => (
                         <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 shadow-sm items-end transition-all hover:border-primary/30 hover:shadow-md">
                           <div className="md:col-span-2 space-y-2">
@@ -377,8 +377,8 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="relative border-2 border-slate-200 bg-slate-100 rounded-2xl my-4 overflow-hidden shadow-inner">
-                    <div className="space-y-6 overflow-y-auto p-6 custom-scrollbar isolate" style={{ maxHeight: "400px", minHeight: "240px", position: "relative" }}>
+                  <div className="relative border-2 border-slate-200 bg-slate-100 rounded-2xl my-4 overflow-hidden shadow-inner isolate">
+                    <div className="space-y-6 overflow-y-auto p-6 custom-scrollbar" style={{ maxHeight: "500px", minHeight: "240px" }}>
                       {values.golf?.selections?.map((selection, index) => (
                         <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 shadow-sm items-end transition-all hover:border-primary/30 hover:shadow-md">
                           <div className="md:col-span-3 space-y-2">
