@@ -10,6 +10,7 @@ import { calculateQuoteSchema, type CalculateQuoteRequest, type QuoteBreakdown }
 
 import { SectionCard } from "@/components/SectionCard";
 import { QuoteSummary } from "@/components/QuoteSummary";
+import { LanguageSelector } from "@/components/LanguageSelector";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -464,6 +465,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      
+      <LanguageSelector />
     </div>
   );
 }
