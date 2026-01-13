@@ -19,7 +19,19 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-import { Plane, Car, Users, User, CalendarIcon, Check, Plus } from "lucide-react";
+import { 
+  Plane, 
+  Car, 
+  Users, 
+  User, 
+  Calendar as CalendarIcon, 
+  Check, 
+  Plus,
+  Phone,
+  MessageSquare,
+  ExternalLink,
+  Globe
+} from "lucide-react";
 
 export default function Home() {
   const { toast } = useToast();
@@ -509,6 +521,71 @@ export default function Home() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Contact Information Footer */}
+      <footer className="bg-white border-t border-slate-200 mt-20 pb-20 pt-12">
+        <div className="container mx-auto px-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <h3 className="font-display font-bold text-lg text-primary">연락처 (베트남)</h3>
+              <div className="space-y-2">
+                <a href="tel:0899326273" className="flex items-center text-slate-600 hover:text-primary transition-colors gap-2">
+                  <Phone className="w-4 h-4" />
+                  <span>089-932-6273</span>
+                </a>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="font-display font-bold text-lg text-primary">연락처 (한국)</h3>
+              <div className="space-y-2">
+                <a href="tel:01090774860" className="flex items-center text-slate-600 hover:text-primary transition-colors gap-2">
+                  <Phone className="w-4 h-4" />
+                  <span>010-9077-4860</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-display font-bold text-lg text-primary">SNS & 메신저</h3>
+              <div className="space-y-2">
+                <div className="flex items-center text-slate-600 gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>카톡 ID: vungtau</span>
+                </div>
+                <a 
+                  href="http://pf.kakao.com/_TuxoxfG" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-blue-600 hover:underline gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>카카오톡 채널</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-display font-bold text-lg text-primary">공식 채널</h3>
+              <div className="space-y-2">
+                <a 
+                  href="https://m.blog.naver.com/vungtausaver" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-green-600 hover:underline gap-2"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>네이버 블로그</span>
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm">
+            © 2026 Vung Tau Travel Saver. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
