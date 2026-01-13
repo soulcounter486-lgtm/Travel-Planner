@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { useRef } from "react";
 import { useLanguage } from "@/lib/i18n";
+import { useQuery } from "@tanstack/react-query";
 
 interface QuoteSummaryProps {
   breakdown: QuoteBreakdown | null;
@@ -18,6 +19,16 @@ interface QuoteSummaryProps {
 export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSummaryProps) {
   const { t } = useLanguage();
   const summaryRef = useRef<HTMLDivElement>(null);
+
+  const { data: exchangeRateData } = useQuery<{ rate: number; timestamp: number }>({
+    queryKey: ["/api/exchange-rate"],
+    staleTime: 12 * 60 * 60 * 1000,
+  });
+  const exchangeRate = exchangeRateData?.rate || 1350;
+  const formatKRW = (usd: number) => {
+    const krw = Math.round(usd * exchangeRate);
+    return new Intl.NumberFormat("ko-KR").format(krw);
+  };
 
   const handleDownloadImage = async () => {
     if (!summaryRef.current || !breakdown) return;
@@ -72,6 +83,12 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               <span className="text-sm font-medium text-muted-foreground">{t("quote.title")}</span>
               <span className="text-4xl text-primary font-bold">
                 ${breakdown.total.toLocaleString()}
+              </span>
+              <span className="text-xl text-primary/70 font-semibold">
+                ≈ ₩{formatKRW(breakdown.total)}
+              </span>
+              <span className="text-xs text-muted-foreground mt-1">
+                {t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD
               </span>
             </CardTitle>
           </CardHeader>

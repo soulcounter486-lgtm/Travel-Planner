@@ -3,6 +3,7 @@ import { format, addDays, parseISO, getDay } from "date-fns";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 
 import { useLanguage } from "@/lib/i18n";
 import { useCalculateQuote, useCreateQuote } from "@/hooks/use-quotes";
@@ -48,6 +49,16 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
+
+  const { data: exchangeRateData } = useQuery<{ rate: number; timestamp: number }>({
+    queryKey: ["/api/exchange-rate"],
+    staleTime: 12 * 60 * 60 * 1000,
+  });
+  const exchangeRate = exchangeRateData?.rate || 1350;
+  const formatKRW = (usd: number) => {
+    const krw = Math.round(usd * exchangeRate);
+    return new Intl.NumberFormat("ko-KR").format(krw);
+  };
 
   const form = useForm<CalculateQuoteRequest>({
     resolver: zodResolver(calculateQuoteSchema),
@@ -336,7 +347,10 @@ export default function Home() {
                     <div className="mt-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold">{t("villa.estimatedPrice")}</span>
-                        <span className="text-2xl font-bold">${villaEstimate.price}</span>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold">${villaEstimate.price}</span>
+                          <div className="text-sm text-blue-200">≈ ₩{formatKRW(villaEstimate.price)}</div>
+                        </div>
                       </div>
                       <div className="text-xs text-blue-100 space-y-0.5">
                         {villaEstimate.details.map((d, i) => (
@@ -346,8 +360,9 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100">
-                        {villaEstimate.nights}{t("villa.nightsTotal")}
+                      <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100 flex justify-between">
+                        <span>{villaEstimate.nights}{t("villa.nightsTotal")}</span>
+                        <span className="text-blue-200">{t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD</span>
                       </div>
                     </div>
                   )}
@@ -498,7 +513,10 @@ export default function Home() {
                     <div className="mt-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white p-4 rounded-xl shadow-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold">{t("golf.estimatedPrice")}</span>
-                        <span className="text-2xl font-bold">${golfEstimate.price}</span>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold">${golfEstimate.price}</span>
+                          <div className="text-sm text-emerald-200">≈ ₩{formatKRW(golfEstimate.price)}</div>
+                        </div>
                       </div>
                       <div className="text-xs text-emerald-100 space-y-1">
                         {golfEstimate.details.map((d, i) => (
@@ -508,8 +526,9 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
-                      <div className="mt-2 pt-2 border-t border-emerald-400/30 text-xs text-emerald-100">
-                        {t("golf.caddyTipNote")}
+                      <div className="mt-2 pt-2 border-t border-emerald-400/30 text-xs text-emerald-100 flex justify-between">
+                        <span>{t("golf.caddyTipNote")}</span>
+                        <span className="text-emerald-200">{t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD</span>
                       </div>
                     </div>
                   )}
@@ -522,7 +541,10 @@ export default function Home() {
                     <div className="mt-4 bg-gradient-to-r from-teal-600 to-teal-500 text-white p-4 rounded-xl shadow-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold">{t("guide.estimatedPrice")}</span>
-                        <span className="text-2xl font-bold">${guideEstimate.price}</span>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold">${guideEstimate.price}</span>
+                          <div className="text-sm text-teal-200">≈ ₩{formatKRW(guideEstimate.price)}</div>
+                        </div>
                       </div>
                       <div className="text-xs text-teal-100 space-y-1">
                         <div className="flex justify-between">
@@ -538,6 +560,9 @@ export default function Home() {
                         <div className="flex justify-between pt-1 border-t border-teal-400/30">
                           <span>{guideEstimate.days}{t("guide.daysTotal")}</span>
                           <span>${guideEstimate.dailyTotal} × {guideEstimate.days} = ${guideEstimate.price}</span>
+                        </div>
+                        <div className="flex justify-end pt-1 text-teal-200">
+                          <span>{t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD</span>
                         </div>
                       </div>
                     </div>

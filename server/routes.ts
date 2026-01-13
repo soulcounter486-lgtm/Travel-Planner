@@ -6,10 +6,38 @@ import { z } from "zod";
 import { calculateQuoteSchema } from "@shared/schema";
 import { addDays, getDay, parseISO } from "date-fns";
 
+let exchangeRateCache: { rate: number; timestamp: number } | null = null;
+const CACHE_DURATION = 12 * 60 * 60 * 1000;
+
+async function getExchangeRate(): Promise<number> {
+  if (exchangeRateCache && Date.now() - exchangeRateCache.timestamp < CACHE_DURATION) {
+    return exchangeRateCache.rate;
+  }
+  try {
+    const response = await fetch("https://api.frankfurter.app/latest?from=USD&to=KRW");
+    const data = await response.json() as { rates: { KRW: number } };
+    const rate = data.rates?.KRW || 1350;
+    exchangeRateCache = { rate, timestamp: Date.now() };
+    return rate;
+  } catch (error) {
+    console.error("Exchange rate fetch error:", error);
+    return exchangeRateCache?.rate || 1350;
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+
+  app.get("/api/exchange-rate", async (req, res) => {
+    try {
+      const rate = await getExchangeRate();
+      res.json({ rate, timestamp: exchangeRateCache?.timestamp || Date.now() });
+    } catch (error) {
+      res.status(500).json({ rate: 1350, timestamp: Date.now() });
+    }
+  });
 
   const vehiclePrices: Record<string, { city: number; oneway: number; roundtrip: number }> = {
     "7_seater": { city: 100, oneway: 80, roundtrip: 150 },

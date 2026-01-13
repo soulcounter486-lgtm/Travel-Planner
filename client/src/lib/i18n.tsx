@@ -123,6 +123,7 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Quote Summary
     "quote.title": "예상 견적 금액",
+    "common.exchangeRate": "현재 환율",
     "quote.villa": "풀빌라 숙박",
     "quote.vehicle": "차량 서비스",
     "quote.golf": "골프 라운딩",
@@ -292,6 +293,7 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Quote Summary
     "quote.title": "Estimated Quote",
+    "common.exchangeRate": "Exchange Rate",
     "quote.villa": "Pool Villa Stay",
     "quote.vehicle": "Vehicle Service",
     "quote.golf": "Golf Round",
@@ -461,6 +463,7 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Quote Summary
     "quote.title": "预估报价",
+    "common.exchangeRate": "当前汇率",
     "quote.villa": "泳池别墅住宿",
     "quote.vehicle": "车辆服务",
     "quote.golf": "高尔夫球场",
@@ -630,6 +633,7 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Quote Summary
     "quote.title": "Báo giá ước tính",
+    "common.exchangeRate": "Tỷ giá hiện tại",
     "quote.villa": "Biệt thự hồ bơi",
     "quote.vehicle": "Dịch vụ xe",
     "quote.golf": "Chơi golf",
@@ -799,6 +803,7 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Quote Summary
     "quote.title": "Ориентировочная стоимость",
+    "common.exchangeRate": "Текущий курс",
     "quote.villa": "Вилла с бассейном",
     "quote.vehicle": "Транспортные услуги",
     "quote.golf": "Гольф",
@@ -968,6 +973,7 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Quote Summary
     "quote.title": "見積金額",
+    "common.exchangeRate": "現在の為替レート",
     "quote.villa": "プールヴィラ宿泊",
     "quote.vehicle": "車両サービス",
     "quote.golf": "ゴルフラウンド",
