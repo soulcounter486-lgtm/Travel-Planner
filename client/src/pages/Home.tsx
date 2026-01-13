@@ -204,7 +204,10 @@ export default function Home() {
                       />
                     </div>
                   </div>
-                  <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm"><p><strong>평일(일-목):</strong> $350 | <strong>금요일:</strong> $380 | <strong>토요일:</strong> $500</p></div>
+                  <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm">
+                    <p><strong>평일(일-목):</strong> $350 | <strong>금요일:</strong> $380 | <strong>토요일:</strong> $500</p>
+                    <p className="mt-1 text-xs text-blue-600/80">* 빌라 방갯수와 컨디션에 따라 가격은 변경될 수 있습니다.</p>
+                  </div>
                 </SectionCard>
               )}
             />
