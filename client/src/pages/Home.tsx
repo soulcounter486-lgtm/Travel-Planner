@@ -293,7 +293,7 @@ export default function Home() {
                                 <SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200">
                                   <SelectValue placeholder="선택" />
                                 </SelectTrigger>
-                                <SelectContent className="z-[9999]">
+                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
                                   <SelectItem value="7_seater">7인승 SUV</SelectItem>
                                   <SelectItem value="16_seater">16인승 밴</SelectItem>
                                   <SelectItem value="9_limo">9인승 리무진</SelectItem>
@@ -324,7 +324,7 @@ export default function Home() {
                                 <SelectTrigger className="h-10 rounded-lg text-sm bg-white border-slate-200">
                                   <SelectValue placeholder="선택" />
                                 </SelectTrigger>
-                                <SelectContent className="z-[9999]">
+                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
                                   <SelectItem value="city">붕따우 시내투어</SelectItem>
                                   <SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem>
                                   <SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem>
