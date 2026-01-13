@@ -89,7 +89,7 @@ export default function Home() {
     const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
     const newSelections = [
       ...currentSelections,
-      { date: format(nextDate, "yyyy-MM-dd"), course: "paradise" as const, players: 1 }
+      { date: format(nextDate, "yyyy-MM-dd"), course: "paradise" as const, players: "" as any }
     ];
     form.setValue("golf.selections", [...newSelections], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
