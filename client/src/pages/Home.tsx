@@ -97,6 +97,57 @@ export default function Home() {
     }
   }, [values.villa?.enabled, values.villa?.checkIn, values.villa?.checkOut, t]);
 
+  const golfEstimate = useMemo(() => {
+    if (!values.golf?.enabled || !values.golf?.selections || values.golf.selections.length === 0) {
+      return { price: 0, details: [] as { date: string; course: string; players: number; unitPrice: number; subtotal: number; tip: string }[] };
+    }
+    try {
+      let totalPrice = 0;
+      const details: { date: string; course: string; players: number; unitPrice: number; subtotal: number; tip: string }[] = [];
+      for (const selection of values.golf.selections) {
+        if (!selection?.date || !selection?.course) continue;
+        const date = parseISO(selection.date);
+        if (isNaN(date.getTime())) continue;
+        const dayOfWeek = getDay(date);
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const players = Number(selection.players) || 1;
+        let price = 0;
+        let tip = "";
+        let courseName = "";
+        switch (selection.course) {
+          case "paradise":
+            price = isWeekend ? 100 : 80;
+            tip = "40만동";
+            courseName = t("golf.course.paradise");
+            break;
+          case "chouduc":
+            price = isWeekend ? 120 : 80;
+            tip = "50만동";
+            courseName = t("golf.course.chouduc");
+            break;
+          case "hocham":
+            price = isWeekend ? 200 : 130;
+            tip = "50만동";
+            courseName = t("golf.course.hocham");
+            break;
+        }
+        const subtotal = price * players;
+        totalPrice += subtotal;
+        details.push({
+          date: format(date, "M/d"),
+          course: courseName,
+          players,
+          unitPrice: price,
+          subtotal,
+          tip
+        });
+      }
+      return { price: totalPrice, details };
+    } catch {
+      return { price: 0, details: [] as { date: string; course: string; players: number; unitPrice: number; subtotal: number; tip: string }[] };
+    }
+  }, [values.golf?.enabled, values.golf?.selections, t]);
+
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
     const lastDateStr = currentSelections.length > 0 
@@ -429,6 +480,25 @@ export default function Home() {
                       <Button type="button" variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white" onClick={handleAddGolfDay}><Plus className="mr-2 h-4 w-4" /> {t("golf.addDay")}</Button>
                     </div>
                   </div>
+                  {golfEstimate.price > 0 && (
+                    <div className="mt-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white p-4 rounded-xl shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">{t("golf.estimatedPrice")}</span>
+                        <span className="text-2xl font-bold">${golfEstimate.price}</span>
+                      </div>
+                      <div className="text-xs text-emerald-100 space-y-1">
+                        {golfEstimate.details.map((d, i) => (
+                          <div key={i} className="flex justify-between items-center">
+                            <span>{d.date} {d.course}</span>
+                            <span>${d.unitPrice} × {d.players}{t("golf.person")} = ${d.subtotal}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-emerald-400/30 text-xs text-emerald-100">
+                        {t("golf.caddyTipNote")}
+                      </div>
+                    </div>
+                  )}
                 </SectionCard>
               )}
             />
