@@ -63,7 +63,7 @@ export default function Home() {
       }
     ];
     
-    form.setValue("vehicle.selections", newSelections, { shouldValidate: true });
+    form.setValue("vehicle.selections", [...newSelections], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
 
   const handleRemoveVehicleDay = (index: number) => {
@@ -260,7 +260,7 @@ export default function Home() {
                 >
                   <div className="space-y-4">
                     {values.vehicle?.selections?.map((selection, index) => (
-                      <div key={`${index}-${selection.date}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
+                      <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
                         <div className="md:col-span-2 space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-500">날짜</Label>
                           <Controller
