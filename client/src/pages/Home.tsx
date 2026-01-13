@@ -267,12 +267,21 @@ export default function Home() {
                       </div>
                       <div className="flex flex-col justify-center bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
                         <h4 className="font-bold text-indigo-900 mb-2 underline underline-offset-4 decoration-indigo-200">차량 서비스 안내</h4>
-                        <ul className="text-sm text-indigo-800 space-y-1.5 list-disc list-inside">
-                          <li>인원수에 맞는 다양한 차종 보유</li>
-                          <li>숙련된 전담 기사님 배정</li>
-                          <li>호치민 공항 픽업 및 시내 관광 가능</li>
-                          <li>청결하고 쾌적한 최신형 리무진</li>
-                        </ul>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs font-bold text-indigo-900 mb-1">[포함 사항]</p>
+                            <ul className="text-[11px] text-indigo-800 space-y-0.5 list-disc list-inside">
+                              <li>운전기사, 유류비, 통행료 및 팁</li>
+                              <li>대기료, 야간 할증</li>
+                            </ul>
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-indigo-900 mb-1">[불포함 사항]</p>
+                            <ul className="text-[11px] text-indigo-800 space-y-0.5 list-disc list-inside">
+                              <li>개별 여행자 보험</li>
+                            </ul>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-4">
