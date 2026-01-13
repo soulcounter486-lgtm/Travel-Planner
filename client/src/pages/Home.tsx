@@ -269,7 +269,7 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto p-1 pr-2 custom-scrollbar">
+                  <div className="space-y-4 max-h-[800px] overflow-y-auto p-1 pr-2 custom-scrollbar">
                     {values.vehicle?.selections?.map((selection, index) => (
                       <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
                         <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`vehicle.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />)} /></div>
@@ -289,7 +289,7 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto p-1 pr-2 custom-scrollbar">
+                  <div className="space-y-4 max-h-[800px] overflow-y-auto p-1 pr-2 custom-scrollbar">
                     {values.golf?.selections?.map((selection, index) => (
                       <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
                         <div className="md:col-span-3 space-y-1.5"><Label className="text-xs font-semibold text-slate-500">날짜</Label><Controller control={form.control} name={`golf.selections.${index}.date`} render={({ field }) => (<Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />)} /></div>
