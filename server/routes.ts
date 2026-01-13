@@ -12,7 +12,7 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   const vehiclePrices: Record<string, { city: number; oneway: number; roundtrip: number }> = {
-    "7_seater": { city: 100, oneway: 110, roundtrip: 150 },
+    "7_seater": { city: 100, oneway: 80, roundtrip: 150 },
     "16_seater": { city: 130, oneway: 130, roundtrip: 250 },
     "9_limo": { city: 160, oneway: 160, roundtrip: 300 },
     "9_lux_limo": { city: 210, oneway: 210, roundtrip: 400 },
