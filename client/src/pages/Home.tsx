@@ -155,7 +155,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-12 gap-8">
           
           {/* Left Column: Form Inputs */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-6 pb-20">
             
             {/* Villa Section */}
             <Controller
@@ -258,7 +258,7 @@ export default function Home() {
                   onToggle={field.onChange}
                   gradient="from-indigo-500/10"
                 >
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto p-1 pr-2 custom-scrollbar">
                     {values.vehicle?.selections?.map((selection, index) => (
                       <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-3 p-4 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end">
                         <div className="md:col-span-2 space-y-1.5">
