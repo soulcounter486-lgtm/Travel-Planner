@@ -36,33 +36,38 @@ export async function registerRoutes(
 
       // 1. Villa Calculation
       if (input.villa?.enabled && input.villa.checkIn && input.villa.checkOut) {
-        let current = parseISO(input.villa.checkIn);
-        const end = parseISO(input.villa.checkOut);
-        while (current < end) {
-          const dayOfWeek = getDay(current);
-          let dailyPrice = 350;
-          let dayName = "Weekday";
-          if (dayOfWeek === 5) {
-            dailyPrice = 380;
-            dayName = "Friday";
-          } else if (dayOfWeek === 6) {
-            dailyPrice = 500;
-            dayName = "Saturday";
-          } else if (dayOfWeek === 0) {
-            dailyPrice = 350;
-            dayName = "Sunday (Weekday rate)";
+        try {
+          let current = parseISO(input.villa.checkIn);
+          const end = parseISO(input.villa.checkOut);
+          while (current < end) {
+            const dayOfWeek = getDay(current);
+            let dailyPrice = 350;
+            let dayName = "Weekday";
+            if (dayOfWeek === 5) {
+              dailyPrice = 380;
+              dayName = "Friday";
+            } else if (dayOfWeek === 6) {
+              dailyPrice = 500;
+              dayName = "Saturday";
+            } else if (dayOfWeek === 0) {
+              dailyPrice = 350;
+              dayName = "Sunday (Weekday rate)";
+            }
+            breakdown.villa.price += dailyPrice;
+            breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
+            current = addDays(current, 1);
           }
-          breakdown.villa.price += dailyPrice;
-          breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
-          current = addDays(current, 1);
+        } catch (e) {
+          console.error("Villa calculation error:", e);
         }
       }
 
       // 2. Vehicle Calculation
-      if (input.vehicle?.enabled && input.vehicle.selections) {
+      if (input.vehicle?.enabled && input.vehicle.selections && input.vehicle.selections.length > 0) {
         let vehicleTotalPrice = 0;
         const vehicleDescriptions: string[] = [];
         for (const selection of input.vehicle.selections) {
+          if (!selection.date || !selection.type || !selection.route) continue;
           const prices = vehiclePrices[selection.type];
           if (prices) {
             let basePrice = 0;
@@ -82,35 +87,40 @@ export async function registerRoutes(
       }
 
       // 3. Golf Calculation
-      if (input.golf?.enabled && input.golf.selections) {
+      if (input.golf?.enabled && input.golf.selections && input.golf.selections.length > 0) {
         let golfTotalPrice = 0;
         const golfDescriptions: string[] = [];
         for (const selection of input.golf.selections) {
-          const date = parseISO(selection.date);
-          const dayOfWeek = getDay(date);
-          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-          let price = 0;
-          let tip = "";
-          let courseName = "";
-          switch (selection.course) {
-            case "paradise":
-              price = isWeekend ? 100 : 80;
-              tip = "40만동";
-              courseName = "파라다이스";
-              break;
-            case "chouduc":
-              price = isWeekend ? 120 : 80;
-              tip = "50만동";
-              courseName = "쩌우득";
-              break;
-            case "hocham":
-              price = isWeekend ? 200 : 130;
-              tip = "50만동";
-              courseName = "호짬";
-              break;
+          if (!selection.date || !selection.course) continue;
+          try {
+            const date = parseISO(selection.date);
+            const dayOfWeek = getDay(date);
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            let price = 0;
+            let tip = "";
+            let courseName = "";
+            switch (selection.course) {
+              case "paradise":
+                price = isWeekend ? 100 : 80;
+                tip = "40만동";
+                courseName = "파라다이스";
+                break;
+              case "chouduc":
+                price = isWeekend ? 120 : 80;
+                tip = "50만동";
+                courseName = "쩌우득";
+                break;
+              case "hocham":
+                price = isWeekend ? 200 : 130;
+                tip = "50만동";
+                courseName = "호짬";
+                break;
+            }
+            golfTotalPrice += price;
+            golfDescriptions.push(`${selection.date}: ${courseName} ($${price}, 캐디팁: ${tip})`);
+          } catch (e) {
+            console.error("Golf selection calculation error:", e);
           }
-          golfTotalPrice += price;
-          golfDescriptions.push(`${selection.date}: ${courseName} ($${price}, 캐디팁: ${tip})`);
         }
         breakdown.golf.price = golfTotalPrice;
         breakdown.golf.description = golfDescriptions.join(" | ");

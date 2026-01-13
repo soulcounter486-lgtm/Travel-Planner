@@ -101,20 +101,34 @@ export default function Home() {
     const subscription = form.watch((value) => {
       const timer = setTimeout(() => {
         try {
-          // Prepare payload: if villa is enabled but dates are missing, 
-          // we treat it as villa disabled for the calculation to allow other items to sum up
-          const calcValue = { ...value };
-          if (calcValue.villa?.enabled && (!calcValue.villa?.checkIn || !calcValue.villa?.checkOut)) {
-            // Create a copy to avoid mutating the form state
-            calcValue.villa = { ...calcValue.villa, enabled: false };
-          }
-
-          const payload = calculateQuoteSchema.parse(calcValue);
+          // Send exactly what's in the form, the backend should handle missing fields
+          const payload = calculateQuoteSchema.parse(value);
           calculateMutation.mutate(payload, {
             onSuccess: (data) => setBreakdown(data),
             onError: (error) => console.error("Calculation error", error)
           });
-        } catch (e) {}
+        } catch (e) {
+          // If Zod validation fails (e.g. required fields missing in enabled sections), 
+          // we still try to send a partial payload by disabling incomplete sections
+          try {
+            const partialValue = JSON.parse(JSON.stringify(value));
+            if (partialValue.villa?.enabled && (!partialValue.villa?.checkIn || !partialValue.villa?.checkOut)) {
+              partialValue.villa.enabled = false;
+            }
+            if (partialValue.vehicle?.enabled && (!partialValue.vehicle.selections || partialValue.vehicle.selections.length === 0)) {
+              partialValue.vehicle.enabled = false;
+            }
+            if (partialValue.golf?.enabled && (!partialValue.golf.selections || partialValue.golf.selections.length === 0)) {
+              partialValue.golf.enabled = false;
+            }
+            
+            const payload = calculateQuoteSchema.parse(partialValue);
+            calculateMutation.mutate(payload, {
+              onSuccess: (data) => setBreakdown(data),
+              onError: (error) => console.error("Calculation error", error)
+            });
+          } catch (innerE) {}
+        }
       }, 300);
       return () => clearTimeout(timer);
     });
