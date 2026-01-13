@@ -94,6 +94,31 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
             </motion.div>
           )}
 
+          {breakdown.golf.price > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-3"
+            >
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between font-semibold text-slate-800">
+                  <span>골프 라운딩</span>
+                  <span>${breakdown.golf.price}</span>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-0.5 pl-1 italic">
+                  {breakdown.golf.description.split(" | ").map((detail, idx) => (
+                    <p key={idx} className="flex items-center gap-2">
+                      <span className="w-1 h-1 rounded-full bg-emerald-500/40" />
+                      {detail}
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <Separator className="bg-border/50" />
+            </motion.div>
+          )}
+
           {breakdown.ecoGirl.price > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
