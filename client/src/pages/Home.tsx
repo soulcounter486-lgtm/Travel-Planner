@@ -101,8 +101,15 @@ export default function Home() {
     const subscription = form.watch((value) => {
       const timer = setTimeout(() => {
         try {
-          if (value.villa?.enabled && (!value.villa?.checkIn || !value.villa?.checkOut)) return;
-          const payload = calculateQuoteSchema.parse(value);
+          // Prepare payload: if villa is enabled but dates are missing, 
+          // we treat it as villa disabled for the calculation to allow other items to sum up
+          const calcValue = { ...value };
+          if (calcValue.villa?.enabled && (!calcValue.villa?.checkIn || !calcValue.villa?.checkOut)) {
+            // Create a copy to avoid mutating the form state
+            calcValue.villa = { ...calcValue.villa, enabled: false };
+          }
+
+          const payload = calculateQuoteSchema.parse(calcValue);
           calculateMutation.mutate(payload, {
             onSuccess: (data) => setBreakdown(data),
             onError: (error) => console.error("Calculation error", error)
