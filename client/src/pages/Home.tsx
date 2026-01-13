@@ -244,128 +244,130 @@ export default function Home() {
                   onToggle={field.onChange}
                   gradient="from-indigo-500/10"
                 >
-                  <div className="grid md:grid-cols-2 gap-6 mb-6">
-                    <div className="relative group overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video">
-                      <img 
-                        src={vehicleImg} 
-                        alt="프라이빗 차량" 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                        <a 
-                          href="https://m.blog.naver.com/vungtausaver/223352172674" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white text-primary px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300"
-                        >
-                          차량 상세정보 보기 <ExternalLink className="w-4 h-4" />
-                        </a>
-                      </div>
-                    </div>
-                    <div className="flex flex-col justify-center bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                      <h4 className="font-bold text-indigo-900 mb-2">프라이빗 이동 서비스</h4>
-                      <p className="text-sm text-indigo-800 leading-relaxed">
-                        호치민 공항 픽업부터 붕따우 시내 투어까지, 인원수에 맞는 다양한 차종(7인승~29인승)으로 안전하고 편안하게 모십니다.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto p-1 pr-2 custom-scrollbar">
-                    {values.vehicle?.selections?.map((selection, index) => (
-                      <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
-                        <div className="md:col-span-2 space-y-2">
-                          <Label className="text-sm font-semibold text-slate-600">이용 날짜</Label>
-                          <Controller
-                            control={form.control}
-                            name={`vehicle.selections.${index}.date`}
-                            render={({ field }) => (
-                              <Input 
-                                type="date"
-                                {...field}
-                                className="h-12 rounded-lg text-base border-slate-200 focus:ring-primary/20"
-                              />
-                            )}
-                          />
-                        </div>
-                        <div className="md:col-span-2 space-y-2">
-                          <Label className="text-sm font-semibold text-slate-600">차량 종류 선택</Label>
-                          <Controller
-                            control={form.control}
-                            name={`vehicle.selections.${index}.type`}
-                            render={({ field }) => (
-                              <Select 
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  if (document.activeElement instanceof HTMLElement) {
-                                    document.activeElement.blur();
-                                  }
-                                }} 
-                                defaultValue={field.value}
-                              >
-                                <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
-                                  <SelectValue placeholder="선택" />
-                                </SelectTrigger>
-                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
-                                  <SelectItem value="7_seater">7인승 SUV</SelectItem>
-                                  <SelectItem value="16_seater">16인승 밴</SelectItem>
-                                  <SelectItem value="9_limo">9인승 리무진</SelectItem>
-                                  <SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem>
-                                  <SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem>
-                                  <SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem>
-                                  <SelectItem value="29_seater">29인승 버스</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                        </div>
-                        <div className="md:col-span-2 space-y-2">
-                          <Label className="text-sm font-semibold text-slate-600">이동 경로 선택</Label>
-                          <Controller
-                            control={form.control}
-                            name={`vehicle.selections.${index}.route`}
-                            render={({ field }) => (
-                              <Select 
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  if (document.activeElement instanceof HTMLElement) {
-                                    document.activeElement.blur();
-                                  }
-                                }} 
-                                defaultValue={field.value}
-                              >
-                                <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
-                                  <SelectValue placeholder="선택" />
-                                </SelectTrigger>
-                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
-                                  <SelectItem value="city">붕따우 시내투어</SelectItem>
-                                  <SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem>
-                                  <SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem>
-                                  <SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                        </div>
-                        <div className="md:col-span-1 flex justify-end">
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-12 w-12 rounded-lg"
-                             onClick={() => handleRemoveVehicleDay(index)}
-                             type="button"
-                           >
-                             <Plus className="w-5 h-5 rotate-45" />
-                           </Button>
+                  <div className="max-h-[800px] overflow-y-auto p-1 pr-2 custom-scrollbar">
+                    <div className="grid md:grid-cols-2 gap-6 mb-6">
+                      <div className="relative group overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video">
+                        <img 
+                          src={vehicleImg} 
+                          alt="프라이빗 차량" 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                          <a 
+                            href="https://m.blog.naver.com/vungtausaver/223352172674" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="bg-white/90 hover:bg-white text-primary px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300"
+                          >
+                            차량 상세정보 보기 <ExternalLink className="w-4 h-4" />
+                          </a>
                         </div>
                       </div>
-                    ))}
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full h-14 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white text-base font-semibold"
-                      onClick={handleAddVehicleDay}
-                    >
-                      <Plus className="mr-2 h-5 w-5" /> 차량 이용일 추가
-                    </Button>
+                      <div className="flex flex-col justify-center bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                        <h4 className="font-bold text-indigo-900 mb-2">프라이빗 이동 서비스</h4>
+                        <p className="text-sm text-indigo-800 leading-relaxed">
+                          호치민 공항 픽업부터 붕따우 시내 투어까지, 인원수에 맞는 다양한 차종(7인승~29인승)으로 안전하고 편안하게 모십니다.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      {values.vehicle?.selections?.map((selection, index) => (
+                        <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
+                          <div className="md:col-span-2 space-y-2">
+                            <Label className="text-sm font-semibold text-slate-600">이용 날짜</Label>
+                            <Controller
+                              control={form.control}
+                              name={`vehicle.selections.${index}.date`}
+                              render={({ field }) => (
+                                <Input 
+                                  type="date"
+                                  {...field}
+                                  className="h-12 rounded-lg text-base border-slate-200 focus:ring-primary/20"
+                                />
+                              )}
+                            />
+                          </div>
+                          <div className="md:col-span-2 space-y-2">
+                            <Label className="text-sm font-semibold text-slate-600">차량 종류 선택</Label>
+                            <Controller
+                              control={form.control}
+                              name={`vehicle.selections.${index}.type`}
+                              render={({ field }) => (
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    if (document.activeElement instanceof HTMLElement) {
+                                      document.activeElement.blur();
+                                    }
+                                  }} 
+                                  defaultValue={field.value}
+                                >
+                                  <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
+                                    <SelectValue placeholder="선택" />
+                                  </SelectTrigger>
+                                  <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                    <SelectItem value="7_seater">7인승 SUV</SelectItem>
+                                    <SelectItem value="16_seater">16인승 밴</SelectItem>
+                                    <SelectItem value="9_limo">9인승 리무진</SelectItem>
+                                    <SelectItem value="9_lux_limo">9인승 럭셔리 리무진</SelectItem>
+                                    <SelectItem value="12_lux_limo">12인승 럭셔리 리무진</SelectItem>
+                                    <SelectItem value="16_lux_limo">16인승 럭셔리 리무진</SelectItem>
+                                    <SelectItem value="29_seater">29인승 버스</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                          <div className="md:col-span-2 space-y-2">
+                            <Label className="text-sm font-semibold text-slate-600">이동 경로 선택</Label>
+                            <Controller
+                              control={form.control}
+                              name={`vehicle.selections.${index}.route`}
+                              render={({ field }) => (
+                                <Select 
+                                  onValueChange={(value) => {
+                                    field.onChange(value);
+                                    if (document.activeElement instanceof HTMLElement) {
+                                      document.activeElement.blur();
+                                    }
+                                  }} 
+                                  defaultValue={field.value}
+                                >
+                                  <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
+                                    <SelectValue placeholder="선택" />
+                                  </SelectTrigger>
+                                  <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                    <SelectItem value="city">붕따우 시내투어</SelectItem>
+                                    <SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem>
+                                    <SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem>
+                                    <SelectItem value="city_pickup_drop">픽업/드랍 + 시내</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                          <div className="md:col-span-1 flex justify-end">
+                             <Button 
+                               variant="ghost" 
+                               size="icon" 
+                               className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-12 w-12 rounded-lg"
+                               onClick={() => handleRemoveVehicleDay(index)}
+                               type="button"
+                             >
+                               <Plus className="w-5 h-5 rotate-45" />
+                             </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full h-14 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white text-base font-semibold"
+                        onClick={handleAddVehicleDay}
+                      >
+                        <Plus className="mr-2 h-5 w-5" /> 차량 이용일 추가
+                      </Button>
+                    </div>
                   </div>
                 </SectionCard>
               )}
@@ -376,68 +378,74 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto p-1 pr-2 custom-scrollbar">
-                    {values.golf?.selections?.map((selection, index) => (
-                      <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
-                        <div className="md:col-span-3 space-y-2">
-                          <Label className="text-sm font-semibold text-slate-600">라운딩 날짜</Label>
-                          <Controller
-                            control={form.control}
-                            name={`golf.selections.${index}.date`}
-                            render={({ field }) => (
-                              <Input 
-                                type="date"
-                                {...field}
-                                className="h-12 rounded-lg text-base border-slate-200 focus:ring-primary/20"
-                              />
-                            )}
-                          />
+                  <div className="max-h-[800px] overflow-y-auto p-1 pr-2 custom-scrollbar">
+                    <div className="space-y-4">
+                      {values.golf?.selections?.map((selection, index) => (
+                        <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
+                          <div className="md:col-span-3 space-y-2">
+                            <Label className="text-sm font-semibold text-slate-600">라운딩 날짜</Label>
+                            <Controller
+                              control={form.control}
+                              name={`golf.selections.${index}.date`}
+                              render={({ field }) => (
+                                <Input 
+                                  type="date"
+                                  {...field}
+                                  className="h-12 rounded-lg text-base border-slate-200 focus:ring-primary/20"
+                                />
+                              )}
+                            />
+                          </div>
+                          <div className="md:col-span-3 space-y-2">
+                            <Label className="text-sm font-semibold text-slate-600">골프장 선택</Label>
+                            <Controller
+                              control={form.control}
+                              name={`golf.selections.${index}.course`}
+                              render={({ field }) => (
+                                <Select 
+                                  onValueChange={field.onChange} 
+                                  defaultValue={field.value}
+                                >
+                                  <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
+                                    <SelectValue placeholder="선택" />
+                                  </SelectTrigger>
+                                  <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                    <SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem>
+                                    <SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem>
+                                    <SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                          <div className="md:col-span-1 flex justify-end">
+                             <Button 
+                               variant="ghost" 
+                               size="icon" 
+                               className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-12 w-12 rounded-lg"
+                               onClick={() => handleRemoveGolfDay(index)}
+                               type="button"
+                             >
+                               <Plus className="w-5 h-5 rotate-45" />
+                             </Button>
+                          </div>
                         </div>
-                        <div className="md:col-span-3 space-y-2">
-                          <Label className="text-sm font-semibold text-slate-600">골프장 선택</Label>
-                          <Controller
-                            control={form.control}
-                            name={`golf.selections.${index}.course`}
-                            render={({ field }) => (
-                              <Select 
-                                onValueChange={field.onChange} 
-                                defaultValue={field.value}
-                              >
-                                <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
-                                  <SelectValue placeholder="선택" />
-                                </SelectTrigger>
-                                <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
-                                  <SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem>
-                                  <SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem>
-                                  <SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                        </div>
-                        <div className="md:col-span-1 flex justify-end">
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-12 w-12 rounded-lg"
-                             onClick={() => handleRemoveGolfDay(index)}
-                             type="button"
-                           >
-                             <Plus className="w-5 h-5 rotate-45" />
-                           </Button>
-                        </div>
-                      </div>
-                    ))}
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="w-full h-14 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white text-base font-semibold"
-                      onClick={handleAddGolfDay}
-                    >
-                      <Plus className="mr-2 h-5 w-5" /> 라운딩 일정 추가
-                    </Button>
+                      ))}
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full h-14 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white text-base font-semibold"
+                        onClick={handleAddGolfDay}
+                      >
+                        <Plus className="mr-2 h-5 w-5" /> 라운딩 일정 추가
+                      </Button>
+                    </div>
+                    <div className="mt-4 p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100">
+                      <p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p>
+                      <p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p>
+                      <p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p>
+                    </div>
                   </div>
-                  <div className="mt-4 p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100"><p><strong>* 포함사항:</strong> 그린피, 카트피(2인 1카트), 캐디피</p><p><strong>* 불포함(현장지불):</strong> 캐디팁 (파라다이스 40만동 / 쩌우득·호짬 50만동)</p><p><strong>* 주말요금 적용:</strong> 토요일, 일요일</p></div>
                 </SectionCard>
               )}
             />
