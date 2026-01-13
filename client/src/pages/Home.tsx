@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+import stockVillaImg from "@assets/stock_images/luxury_villa_with_pr_3e579b70.jpg";
 
 import { 
   Plane, 
@@ -176,32 +177,51 @@ export default function Home() {
               name="villa.enabled"
               render={({ field }) => (
                 <SectionCard title="럭셔리 풀빌라 숙박" icon={Plane} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-blue-500/10">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label>체크인 날짜</Label>
-                      <Controller
-                        control={form.control}
-                        name="villa.checkIn"
-                        render={({ field }) => (
-                          <Popover open={isCheckInOpen} onOpenChange={setIsCheckInOpen}>
-                            <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>날짜 선택</span>}</Button></PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckInOpen(false); }} initialFocus /></PopoverContent>
-                          </Popover>
-                        )}
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="relative group overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video">
+                      <img 
+                        src={stockVillaImg} 
+                        alt="럭셔리 풀빌라" 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                        <a 
+                          href="https://m.blog.naver.com/vungtausaver" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="bg-white/90 hover:bg-white text-primary px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300"
+                        >
+                          실제 빌라 사진 더보기 <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>체크아웃 날짜</Label>
-                      <Controller
-                        control={form.control}
-                        name="villa.checkOut"
-                        render={({ field }) => (
-                          <Popover open={isCheckOutOpen} onOpenChange={setIsCheckOutOpen}>
-                            <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>날짜 선택</span>}</Button></PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckOutOpen(false); }} initialFocus /></PopoverContent>
-                          </Popover>
-                        )}
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>체크인 날짜</Label>
+                        <Controller
+                          control={form.control}
+                          name="villa.checkIn"
+                          render={({ field }) => (
+                            <Popover open={isCheckInOpen} onOpenChange={setIsCheckInOpen}>
+                              <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>날짜 선택</span>}</Button></PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckInOpen(false); }} initialFocus /></PopoverContent>
+                            </Popover>
+                          )}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>체크아웃 날짜</Label>
+                        <Controller
+                          control={form.control}
+                          name="villa.checkOut"
+                          render={({ field }) => (
+                            <Popover open={isCheckOutOpen} onOpenChange={setIsCheckOutOpen}>
+                              <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>날짜 선택</span>}</Button></PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckOutOpen(false); }} initialFocus /></PopoverContent>
+                            </Popover>
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
                   <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm">
