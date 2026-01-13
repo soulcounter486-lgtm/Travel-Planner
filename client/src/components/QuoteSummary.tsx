@@ -17,17 +17,29 @@ interface QuoteSummaryProps {
 }
 
 export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSummaryProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const summaryRef = useRef<HTMLDivElement>(null);
-
-  const { data: exchangeRateData } = useQuery<{ rate: number; timestamp: number }>({
-    queryKey: ["/api/exchange-rate"],
+  const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
+    queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
   });
-  const exchangeRate = exchangeRateData?.rate || 1350;
-  const formatKRW = (usd: number) => {
-    const krw = Math.round(usd * exchangeRate);
-    return new Intl.NumberFormat("ko-KR").format(krw);
+
+  const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
+    ko: { code: "KRW", symbol: "₩", locale: "ko-KR" },
+    en: { code: "USD", symbol: "$", locale: "en-US" },
+    zh: { code: "CNY", symbol: "¥", locale: "zh-CN" },
+    vi: { code: "VND", symbol: "₫", locale: "vi-VN" },
+    ru: { code: "RUB", symbol: "₽", locale: "ru-RU" },
+    ja: { code: "JPY", symbol: "¥", locale: "ja-JP" },
+  };
+
+  const currencyInfo = languageCurrencyMap[language] || languageCurrencyMap.ko;
+  const exchangeRate = exchangeRatesData?.rates?.[currencyInfo.code] || 1;
+  
+  const formatLocalCurrency = (usd: number) => {
+    if (currencyInfo.code === "USD") return `$${usd.toLocaleString()}`;
+    const converted = Math.round(usd * exchangeRate);
+    return `${currencyInfo.symbol}${new Intl.NumberFormat(currencyInfo.locale).format(converted)}`;
   };
 
   const handleDownloadImage = async () => {
@@ -84,12 +96,16 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               <span className="text-4xl text-primary font-bold">
                 ${breakdown.total.toLocaleString()}
               </span>
-              <span className="text-xl text-primary/70 font-semibold">
-                ≈ ₩{formatKRW(breakdown.total)}
-              </span>
-              <span className="text-xs text-muted-foreground mt-1">
-                {t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD
-              </span>
+              {currencyInfo.code !== "USD" && (
+                <>
+                  <span className="text-xl text-primary/70 font-semibold">
+                    ≈ {formatLocalCurrency(breakdown.total)}
+                  </span>
+                  <span className="text-xs text-muted-foreground mt-1">
+                    {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
+                  </span>
+                </>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">

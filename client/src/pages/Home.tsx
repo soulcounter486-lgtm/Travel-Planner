@@ -50,14 +50,28 @@ export default function Home() {
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
 
-  const { data: exchangeRateData } = useQuery<{ rate: number; timestamp: number }>({
-    queryKey: ["/api/exchange-rate"],
+  const { language } = useLanguage();
+  const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
+    queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
   });
-  const exchangeRate = exchangeRateData?.rate || 1350;
-  const formatKRW = (usd: number) => {
-    const krw = Math.round(usd * exchangeRate);
-    return new Intl.NumberFormat("ko-KR").format(krw);
+
+  const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
+    ko: { code: "KRW", symbol: "₩", locale: "ko-KR" },
+    en: { code: "USD", symbol: "$", locale: "en-US" },
+    zh: { code: "CNY", symbol: "¥", locale: "zh-CN" },
+    vi: { code: "VND", symbol: "₫", locale: "vi-VN" },
+    ru: { code: "RUB", symbol: "₽", locale: "ru-RU" },
+    ja: { code: "JPY", symbol: "¥", locale: "ja-JP" },
+  };
+
+  const currencyInfo = languageCurrencyMap[language] || languageCurrencyMap.ko;
+  const exchangeRate = exchangeRatesData?.rates?.[currencyInfo.code] || 1;
+  
+  const formatLocalCurrency = (usd: number) => {
+    if (currencyInfo.code === "USD") return `$${usd.toLocaleString()}`;
+    const converted = Math.round(usd * exchangeRate);
+    return `${currencyInfo.symbol}${new Intl.NumberFormat(currencyInfo.locale).format(converted)}`;
   };
 
   const form = useForm<CalculateQuoteRequest>({
@@ -349,7 +363,9 @@ export default function Home() {
                         <span className="font-semibold">{t("villa.estimatedPrice")}</span>
                         <div className="text-right">
                           <span className="text-2xl font-bold">${villaEstimate.price}</span>
-                          <div className="text-sm text-blue-200">≈ ₩{formatKRW(villaEstimate.price)}</div>
+                          {currencyInfo.code !== "USD" && (
+                            <div className="text-sm text-blue-200">≈ {formatLocalCurrency(villaEstimate.price)}</div>
+                          )}
                         </div>
                       </div>
                       <div className="text-xs text-blue-100 space-y-0.5">
@@ -362,7 +378,9 @@ export default function Home() {
                       </div>
                       <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100 flex justify-between">
                         <span>{villaEstimate.nights}{t("villa.nightsTotal")}</span>
-                        <span className="text-blue-200">{t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD</span>
+                        {currencyInfo.code !== "USD" && (
+                          <span className="text-blue-200">{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -515,7 +533,9 @@ export default function Home() {
                         <span className="font-semibold">{t("golf.estimatedPrice")}</span>
                         <div className="text-right">
                           <span className="text-2xl font-bold">${golfEstimate.price}</span>
-                          <div className="text-sm text-emerald-200">≈ ₩{formatKRW(golfEstimate.price)}</div>
+                          {currencyInfo.code !== "USD" && (
+                            <div className="text-sm text-emerald-200">≈ {formatLocalCurrency(golfEstimate.price)}</div>
+                          )}
                         </div>
                       </div>
                       <div className="text-xs text-emerald-100 space-y-1">
@@ -528,7 +548,9 @@ export default function Home() {
                       </div>
                       <div className="mt-2 pt-2 border-t border-emerald-400/30 text-xs text-emerald-100 flex justify-between">
                         <span>{t("golf.caddyTipNote")}</span>
-                        <span className="text-emerald-200">{t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD</span>
+                        {currencyInfo.code !== "USD" && (
+                          <span className="text-emerald-200">{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -543,7 +565,9 @@ export default function Home() {
                         <span className="font-semibold">{t("guide.estimatedPrice")}</span>
                         <div className="text-right">
                           <span className="text-2xl font-bold">${guideEstimate.price}</span>
-                          <div className="text-sm text-teal-200">≈ ₩{formatKRW(guideEstimate.price)}</div>
+                          {currencyInfo.code !== "USD" && (
+                            <div className="text-sm text-teal-200">≈ {formatLocalCurrency(guideEstimate.price)}</div>
+                          )}
                         </div>
                       </div>
                       <div className="text-xs text-teal-100 space-y-1">
@@ -561,9 +585,11 @@ export default function Home() {
                           <span>{guideEstimate.days}{t("guide.daysTotal")}</span>
                           <span>${guideEstimate.dailyTotal} × {guideEstimate.days} = ${guideEstimate.price}</span>
                         </div>
-                        <div className="flex justify-end pt-1 text-teal-200">
-                          <span>{t("common.exchangeRate")}: ₩{exchangeRate.toLocaleString()}/USD</span>
-                        </div>
+                        {currencyInfo.code !== "USD" && (
+                          <div className="flex justify-end pt-1 text-teal-200">
+                            <span>{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

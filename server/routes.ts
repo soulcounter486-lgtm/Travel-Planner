@@ -6,22 +6,38 @@ import { z } from "zod";
 import { calculateQuoteSchema } from "@shared/schema";
 import { addDays, getDay, parseISO } from "date-fns";
 
-let exchangeRateCache: { rate: number; timestamp: number } | null = null;
+let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 12 * 60 * 60 * 1000;
 
-async function getExchangeRate(): Promise<number> {
-  if (exchangeRateCache && Date.now() - exchangeRateCache.timestamp < CACHE_DURATION) {
-    return exchangeRateCache.rate;
+const defaultRates: Record<string, number> = {
+  KRW: 1350,
+  CNY: 7.2,
+  VND: 25000,
+  RUB: 95,
+  JPY: 155,
+  USD: 1,
+};
+
+async function getExchangeRates(): Promise<Record<string, number>> {
+  if (exchangeRatesCache && Date.now() - exchangeRatesCache.timestamp < CACHE_DURATION) {
+    return exchangeRatesCache.rates;
   }
   try {
-    const response = await fetch("https://api.frankfurter.app/latest?from=USD&to=KRW");
-    const data = await response.json() as { rates: { KRW: number } };
-    const rate = data.rates?.KRW || 1350;
-    exchangeRateCache = { rate, timestamp: Date.now() };
-    return rate;
+    const response = await fetch("https://api.frankfurter.app/latest?from=USD&to=KRW,CNY,JPY");
+    const data = await response.json() as { rates: Record<string, number> };
+    const rates: Record<string, number> = {
+      USD: 1,
+      KRW: data.rates?.KRW || defaultRates.KRW,
+      CNY: data.rates?.CNY || defaultRates.CNY,
+      JPY: data.rates?.JPY || defaultRates.JPY,
+      VND: defaultRates.VND,
+      RUB: defaultRates.RUB,
+    };
+    exchangeRatesCache = { rates, timestamp: Date.now() };
+    return rates;
   } catch (error) {
-    console.error("Exchange rate fetch error:", error);
-    return exchangeRateCache?.rate || 1350;
+    console.error("Exchange rates fetch error:", error);
+    return exchangeRatesCache?.rates || defaultRates;
   }
 }
 
@@ -30,12 +46,12 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  app.get("/api/exchange-rate", async (req, res) => {
+  app.get("/api/exchange-rates", async (req, res) => {
     try {
-      const rate = await getExchangeRate();
-      res.json({ rate, timestamp: exchangeRateCache?.timestamp || Date.now() });
+      const rates = await getExchangeRates();
+      res.json({ rates, timestamp: exchangeRatesCache?.timestamp || Date.now() });
     } catch (error) {
-      res.status(500).json({ rate: 1350, timestamp: Date.now() });
+      res.status(500).json({ rates: defaultRates, timestamp: Date.now() });
     }
   });
 
