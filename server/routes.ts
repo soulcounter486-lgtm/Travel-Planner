@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { calculateQuoteSchema } from "@shared/schema";
-import { addDays, getDay, parseISO } from "date-fns";
+import { addDays, getDay, parseISO, format } from "date-fns";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -39,24 +39,30 @@ export async function registerRoutes(
         try {
           let current = parseISO(input.villa.checkIn);
           const end = parseISO(input.villa.checkOut);
-          if (!isNaN(current.getTime()) && !isNaN(end.getTime())) {
-            while (current < end) {
+          
+          if (!isNaN(current.getTime()) && !isNaN(end.getTime()) && current < end) {
+            // 최대 30일로 제한 (무한 루프 방지 및 합리적 견적 범위)
+            let daysCount = 0;
+            while (current < end && daysCount < 30) {
               const dayOfWeek = getDay(current);
               let dailyPrice = 350;
-              let dayName = "Weekday";
-              if (dayOfWeek === 5) {
+              let dayName = "평일";
+              
+              if (dayOfWeek === 5) { // 금요일
                 dailyPrice = 380;
-                dayName = "Friday";
-              } else if (dayOfWeek === 6) {
+                dayName = "금요일";
+              } else if (dayOfWeek === 6) { // 토요일
                 dailyPrice = 500;
-                dayName = "Saturday";
-              } else if (dayOfWeek === 0) {
+                dayName = "토요일";
+              } else if (dayOfWeek === 0) { // 일요일 (평일 요금)
                 dailyPrice = 350;
-                dayName = "Sunday (Weekday rate)";
+                dayName = "일요일";
               }
+              
               breakdown.villa.price += dailyPrice;
-              breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
+              breakdown.villa.details.push(`${format(current, "MM/dd")} (${dayName}): $${dailyPrice}`);
               current = addDays(current, 1);
+              daysCount++;
             }
           }
         } catch (e) {
@@ -132,22 +138,22 @@ export async function registerRoutes(
       // 4. Eco Girl Calculation
       if (input.ecoGirl?.enabled) {
         const rate = 220;
-        const count = Number(input.ecoGirl.count) || 0;
-        const nights = Number(input.ecoGirl.nights) || 0;
+        const count = Math.max(0, Math.min(20, Number(input.ecoGirl.count) || 0));
+        const nights = Math.max(0, Math.min(30, Number(input.ecoGirl.nights) || 0));
         breakdown.ecoGirl.price = rate * count * nights;
-        breakdown.ecoGirl.description = `${count} Girls x ${nights} Nights @ $${rate}`;
+        breakdown.ecoGirl.description = `${count}명 x ${nights}박 @ $${rate}`;
       }
 
       // 5. Guide Calculation
       if (input.guide?.enabled) {
         const baseRate = 120;
         const extraRate = 20;
-        const days = Number(input.guide.days) || 0;
-        const groupSize = Number(input.guide.groupSize) || 1;
+        const days = Math.max(0, Math.min(30, Number(input.guide.days) || 0));
+        const groupSize = Math.max(1, Math.min(50, Number(input.guide.groupSize) || 1));
         let dailyTotal = baseRate;
         if (groupSize > 4) { dailyTotal += (groupSize - 4) * extraRate; }
         breakdown.guide.price = dailyTotal * days;
-        breakdown.guide.description = `${days} Days for ${groupSize} People (Base $120 + Extra)`;
+        breakdown.guide.description = `${days}일 (인원: ${groupSize}명)`;
       }
 
       breakdown.total = breakdown.villa.price + breakdown.vehicle.price + breakdown.golf.price + breakdown.ecoGirl.price + breakdown.guide.price;
