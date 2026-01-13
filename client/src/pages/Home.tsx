@@ -269,8 +269,8 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
-                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 shadow-inner my-6">
-                    <div className="space-y-4 overflow-y-auto custom-scrollbar pr-2" style={{ maxHeight: "500px", minHeight: "200px" }}>
+                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 shadow-inner my-6 overflow-hidden">
+                    <div className="space-y-4 overflow-y-auto custom-scrollbar pr-2" style={{ maxHeight: "400px", minHeight: "200px" }}>
                       {values.vehicle?.selections?.map((selection, index) => (
                         <div key={`vehicle-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
                           <div className="md:col-span-2 space-y-2">
@@ -305,7 +305,7 @@ export default function Home() {
                                   <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
                                     <SelectValue placeholder="선택" />
                                   </SelectTrigger>
-                                  <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                  <SelectContent className="z-[99999] bg-white border shadow-xl opacity-100">
                                     <SelectItem value="7_seater">7인승 SUV</SelectItem>
                                     <SelectItem value="16_seater">16인승 밴</SelectItem>
                                     <SelectItem value="9_limo">9인승 리무진</SelectItem>
@@ -336,7 +336,7 @@ export default function Home() {
                                   <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
                                     <SelectValue placeholder="선택" />
                                   </SelectTrigger>
-                                  <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                  <SelectContent className="z-[99999] bg-white border shadow-xl opacity-100">
                                     <SelectItem value="city">붕따우 시내투어</SelectItem>
                                     <SelectItem value="oneway">호치민 ↔ 붕따우 (편도)</SelectItem>
                                     <SelectItem value="roundtrip">호치민 ↔ 붕따우 (왕복)</SelectItem>
@@ -379,8 +379,8 @@ export default function Home() {
               name="golf.enabled"
               render={({ field }) => (
                 <SectionCard title="골프 라운딩 견적 (선택)" icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
-                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 shadow-inner my-6">
-                    <div className="space-y-4 overflow-y-auto custom-scrollbar pr-2" style={{ maxHeight: "500px", minHeight: "200px" }}>
+                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-slate-200 shadow-inner my-6 overflow-hidden">
+                    <div className="space-y-4 overflow-y-auto custom-scrollbar pr-2" style={{ maxHeight: "400px", minHeight: "200px" }}>
                       {values.golf?.selections?.map((selection, index) => (
                         <div key={`golf-day-${index}`} className="grid grid-cols-1 md:grid-cols-7 gap-4 p-6 bg-white rounded-xl border border-slate-200 relative group shadow-sm items-end transition-all hover:border-primary/30">
                           <div className="md:col-span-3 space-y-2">
@@ -410,7 +410,7 @@ export default function Home() {
                                   <SelectTrigger className="h-12 rounded-lg text-base bg-white border-slate-200">
                                     <SelectValue placeholder="선택" />
                                   </SelectTrigger>
-                                  <SelectContent className="z-[9999] bg-white border shadow-lg opacity-100">
+                                  <SelectContent className="z-[99999] bg-white border shadow-xl opacity-100">
                                     <SelectItem value="paradise">파라다이스 (평일 $80 / 주말 $100)</SelectItem>
                                     <SelectItem value="chouduc">쩌우득 (평일 $80 / 주말 $120)</SelectItem>
                                     <SelectItem value="hocham">호짬 (평일 $130 / 주말 $200)</SelectItem>
