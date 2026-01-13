@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { format, addDays } from "date-fns";
+import { useState, useEffect, useMemo } from "react";
+import { format, addDays, parseISO, getDay } from "date-fns";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -63,6 +63,39 @@ export default function Home() {
   const calculateMutation = useCalculateQuote();
   const createQuoteMutation = useCreateQuote();
   const values = form.watch();
+
+  const villaEstimate = useMemo(() => {
+    if (!values.villa?.enabled || !values.villa?.checkIn || !values.villa?.checkOut) {
+      return { price: 0, nights: 0, details: [] as { day: string; price: number }[] };
+    }
+    try {
+      let current = parseISO(values.villa.checkIn);
+      const end = parseISO(values.villa.checkOut);
+      if (isNaN(current.getTime()) || isNaN(end.getTime()) || current >= end) {
+        return { price: 0, nights: 0, details: [] as { day: string; price: number }[] };
+      }
+      let totalPrice = 0;
+      const details: { day: string; price: number }[] = [];
+      while (current < end) {
+        const dayOfWeek = getDay(current);
+        let dailyPrice = 350;
+        let dayName = format(current, "M/d");
+        if (dayOfWeek === 5) {
+          dailyPrice = 380;
+          dayName += ` (${t("villa.friday")})`;
+        } else if (dayOfWeek === 6) {
+          dailyPrice = 500;
+          dayName += ` (${t("villa.saturday")})`;
+        }
+        totalPrice += dailyPrice;
+        details.push({ day: dayName, price: dailyPrice });
+        current = addDays(current, 1);
+      }
+      return { price: totalPrice, nights: details.length, details };
+    } catch {
+      return { price: 0, nights: 0, details: [] as { day: string; price: number }[] };
+    }
+  }, [values.villa?.enabled, values.villa?.checkIn, values.villa?.checkOut, t]);
 
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
@@ -234,6 +267,25 @@ export default function Home() {
                     <p><strong>{t("villa.weekday")}:</strong> $350 | <strong>{t("villa.friday")}:</strong> $380 | <strong>{t("villa.saturday")}:</strong> $500</p>
                     <p className="mt-1 text-xs text-blue-600/80">{t("villa.priceNote")}</p>
                   </div>
+                  {villaEstimate.price > 0 && (
+                    <div className="mt-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">{t("villa.estimatedPrice")}</span>
+                        <span className="text-2xl font-bold">${villaEstimate.price}</span>
+                      </div>
+                      <div className="text-xs text-blue-100 space-y-0.5">
+                        {villaEstimate.details.map((d, i) => (
+                          <div key={i} className="flex justify-between">
+                            <span>{d.day}</span>
+                            <span>${d.price}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100">
+                        {villaEstimate.nights}{t("villa.nightsTotal")}
+                      </div>
+                    </div>
+                  )}
                 </SectionCard>
               )}
             />

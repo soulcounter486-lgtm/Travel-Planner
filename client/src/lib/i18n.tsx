@@ -36,6 +36,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "villa.friday": "금요일",
     "villa.saturday": "토요일",
     "villa.priceNote": "* 빌라 방갯수와 컨디션에 따라 가격은 변경될 수 있습니다.",
+    "villa.estimatedPrice": "예상 금액",
+    "villa.nightsTotal": "박 기준 예상 금액입니다",
     "villa.viewMore": "실제 빌라 사진 더보기",
     
     // Vehicle Section
@@ -193,6 +195,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "villa.friday": "Friday",
     "villa.saturday": "Saturday",
     "villa.priceNote": "* Prices may vary based on villa size and condition.",
+    "villa.estimatedPrice": "Estimated Price",
+    "villa.nightsTotal": " night(s) total",
     "villa.viewMore": "View More Villa Photos",
     
     // Vehicle Section
@@ -350,6 +354,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "villa.friday": "周五",
     "villa.saturday": "周六",
     "villa.priceNote": "* 价格可能因别墅大小和条件而有所不同。",
+    "villa.estimatedPrice": "预估价格",
+    "villa.nightsTotal": "晚 总计",
     "villa.viewMore": "查看更多别墅照片",
     
     // Vehicle Section
@@ -507,6 +513,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "villa.friday": "Thứ Sáu",
     "villa.saturday": "Thứ Bảy",
     "villa.priceNote": "* Giá có thể thay đổi tùy theo kích thước và tình trạng biệt thự.",
+    "villa.estimatedPrice": "Giá ước tính",
+    "villa.nightsTotal": " đêm tổng cộng",
     "villa.viewMore": "Xem thêm ảnh biệt thự",
     
     // Vehicle Section
@@ -664,6 +672,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "villa.friday": "Пятница",
     "villa.saturday": "Суббота",
     "villa.priceNote": "* Цены могут меняться в зависимости от размера и состояния виллы.",
+    "villa.estimatedPrice": "Расчётная цена",
+    "villa.nightsTotal": " ночей всего",
     "villa.viewMore": "Больше фото виллы",
     
     // Vehicle Section
@@ -821,6 +831,8 @@ export const translations: Record<Language, Record<string, string>> = {
     "villa.friday": "金曜日",
     "villa.saturday": "土曜日",
     "villa.priceNote": "※ヴィラの広さやコンディションにより価格が変動する場合があります。",
+    "villa.estimatedPrice": "見積もり金額",
+    "villa.nightsTotal": "泊分の合計金額です",
     "villa.viewMore": "ヴィラ写真をもっと見る",
     
     // Vehicle Section
