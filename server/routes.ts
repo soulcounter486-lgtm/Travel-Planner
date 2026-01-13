@@ -4,16 +4,13 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { calculateQuoteSchema } from "@shared/schema";
-import { addDays, differenceInDays, getDay, parseISO, isSameDay } from "date-fns";
+import { addDays, getDay, parseISO } from "date-fns";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
 
-  // Vehicle Pricing Table
-  // Type -> { city, oneway, roundtrip }
-  // City hours are informational for this logic, but prices are key
   const vehiclePrices: Record<string, { city: number; oneway: number; roundtrip: number }> = {
     "7_seater": { city: 100, oneway: 80, roundtrip: 150 },
     "16_seater": { city: 130, oneway: 130, roundtrip: 250 },
@@ -28,10 +25,10 @@ export async function registerRoutes(
     try {
       const input = calculateQuoteSchema.parse(req.body);
       
-      let total = 0;
       const breakdown = {
         villa: { price: 0, details: [] as string[] },
         vehicle: { price: 0, description: "" },
+        golf: { price: 0, description: "" },
         ecoGirl: { price: 0, description: "" },
         guide: { price: 0, description: "" },
         total: 0
@@ -41,30 +38,22 @@ export async function registerRoutes(
       if (input.villa?.enabled && input.villa.checkIn && input.villa.checkOut) {
         let current = parseISO(input.villa.checkIn);
         const end = parseISO(input.villa.checkOut);
-        
-        // Calculate nights (days between checkin and checkout)
-        // If checkIn = checkOut, it's 0 nights
-        // Iterate until current < end
-        
         while (current < end) {
-          const dayOfWeek = getDay(current); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
-          let dailyPrice = 350; // Default (Sun-Thu)
+          const dayOfWeek = getDay(current);
+          let dailyPrice = 350;
           let dayName = "Weekday";
-
-          if (dayOfWeek === 5) { // Friday
+          if (dayOfWeek === 5) {
             dailyPrice = 380;
             dayName = "Friday";
-          } else if (dayOfWeek === 6) { // Saturday
+          } else if (dayOfWeek === 6) {
             dailyPrice = 500;
             dayName = "Saturday";
-          } else if (dayOfWeek === 0) { // Sunday is Weekday per spec
+          } else if (dayOfWeek === 0) {
             dailyPrice = 350;
-             dayName = "Sunday (Weekday rate)";
+            dayName = "Sunday (Weekday rate)";
           }
-
           breakdown.villa.price += dailyPrice;
           breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
-          
           current = addDays(current, 1);
         }
       }
@@ -73,42 +62,61 @@ export async function registerRoutes(
       if (input.vehicle?.enabled && input.vehicle.selections) {
         let vehicleTotalPrice = 0;
         const vehicleDescriptions: string[] = [];
-
         for (const selection of input.vehicle.selections) {
           const prices = vehiclePrices[selection.type];
           if (prices) {
             let basePrice = 0;
             let routeDesc = "";
-
             switch (selection.route) {
-              case "city":
-                basePrice = prices.city;
-                routeDesc = "City Tour";
-                break;
-              case "oneway":
-                basePrice = prices.oneway;
-                routeDesc = "One Way";
-                break;
-              case "roundtrip":
-                basePrice = prices.roundtrip;
-                routeDesc = "Round Trip";
-                break;
-              case "city_pickup_drop":
-                basePrice = prices.city * 1.5;
-                routeDesc = "Pickup/Drop + City";
-                break;
+              case "city": basePrice = prices.city; routeDesc = "City Tour"; break;
+              case "oneway": basePrice = prices.oneway; routeDesc = "One Way"; break;
+              case "roundtrip": basePrice = prices.roundtrip; routeDesc = "Round Trip"; break;
+              case "city_pickup_drop": basePrice = prices.city * 1.5; routeDesc = "Pickup/Drop + City"; break;
             }
-
             vehicleTotalPrice += basePrice;
             vehicleDescriptions.push(`${selection.date}: ${selection.type.replace(/_/g, " ")} (${routeDesc})`);
           }
         }
-
         breakdown.vehicle.price = vehicleTotalPrice;
         breakdown.vehicle.description = vehicleDescriptions.join(" | ");
       }
 
-      // 3. Eco Girl Calculation
+      // 3. Golf Calculation
+      if (input.golf?.enabled && input.golf.selections) {
+        let golfTotalPrice = 0;
+        const golfDescriptions: string[] = [];
+        for (const selection of input.golf.selections) {
+          const date = parseISO(selection.date);
+          const dayOfWeek = getDay(date);
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+          let price = 0;
+          let tip = "";
+          let courseName = "";
+          switch (selection.course) {
+            case "paradise":
+              price = isWeekend ? 100 : 80;
+              tip = "40만동";
+              courseName = "파라다이스";
+              break;
+            case "chouduc":
+              price = isWeekend ? 120 : 80;
+              tip = "50만동";
+              courseName = "쩌우득";
+              break;
+            case "hocham":
+              price = isWeekend ? 200 : 130;
+              tip = "50만동";
+              courseName = "호짬";
+              break;
+          }
+          golfTotalPrice += price;
+          golfDescriptions.push(`${selection.date}: ${courseName} ($${price}, 캐디팁: ${tip})`);
+        }
+        breakdown.golf.price = golfTotalPrice;
+        breakdown.golf.description = golfDescriptions.join(" | ");
+      }
+
+      // 4. Eco Girl Calculation
       if (input.ecoGirl?.enabled) {
         const rate = 220;
         const count = input.ecoGirl.count;
@@ -117,37 +125,23 @@ export async function registerRoutes(
         breakdown.ecoGirl.description = `${count} Girls x ${nights} Nights @ $${rate}`;
       }
 
-      // 4. Guide Calculation
+      // 5. Guide Calculation
       if (input.guide?.enabled) {
         const baseRate = 120;
         const extraRate = 20;
         const days = input.guide.days;
         const groupSize = input.guide.groupSize;
-        
         let dailyTotal = baseRate;
-        if (groupSize > 4) {
-          dailyTotal += (groupSize - 4) * extraRate;
-        }
-
+        if (groupSize > 4) { dailyTotal += (groupSize - 4) * extraRate; }
         breakdown.guide.price = dailyTotal * days;
         breakdown.guide.description = `${days} Days for ${groupSize} People (Base $120 + Extra)`;
       }
 
-      // Final Total
-      breakdown.total = 
-        breakdown.villa.price + 
-        breakdown.vehicle.price + 
-        breakdown.ecoGirl.price + 
-        breakdown.guide.price;
-
+      breakdown.total = breakdown.villa.price + breakdown.vehicle.price + breakdown.golf.price + breakdown.ecoGirl.price + breakdown.guide.price;
       res.json(breakdown);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        res.status(400).json({ message: err.errors[0].message });
-      } else {
-        console.error(err);
-        res.status(500).json({ message: "Internal server error" });
-      }
+      if (err instanceof z.ZodError) { res.status(400).json({ message: err.errors[0].message }); }
+      else { res.status(500).json({ message: "Internal server error" }); }
     }
   });
 
@@ -157,11 +151,8 @@ export async function registerRoutes(
       const quote = await storage.createQuote(input);
       res.status(201).json(quote);
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        res.status(400).json({ message: err.errors[0].message });
-      } else {
-        res.status(500).json({ message: "Internal server error" });
-      }
+      if (err instanceof z.ZodError) { res.status(400).json({ message: err.errors[0].message }); }
+      else { res.status(500).json({ message: "Internal server error" }); }
     }
   });
 

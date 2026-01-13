@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -41,6 +41,15 @@ export const calculateQuoteSchema = z.object({
     })).optional(),
   }).optional(),
 
+  // Golf
+  golf: z.object({
+    enabled: z.boolean(),
+    selections: z.array(z.object({
+      date: z.string(), // YYYY-MM-DD
+      course: z.enum(["paradise", "chouduc", "hocham"]),
+    })).optional(),
+  }).optional(),
+
   // Eco Girl
   ecoGirl: z.object({
     enabled: z.boolean(),
@@ -63,6 +72,10 @@ export const quoteBreakdownSchema = z.object({
     details: z.array(z.string()), // e.g., "Friday: $380"
   }),
   vehicle: z.object({
+    price: z.number(),
+    description: z.string(),
+  }),
+  golf: z.object({
     price: z.number(),
     description: z.string(),
   }),
