@@ -366,38 +366,21 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
-            <div className="flex items-center gap-2">
-              {installPrompt && !isAppInstalled && (
-                <Button 
-                  onClick={handleInstallClick}
-                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
-                  data-testid="button-install-app"
-                >
-                  <Download className="w-4 h-4" />
-                  {language === "ko" ? "앱 설치" : 
-                   language === "en" ? "Install App" :
-                   language === "zh" ? "安装应用" :
-                   language === "vi" ? "Cài đặt" :
-                   language === "ru" ? "Установить" :
-                   language === "ja" ? "アプリ" : "앱 설치"}
-                </Button>
-              )}
-              <a href="/vungtau-dokkaebi.apk" download>
-                <Button 
-                  variant="outline"
-                  className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50"
-                  data-testid="button-download-apk"
-                >
-                  <Smartphone className="w-4 h-4" />
-                  {language === "ko" ? "붕따우 도깨비 어플설치" : 
-                   language === "en" ? "Install Dokkaebi App" :
-                   language === "zh" ? "安装道盖比应用" :
-                   language === "vi" ? "Cài đặt Dokkaebi" :
-                   language === "ru" ? "Установить Dokkaebi" :
-                   language === "ja" ? "ドッケビアプリ" : "붕따우 도깨비 어플설치"}
-                </Button>
-              </a>
-            </div>
+            <a href="/vungtau-dokkaebi.apk" download>
+              <Button 
+                variant="outline"
+                className="flex items-center gap-2 border-orange-500 text-orange-600 hover:bg-orange-50"
+                data-testid="button-download-apk"
+              >
+                <Smartphone className="w-4 h-4" />
+                {language === "ko" ? "붕따우 도깨비 어플설치" : 
+                 language === "en" ? "Install Dokkaebi App" :
+                 language === "zh" ? "安装道盖比应用" :
+                 language === "vi" ? "Cài đặt Dokkaebi" :
+                 language === "ru" ? "Установить Dokkaebi" :
+                 language === "ja" ? "ドッケビアプリ" : "붕따우 도깨비 어플설치"}
+              </Button>
+            </a>
           </div>
         </div>
       </div>
