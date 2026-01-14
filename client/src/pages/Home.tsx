@@ -171,7 +171,7 @@ export default function Home() {
     } catch {
       return { price: 0, details: [] as { date: string; course: string; players: number; unitPrice: number; subtotal: number; tip: string }[] };
     }
-  }, [values.golf?.enabled, values.golf?.selections, t]);
+  }, [values.golf?.enabled, JSON.stringify(values.golf?.selections), t]);
 
   const guideEstimate = useMemo(() => {
     if (!values.guide?.enabled) {
