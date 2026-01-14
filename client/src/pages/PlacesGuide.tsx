@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 
@@ -244,6 +246,14 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
 export default function PlacesGuide() {
   const { language, t } = useLanguage();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["attractions", "localFood"]));
+  const [visitorCount, setVisitorCount] = useState<number>(0);
+
+  useEffect(() => {
+    apiRequest("POST", "/api/visitor-count/increment")
+      .then(res => res.json())
+      .then(data => setVisitorCount(data.count))
+      .catch(() => {});
+  }, []);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {
@@ -357,37 +367,50 @@ export default function PlacesGuide() {
           })}
         </div>
 
-        <div className="h-16" />
+        <div className="h-20" />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg z-50">
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-semibold text-black">
-              {language === "ko" ? "예약 문의" : 
-               language === "en" ? "Reservation" :
-               language === "zh" ? "预约" :
-               language === "vi" ? "Đặt chỗ" :
-               language === "ru" ? "Бронь" :
-               language === "ja" ? "予約" : "예약 문의"}
-            </span>
-            <a
-              href="http://pf.kakao.com/_TuxoxfG"
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="link-kakao-reservation"
-            >
-              <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                <MessageCircle className="w-4 h-4" />
-                {language === "ko" ? "카카오톡 문의" : 
-                 language === "en" ? "KakaoTalk" :
-                 language === "zh" ? "KakaoTalk" :
-                 language === "vi" ? "KakaoTalk" :
-                 language === "ru" ? "KakaoTalk" :
-                 language === "ja" ? "カカオトーク" : "카카오톡 문의"}
-              </Button>
-            </a>
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-black">
+                {language === "ko" ? "예약 문의" : 
+                 language === "en" ? "Reservation" :
+                 language === "zh" ? "预约" :
+                 language === "vi" ? "Đặt chỗ" :
+                 language === "ru" ? "Бронь" :
+                 language === "ja" ? "予約" : "예약 문의"}
+              </span>
+              <a
+                href="http://pf.kakao.com/_TuxoxfG"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="link-kakao-reservation"
+              >
+                <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
+                  <MessageCircle className="w-4 h-4" />
+                  {language === "ko" ? "카카오톡 문의" : 
+                   language === "en" ? "KakaoTalk" :
+                   language === "zh" ? "KakaoTalk" :
+                   language === "vi" ? "KakaoTalk" :
+                   language === "ru" ? "KakaoTalk" :
+                   language === "ja" ? "カカオトーク" : "카카오톡 문의"}
+                </Button>
+              </a>
+            </div>
           </div>
+        </div>
+        <div className="bg-slate-800 text-center py-1">
+          <span className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+            <Eye className="w-3 h-3" />
+            {language === "ko" ? `방문자 ${visitorCount.toLocaleString()}명` : 
+             language === "en" ? `${visitorCount.toLocaleString()} visitors` :
+             language === "zh" ? `访客 ${visitorCount.toLocaleString()}` :
+             language === "vi" ? `${visitorCount.toLocaleString()} lượt xem` :
+             language === "ru" ? `${visitorCount.toLocaleString()} посетителей` :
+             language === "ja" ? `訪問者 ${visitorCount.toLocaleString()}人` : `방문자 ${visitorCount.toLocaleString()}명`}
+          </span>
         </div>
       </div>
     </div>

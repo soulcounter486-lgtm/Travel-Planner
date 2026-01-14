@@ -11,6 +11,11 @@ export const quotes = pgTable("quotes", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const visitorCount = pgTable("visitor_count", {
+  id: serial("id").primaryKey(),
+  count: integer("count").notNull().default(0),
+});
+
 // === SCHEMAS ===
 export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true });
 

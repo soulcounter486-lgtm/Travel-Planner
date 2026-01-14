@@ -3,8 +3,10 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount } from "@shared/schema";
 import { addDays, getDay, parseISO } from "date-fns";
+import { db } from "./db";
+import { eq, sql } from "drizzle-orm";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 12 * 60 * 60 * 1000;
@@ -235,6 +237,38 @@ export async function registerRoutes(
   app.get(api.quotes.list.path, async (req, res) => {
     const quotes = await storage.getQuotes();
     res.json(quotes);
+  });
+
+  app.get("/api/visitor-count", async (req, res) => {
+    try {
+      const result = await db.select().from(visitorCount).where(eq(visitorCount.id, 1));
+      if (result.length === 0) {
+        await db.insert(visitorCount).values({ id: 1, count: 1 });
+        res.json({ count: 1 });
+      } else {
+        res.json({ count: result[0].count });
+      }
+    } catch (err) {
+      console.error("Visitor count get error:", err);
+      res.json({ count: 0 });
+    }
+  });
+
+  app.post("/api/visitor-count/increment", async (req, res) => {
+    try {
+      const result = await db.select().from(visitorCount).where(eq(visitorCount.id, 1));
+      if (result.length === 0) {
+        await db.insert(visitorCount).values({ id: 1, count: 1 });
+        res.json({ count: 1 });
+      } else {
+        const newCount = result[0].count + 1;
+        await db.update(visitorCount).set({ count: newCount }).where(eq(visitorCount.id, 1));
+        res.json({ count: newCount });
+      }
+    } catch (err) {
+      console.error("Visitor count increment error:", err);
+      res.json({ count: 0 });
+    }
   });
 
   return httpServer;
