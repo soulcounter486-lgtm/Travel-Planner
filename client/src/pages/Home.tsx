@@ -41,19 +41,29 @@ import {
   Globe,
   Flag,
   MapPin,
-  Calculator
+  Calculator,
+  MessageCircle,
+  Eye
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Home() {
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
+  const [visitorCount, setVisitorCount] = useState<number>(0);
 
-  const { language } = useLanguage();
+  useEffect(() => {
+    apiRequest("POST", "/api/visitor-count/increment")
+      .then(res => res.json())
+      .then(data => setVisitorCount(data.count))
+      .catch(() => {});
+  }, []);
+
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -709,6 +719,50 @@ export default function Home() {
       </footer>
       
       <LanguageSelector />
+
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-black">
+                {language === "ko" ? "예약 문의" : 
+                 language === "en" ? "Reservation" :
+                 language === "zh" ? "预约" :
+                 language === "vi" ? "Đặt chỗ" :
+                 language === "ru" ? "Бронь" :
+                 language === "ja" ? "予約" : "예약 문의"}
+              </span>
+              <a
+                href="http://pf.kakao.com/_TuxoxfG"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="link-kakao-reservation-home"
+              >
+                <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
+                  <MessageCircle className="w-4 h-4" />
+                  {language === "ko" ? "카카오톡 문의" : 
+                   language === "en" ? "KakaoTalk" :
+                   language === "zh" ? "KakaoTalk" :
+                   language === "vi" ? "KakaoTalk" :
+                   language === "ru" ? "KakaoTalk" :
+                   language === "ja" ? "カカオトーク" : "카카오톡 문의"}
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className="bg-slate-800 text-center py-1">
+          <span className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+            <Eye className="w-3 h-3" />
+            {language === "ko" ? `방문자 ${visitorCount.toLocaleString()}명` : 
+             language === "en" ? `${visitorCount.toLocaleString()} visitors` :
+             language === "zh" ? `访客 ${visitorCount.toLocaleString()}` :
+             language === "vi" ? `${visitorCount.toLocaleString()} lượt xem` :
+             language === "ru" ? `${visitorCount.toLocaleString()} посетителей` :
+             language === "ja" ? `訪問者 ${visitorCount.toLocaleString()}人` : `방문자 ${visitorCount.toLocaleString()}명`}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
