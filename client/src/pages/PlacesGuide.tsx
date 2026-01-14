@@ -41,7 +41,7 @@ const placesData: Record<string, Category> = {
       { name: "불교사찰", nameVi: "Chơn Không Monastery", mapUrl: "https://maps.app.goo.gl/THctAg3uEvx9q9ZLA", note: "largeVehicleNo" },
       { name: "붕따우 백비치", nameVi: "Bãi Sau", mapUrl: "https://maps.app.goo.gl/UCARs7msTkaUr2HW6" },
       { name: "붕따우 프론트 비치", nameVi: "Front Beach", mapUrl: "https://maps.app.goo.gl/Uz5gy2Tsg3kQm4QCA" },
-      { name: "탑땀 기념타워", nameVi: "Tháp Tầm", mapUrl: "https://maps.app.goo.gl/HHr2NF7upTr7Djhy9" },
+      { name: "땀탕기념타워", nameVi: "Tháp Tầm", mapUrl: "https://maps.app.goo.gl/HHr2NF7upTr7Djhy9" },
       { name: "돼지언덕", nameVi: "Đồi Con Heo", mapUrl: "https://maps.app.goo.gl/Y8nMHFU7xAdXH7e48", note: "largeVehicleNo" },
       { name: "원숭이사원", nameVi: "Chùa Khỉ Viba", mapUrl: "https://maps.app.goo.gl/LmQ7U7VDgi9n8aGH8", note: "largeVehicleNo" },
       { name: "붕따우 해산물 시장", nameVi: "Seafood Market", mapUrl: "https://maps.app.goo.gl/BLVTP1tarzKrXZN28" },
