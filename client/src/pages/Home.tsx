@@ -389,12 +389,12 @@ export default function Home() {
                   data-testid="button-download-apk"
                 >
                   <Smartphone className="w-4 h-4" />
-                  {language === "ko" ? "APK 다운로드" : 
-                   language === "en" ? "APK Download" :
-                   language === "zh" ? "下载APK" :
-                   language === "vi" ? "Tải APK" :
-                   language === "ru" ? "Скачать APK" :
-                   language === "ja" ? "APKダウンロード" : "APK 다운로드"}
+                  {language === "ko" ? "붕따우 도깨비 어플설치" : 
+                   language === "en" ? "Install Dokkaebi App" :
+                   language === "zh" ? "安装道盖比应用" :
+                   language === "vi" ? "Cài đặt Dokkaebi" :
+                   language === "ru" ? "Установить Dokkaebi" :
+                   language === "ja" ? "ドッケビアプリ" : "붕따우 도깨비 어플설치"}
                 </Button>
               </a>
             </div>
