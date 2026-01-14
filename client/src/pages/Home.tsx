@@ -4,6 +4,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 
 import { useLanguage } from "@/lib/i18n";
 import { useCalculateQuote, useCreateQuote } from "@/hooks/use-quotes";
@@ -38,7 +39,9 @@ import {
   MessageSquare,
   ExternalLink,
   Globe,
-  Flag
+  Flag,
+  MapPin,
+  Calculator
 } from "lucide-react";
 
 export default function Home() {
@@ -295,6 +298,25 @@ export default function Home() {
               <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
             </div>
           </motion.div>
+        </div>
+      </div>
+
+      <div className="bg-white border-b shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-2 py-3">
+            <Link href="/">
+              <Button variant="default" className="flex items-center gap-2" data-testid="nav-calculator">
+                <Calculator className="w-4 h-4" />
+                {t("nav.calculator")}
+              </Button>
+            </Link>
+            <Link href="/guide">
+              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-guide">
+                <MapPin className="w-4 h-4" />
+                {t("nav.guide")}
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 

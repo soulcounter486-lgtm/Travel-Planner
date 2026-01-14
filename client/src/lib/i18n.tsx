@@ -27,6 +27,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "header.subtitle": "여행견적",
     "header.description": "풀빌라, 차량, 가이드 서비스 등 나만의 맞춤 여행 견적을 실시간으로 확인하세요.",
     
+    // Navigation
+    "nav.calculator": "견적 계산기",
+    "nav.guide": "관광/맛집",
+    
     // Villa Section
     "villa.title": "럭셔리 풀빌라 숙박",
     "villa.checkIn": "체크인 날짜",
@@ -196,6 +200,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "header.title": "Vung Tau Dokkaebi",
     "header.subtitle": "Travel Quote",
     "header.description": "Check your customized travel quote for pool villas, vehicles, and guide services in real-time.",
+    
+    // Navigation
+    "nav.calculator": "Quote Calculator",
+    "nav.guide": "Travel Guide",
     
     // Villa Section
     "villa.title": "Luxury Pool Villa Stay",
@@ -367,6 +375,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "header.subtitle": "旅行报价",
     "header.description": "实时查看您的定制旅行报价，包括别墅、车辆和导游服务。",
     
+    // Navigation
+    "nav.calculator": "报价计算器",
+    "nav.guide": "旅游指南",
+    
     // Villa Section
     "villa.title": "豪华泳池别墅住宿",
     "villa.checkIn": "入住日期",
@@ -536,6 +548,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "header.title": "Vũng Tàu Dokkaebi",
     "header.subtitle": "Báo giá du lịch",
     "header.description": "Kiểm tra báo giá du lịch tùy chỉnh của bạn cho biệt thự, xe và dịch vụ hướng dẫn theo thời gian thực.",
+    
+    // Navigation
+    "nav.calculator": "Báo giá",
+    "nav.guide": "Du lịch",
     
     // Villa Section
     "villa.title": "Biệt thự hồ bơi sang trọng",
@@ -707,6 +723,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "header.subtitle": "Расчет стоимости",
     "header.description": "Проверьте расчет стоимости вашего индивидуального тура: виллы, транспорт и услуги гида в реальном времени.",
     
+    // Navigation
+    "nav.calculator": "Калькулятор",
+    "nav.guide": "Гид",
+    
     // Villa Section
     "villa.title": "Люксовая вилла с бассейном",
     "villa.checkIn": "Дата заезда",
@@ -876,6 +896,10 @@ export const translations: Record<Language, Record<string, string>> = {
     "header.title": "ブンタウ ドッケビ",
     "header.subtitle": "旅行見積",
     "header.description": "プールヴィラ、車両、ガイドサービスなど、オーダーメイド旅行の見積をリアルタイムで確認できます。",
+    
+    // Navigation
+    "nav.calculator": "見積計算機",
+    "nav.guide": "観光ガイド",
     
     // Villa Section
     "villa.title": "ラグジュアリープールヴィラ宿泊",
