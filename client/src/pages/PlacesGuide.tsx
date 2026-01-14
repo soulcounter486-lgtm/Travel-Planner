@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 
@@ -356,6 +356,47 @@ export default function PlacesGuide() {
             );
           })}
         </div>
+
+        <Card className="mt-8 bg-gradient-to-r from-yellow-400 to-amber-500 border-0">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-center md:text-left">
+                <h3 className="text-xl font-bold text-black mb-1">
+                  {language === "ko" ? "예약 문의" : 
+                   language === "en" ? "Reservation Inquiry" :
+                   language === "zh" ? "预约咨询" :
+                   language === "vi" ? "Đặt chỗ" :
+                   language === "ru" ? "Бронирование" :
+                   language === "ja" ? "予約お問い合わせ" : "예약 문의"}
+                </h3>
+                <p className="text-black/70 text-sm">
+                  {language === "ko" ? "카카오톡으로 편하게 문의하세요" : 
+                   language === "en" ? "Contact us via KakaoTalk" :
+                   language === "zh" ? "通过KakaoTalk联系我们" :
+                   language === "vi" ? "Liên hệ qua KakaoTalk" :
+                   language === "ru" ? "Свяжитесь через KakaoTalk" :
+                   language === "ja" ? "カカオトークでお気軽にお問い合わせください" : "카카오톡으로 편하게 문의하세요"}
+                </p>
+              </div>
+              <a
+                href="http://pf.kakao.com/_TuxoxfG"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="link-kakao-reservation"
+              >
+                <Button size="lg" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                  {language === "ko" ? "카카오톡 문의하기" : 
+                   language === "en" ? "Contact on KakaoTalk" :
+                   language === "zh" ? "KakaoTalk咨询" :
+                   language === "vi" ? "Liên hệ KakaoTalk" :
+                   language === "ru" ? "Написать в KakaoTalk" :
+                   language === "ja" ? "カカオトークで問い合わせ" : "카카오톡 문의하기"}
+                </Button>
+              </a>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
