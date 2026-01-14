@@ -43,7 +43,9 @@ import {
   MapPin,
   Calculator,
   MessageCircle,
-  Eye
+  Eye,
+  Download,
+  Smartphone
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -56,6 +58,8 @@ export default function Home() {
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [visitorCount, setVisitorCount] = useState<number>(0);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
 
   useEffect(() => {
     apiRequest("POST", "/api/visitor-count/increment")
@@ -63,6 +67,40 @@ export default function Home() {
       .then(data => setVisitorCount(data.count))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    
+    const handleAppInstalled = () => {
+      setIsAppInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsAppInstalled(true);
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const result = await installPrompt.userChoice;
+    if (result.outcome === 'accepted') {
+      setIsAppInstalled(true);
+    }
+    setInstallPrompt(null);
+  };
 
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
@@ -313,19 +351,36 @@ export default function Home() {
 
       <div className="bg-white border-b shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 py-3">
-            <Link href="/">
-              <Button variant="default" className="flex items-center gap-2" data-testid="nav-calculator">
-                <Calculator className="w-4 h-4" />
-                {t("nav.calculator")}
+          <div className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-2">
+              <Link href="/">
+                <Button variant="default" className="flex items-center gap-2" data-testid="nav-calculator">
+                  <Calculator className="w-4 h-4" />
+                  {t("nav.calculator")}
+                </Button>
+              </Link>
+              <Link href="/guide">
+                <Button variant="outline" className="flex items-center gap-2" data-testid="nav-guide">
+                  <MapPin className="w-4 h-4" />
+                  {t("nav.guide")}
+                </Button>
+              </Link>
+            </div>
+            {installPrompt && !isAppInstalled && (
+              <Button 
+                onClick={handleInstallClick}
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                data-testid="button-install-app"
+              >
+                <Download className="w-4 h-4" />
+                {language === "ko" ? "앱 설치" : 
+                 language === "en" ? "Install App" :
+                 language === "zh" ? "安装应用" :
+                 language === "vi" ? "Cài đặt" :
+                 language === "ru" ? "Установить" :
+                 language === "ja" ? "アプリ" : "앱 설치"}
               </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-guide">
-                <MapPin className="w-4 h-4" />
-                {t("nav.guide")}
-              </Button>
-            </Link>
+            )}
           </div>
         </div>
       </div>
