@@ -528,5 +528,122 @@ export async function registerRoutes(
     }
   });
 
+  // 내 주변 장소 검색 (Google Places API)
+  app.get("/api/nearby-places", async (req, res) => {
+    try {
+      const { lat, lng, type, radius = "1500" } = req.query;
+      
+      if (!lat || !lng || !type) {
+        return res.status(400).json({ message: "lat, lng, and type are required" });
+      }
+      
+      const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Maps API key not configured" });
+      }
+      
+      // Google Places Nearby Search API
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${apiKey}&language=ko`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+        console.error("Google Places API error:", data.status, data.error_message);
+        return res.status(500).json({ message: "Failed to fetch nearby places" });
+      }
+      
+      // 필요한 정보만 추출하여 반환
+      const places = (data.results || []).map((place: any) => ({
+        placeId: place.place_id,
+        name: place.name,
+        address: place.vicinity,
+        rating: place.rating,
+        userRatingsTotal: place.user_ratings_total,
+        priceLevel: place.price_level,
+        openNow: place.opening_hours?.open_now,
+        types: place.types,
+        location: place.geometry?.location,
+        photoReference: place.photos?.[0]?.photo_reference,
+      }));
+      
+      res.json({ places, status: data.status });
+    } catch (err) {
+      console.error("Nearby places error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // 장소 상세 정보 (Google Places API)
+  app.get("/api/place-details/:placeId", async (req, res) => {
+    try {
+      const { placeId } = req.params;
+      
+      const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Maps API key not configured" });
+      }
+      
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,opening_hours,rating,user_ratings_total,price_level,reviews,website,url,photos&key=${apiKey}&language=ko`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.status !== "OK") {
+        console.error("Google Places Details API error:", data.status, data.error_message);
+        return res.status(500).json({ message: "Failed to fetch place details" });
+      }
+      
+      const result = data.result;
+      res.json({
+        name: result.name,
+        address: result.formatted_address,
+        phone: result.formatted_phone_number,
+        openingHours: result.opening_hours?.weekday_text,
+        rating: result.rating,
+        userRatingsTotal: result.user_ratings_total,
+        priceLevel: result.price_level,
+        reviews: result.reviews?.slice(0, 3),
+        website: result.website,
+        googleMapsUrl: result.url,
+        photoReferences: result.photos?.slice(0, 5).map((p: any) => p.photo_reference),
+      });
+    } catch (err) {
+      console.error("Place details error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // 장소 사진 프록시 (Google Places API Photo)
+  app.get("/api/place-photo/:photoReference", async (req, res) => {
+    try {
+      const { photoReference } = req.params;
+      const { maxwidth = "400" } = req.query;
+      
+      const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Maps API key not configured" });
+      }
+      
+      const url = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photo_reference=${photoReference}&key=${apiKey}`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        return res.status(response.status).json({ message: "Failed to fetch photo" });
+      }
+      
+      // 이미지를 직접 스트리밍
+      res.set("Content-Type", response.headers.get("content-type") || "image/jpeg");
+      res.set("Cache-Control", "public, max-age=86400"); // 24시간 캐시
+      
+      const arrayBuffer = await response.arrayBuffer();
+      res.send(Buffer.from(arrayBuffer));
+    } catch (err) {
+      console.error("Place photo error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   return httpServer;
 }
