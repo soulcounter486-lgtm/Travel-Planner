@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/lib/i18n";
 import { MapPin, Star, Navigation, Phone, Clock, ExternalLink, Loader2, AlertCircle, Coffee, Utensils, Building, Pill, CreditCard, ShoppingBag, Scissors, Car, Hospital, Home } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
@@ -85,21 +86,19 @@ export default function NearbyPlaces() {
   }, [t]);
 
   const { data: placesData, isLoading: placesLoading, error: placesError } = useQuery<{ places: NearbyPlace[]; status: string }>({
-    queryKey: ["/api/nearby-places", currentLocation?.lat, currentLocation?.lng, selectedCategory],
+    queryKey: ["/api/nearby-places", currentLocation?.lat, currentLocation?.lng, selectedCategory, language],
     enabled: !!currentLocation,
     queryFn: async () => {
-      const res = await fetch(`/api/nearby-places?lat=${currentLocation!.lat}&lng=${currentLocation!.lng}&type=${selectedCategory}&radius=1500`);
-      if (!res.ok) throw new Error("Failed to fetch nearby places");
+      const res = await apiRequest("GET", `/api/nearby-places?lat=${currentLocation!.lat}&lng=${currentLocation!.lng}&type=${selectedCategory}&radius=1500&lang=${language}`);
       return res.json();
     },
   });
 
   const { data: placeDetails, isLoading: detailsLoading } = useQuery<PlaceDetails>({
-    queryKey: ["/api/place-details", selectedPlace?.placeId],
+    queryKey: ["/api/place-details", selectedPlace?.placeId, language],
     enabled: !!selectedPlace && showDetails,
     queryFn: async () => {
-      const res = await fetch(`/api/place-details/${selectedPlace!.placeId}`);
-      if (!res.ok) throw new Error("Failed to fetch place details");
+      const res = await apiRequest("GET", `/api/place-details/${selectedPlace!.placeId}?lang=${language}`);
       return res.json();
     },
   });

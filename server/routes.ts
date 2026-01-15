@@ -531,7 +531,7 @@ export async function registerRoutes(
   // 내 주변 장소 검색 (Google Places API)
   app.get("/api/nearby-places", async (req, res) => {
     try {
-      const { lat, lng, type, radius = "1500" } = req.query;
+      const { lat, lng, type, radius = "1500", lang = "ko" } = req.query;
       
       if (!lat || !lng || !type) {
         return res.status(400).json({ message: "lat, lng, and type are required" });
@@ -542,8 +542,12 @@ export async function registerRoutes(
         return res.status(500).json({ message: "Google Maps API key not configured" });
       }
       
+      // Map language code to Google Places API language code
+      const langMap: Record<string, string> = { ko: "ko", en: "en", zh: "zh-CN", vi: "vi", ru: "ru", ja: "ja" };
+      const googleLang = langMap[lang as string] || "ko";
+      
       // Google Places Nearby Search API
-      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${apiKey}&language=ko`;
+      const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${apiKey}&language=${googleLang}`;
       
       const response = await fetch(url);
       const data = await response.json();
@@ -578,13 +582,18 @@ export async function registerRoutes(
   app.get("/api/place-details/:placeId", async (req, res) => {
     try {
       const { placeId } = req.params;
+      const { lang = "ko" } = req.query;
       
       const apiKey = process.env.GOOGLE_MAPS_API_KEY;
       if (!apiKey) {
         return res.status(500).json({ message: "Google Maps API key not configured" });
       }
       
-      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,opening_hours,rating,user_ratings_total,price_level,reviews,website,url,photos&key=${apiKey}&language=ko`;
+      // Map language code to Google Places API language code
+      const langMap: Record<string, string> = { ko: "ko", en: "en", zh: "zh-CN", vi: "vi", ru: "ru", ja: "ja" };
+      const googleLang = langMap[lang as string] || "ko";
+      
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_address,formatted_phone_number,opening_hours,rating,user_ratings_total,price_level,reviews,website,url,photos&key=${apiKey}&language=${googleLang}`;
       
       const response = await fetch(url);
       const data = await response.json();
