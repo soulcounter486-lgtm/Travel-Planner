@@ -118,16 +118,16 @@ export function WeatherWidget({ language }: { language: string }) {
   }
 
   return (
-    <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 rounded-md px-2.5 py-1.5 border border-sky-200 dark:border-sky-800 inline-flex items-center gap-2">
+    <div className="bg-gradient-to-r from-sky-500/10 to-blue-500/10 rounded-md px-2.5 py-1.5 border border-sky-200 dark:border-sky-800 inline-flex items-center gap-2 whitespace-nowrap">
       {getWeatherIcon(weather.condition)}
       <div className="flex items-center gap-2">
-        <div>
-          <p className="text-[9px] text-muted-foreground">{weatherLabels.title[language] || weatherLabels.title.ko}</p>
-          <p className="text-sm font-bold text-foreground leading-tight">{weather.temp}°C</p>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] text-muted-foreground whitespace-nowrap">{weatherLabels.title[language] || weatherLabels.title.ko}</span>
+          <span className="text-sm font-bold text-foreground">{weather.temp}°C</span>
         </div>
-        <div className="text-[9px] text-muted-foreground">
-          <p>{weatherLabels.humidity[language] || weatherLabels.humidity.ko} {weather.humidity}%</p>
-          <p className="flex items-center gap-0.5"><Wind className="w-2.5 h-2.5" />{weather.wind}km/h</p>
+        <div className="text-[9px] text-muted-foreground flex items-center gap-2">
+          <span>{weatherLabels.humidity[language] || weatherLabels.humidity.ko} {weather.humidity}%</span>
+          <span className="flex items-center gap-0.5"><Wind className="w-2.5 h-2.5" />{weather.wind}km/h</span>
         </div>
       </div>
     </div>
