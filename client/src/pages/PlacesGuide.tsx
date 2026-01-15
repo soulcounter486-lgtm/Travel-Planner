@@ -316,6 +316,7 @@ const placesData: Record<string, Category> = {
     places: [
       { name: "Rean 마사지", mapUrl: "https://maps.app.goo.gl/zGjF1ZoN5TJY5jdu8", note: "partnerBarber" },
       { name: "그랜드 마사지", mapUrl: "https://maps.app.goo.gl/4z3hEL8RF5acvtod7", note: "partnerBarber" },
+      { name: "DAY SPA", address: "63 Trần Hưng Đạo, Phường 1, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/JH3JEHhRRemgAm3VA", note: "partnerBarber" },
       { name: "김마싸 (MASSAGE 12C2)", phone: "0779 090 882", mapUrl: "https://maps.app.goo.gl/WA7Wt63HWcsi5dVQA" },
       { name: "이발소 Salon Kimha", address: "26 Đinh Tiên Hoàng, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/q2HpipbVVMpvMHYj7" },
       { name: "Bi Roen 현지 고급 이발소", address: "518 Thống Nhất Mới, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/yCMh6jYoLXLq8fgn7", recommended: true, note: "partnerBarber" },
