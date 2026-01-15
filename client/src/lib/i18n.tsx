@@ -170,7 +170,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "contact.title": "문의하기",
     "contact.vietnam": "베트남",
     "contact.korea": "한국",
-    "contact.kakao": "카카오톡",
+    "contact.kakao": "카톡ID",
     "contact.blog": "블로그",
     
     // Dialog
