@@ -452,7 +452,7 @@ export default function ExpenseTracker() {
                       <SelectTrigger data-testid="select-expense-category">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover">
+                      <SelectContent className="bg-card border shadow-lg">
                         {Object.entries(categoryLabels).map(([key, label]) => (
                           <SelectItem key={key} value={key}>{label}</SelectItem>
                         ))}
@@ -474,7 +474,7 @@ export default function ExpenseTracker() {
                       <SelectTrigger data-testid="select-expense-paidby">
                         <SelectValue placeholder="결제자 선택" />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover">
+                      <SelectContent className="bg-card border shadow-lg">
                         {participants.map((p) => (
                           <SelectItem key={p} value={p}>{p}</SelectItem>
                         ))}
@@ -550,7 +550,7 @@ export default function ExpenseTracker() {
                       <SelectTrigger data-testid="select-edit-category">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover">
+                      <SelectContent className="bg-card border shadow-lg">
                         {Object.entries(categoryLabels).map(([key, label]) => (
                           <SelectItem key={key} value={key}>{label}</SelectItem>
                         ))}
@@ -572,7 +572,7 @@ export default function ExpenseTracker() {
                       <SelectTrigger data-testid="select-edit-paidby">
                         <SelectValue placeholder="결제자 선택" />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover">
+                      <SelectContent className="bg-card border shadow-lg">
                         {participants.map((p) => (
                           <SelectItem key={p} value={p}>{p}</SelectItem>
                         ))}
