@@ -383,26 +383,47 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">
           {place.imageUrl && (
-            <div 
-              className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group"
-              onClick={() => setShowDescription(!showDescription)}
-              data-testid={`image-${place.name.replace(/\s/g, "-")}`}
-            >
-              <img 
-                src={place.imageUrl} 
-                alt={place.name}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
-              />
-              {descriptionText && (
+            descriptionText ? (
+              <div 
+                className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group"
+                onClick={() => setShowDescription(!showDescription)}
+                data-testid={`image-${place.name.replace(/\s/g, "-")}`}
+              >
+                <img 
+                  src={place.imageUrl} 
+                  alt={place.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-2">
                   <span className="text-[10px] text-white flex items-center gap-1 drop-shadow-md">
                     <Eye className="w-3 h-3" />
                     {language === "ko" ? "클릭하여 설명 보기" : "Click for details"}
                   </span>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <a 
+                href={place.mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group block"
+                data-testid={`image-link-${place.name.replace(/\s/g, "-")}`}
+              >
+                <img 
+                  src={place.imageUrl} 
+                  alt={place.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-2">
+                  <span className="text-[10px] text-white flex items-center gap-1 drop-shadow-md">
+                    <MapPin className="w-3 h-3" />
+                    {language === "ko" ? "클릭시 위치보기" : language === "en" ? "Click for location" : language === "zh" ? "点击查看位置" : language === "vi" ? "Nhấn để xem vị trí" : language === "ru" ? "Нажмите для просмотра" : "クリックで位置表示"}
+                  </span>
+                </div>
+              </a>
+            )
           )}
 
           <AnimatePresence>
