@@ -10,6 +10,18 @@ import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Cam
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
+import lighthouseImg from "@assets/736414b25966415e9006dd674ec2aecf_1768452191679.jpeg";
+import warMuseumImg from "@assets/20230318＿130556_1768452191689.jpg";
+import whitePalaceImg from "@assets/154eaed7-b483-43eb-983f-b52566331719_(1)_1768452191696.jpeg";
+import amusementParkImg from "@assets/붕따우호메이파크입장권_1768452191701.jpg";
+import buddhistTempleImg from "@assets/static-images.vnncdn.net-vps_images_publish-000001-000003-2025_1768452191705.jpg";
+import backBeachImg from "@assets/Things-to-do-in-Vung-Tau-2_1768452191711.jpg";
+import frontBeachImg from "@assets/Vung-Tau-3_1768452191715.jpg";
+import tamTangTowerImg from "@assets/2442f46d1c7d42b49c86ad80e4bec041_1768452191724.jpeg";
+import pigHillImg from "@assets/12-doi-con-heo-vung-tau_1768452191730.jpg";
+import monkeyTempleImg from "@assets/z40559387093017e7b56d8300d82363ef9c08685c1f765-167436802698717_1768452191734.jpg";
+import seafoodMarketImg from "@assets/cho-dem-vung-tau-2_1768452191738.jpg";
+import vungTauMarketImg from "@assets/c3d3213f-cho-vung-tau-2_1768452191743.jpg";
 
 interface Place {
   name: string;
@@ -55,7 +67,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Hải Đăng Vũng Tàu", 
         mapUrl: "https://maps.app.goo.gl/HMJbSLCR3bzZxsxy8", 
         note: "largeVehicleNo",
-        imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+        imageUrl: lighthouseImg,
         description: {
           ko: "1910년 프랑스 식민지 시대에 건설된 역사적인 등대. 도시와 바다의 파노라마 전망을 제공합니다.",
           en: "Historic lighthouse built in 1910 during French colonial era. Offers panoramic views of the city and sea.",
@@ -70,7 +82,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Bà Rịa–Vũng Tàu Provincial museum", 
         phone: "0254 3852 421", 
         mapUrl: "https://maps.app.goo.gl/YiF3HpgZvXtKTfMCA",
-        imageUrl: "https://images.unsplash.com/photo-1575505586569-646b2ca898fc?w=400&h=300&fit=crop",
+        imageUrl: warMuseumImg,
         description: {
           ko: "베트남 전쟁과 지역 역사를 보여주는 박물관. 전쟁 유물과 역사적 사진들이 전시되어 있습니다.",
           en: "Museum showcasing Vietnam War and local history with war artifacts and historical photographs.",
@@ -84,7 +96,7 @@ const placesData: Record<string, Category> = {
         name: "화이트 펠리스(띠우 별장)", 
         nameVi: "Bạch Dinh (White Palace)", 
         mapUrl: "https://maps.app.goo.gl/LDkeQHy1Watfec51A",
-        imageUrl: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop",
+        imageUrl: whitePalaceImg,
         description: {
           ko: "1898년 프랑스 총독의 여름 별장으로 지어진 아름다운 백색 궁전. 열대 정원과 바다 전망이 인상적입니다.",
           en: "Beautiful white palace built in 1898 as French Governor's summer residence. Impressive tropical gardens and sea views.",
@@ -98,7 +110,7 @@ const placesData: Record<string, Category> = {
         name: "놀이동산", 
         nameVi: "Ho May Amusement Park", 
         mapUrl: "https://maps.app.goo.gl/vM6tXvAXi4tTNhUV6",
-        imageUrl: "https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?w=400&h=300&fit=crop",
+        imageUrl: amusementParkImg,
         description: {
           ko: "케이블카로 올라가는 언덕 위 놀이공원. 워터파크, 동물원, 놀이기구를 즐길 수 있습니다.",
           en: "Hilltop amusement park accessible by cable car. Features water park, zoo, and rides.",
@@ -113,7 +125,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Chơn Không Monastery", 
         mapUrl: "https://maps.app.goo.gl/THctAg3uEvx9q9ZLA", 
         note: "largeVehicleNo",
-        imageUrl: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&h=300&fit=crop",
+        imageUrl: buddhistTempleImg,
         description: {
           ko: "산 중턱에 위치한 고요한 불교 사찰. 명상과 평화로운 분위기를 경험할 수 있습니다.",
           en: "Serene Buddhist monastery on the mountainside. Experience meditation and peaceful atmosphere.",
@@ -127,7 +139,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 백비치", 
         nameVi: "Bãi Sau", 
         mapUrl: "https://maps.app.goo.gl/UCARs7msTkaUr2HW6",
-        imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop",
+        imageUrl: backBeachImg,
         description: {
           ko: "붕따우에서 가장 긴 해변. 수영과 해양 스포츠를 즐기기에 좋으며 해변가 레스토랑이 많습니다.",
           en: "Longest beach in Vung Tau. Great for swimming, water sports, with many beachfront restaurants.",
@@ -141,7 +153,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 프론트 비치", 
         nameVi: "Front Beach", 
         mapUrl: "https://maps.app.goo.gl/Uz5gy2Tsg3kQm4QCA",
-        imageUrl: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=300&fit=crop",
+        imageUrl: frontBeachImg,
         description: {
           ko: "도심에서 가까운 해변으로 일몰 감상에 최적. 저녁에는 해변 산책로가 활기차게 변합니다.",
           en: "Beach close to downtown, perfect for sunset viewing. The promenade comes alive in the evening.",
@@ -155,7 +167,7 @@ const placesData: Record<string, Category> = {
         name: "땀탕기념타워", 
         nameVi: "Tháp Tầm", 
         mapUrl: "https://maps.app.goo.gl/HHr2NF7upTr7Djhy9",
-        imageUrl: "https://images.unsplash.com/photo-1562979314-bee7453e911c?w=400&h=300&fit=crop",
+        imageUrl: tamTangTowerImg,
         description: {
           ko: "베트남 해군의 역사적인 기념탑. 전쟁 영웅들을 기리는 곳으로 바다가 한눈에 보입니다.",
           en: "Historic naval memorial tower honoring war heroes with panoramic sea views.",
@@ -170,7 +182,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Đồi Con Heo", 
         mapUrl: "https://maps.app.goo.gl/Y8nMHFU7xAdXH7e48", 
         note: "largeVehicleNo",
-        imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+        imageUrl: pigHillImg,
         description: {
           ko: "돼지 모양을 닮은 언덕으로 포토존이 많습니다. 일몰 때 방문하면 아름다운 사진을 찍을 수 있습니다.",
           en: "Hill resembling a pig shape with many photo spots. Beautiful sunset photography location.",
@@ -185,7 +197,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Chùa Khỉ Viba", 
         mapUrl: "https://maps.app.goo.gl/LmQ7U7VDgi9n8aGH8", 
         note: "largeVehicleNo",
-        imageUrl: "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=300&fit=crop",
+        imageUrl: monkeyTempleImg,
         description: {
           ko: "야생 원숭이들이 서식하는 사원. 원숭이들과 교감하며 사진을 찍을 수 있습니다 (소지품 주의).",
           en: "Temple with wild monkeys. Interact and take photos with monkeys (watch your belongings).",
@@ -199,7 +211,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 해산물 시장", 
         nameVi: "Seafood Market", 
         mapUrl: "https://maps.app.goo.gl/BLVTP1tarzKrXZN28",
-        imageUrl: "https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=400&h=300&fit=crop",
+        imageUrl: seafoodMarketImg,
         description: {
           ko: "신선한 해산물을 저렴하게 구입할 수 있는 재래시장. 현지인들의 생활을 엿볼 수 있습니다.",
           en: "Traditional market for fresh, affordable seafood. Experience local life and culture.",
@@ -213,7 +225,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 시장", 
         nameVi: "Chợ Vũng Tàu 1985", 
         mapUrl: "https://maps.app.goo.gl/1Zpepi95K4garY268",
-        imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop",
+        imageUrl: vungTauMarketImg,
         description: {
           ko: "1985년부터 운영된 붕따우 중심부의 전통 시장. 현지 음식, 과일, 기념품을 구입할 수 있습니다.",
           en: "Traditional market in downtown Vung Tau since 1985. Local food, fruits, and souvenirs available.",
