@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/i18n";
 import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
 
 interface Place {
   name: string;
@@ -39,7 +40,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 거대 예수상", 
         nameVi: "Tượng Chúa Kitô", 
         mapUrl: "https://maps.app.goo.gl/CgLqYEKGLxodn27B8",
-        imageUrl: "https://images.unsplash.com/photo-1555921015-5532091f6026?w=400&h=300&fit=crop",
+        imageUrl: jesusStatueImg,
         description: {
           ko: "높이 32m의 거대한 예수상. 붕따우의 대표적인 랜드마크로 811개의 계단을 올라가면 아름다운 해안 전경을 감상할 수 있습니다.",
           en: "A 32m tall statue of Jesus. Iconic landmark of Vung Tau with 811 steps leading to stunning coastal views.",
