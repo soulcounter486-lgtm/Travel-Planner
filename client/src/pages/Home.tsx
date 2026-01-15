@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import villaImg from "@assets/900＿IMG＿1762947034771＿1762948444789_1768281401898.jpg";
 import vehicleImg from "@assets/Photo＿1725451852943-1_1768289649378.jpg";
+import { WeatherWidget } from "@/components/WeatherWidget";
 
 import { 
   Plane, 
@@ -308,6 +309,9 @@ export default function Home() {
               <h1 className="text-3xl md:text-5xl font-display font-bold text-primary mb-4 leading-tight">{t("header.title")}<br className="md:hidden" /> {t("header.subtitle")}</h1>
               <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
             </div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4 max-w-xs">
+            <WeatherWidget language={language} />
           </motion.div>
         </div>
       </div>
