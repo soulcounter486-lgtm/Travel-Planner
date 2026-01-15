@@ -318,7 +318,7 @@ const placesData: Record<string, Category> = {
       { name: "그랜드 마사지", mapUrl: "https://maps.app.goo.gl/4z3hEL8RF5acvtod7" },
       { name: "김마싸 (MASSAGE 12C2)", phone: "0779 090 882", mapUrl: "https://maps.app.goo.gl/WA7Wt63HWcsi5dVQA" },
       { name: "이발소 Salon Kimha", address: "26 Đinh Tiên Hoàng, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/q2HpipbVVMpvMHYj7" },
-      { name: "Bi Roen 현지 고급 이발소", address: "518 Thống Nhất Mới, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/yCMh6jYoLXLq8fgn7", recommended: true },
+      { name: "Bi Roen 현지 고급 이발소", address: "518 Thống Nhất Mới, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/yCMh6jYoLXLq8fgn7", recommended: true, note: "partnerBarber" },
     ]
   }
 };
@@ -338,16 +338,27 @@ const noteLabels: Record<string, Record<string, string>> = {
   largeVehicleNo: { ko: "대형차량 진입불가", en: "No large vehicles", zh: "大型车辆禁入", vi: "Xe lớn không vào được", ru: "Большие авто запрещены", ja: "大型車両進入禁止" },
   crowded: { ko: "붐빔", en: "Often crowded", zh: "经常拥挤", vi: "Thường đông", ru: "Часто многолюдно", ja: "混雑あり" },
   spacious: { ko: "쾌적", en: "Spacious", zh: "宽敞", vi: "Thoáng mát", ru: "Просторно", ja: "快適" },
-  partnerRestaurant: { ko: "붕따우 도깨비 협력식당", en: "Dokkaebi Partner", zh: "道佶比合作餐厅", vi: "Đối tác Dokkaebi", ru: "Партнёр Dokkaebi", ja: "ドッケビ提携店" }
+  partnerRestaurant: { ko: "붕따우 도깨비 협력식당", en: "Dokkaebi Partner", zh: "道佶比合作餐厅", vi: "Đối tác Dokkaebi", ru: "Партнёр Dokkaebi", ja: "ドッケビ提携店" },
+  partnerBarber: { ko: "붕따우 도깨비 협력업체", en: "Dokkaebi Partner", zh: "道佶比合作店", vi: "Đối tác Dokkaebi", ru: "Партнёр Dokkaebi", ja: "ドッケビ提携店" }
 };
 
-const discountLabel: Record<string, string> = {
-  ko: "붕따우 도깨비 카톡으로 예약 시 10% 할인",
-  en: "10% off when booking via Dokkaebi KakaoTalk",
-  zh: "通过道佶比KakaoTalk预订享10%折扣",
-  vi: "Giảm 10% khi đặt qua KakaoTalk Dokkaebi",
-  ru: "Скидка 10% при бронировании через KakaoTalk Dokkaebi",
-  ja: "ドッケビカカオトークで予約時10%OFF"
+const discountLabel: Record<string, Record<string, string>> = {
+  partnerRestaurant: {
+    ko: "붕따우 도깨비 카톡으로 예약 시 10% 할인",
+    en: "10% off when booking via Dokkaebi KakaoTalk",
+    zh: "通过道佶比KakaoTalk预订享10%折扣",
+    vi: "Giảm 10% khi đặt qua KakaoTalk Dokkaebi",
+    ru: "Скидка 10% при бронировании через KakaoTalk Dokkaebi",
+    ja: "ドッケビカカオトークで予約時10%OFF"
+  },
+  partnerBarber: {
+    ko: "붕따우 도깨비 카톡으로 예약 시 5% 할인",
+    en: "5% off when booking via Dokkaebi KakaoTalk",
+    zh: "通过道佶比KakaoTalk预订享5%折扣",
+    vi: "Giảm 5% khi đặt qua KakaoTalk Dokkaebi",
+    ru: "Скидка 5% при бронировании через KakaoTalk Dokkaebi",
+    ja: "ドッケビカカオトークで予約時5%OFF"
+  }
 };
 
 function PlaceCard({ place, language }: { place: Place; language: string }) {
@@ -407,16 +418,16 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-sm text-foreground">{place.name}</h3>
-                {place.note === "partnerRestaurant" && (
+                {(place.note === "partnerRestaurant" || place.note === "partnerBarber") && (
                   <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary text-primary">
-                    {noteLabels.partnerRestaurant[language] || noteLabels.partnerRestaurant.ko}
+                    {noteLabels[place.note]?.[language] || noteLabels[place.note]?.ko}
                   </Badge>
                 )}
               </div>
               {place.nameVi && <p className="text-xs text-muted-foreground truncate">{place.nameVi}</p>}
-              {place.note === "partnerRestaurant" && (
+              {(place.note === "partnerRestaurant" || place.note === "partnerBarber") && (
                 <p className="text-[10px] text-green-600 dark:text-green-400 font-medium mt-0.5">
-                  {discountLabel[language] || discountLabel.ko}
+                  {discountLabel[place.note]?.[language] || discountLabel[place.note]?.ko}
                 </p>
               )}
             </div>
@@ -429,7 +440,7 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
             </div>
           </div>
 
-          {noteText && place.note !== "partnerRestaurant" && (
+          {noteText && place.note !== "partnerRestaurant" && place.note !== "partnerBarber" && (
             <div className="flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded">
               <AlertTriangle className="w-3 h-3" />
               {noteText}
