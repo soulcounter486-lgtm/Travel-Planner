@@ -43,7 +43,8 @@ import {
   MapPin,
   Calculator,
   MessageCircle,
-  Eye
+  Eye,
+  Camera
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -338,27 +339,37 @@ export default function Home() {
               name="villa.enabled"
               render={({ field }) => (
                 <SectionCard title={t("villa.title")} icon={Plane} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-blue-500/10">
-                  <div className="grid md:grid-cols-2 gap-6 mb-6">
-                    <div className="relative group overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video">
+                  <a 
+                    href="https://m.blog.naver.com/vungtausaver?categoryNo=16&tab=1" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block relative group overflow-hidden rounded-xl border border-slate-200 shadow-md mb-4 cursor-pointer"
+                    data-testid="link-villa-gallery"
+                  >
+                    <div className="aspect-[16/9] md:aspect-[21/9]">
                       <img 
                         src={villaImg} 
                         alt="럭셔리 풀빌라" 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                        <a 
-                          href="https://m.blog.naver.com/vungtausaver?categoryNo=16&tab=1" 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="bg-white/90 hover:bg-white text-primary px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300"
-                        >
-                          {t("villa.viewMore")} <ExternalLink className="w-4 h-4" />
-                        </a>
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col items-center justify-end pb-4">
+                      <div className="bg-white/95 hover:bg-white text-primary px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
+                        <Camera className="w-3.5 h-3.5" />
+                        {language === "ko" ? "사진 더보기 (클릭)" : 
+                         language === "en" ? "View More Photos" :
+                         language === "zh" ? "查看更多照片" :
+                         language === "vi" ? "Xem thêm ảnh" :
+                         language === "ru" ? "Больше фото" :
+                         language === "ja" ? "写真をもっと見る" : "사진 더보기"}
+                        <ExternalLink className="w-3 h-3" />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>{t("villa.checkIn")}</Label>
+                  </a>
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">{t("villa.checkIn")}</Label>
                         <Controller
                           control={form.control}
                           name="villa.checkIn"
@@ -432,39 +443,47 @@ export default function Home() {
                   gradient="from-indigo-500/10"
                 >
                   <div className="space-y-4 max-h-[500px] overflow-y-auto p-1 pr-2 custom-scrollbar">
-                    <div className="grid md:grid-cols-2 gap-6 mb-6">
-                      <div className="relative group overflow-hidden rounded-xl border border-slate-200 shadow-sm aspect-video">
+                    <a 
+                      href="https://m.blog.naver.com/vungtausaver/223352172674" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block relative group overflow-hidden rounded-xl border border-slate-200 shadow-md mb-4 cursor-pointer"
+                      data-testid="link-vehicle-gallery"
+                    >
+                      <div className="aspect-[16/9] md:aspect-[21/9]">
                         <img 
                           src={vehicleImg} 
                           alt="프라이빗 차량 서비스" 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-                          <a 
-                            href="https://m.blog.naver.com/vungtausaver/223352172674" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="bg-white/90 hover:bg-white text-primary px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300"
-                          >
-                            {t("vehicle.viewMore")} <ExternalLink className="w-4 h-4" />
-                          </a>
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col items-center justify-end pb-4">
+                        <div className="bg-white/95 hover:bg-white text-primary px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
+                          <Camera className="w-3.5 h-3.5" />
+                          {language === "ko" ? "사진 더보기 (클릭)" : 
+                           language === "en" ? "View More Photos" :
+                           language === "zh" ? "查看更多照片" :
+                           language === "vi" ? "Xem thêm ảnh" :
+                           language === "ru" ? "Больше фото" :
+                           language === "ja" ? "写真をもっと見る" : "사진 더보기"}
+                          <ExternalLink className="w-3 h-3" />
                         </div>
                       </div>
-                      <div className="flex flex-col justify-center bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-                        <h4 className="font-bold text-indigo-900 mb-2 underline underline-offset-4 decoration-indigo-200">{t("vehicle.info")}</h4>
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-xs font-bold text-indigo-900 mb-1">{t("vehicle.included")}</p>
-                            <ul className="text-[11px] text-indigo-800 space-y-0.5 list-disc list-inside">
-                              {t("vehicle.includedItems").split("|").map((item, i) => <li key={i}>{item}</li>)}
-                            </ul>
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-indigo-900 mb-1">{t("vehicle.notIncluded")}</p>
-                            <ul className="text-[11px] text-indigo-800 space-y-0.5 list-disc list-inside">
-                              {t("vehicle.notIncludedItems").split("|").map((item, i) => <li key={i}>{item}</li>)}
-                            </ul>
-                          </div>
+                    </a>
+                    <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 mb-4">
+                      <h4 className="text-xs font-bold text-indigo-900 mb-2">{t("vehicle.info")}</h4>
+                      <div className="grid grid-cols-2 gap-3 text-[10px]">
+                        <div>
+                          <p className="font-semibold text-indigo-900 mb-0.5">{t("vehicle.included")}</p>
+                          <ul className="text-indigo-700 space-y-0 list-disc list-inside">
+                            {t("vehicle.includedItems").split("|").map((item, i) => <li key={i}>{item}</li>)}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-indigo-900 mb-0.5">{t("vehicle.notIncluded")}</p>
+                          <ul className="text-indigo-700 space-y-0 list-disc list-inside">
+                            {t("vehicle.notIncludedItems").split("|").map((item, i) => <li key={i}>{item}</li>)}
+                          </ul>
                         </div>
                       </div>
                     </div>
