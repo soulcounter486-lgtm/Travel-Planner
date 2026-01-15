@@ -323,7 +323,7 @@ const placesData: Record<string, Category> = {
   }
 };
 
-const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "exchange", "coffee"];
+const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "coffee", "exchange"];
 
 const categoryLabels: Record<string, Record<string, string>> = {
   attractions: { ko: "관광명소", en: "Attractions", zh: "景点", vi: "Địa điểm du lịch", ru: "Достопримечательности", ja: "観光スポット" },
