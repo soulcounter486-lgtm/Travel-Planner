@@ -56,20 +56,18 @@ export function ExchangeRateWidget({ language, rates }: ExchangeRateWidgetProps)
   };
 
   return (
-    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800">
-      <div className="flex items-center gap-2 mb-2">
-        <DollarSign className="w-4 h-4 text-emerald-600" />
-        <span className="text-xs font-medium text-muted-foreground">{labels.title[language] || labels.title.ko}</span>
-        <span className="text-[9px] text-muted-foreground/70">({labels.base[language] || labels.base.ko})</span>
-      </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-1">
-        {filteredRates.map(({ code, flag, rate }) => (
-          <div key={code} className="flex items-center gap-1 text-[11px]">
-            <span>{flag}</span>
-            <span className="text-muted-foreground">{code}:</span>
-            <span className="font-semibold text-foreground">{formatRate(rate)}</span>
-          </div>
-        ))}
+    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-md px-2.5 py-1.5 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-2">
+      <DollarSign className="w-5 h-5 text-emerald-600" />
+      <div>
+        <p className="text-[9px] text-muted-foreground">{labels.title[language] || labels.title.ko}</p>
+        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
+          {filteredRates.map(({ code, flag, rate }) => (
+            <span key={code} className="text-[10px]">
+              <span>{flag}</span>
+              <span className="font-semibold text-foreground ml-0.5">{formatRate(rate)}</span>
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
