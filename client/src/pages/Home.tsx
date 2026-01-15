@@ -341,12 +341,6 @@ export default function Home() {
                 {t("nav.expenses")}
               </Button>
             </Link>
-            <Link href="/nearby">
-              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-nearby">
-                <Navigation className="w-4 h-4" />
-                {t("nav.nearby")}
-              </Button>
-            </Link>
           </div>
         </div>
       </div>
