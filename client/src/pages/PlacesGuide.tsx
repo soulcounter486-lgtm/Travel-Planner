@@ -39,7 +39,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 거대 예수상", 
         nameVi: "Tượng Chúa Kitô", 
         mapUrl: "https://maps.app.goo.gl/CgLqYEKGLxodn27B8",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipOQj8Q8xgBjvPKkFQFxY8uG4FGRP0e_3HPHx0bV=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1555921015-5532091f6026?w=400&h=300&fit=crop",
         description: {
           ko: "높이 32m의 거대한 예수상. 붕따우의 대표적인 랜드마크로 811개의 계단을 올라가면 아름다운 해안 전경을 감상할 수 있습니다.",
           en: "A 32m tall statue of Jesus. Iconic landmark of Vung Tau with 811 steps leading to stunning coastal views.",
@@ -54,7 +54,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Hải Đăng Vũng Tàu", 
         mapUrl: "https://maps.app.goo.gl/HMJbSLCR3bzZxsxy8", 
         note: "largeVehicleNo",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipN9sMGJHnELCxTxaIQNxZxpnKuNXzKwCQKWQfYx=w408-h544-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
         description: {
           ko: "1910년 프랑스 식민지 시대에 건설된 역사적인 등대. 도시와 바다의 파노라마 전망을 제공합니다.",
           en: "Historic lighthouse built in 1910 during French colonial era. Offers panoramic views of the city and sea.",
@@ -69,7 +69,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Bà Rịa–Vũng Tàu Provincial museum", 
         phone: "0254 3852 421", 
         mapUrl: "https://maps.app.goo.gl/YiF3HpgZvXtKTfMCA",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipPfKnWEVF9uDPYCzMSXM8WdCVXbHvBQMkBRvVxP=w408-h272-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1575505586569-646b2ca898fc?w=400&h=300&fit=crop",
         description: {
           ko: "베트남 전쟁과 지역 역사를 보여주는 박물관. 전쟁 유물과 역사적 사진들이 전시되어 있습니다.",
           en: "Museum showcasing Vietnam War and local history with war artifacts and historical photographs.",
@@ -83,7 +83,7 @@ const placesData: Record<string, Category> = {
         name: "화이트 펠리스(띠우 별장)", 
         nameVi: "Bạch Dinh (White Palace)", 
         mapUrl: "https://maps.app.goo.gl/LDkeQHy1Watfec51A",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipMEJKcB2cDvnPnOvxW6xAZdNF6Y8JHXBc3B9cCs=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop",
         description: {
           ko: "1898년 프랑스 총독의 여름 별장으로 지어진 아름다운 백색 궁전. 열대 정원과 바다 전망이 인상적입니다.",
           en: "Beautiful white palace built in 1898 as French Governor's summer residence. Impressive tropical gardens and sea views.",
@@ -97,7 +97,7 @@ const placesData: Record<string, Category> = {
         name: "놀이동산", 
         nameVi: "Ho May Amusement Park", 
         mapUrl: "https://maps.app.goo.gl/vM6tXvAXi4tTNhUV6",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipNmXk7VFFNP6kQ8n8VbOIVsFQxQ4qR8x5K7VqFV=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1513889961551-628c1e5e2ee9?w=400&h=300&fit=crop",
         description: {
           ko: "케이블카로 올라가는 언덕 위 놀이공원. 워터파크, 동물원, 놀이기구를 즐길 수 있습니다.",
           en: "Hilltop amusement park accessible by cable car. Features water park, zoo, and rides.",
@@ -112,7 +112,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Chơn Không Monastery", 
         mapUrl: "https://maps.app.goo.gl/THctAg3uEvx9q9ZLA", 
         note: "largeVehicleNo",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipMQvYkJLRBcvYTXQM8M5Wq8jdBqH6x1wQzPrKHR=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400&h=300&fit=crop",
         description: {
           ko: "산 중턱에 위치한 고요한 불교 사찰. 명상과 평화로운 분위기를 경험할 수 있습니다.",
           en: "Serene Buddhist monastery on the mountainside. Experience meditation and peaceful atmosphere.",
@@ -126,7 +126,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 백비치", 
         nameVi: "Bãi Sau", 
         mapUrl: "https://maps.app.goo.gl/UCARs7msTkaUr2HW6",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipP4J7kn5YxDYlXqH0aD6bFQPNP8l7Tx7bJkdcvQ=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop",
         description: {
           ko: "붕따우에서 가장 긴 해변. 수영과 해양 스포츠를 즐기기에 좋으며 해변가 레스토랑이 많습니다.",
           en: "Longest beach in Vung Tau. Great for swimming, water sports, with many beachfront restaurants.",
@@ -140,7 +140,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 프론트 비치", 
         nameVi: "Front Beach", 
         mapUrl: "https://maps.app.goo.gl/Uz5gy2Tsg3kQm4QCA",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipOvQ8xFQPsRqPzLlMjXhkJIKl8PmYWNLvCcZvYG=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=400&h=300&fit=crop",
         description: {
           ko: "도심에서 가까운 해변으로 일몰 감상에 최적. 저녁에는 해변 산책로가 활기차게 변합니다.",
           en: "Beach close to downtown, perfect for sunset viewing. The promenade comes alive in the evening.",
@@ -154,7 +154,7 @@ const placesData: Record<string, Category> = {
         name: "땀탕기념타워", 
         nameVi: "Tháp Tầm", 
         mapUrl: "https://maps.app.goo.gl/HHr2NF7upTr7Djhy9",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipOr8N5gqh9iOp8sLPCJX7dQ9xQdN9mLKjP0QTZL=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1562979314-bee7453e911c?w=400&h=300&fit=crop",
         description: {
           ko: "베트남 해군의 역사적인 기념탑. 전쟁 영웅들을 기리는 곳으로 바다가 한눈에 보입니다.",
           en: "Historic naval memorial tower honoring war heroes with panoramic sea views.",
@@ -169,7 +169,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Đồi Con Heo", 
         mapUrl: "https://maps.app.goo.gl/Y8nMHFU7xAdXH7e48", 
         note: "largeVehicleNo",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipNAB9l8qKxl6_TkF4QW8EpLZQQfXTYdXQ4lJdZV=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
         description: {
           ko: "돼지 모양을 닮은 언덕으로 포토존이 많습니다. 일몰 때 방문하면 아름다운 사진을 찍을 수 있습니다.",
           en: "Hill resembling a pig shape with many photo spots. Beautiful sunset photography location.",
@@ -184,7 +184,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Chùa Khỉ Viba", 
         mapUrl: "https://maps.app.goo.gl/LmQ7U7VDgi9n8aGH8", 
         note: "largeVehicleNo",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipPBK8H4k3_J9vYK9FkJIQYH3TnLa8Z9CbVbqT1V=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?w=400&h=300&fit=crop",
         description: {
           ko: "야생 원숭이들이 서식하는 사원. 원숭이들과 교감하며 사진을 찍을 수 있습니다 (소지품 주의).",
           en: "Temple with wild monkeys. Interact and take photos with monkeys (watch your belongings).",
@@ -198,7 +198,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 해산물 시장", 
         nameVi: "Seafood Market", 
         mapUrl: "https://maps.app.goo.gl/BLVTP1tarzKrXZN28",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipMx3kLzHqPQKxV7Vf1bT5QGjRy6LPLh8vYKPJmE=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1534483509719-3feaee7c30da?w=400&h=300&fit=crop",
         description: {
           ko: "신선한 해산물을 저렴하게 구입할 수 있는 재래시장. 현지인들의 생활을 엿볼 수 있습니다.",
           en: "Traditional market for fresh, affordable seafood. Experience local life and culture.",
@@ -212,7 +212,7 @@ const placesData: Record<string, Category> = {
         name: "붕따우 시장", 
         nameVi: "Chợ Vũng Tàu 1985", 
         mapUrl: "https://maps.app.goo.gl/1Zpepi95K4garY268",
-        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipN7gKFLrBz9b8wVPQpLPH5sVJQXxjGQN5QWsKCK=w408-h306-k-no",
+        imageUrl: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop",
         description: {
           ko: "1985년부터 운영된 붕따우 중심부의 전통 시장. 현지 음식, 과일, 기념품을 구입할 수 있습니다.",
           en: "Traditional market in downtown Vung Tau since 1985. Local food, fruits, and souvenirs available.",
