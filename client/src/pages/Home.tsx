@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768371269457.png";
+import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import villaImg from "@assets/900＿IMG＿1762947034771＿1762948444789_1768281401898.jpg";
 import vehicleImg from "@assets/Photo＿1725451852943-1_1768289649378.jpg";
 
