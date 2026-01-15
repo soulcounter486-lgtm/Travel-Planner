@@ -342,12 +342,12 @@ const noteLabels: Record<string, Record<string, string>> = {
 };
 
 const discountLabel: Record<string, string> = {
-  ko: "로고 제시 시 10% 할인",
-  en: "10% off with logo",
-  zh: "出示标志享10%折扣",
-  vi: "Giảm 10% khi có logo",
-  ru: "Скидка 10% по логотипу",
-  ja: "ロゴ提示で10%OFF"
+  ko: "붕따우 도깨비 로고 제시 시 10% 할인",
+  en: "10% off with Dokkaebi logo",
+  zh: "出示道佶比标志享10%折扣",
+  vi: "Giảm 10% khi có logo Dokkaebi",
+  ru: "Скидка 10% с логотипом Dokkaebi",
+  ja: "ドッケビロゴ提示で10%OFF"
 };
 
 function PlaceCard({ place, language }: { place: Place; language: string }) {
