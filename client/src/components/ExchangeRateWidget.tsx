@@ -7,20 +7,20 @@ interface ExchangeRateWidgetProps {
 
 const labels: Record<string, Record<string, string>> = {
   title: {
-    ko: "오늘의 환율",
-    en: "Exchange Rates",
-    zh: "今日汇率",
-    vi: "Tỷ giá hôm nay",
-    ru: "Курс валют",
-    ja: "本日の為替"
+    ko: "환율",
+    en: "Rates",
+    zh: "汇率",
+    vi: "Tỷ giá",
+    ru: "Курс",
+    ja: "為替"
   },
-  base: {
-    ko: "1 USD 기준",
-    en: "Based on 1 USD",
-    zh: "基于1美元",
-    vi: "Dựa trên 1 USD",
-    ru: "На 1 USD",
-    ja: "1 USD基準"
+  source: {
+    ko: "네이버 매매기준율",
+    en: "Naver Rate",
+    zh: "Naver汇率",
+    vi: "Tỷ giá Naver",
+    ru: "Курс Naver",
+    ja: "Naver為替"
   }
 };
 
@@ -59,7 +59,7 @@ export function ExchangeRateWidget({ language, rates }: ExchangeRateWidgetProps)
     <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-md px-2.5 py-1.5 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-2">
       <DollarSign className="w-5 h-5 text-emerald-600" />
       <div>
-        <p className="text-[9px] text-muted-foreground">{labels.title[language] || labels.title.ko}</p>
+        <p className="text-[9px] text-muted-foreground">{labels.title[language] || labels.title.ko} <span className="text-[8px] opacity-70">({labels.source[language] || labels.source.ko})</span></p>
         <div className="flex flex-wrap gap-x-2 gap-y-0.5">
           {filteredRates.map(({ code, flag, rate }) => (
             <span key={code} className="text-[10px]">

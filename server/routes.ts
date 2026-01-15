@@ -9,33 +9,71 @@ import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
-const CACHE_DURATION = 12 * 60 * 60 * 1000;
+const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
 
 const defaultRates: Record<string, number> = {
-  KRW: 1350,
-  CNY: 7.2,
-  VND: 25000,
-  RUB: 95,
-  JPY: 155,
+  KRW: 1450,
+  CNY: 7.3,
+  VND: 25500,
+  RUB: 100,
+  JPY: 157,
   USD: 1,
 };
+
+const naverCurrencyCodes: Record<string, string> = {
+  KRW: "FX_USDKRW",
+  JPY: "FX_USDJPY", 
+  CNY: "FX_USDCNY",
+  VND: "FX_USDVND",
+  RUB: "FX_USDRUB",
+};
+
+async function fetchNaverRate(currencyCode: string): Promise<number | null> {
+  try {
+    const url = `https://finance.naver.com/marketindex/exchangeDetail.naver?marketindexCd=${currencyCode}`;
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+      }
+    });
+    const html = await response.text();
+    
+    // 매매기준율 추출 (네이버 금융 페이지 구조)
+    const match = html.match(/class="no_today"[^>]*>[\s\S]*?<span class="blind">([0-9,]+\.?[0-9]*)<\/span>/);
+    if (match && match[1]) {
+      return parseFloat(match[1].replace(/,/g, ''));
+    }
+    return null;
+  } catch (error) {
+    console.error(`Naver rate fetch error for ${currencyCode}:`, error);
+    return null;
+  }
+}
 
 async function getExchangeRates(): Promise<Record<string, number>> {
   if (exchangeRatesCache && Date.now() - exchangeRatesCache.timestamp < CACHE_DURATION) {
     return exchangeRatesCache.rates;
   }
+  
   try {
-    const response = await fetch("https://api.frankfurter.app/latest?from=USD&to=KRW,CNY,JPY");
-    const data = await response.json() as { rates: Record<string, number> };
-    const rates: Record<string, number> = {
-      USD: 1,
-      KRW: data.rates?.KRW || defaultRates.KRW,
-      CNY: data.rates?.CNY || defaultRates.CNY,
-      JPY: data.rates?.JPY || defaultRates.JPY,
-      VND: defaultRates.VND,
-      RUB: defaultRates.RUB,
-    };
+    const rates: Record<string, number> = { USD: 1 };
+    
+    // 네이버 금융에서 환율 가져오기 (병렬 처리)
+    const promises = Object.entries(naverCurrencyCodes).map(async ([currency, code]) => {
+      const rate = await fetchNaverRate(code);
+      return { currency, rate };
+    });
+    
+    const results = await Promise.all(promises);
+    
+    for (const { currency, rate } of results) {
+      rates[currency] = rate || defaultRates[currency];
+    }
+    
     exchangeRatesCache = { rates, timestamp: Date.now() };
+    console.log("Naver exchange rates updated:", rates);
     return rates;
   } catch (error) {
     console.error("Exchange rates fetch error:", error);
