@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
@@ -569,7 +569,8 @@ export default function PlacesGuide() {
 
   const navLabels = {
     calculator: { ko: "견적 계산기", en: "Quote Calculator", zh: "报价计算器", vi: "Báo giá", ru: "Калькулятор", ja: "見積計算機" },
-    guide: { ko: "관광/맛집", en: "Travel Guide", zh: "旅游指南", vi: "Du lịch", ru: "Гид", ja: "ガイド" }
+    guide: { ko: "관광/맛집", en: "Travel Guide", zh: "旅游指南", vi: "Du lịch", ru: "Гид", ja: "ガイド" },
+    expenses: { ko: "여행 가계부", en: "Travel Expenses", zh: "旅行费用", vi: "Chi phí", ru: "Расходы", ja: "旅費" }
   };
 
   return (
@@ -602,6 +603,12 @@ export default function PlacesGuide() {
               <Button variant="default" className="flex items-center gap-2" data-testid="nav-guide">
                 <MapPin className="w-4 h-4" />
                 {navLabels.guide[language as keyof typeof navLabels.guide] || navLabels.guide.ko}
+              </Button>
+            </Link>
+            <Link href="/expenses">
+              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-expenses">
+                <Wallet className="w-4 h-4" />
+                {navLabels.expenses[language as keyof typeof navLabels.expenses] || navLabels.expenses.ko}
               </Button>
             </Link>
           </div>
