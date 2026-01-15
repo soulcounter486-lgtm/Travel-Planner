@@ -602,11 +602,11 @@ export default function ExpenseTracker() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Wallet className="h-6 w-6 text-primary" />
-            <h1 className="font-bold text-xl">{t.title}</h1>
+          <div className="flex items-center gap-3 shrink-0">
+            <Wallet className="h-6 w-6 text-primary shrink-0" />
+            <h1 className="font-bold text-xl whitespace-nowrap">{t.title}</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             {user && (
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">
