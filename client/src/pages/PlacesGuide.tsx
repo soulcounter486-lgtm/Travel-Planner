@@ -367,9 +367,9 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
                 loading="lazy"
               />
               {descriptionText && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                  <span className="text-[10px] text-white/90 flex items-center gap-1">
-                    <Camera className="w-3 h-3" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-2">
+                  <span className="text-[10px] text-white flex items-center gap-1 drop-shadow-md">
+                    <Eye className="w-3 h-3" />
                     {language === "ko" ? "클릭하여 설명 보기" : "Click for details"}
                   </span>
                 </div>
