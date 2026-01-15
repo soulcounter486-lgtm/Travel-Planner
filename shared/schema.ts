@@ -16,6 +16,27 @@ export const visitorCount = pgTable("visitor_count", {
   count: integer("count").notNull().default(0),
 });
 
+// 여행 가계부 - 지출 그룹 (여행별)
+export const expenseGroups = pgTable("expense_groups", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  participants: jsonb("participants").notNull().$type<string[]>(), // 참여자 이름 배열
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// 여행 가계부 - 개별 지출
+export const expenses = pgTable("expenses", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").notNull(),
+  description: text("description").notNull(),
+  amount: integer("amount").notNull(), // VND 단위
+  category: text("category").notNull(), // 식비, 교통, 숙박, 관광, 쇼핑, 기타
+  paidBy: text("paid_by").notNull(), // 결제한 사람
+  splitAmong: jsonb("split_among").notNull().$type<string[]>(), // 나눌 사람들
+  date: text("date").notNull(), // YYYY-MM-DD
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === SCHEMAS ===
 export const insertQuoteSchema = createInsertSchema(quotes).omit({ id: true, createdAt: true });
 
@@ -101,3 +122,12 @@ export type Quote = typeof quotes.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;
 export type CalculateQuoteRequest = z.infer<typeof calculateQuoteSchema>;
 export type QuoteBreakdown = z.infer<typeof quoteBreakdownSchema>;
+
+// 여행 가계부 스키마
+export const insertExpenseGroupSchema = createInsertSchema(expenseGroups).omit({ id: true, createdAt: true });
+export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true });
+
+export type ExpenseGroup = typeof expenseGroups.$inferSelect;
+export type InsertExpenseGroup = z.infer<typeof insertExpenseGroupSchema>;
+export type Expense = typeof expenses.$inferSelect;
+export type InsertExpense = z.infer<typeof insertExpenseSchema>;
