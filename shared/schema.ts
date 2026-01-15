@@ -2,6 +2,9 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Re-export auth models
+export * from "./models/auth";
+
 // === TABLE DEFINITIONS ===
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),
@@ -19,6 +22,7 @@ export const visitorCount = pgTable("visitor_count", {
 // 여행 가계부 - 지출 그룹 (여행별)
 export const expenseGroups = pgTable("expense_groups", {
   id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // 그룹 생성자 ID (로그인 사용자)
   name: text("name").notNull(),
   participants: jsonb("participants").notNull().$type<string[]>(), // 참여자 이름 배열
   createdAt: timestamp("created_at").defaultNow(),

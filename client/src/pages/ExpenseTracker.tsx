@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Home as HomeIcon, 
   Plus, 
@@ -21,7 +23,10 @@ import {
   Receipt, 
   ArrowRight,
   ChevronLeft,
-  Wallet
+  Wallet,
+  LogIn,
+  LogOut,
+  Loader2
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
 
@@ -56,6 +61,10 @@ type TranslationType = {
   paid: string;
   split: string;
   vnd: string;
+  login: string;
+  logout: string;
+  loginRequired: string;
+  loginDescription: string;
 };
 
 const translations: Record<string, TranslationType> = {
@@ -96,7 +105,11 @@ const translations: Record<string, TranslationType> = {
     noExpenses: "아직 지출 내역이 없습니다",
     paid: "결제",
     split: "분담",
-    vnd: "₫"
+    vnd: "₫",
+    login: "로그인",
+    logout: "로그아웃",
+    loginRequired: "로그인이 필요합니다",
+    loginDescription: "여행 가계부를 사용하려면 로그인해주세요. 로그인하면 나만의 여행 가계부를 관리할 수 있습니다."
   },
   en: {
     title: "Travel Expense Tracker",
@@ -135,7 +148,11 @@ const translations: Record<string, TranslationType> = {
     noExpenses: "No expenses yet",
     paid: "Paid",
     split: "Split",
-    vnd: "₫"
+    vnd: "₫",
+    login: "Login",
+    logout: "Logout",
+    loginRequired: "Login Required",
+    loginDescription: "Please log in to use the travel expense tracker. After logging in, you can manage your own travel expenses."
   }
 };
 
@@ -153,6 +170,7 @@ export default function ExpenseTracker() {
   const { language } = useLanguage();
   const t = translations[language] || translations.ko;
   const { toast } = useToast();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   
   const [selectedGroup, setSelectedGroup] = useState<ExpenseGroup | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -171,6 +189,7 @@ export default function ExpenseTracker() {
 
   const { data: groups = [], isLoading: groupsLoading } = useQuery<ExpenseGroup[]>({
     queryKey: ["/api/expense-groups"],
+    enabled: isAuthenticated,
   });
 
   const { data: expenses = [], isLoading: expensesLoading } = useQuery<Expense[]>({
@@ -537,6 +556,48 @@ export default function ExpenseTracker() {
     );
   }
 
+  // 로딩 중
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // 로그인하지 않은 경우
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Wallet className="h-6 w-6 text-primary" />
+              <h1 className="font-bold text-xl">{t.title}</h1>
+            </div>
+            <Link href="/">
+              <Button variant="ghost" size="sm" data-testid="button-home">
+                <HomeIcon className="h-4 w-4 mr-2" />
+                {t.home}
+              </Button>
+            </Link>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-12 max-w-md text-center">
+          <Card className="p-8">
+            <LogIn className="h-16 w-16 mx-auto mb-6 text-primary" />
+            <h2 className="text-2xl font-bold mb-4">{t.loginRequired}</h2>
+            <p className="text-muted-foreground mb-6">{t.loginDescription}</p>
+            <Button size="lg" className="w-full" onClick={() => window.location.href = "/api/login"} data-testid="button-login">
+              <LogIn className="h-5 w-5 mr-2" />
+              {t.login}
+            </Button>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -545,12 +606,27 @@ export default function ExpenseTracker() {
             <Wallet className="h-6 w-6 text-primary" />
             <h1 className="font-bold text-xl">{t.title}</h1>
           </div>
-          <Link href="/">
-            <Button variant="ghost" size="sm" data-testid="button-home">
-              <HomeIcon className="h-4 w-4 mr-2" />
-              {t.home}
+          <div className="flex items-center gap-3">
+            {user && (
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} />
+                  <AvatarFallback>{user.firstName?.[0] || "U"}</AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium hidden sm:inline">{user.firstName}</span>
+              </div>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => window.location.href = "/api/logout"} data-testid="button-logout">
+              <LogOut className="h-4 w-4 mr-2" />
+              {t.logout}
             </Button>
-          </Link>
+            <Link href="/">
+              <Button variant="ghost" size="sm" data-testid="button-home">
+                <HomeIcon className="h-4 w-4 mr-2" />
+                {t.home}
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 

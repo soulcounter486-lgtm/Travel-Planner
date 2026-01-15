@@ -6,7 +6,8 @@ import { z } from "zod";
 import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema } from "@shared/schema";
 import { addDays, getDay, parseISO } from "date-fns";
 import { db } from "./db";
-import { eq, sql, desc } from "drizzle-orm";
+import { eq, sql, desc, and } from "drizzle-orm";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
@@ -85,6 +86,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Setup authentication (MUST be before other routes)
+  await setupAuth(app);
+  registerAuthRoutes(app);
 
   app.get("/api/exchange-rates", async (req, res) => {
     try {
@@ -309,12 +313,15 @@ export async function registerRoutes(
     }
   });
 
-  // === 여행 가계부 API ===
+  // === 여행 가계부 API (인증 필요) ===
   
-  // 그룹 목록 조회
-  app.get("/api/expense-groups", async (req, res) => {
+  // 그룹 목록 조회 (로그인한 사용자의 그룹만)
+  app.get("/api/expense-groups", isAuthenticated, async (req: any, res) => {
     try {
-      const groups = await db.select().from(expenseGroups).orderBy(desc(expenseGroups.createdAt));
+      const userId = req.user?.claims?.sub;
+      const groups = await db.select().from(expenseGroups)
+        .where(eq(expenseGroups.userId, userId))
+        .orderBy(desc(expenseGroups.createdAt));
       res.json(groups);
     } catch (err) {
       console.error("Expense groups get error:", err);
@@ -323,10 +330,12 @@ export async function registerRoutes(
   });
 
   // 그룹 생성
-  app.post("/api/expense-groups", async (req, res) => {
+  app.post("/api/expense-groups", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
       const input = insertExpenseGroupSchema.parse(req.body);
       const [group] = await db.insert(expenseGroups).values({
+        userId: userId,
         name: input.name,
         participants: input.participants as string[],
       }).returning();
@@ -341,10 +350,18 @@ export async function registerRoutes(
     }
   });
 
-  // 그룹 삭제
-  app.delete("/api/expense-groups/:id", async (req, res) => {
+  // 그룹 삭제 (본인 그룹만)
+  app.delete("/api/expense-groups/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
       const id = parseInt(req.params.id);
+      
+      // 본인 그룹인지 확인
+      const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, id), eq(expenseGroups.userId, userId)));
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
       await db.delete(expenses).where(eq(expenses.groupId, id));
       await db.delete(expenseGroups).where(eq(expenseGroups.id, id));
       res.json({ success: true });
@@ -354,10 +371,18 @@ export async function registerRoutes(
     }
   });
 
-  // 지출 목록 조회 (그룹별)
-  app.get("/api/expense-groups/:id/expenses", async (req, res) => {
+  // 지출 목록 조회 (그룹별, 본인 그룹만)
+  app.get("/api/expense-groups/:id/expenses", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
       const groupId = parseInt(req.params.id);
+      
+      // 본인 그룹인지 확인
+      const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, groupId), eq(expenseGroups.userId, userId)));
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
       const expenseList = await db.select().from(expenses).where(eq(expenses.groupId, groupId)).orderBy(desc(expenses.createdAt));
       res.json(expenseList);
     } catch (err) {
@@ -366,13 +391,14 @@ export async function registerRoutes(
     }
   });
 
-  // 지출 추가
-  app.post("/api/expense-groups/:id/expenses", async (req, res) => {
+  // 지출 추가 (본인 그룹만)
+  app.post("/api/expense-groups/:id/expenses", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
       const groupId = parseInt(req.params.id);
       
-      // 그룹 조회 및 참여자 검증
-      const [group] = await db.select().from(expenseGroups).where(eq(expenseGroups.id, groupId));
+      // 그룹 조회 및 본인 그룹 확인
+      const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, groupId), eq(expenseGroups.userId, userId)));
       if (!group) {
         return res.status(404).json({ message: "Group not found" });
       }
@@ -421,10 +447,23 @@ export async function registerRoutes(
     }
   });
 
-  // 지출 삭제
-  app.delete("/api/expenses/:id", async (req, res) => {
+  // 지출 삭제 (본인 그룹의 지출만)
+  app.delete("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
       const id = parseInt(req.params.id);
+      
+      // 해당 지출의 그룹이 본인 것인지 확인
+      const [expense] = await db.select().from(expenses).where(eq(expenses.id, id));
+      if (!expense) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+      
+      const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, expense.groupId), eq(expenseGroups.userId, userId)));
+      if (!group) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
       await db.delete(expenses).where(eq(expenses.id, id));
       res.json({ success: true });
     } catch (err) {
@@ -433,11 +472,12 @@ export async function registerRoutes(
     }
   });
 
-  // 정산 계산 (그룹별)
-  app.get("/api/expense-groups/:id/settlement", async (req, res) => {
+  // 정산 계산 (그룹별, 본인 그룹만)
+  app.get("/api/expense-groups/:id/settlement", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user?.claims?.sub;
       const groupId = parseInt(req.params.id);
-      const [group] = await db.select().from(expenseGroups).where(eq(expenseGroups.id, groupId));
+      const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, groupId), eq(expenseGroups.userId, userId)));
       if (!group) {
         return res.status(404).json({ message: "Group not found" });
       }
