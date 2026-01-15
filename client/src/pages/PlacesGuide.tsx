@@ -323,6 +323,8 @@ const placesData: Record<string, Category> = {
   }
 };
 
+const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "exchange", "coffee"];
+
 const categoryLabels: Record<string, Record<string, string>> = {
   attractions: { ko: "관광명소", en: "Attractions", zh: "景点", vi: "Địa điểm du lịch", ru: "Достопримечательности", ja: "観光スポット" },
   localFood: { ko: "현지 음식점", en: "Local Restaurants", zh: "当地餐厅", vi: "Nhà hàng địa phương", ru: "Местные рестораны", ja: "ローカルレストラン" },
@@ -583,7 +585,9 @@ export default function PlacesGuide() {
       <div className="container mx-auto px-4 max-w-4xl py-8">
 
         <div className="space-y-4">
-          {Object.entries(placesData).map(([key, category]) => {
+          {categoryOrder.map((key) => {
+            const category = placesData[key];
+            if (!category) return null;
             const Icon = category.icon;
             const isExpanded = expandedCategories.has(key);
             const label = categoryLabels[key]?.[language] || categoryLabels[key]?.ko || key;
