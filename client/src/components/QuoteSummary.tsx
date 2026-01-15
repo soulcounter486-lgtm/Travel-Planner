@@ -221,10 +221,13 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               )}
             </AnimatePresence>
 
-            <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
+            <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 space-y-1">
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
                 <Info className="w-3 h-3" />
                 {t("quote.note")}
+              </div>
+              <div className="text-[10px] text-primary font-semibold flex items-center gap-1 pl-4">
+                • {t("quote.actualLower")}
               </div>
             </div>
           </CardContent>
