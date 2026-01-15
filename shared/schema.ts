@@ -32,12 +32,13 @@ export const expenseGroups = pgTable("expense_groups", {
 export const expenses = pgTable("expenses", {
   id: serial("id").primaryKey(),
   groupId: integer("group_id").notNull(),
-  description: text("description").notNull(),
-  amount: integer("amount").notNull(), // VND 단위
-  category: text("category").notNull(), // 식비, 교통, 숙박, 관광, 쇼핑, 기타
-  paidBy: text("paid_by").notNull(), // 결제한 사람
-  splitAmong: jsonb("split_among").notNull().$type<string[]>(), // 나눌 사람들
+  description: text("description").default(""), // 선택사항
+  amount: integer("amount").notNull().default(0), // VND 단위
+  category: text("category").default("other"), // 식비, 교통, 숙박, 관광, 쇼핑, 기타
+  paidBy: text("paid_by").default(""), // 결제한 사람 (선택)
+  splitAmong: jsonb("split_among").$type<string[]>().default([]), // 나눌 사람들 (선택)
   date: text("date").notNull(), // YYYY-MM-DD
+  memo: text("memo").default(""), // 메모
   createdAt: timestamp("created_at").defaultNow(),
 });
 

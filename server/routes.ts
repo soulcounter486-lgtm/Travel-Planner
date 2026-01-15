@@ -403,21 +403,16 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Group not found" });
       }
       
-      const input = insertExpenseSchema.parse({ ...req.body, groupId });
+      const { description = "", amount = 0, category = "other", paidBy = "", splitAmong = [], date, memo = "" } = req.body;
       const participants = group.participants as string[];
-      const splitAmongList = input.splitAmong as string[];
+      const splitAmongList = splitAmong as string[];
       
-      // 금액 검증
-      if (input.amount <= 0) {
-        return res.status(400).json({ message: "Amount must be a positive number" });
-      }
-      
-      // 결제자 검증
-      if (!participants.includes(input.paidBy)) {
+      // 결제자 검증 (입력된 경우에만)
+      if (paidBy && !participants.includes(paidBy)) {
         return res.status(400).json({ message: "Payer must be a group participant" });
       }
       
-      // 분담자 검증
+      // 분담자 검증 (입력된 경우에만)
       for (const person of splitAmongList) {
         if (!participants.includes(person)) {
           return res.status(400).json({ message: `${person} is not a group participant` });
@@ -428,13 +423,14 @@ export async function registerRoutes(
       const uniqueSplitAmong = Array.from(new Set(splitAmongList));
       
       const [expense] = await db.insert(expenses).values({
-        groupId: input.groupId,
-        description: input.description,
-        amount: input.amount,
-        category: input.category,
-        paidBy: input.paidBy,
+        groupId,
+        description,
+        amount: parseInt(amount) || 0,
+        category,
+        paidBy,
         splitAmong: uniqueSplitAmong,
-        date: input.date,
+        date: date || new Date().toISOString().split('T')[0],
+        memo,
       }).returning();
       res.status(201).json(expense);
     } catch (err) {
@@ -490,15 +486,10 @@ export async function registerRoutes(
       }
       
       const participants = group.participants as string[];
-      const { description, amount, category, paidBy, splitAmong, date } = req.body;
+      const { description, amount, category, paidBy, splitAmong, date, memo } = req.body;
       
-      // 금액 검증
-      if (amount !== undefined && amount <= 0) {
-        return res.status(400).json({ message: "Amount must be a positive number" });
-      }
-      
-      // 결제자 검증
-      if (paidBy !== undefined && !participants.includes(paidBy)) {
+      // 결제자 검증 (입력된 경우에만)
+      if (paidBy !== undefined && paidBy !== "" && !participants.includes(paidBy)) {
         return res.status(400).json({ message: "Payer must be a group participant" });
       }
       
@@ -513,11 +504,12 @@ export async function registerRoutes(
       
       const updateData: any = {};
       if (description !== undefined) updateData.description = description;
-      if (amount !== undefined) updateData.amount = parseInt(amount);
+      if (amount !== undefined) updateData.amount = parseInt(amount) || 0;
       if (category !== undefined) updateData.category = category;
       if (paidBy !== undefined) updateData.paidBy = paidBy;
       if (splitAmong !== undefined) updateData.splitAmong = Array.from(new Set(splitAmong));
       if (date !== undefined) updateData.date = date;
+      if (memo !== undefined) updateData.memo = memo;
       
       const [updated] = await db.update(expenses).set(updateData).where(eq(expenses.id, id)).returning();
       res.json(updated);
@@ -552,13 +544,16 @@ export async function registerRoutes(
       });
       
       for (const expense of expenseList) {
-        const splitAmong = expense.splitAmong as string[];
+        const splitAmong = (expense.splitAmong as string[]) || [];
+        if (splitAmong.length === 0) continue;
+        
         const baseAmount = Math.floor(expense.amount / splitAmong.length);
         const remainder = expense.amount % splitAmong.length;
         
         // 결제자의 지불 금액 증가
-        if (paid[expense.paidBy] !== undefined) {
-          paid[expense.paidBy] += expense.amount;
+        const paidBy = expense.paidBy || "";
+        if (paidBy && paid[paidBy] !== undefined) {
+          paid[paidBy] += expense.amount;
         }
         
         // 각 분담자의 부담 금액 증가 (나머지는 앞 사람부터 분배)

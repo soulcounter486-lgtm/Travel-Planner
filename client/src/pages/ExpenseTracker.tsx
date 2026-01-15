@@ -68,6 +68,7 @@ type TranslationType = {
   loginDescription: string;
   editExpense: string;
   save: string;
+  memo: string;
 };
 
 const translations: Record<string, TranslationType> = {
@@ -114,7 +115,8 @@ const translations: Record<string, TranslationType> = {
     loginRequired: "로그인이 필요합니다",
     loginDescription: "여행 가계부를 사용하려면 로그인해주세요. 로그인하면 나만의 여행 가계부를 관리할 수 있습니다.",
     editExpense: "지출 수정",
-    save: "저장"
+    save: "저장",
+    memo: "메모"
   },
   en: {
     title: "Travel Expense Tracker",
@@ -159,7 +161,8 @@ const translations: Record<string, TranslationType> = {
     loginRequired: "Login Required",
     loginDescription: "Please log in to use the travel expense tracker. After logging in, you can manage your own travel expenses.",
     editExpense: "Edit Expense",
-    save: "Save"
+    save: "Save",
+    memo: "Memo"
   }
 };
 
@@ -195,6 +198,7 @@ export default function ExpenseTracker() {
   const [expensePaidBy, setExpensePaidBy] = useState("");
   const [expenseSplitAmong, setExpenseSplitAmong] = useState<string[]>([]);
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
+  const [expenseMemo, setExpenseMemo] = useState("");
   
   const [editDescription, setEditDescription] = useState("");
   const [editAmount, setEditAmount] = useState("");
@@ -202,6 +206,7 @@ export default function ExpenseTracker() {
   const [editPaidBy, setEditPaidBy] = useState("");
   const [editSplitAmong, setEditSplitAmong] = useState<string[]>([]);
   const [editDate, setEditDate] = useState("");
+  const [editMemo, setEditMemo] = useState("");
 
   const { data: groups = [], isLoading: groupsLoading } = useQuery<ExpenseGroup[]>({
     queryKey: ["/api/expense-groups"],
@@ -250,6 +255,7 @@ export default function ExpenseTracker() {
       paidBy: string;
       splitAmong: string[];
       date: string;
+      memo: string;
     }) => {
       const res = await apiRequest("POST", `/api/expense-groups/${selectedGroup!.id}/expenses`, data);
       return res.json();
@@ -286,6 +292,7 @@ export default function ExpenseTracker() {
       paidBy: string;
       splitAmong: string[];
       date: string;
+      memo: string;
     }) => {
       const { id, ...body } = data;
       const res = await apiRequest("PATCH", `/api/expenses/${id}`, body);
@@ -310,28 +317,21 @@ export default function ExpenseTracker() {
     setExpensePaidBy("");
     setExpenseSplitAmong([]);
     setExpenseDate(new Date().toISOString().split('T')[0]);
+    setExpenseMemo("");
   };
 
   const handleCreateGroup = () => {
     if (!newGroupName.trim() || !newParticipants.trim()) return;
     const participants = newParticipants.split(",").map(p => p.trim()).filter(p => p);
-    if (participants.length < 2) {
-      toast({ title: "최소 2명 이상의 참여자가 필요합니다", variant: "destructive" });
+    if (participants.length < 1) {
+      toast({ title: "최소 1명 이상의 참여자가 필요합니다", variant: "destructive" });
       return;
     }
     createGroupMutation.mutate({ name: newGroupName.trim(), participants });
   };
 
   const handleAddExpense = () => {
-    if (!expenseDescription.trim() || !expenseAmount || !expensePaidBy || expenseSplitAmong.length === 0) {
-      toast({ title: "모든 필드를 입력해주세요", variant: "destructive" });
-      return;
-    }
-    const amount = parseInt(expenseAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({ title: "금액은 0보다 커야 합니다", variant: "destructive" });
-      return;
-    }
+    const amount = expenseAmount ? parseInt(expenseAmount) : 0;
     addExpenseMutation.mutate({
       description: expenseDescription.trim(),
       amount,
@@ -339,31 +339,25 @@ export default function ExpenseTracker() {
       paidBy: expensePaidBy,
       splitAmong: expenseSplitAmong,
       date: expenseDate,
+      memo: expenseMemo.trim(),
     });
   };
 
   const handleStartEdit = (expense: Expense) => {
     setEditingExpense(expense);
-    setEditDescription(expense.description);
+    setEditDescription(expense.description || "");
     setEditAmount(String(expense.amount));
-    setEditCategory(expense.category);
-    setEditPaidBy(expense.paidBy);
-    setEditSplitAmong(expense.splitAmong as string[]);
+    setEditCategory(expense.category || "other");
+    setEditPaidBy(expense.paidBy || "");
+    setEditSplitAmong((expense.splitAmong as string[]) || []);
     setEditDate(expense.date);
+    setEditMemo((expense as any).memo || "");
     setShowEditExpenseDialog(true);
   };
 
   const handleEditExpense = () => {
     if (!editingExpense) return;
-    if (!editDescription.trim() || !editAmount || !editPaidBy || editSplitAmong.length === 0) {
-      toast({ title: "모든 필드를 입력해주세요", variant: "destructive" });
-      return;
-    }
-    const amount = parseInt(editAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({ title: "금액은 0보다 커야 합니다", variant: "destructive" });
-      return;
-    }
+    const amount = editAmount ? parseInt(editAmount) : 0;
     editExpenseMutation.mutate({
       id: editingExpense.id,
       description: editDescription.trim(),
@@ -372,6 +366,7 @@ export default function ExpenseTracker() {
       paidBy: editPaidBy,
       splitAmong: editSplitAmong,
       date: editDate,
+      memo: editMemo.trim(),
     });
   };
 
@@ -502,6 +497,15 @@ export default function ExpenseTracker() {
                       ))}
                     </div>
                   </div>
+                  <div>
+                    <Label>{t.memo}</Label>
+                    <Input
+                      value={expenseMemo}
+                      onChange={(e) => setExpenseMemo(e.target.value)}
+                      placeholder="메모 (선택사항)"
+                      data-testid="input-expense-memo"
+                    />
+                  </div>
                   <div className="flex gap-2 pt-4">
                     <Button variant="outline" className="flex-1" onClick={() => setShowAddExpenseDialog(false)}>
                       {t.cancel}
@@ -600,6 +604,15 @@ export default function ExpenseTracker() {
                       ))}
                     </div>
                   </div>
+                  <div>
+                    <Label>{t.memo}</Label>
+                    <Input
+                      value={editMemo}
+                      onChange={(e) => setEditMemo(e.target.value)}
+                      placeholder="메모 (선택사항)"
+                      data-testid="input-edit-memo"
+                    />
+                  </div>
                   <div className="flex gap-2 pt-4">
                     <Button variant="outline" className="flex-1" onClick={() => setShowEditExpenseDialog(false)}>
                       {t.cancel}
@@ -695,9 +708,9 @@ export default function ExpenseTracker() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium truncate">{expense.description}</span>
+                          <span className="font-medium truncate">{expense.description || "(내용 없음)"}</span>
                           <Badge variant="secondary" className="text-xs">
-                            {categoryLabels[expense.category] || expense.category}
+                            {categoryLabels[expense.category || "other"] || expense.category || "기타"}
                           </Badge>
                         </div>
                         <div className="text-sm text-muted-foreground mt-1 flex flex-wrap gap-x-3 gap-y-1">
