@@ -131,7 +131,7 @@ export type QuoteBreakdown = z.infer<typeof quoteBreakdownSchema>;
 // 여행 가계부 스키마
 export const insertExpenseGroupSchema = createInsertSchema(expenseGroups).omit({ id: true, createdAt: true, userId: true });
 export const insertExpenseSchema = createInsertSchema(expenses).omit({ id: true, createdAt: true }).extend({
-  amount: z.coerce.number().int().positive({ message: "Amount must be a positive integer" }),
+  amount: z.coerce.number().int().nonnegative({ message: "Amount cannot be negative" }).default(0),
 });
 
 export type ExpenseGroup = typeof expenseGroups.$inferSelect;

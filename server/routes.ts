@@ -407,6 +407,12 @@ export async function registerRoutes(
       const participants = group.participants as string[];
       const splitAmongList = splitAmong as string[];
       
+      // 금액 검증 (음수 불허)
+      const parsedAmount = parseInt(amount) || 0;
+      if (parsedAmount < 0) {
+        return res.status(400).json({ message: "Amount cannot be negative" });
+      }
+      
       // 결제자 검증 (입력된 경우에만)
       if (paidBy && !participants.includes(paidBy)) {
         return res.status(400).json({ message: "Payer must be a group participant" });
@@ -425,7 +431,7 @@ export async function registerRoutes(
       const [expense] = await db.insert(expenses).values({
         groupId,
         description,
-        amount: parseInt(amount) || 0,
+        amount: parsedAmount,
         category,
         paidBy,
         splitAmong: uniqueSplitAmong,
@@ -487,6 +493,11 @@ export async function registerRoutes(
       
       const participants = group.participants as string[];
       const { description, amount, category, paidBy, splitAmong, date, memo } = req.body;
+      
+      // 금액 검증 (음수 불허)
+      if (amount !== undefined && (parseInt(amount) || 0) < 0) {
+        return res.status(400).json({ message: "Amount cannot be negative" });
+      }
       
       // 결제자 검증 (입력된 경우에만)
       if (paidBy !== undefined && paidBy !== "" && !participants.includes(paidBy)) {
