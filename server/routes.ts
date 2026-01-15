@@ -3,10 +3,10 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema } from "@shared/schema";
 import { addDays, getDay, parseISO } from "date-fns";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
@@ -306,6 +306,182 @@ export async function registerRoutes(
     } catch (err) {
       console.error("Visitor count increment error:", err);
       res.json({ count: 0 });
+    }
+  });
+
+  // === 여행 가계부 API ===
+  
+  // 그룹 목록 조회
+  app.get("/api/expense-groups", async (req, res) => {
+    try {
+      const groups = await db.select().from(expenseGroups).orderBy(desc(expenseGroups.createdAt));
+      res.json(groups);
+    } catch (err) {
+      console.error("Expense groups get error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // 그룹 생성
+  app.post("/api/expense-groups", async (req, res) => {
+    try {
+      const input = insertExpenseGroupSchema.parse(req.body);
+      const [group] = await db.insert(expenseGroups).values(input).returning();
+      res.status(201).json(group);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0].message });
+      } else {
+        console.error("Expense group create error:", err);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  // 그룹 삭제
+  app.delete("/api/expense-groups/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await db.delete(expenses).where(eq(expenses.groupId, id));
+      await db.delete(expenseGroups).where(eq(expenseGroups.id, id));
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Expense group delete error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // 지출 목록 조회 (그룹별)
+  app.get("/api/expense-groups/:id/expenses", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const expenseList = await db.select().from(expenses).where(eq(expenses.groupId, groupId)).orderBy(desc(expenses.createdAt));
+      res.json(expenseList);
+    } catch (err) {
+      console.error("Expenses get error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // 지출 추가
+  app.post("/api/expense-groups/:id/expenses", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const input = insertExpenseSchema.parse({ ...req.body, groupId });
+      const [expense] = await db.insert(expenses).values(input).returning();
+      res.status(201).json(expense);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0].message });
+      } else {
+        console.error("Expense create error:", err);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  });
+
+  // 지출 삭제
+  app.delete("/api/expenses/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await db.delete(expenses).where(eq(expenses.id, id));
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Expense delete error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // 정산 계산 (그룹별)
+  app.get("/api/expense-groups/:id/settlement", async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const [group] = await db.select().from(expenseGroups).where(eq(expenseGroups.id, groupId));
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
+      const expenseList = await db.select().from(expenses).where(eq(expenses.groupId, groupId));
+      
+      const participants = group.participants as string[];
+      
+      // 각 참여자가 지불한 금액
+      const paid: Record<string, number> = {};
+      // 각 참여자가 부담해야 할 금액
+      const owed: Record<string, number> = {};
+      
+      participants.forEach(p => {
+        paid[p] = 0;
+        owed[p] = 0;
+      });
+      
+      for (const expense of expenseList) {
+        const splitAmong = expense.splitAmong as string[];
+        const perPerson = Math.round(expense.amount / splitAmong.length);
+        
+        // 결제자의 지불 금액 증가
+        if (paid[expense.paidBy] !== undefined) {
+          paid[expense.paidBy] += expense.amount;
+        }
+        
+        // 각 분담자의 부담 금액 증가
+        for (const person of splitAmong) {
+          if (owed[person] !== undefined) {
+            owed[person] += perPerson;
+          }
+        }
+      }
+      
+      // 정산 결과 계산 (차액)
+      const balance: Record<string, number> = {};
+      participants.forEach(p => {
+        balance[p] = paid[p] - owed[p]; // 양수면 받아야 함, 음수면 줘야 함
+      });
+      
+      // 정산 내역 생성
+      const settlements: { from: string; to: string; amount: number }[] = [];
+      const debtors = participants.filter(p => balance[p] < 0).map(p => ({ name: p, amount: -balance[p] }));
+      const creditors = participants.filter(p => balance[p] > 0).map(p => ({ name: p, amount: balance[p] }));
+      
+      debtors.sort((a, b) => b.amount - a.amount);
+      creditors.sort((a, b) => b.amount - a.amount);
+      
+      let i = 0, j = 0;
+      while (i < debtors.length && j < creditors.length) {
+        const debtor = debtors[i];
+        const creditor = creditors[j];
+        const amount = Math.min(debtor.amount, creditor.amount);
+        
+        if (amount > 0) {
+          settlements.push({
+            from: debtor.name,
+            to: creditor.name,
+            amount: Math.round(amount)
+          });
+        }
+        
+        debtor.amount -= amount;
+        creditor.amount -= amount;
+        
+        if (debtor.amount < 1) i++;
+        if (creditor.amount < 1) j++;
+      }
+      
+      const totalExpense = expenseList.reduce((sum, e) => sum + e.amount, 0);
+      const perPerson = participants.length > 0 ? Math.round(totalExpense / participants.length) : 0;
+      
+      res.json({
+        totalExpense,
+        perPerson,
+        participantCount: participants.length,
+        paid,
+        owed,
+        balance,
+        settlements
+      });
+    } catch (err) {
+      console.error("Settlement calculation error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
