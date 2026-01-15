@@ -22,6 +22,11 @@ import pigHillImg from "@assets/12-doi-con-heo-vung-tau_1768452191730.jpg";
 import monkeyTempleImg from "@assets/z40559387093017e7b56d8300d82363ef9c08685c1f765-167436802698717_1768452191734.jpg";
 import seafoodMarketImg from "@assets/cho-dem-vung-tau-2_1768452191738.jpg";
 import vungTauMarketImg from "@assets/c3d3213f-cho-vung-tau-2_1768452191743.jpg";
+import biRoenImg from "@assets/Screenshot_20260115_210807_Maps_1768486311141.jpg";
+import reenMassageImg from "@assets/Screenshot_20260115_210912_Maps_1768486311161.jpg";
+import grandMassageImg from "@assets/Screenshot_20260115_210934_Maps_1768486311164.jpg";
+import daySpaImg from "@assets/Screenshot_20260115_210959_Maps_1768486311167.jpg";
+import ianBbqImg from "@assets/Screenshot_20260115_211048_Maps_1768486311169.jpg";
 
 interface Place {
   name: string;
@@ -263,7 +268,7 @@ const placesData: Record<string, Category> = {
     icon: Utensils,
     gradient: "from-rose-500 to-pink-600",
     places: [
-      { name: "이안 돌판 삼겹살", address: "300A Phan Chu Trinh, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/8FXU2u8Cn2AufLGz9", recommended: true, note: "partnerRestaurant" },
+      { name: "이안 돌판 삼겹살", address: "300A Phan Chu Trinh, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/8FXU2u8Cn2AufLGz9", recommended: true, note: "partnerRestaurant", imageUrl: ianBbqImg },
       { name: "가보정", address: "B12-1/10 Khu Trung Tâm Chí Linh, Phường Nguyễn An Ninh", mapUrl: "https://maps.app.goo.gl/Mr1MXkLFMA5xfBjB6" },
       { name: "비원식당", address: "662A Nguyễn An Ninh, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/UrmsYuMjWGwMhAYq6" },
       { name: "뚱보집 (포차)", address: "151 Thùy Vân, Phường Thắng Tam, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/EXSWLjy4mdcwZkt36" },
@@ -313,12 +318,12 @@ const placesData: Record<string, Category> = {
     icon: Scissors,
     gradient: "from-purple-500 to-violet-600",
     places: [
-      { name: "Rean 마사지", mapUrl: "https://maps.app.goo.gl/zGjF1ZoN5TJY5jdu8", note: "partnerBarber" },
-      { name: "그랜드 마사지", mapUrl: "https://maps.app.goo.gl/4z3hEL8RF5acvtod7", note: "partnerBarber" },
-      { name: "DAY SPA", address: "63 Trần Hưng Đạo, Phường 1, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/JH3JEHhRRemgAm3VA", note: "partnerBarber" },
+      { name: "Re.en 마사지", mapUrl: "https://maps.app.goo.gl/zGjF1ZoN5TJY5jdu8", note: "partnerBarber", imageUrl: reenMassageImg },
+      { name: "그랜드 마사지", mapUrl: "https://maps.app.goo.gl/4z3hEL8RF5acvtod7", note: "partnerBarber", imageUrl: grandMassageImg },
+      { name: "DAY SPA", address: "63 Trần Hưng Đạo, Phường 1, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/JH3JEHhRRemgAm3VA", note: "partnerBarber", imageUrl: daySpaImg },
       { name: "김마싸 (MASSAGE 12C2)", phone: "0779 090 882", mapUrl: "https://maps.app.goo.gl/WA7Wt63HWcsi5dVQA" },
       { name: "이발소 Salon Kimha", address: "26 Đinh Tiên Hoàng, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/q2HpipbVVMpvMHYj7" },
-      { name: "Bi Roen 현지 고급 이발소", address: "518 Thống Nhất Mới, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/yCMh6jYoLXLq8fgn7", recommended: true, note: "partnerBarber" },
+      { name: "Bi Roen 현지 고급 이발소", address: "518 Thống Nhất Mới, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/yCMh6jYoLXLq8fgn7", recommended: true, note: "partnerBarber", imageUrl: biRoenImg },
     ]
   }
 };
