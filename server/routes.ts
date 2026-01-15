@@ -326,7 +326,10 @@ export async function registerRoutes(
   app.post("/api/expense-groups", async (req, res) => {
     try {
       const input = insertExpenseGroupSchema.parse(req.body);
-      const [group] = await db.insert(expenseGroups).values(input).returning();
+      const [group] = await db.insert(expenseGroups).values({
+        name: input.name,
+        participants: input.participants as string[],
+      }).returning();
       res.status(201).json(group);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -367,8 +370,46 @@ export async function registerRoutes(
   app.post("/api/expense-groups/:id/expenses", async (req, res) => {
     try {
       const groupId = parseInt(req.params.id);
+      
+      // 그룹 조회 및 참여자 검증
+      const [group] = await db.select().from(expenseGroups).where(eq(expenseGroups.id, groupId));
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
       const input = insertExpenseSchema.parse({ ...req.body, groupId });
-      const [expense] = await db.insert(expenses).values(input).returning();
+      const participants = group.participants as string[];
+      const splitAmongList = input.splitAmong as string[];
+      
+      // 금액 검증
+      if (input.amount <= 0) {
+        return res.status(400).json({ message: "Amount must be a positive number" });
+      }
+      
+      // 결제자 검증
+      if (!participants.includes(input.paidBy)) {
+        return res.status(400).json({ message: "Payer must be a group participant" });
+      }
+      
+      // 분담자 검증
+      for (const person of splitAmongList) {
+        if (!participants.includes(person)) {
+          return res.status(400).json({ message: `${person} is not a group participant` });
+        }
+      }
+      
+      // 분담자 중복 제거
+      const uniqueSplitAmong = Array.from(new Set(splitAmongList));
+      
+      const [expense] = await db.insert(expenses).values({
+        groupId: input.groupId,
+        description: input.description,
+        amount: input.amount,
+        category: input.category,
+        paidBy: input.paidBy,
+        splitAmong: uniqueSplitAmong,
+        date: input.date,
+      }).returning();
       res.status(201).json(expense);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -417,17 +458,19 @@ export async function registerRoutes(
       
       for (const expense of expenseList) {
         const splitAmong = expense.splitAmong as string[];
-        const perPerson = Math.round(expense.amount / splitAmong.length);
+        const baseAmount = Math.floor(expense.amount / splitAmong.length);
+        const remainder = expense.amount % splitAmong.length;
         
         // 결제자의 지불 금액 증가
         if (paid[expense.paidBy] !== undefined) {
           paid[expense.paidBy] += expense.amount;
         }
         
-        // 각 분담자의 부담 금액 증가
-        for (const person of splitAmong) {
+        // 각 분담자의 부담 금액 증가 (나머지는 앞 사람부터 분배)
+        for (let idx = 0; idx < splitAmong.length; idx++) {
+          const person = splitAmong[idx];
           if (owed[person] !== undefined) {
-            owed[person] += perPerson;
+            owed[person] += baseAmount + (idx < remainder ? 1 : 0);
           }
         }
       }

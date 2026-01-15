@@ -30,6 +30,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.calculator": "견적 계산기",
     "nav.guide": "관광/맛집",
+    "nav.expenses": "여행 가계부",
     
     // Villa Section
     "villa.title": "럭셔리 풀빌라 숙박",
@@ -205,6 +206,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.calculator": "Quote Calculator",
     "nav.guide": "Travel Guide",
+    "nav.expenses": "Expense Tracker",
     
     // Villa Section
     "villa.title": "Luxury Pool Villa Stay",
@@ -380,6 +382,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.calculator": "报价计算器",
     "nav.guide": "旅游指南",
+    "nav.expenses": "旅行记账",
     
     // Villa Section
     "villa.title": "豪华泳池别墅住宿",
@@ -555,6 +558,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.calculator": "Báo giá",
     "nav.guide": "Du lịch",
+    "nav.expenses": "Chi tiêu",
     
     // Villa Section
     "villa.title": "Biệt thự hồ bơi sang trọng",
@@ -730,6 +734,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.calculator": "Калькулятор",
     "nav.guide": "Гид",
+    "nav.expenses": "Расходы",
     
     // Villa Section
     "villa.title": "Люксовая вилла с бассейном",
@@ -905,6 +910,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Navigation
     "nav.calculator": "見積計算機",
     "nav.guide": "観光ガイド",
+    "nav.expenses": "旅費管理",
     
     // Villa Section
     "villa.title": "ラグジュアリープールヴィラ宿泊",
