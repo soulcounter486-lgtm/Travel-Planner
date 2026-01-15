@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/lib/i18n";
 import Home from "@/pages/Home";
 import PlacesGuide from "@/pages/PlacesGuide";
 import ExpenseTracker from "@/pages/ExpenseTracker";
+import NearbyPlaces from "@/pages/NearbyPlaces";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/guide" component={PlacesGuide} />
       <Route path="/expenses" component={ExpenseTracker} />
+      <Route path="/nearby" component={NearbyPlaces} />
       <Route component={NotFound} />
     </Switch>
   );

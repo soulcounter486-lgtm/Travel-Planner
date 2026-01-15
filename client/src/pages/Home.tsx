@@ -47,7 +47,8 @@ import {
   MessageCircle,
   Eye,
   Camera,
-  Wallet
+  Wallet,
+  Navigation
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -338,6 +339,12 @@ export default function Home() {
               <Button variant="outline" className="flex items-center gap-2" data-testid="nav-expenses">
                 <Wallet className="w-4 h-4" />
                 {t("nav.expenses")}
+              </Button>
+            </Link>
+            <Link href="/nearby">
+              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-nearby">
+                <Navigation className="w-4 h-4" />
+                {t("nav.nearby")}
               </Button>
             </Link>
           </div>
