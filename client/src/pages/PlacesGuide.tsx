@@ -18,6 +18,8 @@ interface Place {
   mapUrl: string;
   note?: string;
   recommended?: boolean;
+  imageUrl?: string;
+  description?: Record<string, string>;
 }
 
 interface Category {
@@ -33,19 +35,193 @@ const placesData: Record<string, Category> = {
     icon: Camera,
     gradient: "from-blue-500 to-indigo-600",
     places: [
-      { name: "붕따우 거대 예수상", nameVi: "Tượng Chúa Kitô", mapUrl: "https://maps.app.goo.gl/CgLqYEKGLxodn27B8" },
-      { name: "붕따우 등대", nameVi: "Hải Đăng Vũng Tàu", mapUrl: "https://maps.app.goo.gl/HMJbSLCR3bzZxsxy8", note: "largeVehicleNo" },
-      { name: "전쟁기념관", nameVi: "Bà Rịa–Vũng Tàu Provincial museum", phone: "0254 3852 421", mapUrl: "https://maps.app.goo.gl/YiF3HpgZvXtKTfMCA" },
-      { name: "화이트 펠리스(띠우 별장)", nameVi: "Bạch Dinh (White Palace)", mapUrl: "https://maps.app.goo.gl/LDkeQHy1Watfec51A" },
-      { name: "놀이동산", nameVi: "Ho May Amusement Park", mapUrl: "https://maps.app.goo.gl/vM6tXvAXi4tTNhUV6" },
-      { name: "불교사찰", nameVi: "Chơn Không Monastery", mapUrl: "https://maps.app.goo.gl/THctAg3uEvx9q9ZLA", note: "largeVehicleNo" },
-      { name: "붕따우 백비치", nameVi: "Bãi Sau", mapUrl: "https://maps.app.goo.gl/UCARs7msTkaUr2HW6" },
-      { name: "붕따우 프론트 비치", nameVi: "Front Beach", mapUrl: "https://maps.app.goo.gl/Uz5gy2Tsg3kQm4QCA" },
-      { name: "땀탕기념타워", nameVi: "Tháp Tầm", mapUrl: "https://maps.app.goo.gl/HHr2NF7upTr7Djhy9" },
-      { name: "돼지언덕", nameVi: "Đồi Con Heo", mapUrl: "https://maps.app.goo.gl/Y8nMHFU7xAdXH7e48", note: "largeVehicleNo" },
-      { name: "원숭이사원", nameVi: "Chùa Khỉ Viba", mapUrl: "https://maps.app.goo.gl/LmQ7U7VDgi9n8aGH8", note: "largeVehicleNo" },
-      { name: "붕따우 해산물 시장", nameVi: "Seafood Market", mapUrl: "https://maps.app.goo.gl/BLVTP1tarzKrXZN28" },
-      { name: "붕따우 시장", nameVi: "Chợ Vũng Tàu 1985", mapUrl: "https://maps.app.goo.gl/1Zpepi95K4garY268" },
+      { 
+        name: "붕따우 거대 예수상", 
+        nameVi: "Tượng Chúa Kitô", 
+        mapUrl: "https://maps.app.goo.gl/CgLqYEKGLxodn27B8",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipOQj8Q8xgBjvPKkFQFxY8uG4FGRP0e_3HPHx0bV=w408-h306-k-no",
+        description: {
+          ko: "높이 32m의 거대한 예수상. 붕따우의 대표적인 랜드마크로 811개의 계단을 올라가면 아름다운 해안 전경을 감상할 수 있습니다.",
+          en: "A 32m tall statue of Jesus. Iconic landmark of Vung Tau with 811 steps leading to stunning coastal views.",
+          zh: "32米高的耶稣像。头顿的标志性地标，攀登811级台阶可欣赏美丽的海岸景观。",
+          vi: "Tượng Chúa cao 32m. Biểu tượng của Vũng Tàu với 811 bậc thang dẫn đến tầm nhìn bờ biển tuyệt đẹp.",
+          ru: "32-метровая статуя Иисуса. Знаковая достопримечательность с 811 ступенями и потрясающим видом на побережье.",
+          ja: "高さ32mの巨大なキリスト像。811段の階段を上ると美しい海岸の景色が楽しめます。"
+        }
+      },
+      { 
+        name: "붕따우 등대", 
+        nameVi: "Hải Đăng Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/HMJbSLCR3bzZxsxy8", 
+        note: "largeVehicleNo",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipN9sMGJHnELCxTxaIQNxZxpnKuNXzKwCQKWQfYx=w408-h544-k-no",
+        description: {
+          ko: "1910년 프랑스 식민지 시대에 건설된 역사적인 등대. 도시와 바다의 파노라마 전망을 제공합니다.",
+          en: "Historic lighthouse built in 1910 during French colonial era. Offers panoramic views of the city and sea.",
+          zh: "1910年法国殖民时期建造的历史灯塔。可欣赏城市和大海的全景。",
+          vi: "Hải đăng lịch sử xây năm 1910 thời Pháp thuộc. Tầm nhìn toàn cảnh thành phố và biển.",
+          ru: "Исторический маяк 1910 года постройки. Панорамный вид на город и море.",
+          ja: "1910年フランス植民地時代に建設された歴史的な灯台。街と海のパノラマビュー。"
+        }
+      },
+      { 
+        name: "전쟁기념관", 
+        nameVi: "Bà Rịa–Vũng Tàu Provincial museum", 
+        phone: "0254 3852 421", 
+        mapUrl: "https://maps.app.goo.gl/YiF3HpgZvXtKTfMCA",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipPfKnWEVF9uDPYCzMSXM8WdCVXbHvBQMkBRvVxP=w408-h272-k-no",
+        description: {
+          ko: "베트남 전쟁과 지역 역사를 보여주는 박물관. 전쟁 유물과 역사적 사진들이 전시되어 있습니다.",
+          en: "Museum showcasing Vietnam War and local history with war artifacts and historical photographs.",
+          zh: "展示越战和当地历史的博物馆，有战争文物和历史照片。",
+          vi: "Bảo tàng trưng bày lịch sử chiến tranh Việt Nam và địa phương với hiện vật và ảnh lịch sử.",
+          ru: "Музей истории Вьетнамской войны с военными артефактами и историческими фотографиями.",
+          ja: "ベトナム戦争と地域の歴史を展示する博物館。戦争遺物と歴史的写真を展示。"
+        }
+      },
+      { 
+        name: "화이트 펠리스(띠우 별장)", 
+        nameVi: "Bạch Dinh (White Palace)", 
+        mapUrl: "https://maps.app.goo.gl/LDkeQHy1Watfec51A",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipMEJKcB2cDvnPnOvxW6xAZdNF6Y8JHXBc3B9cCs=w408-h306-k-no",
+        description: {
+          ko: "1898년 프랑스 총독의 여름 별장으로 지어진 아름다운 백색 궁전. 열대 정원과 바다 전망이 인상적입니다.",
+          en: "Beautiful white palace built in 1898 as French Governor's summer residence. Impressive tropical gardens and sea views.",
+          zh: "1898年作为法国总督夏季别墅建造的白色宫殿。热带花园和海景令人印象深刻。",
+          vi: "Dinh thự trắng đẹp xây năm 1898 làm nhà nghỉ mùa hè của Toàn quyền Pháp. Vườn nhiệt đới và view biển ấn tượng.",
+          ru: "Белый дворец 1898 года - летняя резиденция французского губернатора. Тропические сады и вид на море.",
+          ja: "1898年フランス総督の夏の別荘として建てられた白い宮殿。熱帯庭園と海の景色が印象的。"
+        }
+      },
+      { 
+        name: "놀이동산", 
+        nameVi: "Ho May Amusement Park", 
+        mapUrl: "https://maps.app.goo.gl/vM6tXvAXi4tTNhUV6",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipNmXk7VFFNP6kQ8n8VbOIVsFQxQ4qR8x5K7VqFV=w408-h306-k-no",
+        description: {
+          ko: "케이블카로 올라가는 언덕 위 놀이공원. 워터파크, 동물원, 놀이기구를 즐길 수 있습니다.",
+          en: "Hilltop amusement park accessible by cable car. Features water park, zoo, and rides.",
+          zh: "乘缆车上山的游乐园。有水上乐园、动物园和游乐设施。",
+          vi: "Công viên giải trí trên đồi đi bằng cáp treo. Có công viên nước, sở thú và trò chơi.",
+          ru: "Парк развлечений на холме с канатной дорогой. Аквапарк, зоопарк и аттракционы.",
+          ja: "ケーブルカーで行く丘の上の遊園地。ウォーターパーク、動物園、乗り物があります。"
+        }
+      },
+      { 
+        name: "불교사찰", 
+        nameVi: "Chơn Không Monastery", 
+        mapUrl: "https://maps.app.goo.gl/THctAg3uEvx9q9ZLA", 
+        note: "largeVehicleNo",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipMQvYkJLRBcvYTXQM8M5Wq8jdBqH6x1wQzPrKHR=w408-h306-k-no",
+        description: {
+          ko: "산 중턱에 위치한 고요한 불교 사찰. 명상과 평화로운 분위기를 경험할 수 있습니다.",
+          en: "Serene Buddhist monastery on the mountainside. Experience meditation and peaceful atmosphere.",
+          zh: "位于山腰的宁静佛教寺院。可体验冥想和平静的氛围。",
+          vi: "Chùa Phật giáo yên tĩnh trên sườn núi. Trải nghiệm thiền định và không gian thanh bình.",
+          ru: "Тихий буддийский монастырь на склоне горы. Медитация и умиротворяющая атмосфера.",
+          ja: "山腹にある静かな仏教寺院。瞑想と平和な雰囲気を体験できます。"
+        }
+      },
+      { 
+        name: "붕따우 백비치", 
+        nameVi: "Bãi Sau", 
+        mapUrl: "https://maps.app.goo.gl/UCARs7msTkaUr2HW6",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipP4J7kn5YxDYlXqH0aD6bFQPNP8l7Tx7bJkdcvQ=w408-h306-k-no",
+        description: {
+          ko: "붕따우에서 가장 긴 해변. 수영과 해양 스포츠를 즐기기에 좋으며 해변가 레스토랑이 많습니다.",
+          en: "Longest beach in Vung Tau. Great for swimming, water sports, with many beachfront restaurants.",
+          zh: "头顿最长的海滩。适合游泳和水上运动，有很多海边餐厅。",
+          vi: "Bãi biển dài nhất Vũng Tàu. Tuyệt vời để bơi, thể thao nước, có nhiều nhà hàng ven biển.",
+          ru: "Самый длинный пляж Вунгтау. Отлично для плавания и водных видов спорта, много ресторанов.",
+          ja: "ブンタウで最も長いビーチ。水泳やマリンスポーツに最適。ビーチフロントレストランも多数。"
+        }
+      },
+      { 
+        name: "붕따우 프론트 비치", 
+        nameVi: "Front Beach", 
+        mapUrl: "https://maps.app.goo.gl/Uz5gy2Tsg3kQm4QCA",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipOvQ8xFQPsRqPzLlMjXhkJIKl8PmYWNLvCcZvYG=w408-h306-k-no",
+        description: {
+          ko: "도심에서 가까운 해변으로 일몰 감상에 최적. 저녁에는 해변 산책로가 활기차게 변합니다.",
+          en: "Beach close to downtown, perfect for sunset viewing. The promenade comes alive in the evening.",
+          zh: "靠近市中心的海滩，适合看日落。傍晚海滨步道非常热闹。",
+          vi: "Bãi biển gần trung tâm, lý tưởng xem hoàng hôn. Đường dạo bờ biển sôi động vào buổi tối.",
+          ru: "Пляж рядом с центром, идеален для закатов. Вечером набережная оживает.",
+          ja: "ダウンタウン近くのビーチで夕日観賞に最適。夜は遊歩道が賑やかに。"
+        }
+      },
+      { 
+        name: "땀탕기념타워", 
+        nameVi: "Tháp Tầm", 
+        mapUrl: "https://maps.app.goo.gl/HHr2NF7upTr7Djhy9",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipOr8N5gqh9iOp8sLPCJX7dQ9xQdN9mLKjP0QTZL=w408-h306-k-no",
+        description: {
+          ko: "베트남 해군의 역사적인 기념탑. 전쟁 영웅들을 기리는 곳으로 바다가 한눈에 보입니다.",
+          en: "Historic naval memorial tower honoring war heroes with panoramic sea views.",
+          zh: "纪念战争英雄的海军历史纪念塔，可俯瞰大海。",
+          vi: "Tháp tưởng niệm hải quân lịch sử vinh danh các anh hùng chiến tranh với view biển toàn cảnh.",
+          ru: "Историческая мемориальная башня в честь героев войны с панорамным видом на море.",
+          ja: "戦争の英雄を称える歴史的な海軍記念塔。パノラマの海の景色が楽しめます。"
+        }
+      },
+      { 
+        name: "돼지언덕", 
+        nameVi: "Đồi Con Heo", 
+        mapUrl: "https://maps.app.goo.gl/Y8nMHFU7xAdXH7e48", 
+        note: "largeVehicleNo",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipNAB9l8qKxl6_TkF4QW8EpLZQQfXTYdXQ4lJdZV=w408-h306-k-no",
+        description: {
+          ko: "돼지 모양을 닮은 언덕으로 포토존이 많습니다. 일몰 때 방문하면 아름다운 사진을 찍을 수 있습니다.",
+          en: "Hill resembling a pig shape with many photo spots. Beautiful sunset photography location.",
+          zh: "像猪形状的山丘，有很多拍照点。日落时拍照非常美。",
+          vi: "Đồi giống hình con heo với nhiều điểm chụp ảnh. Địa điểm chụp hoàng hôn tuyệt đẹp.",
+          ru: "Холм в форме свиньи с множеством фотозон. Прекрасное место для фото на закате.",
+          ja: "豚の形をした丘でフォトスポットが多い。夕日の時間は特に美しい写真が撮れます。"
+        }
+      },
+      { 
+        name: "원숭이사원", 
+        nameVi: "Chùa Khỉ Viba", 
+        mapUrl: "https://maps.app.goo.gl/LmQ7U7VDgi9n8aGH8", 
+        note: "largeVehicleNo",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipPBK8H4k3_J9vYK9FkJIQYH3TnLa8Z9CbVbqT1V=w408-h306-k-no",
+        description: {
+          ko: "야생 원숭이들이 서식하는 사원. 원숭이들과 교감하며 사진을 찍을 수 있습니다 (소지품 주의).",
+          en: "Temple with wild monkeys. Interact and take photos with monkeys (watch your belongings).",
+          zh: "有野生猴子的寺庙。可与猴子互动拍照（注意随身物品）。",
+          vi: "Chùa có khỉ hoang dã. Tương tác và chụp ảnh với khỉ (chú ý đồ đạc).",
+          ru: "Храм с дикими обезьянами. Можно фотографироваться с обезьянами (берегите вещи).",
+          ja: "野生の猿がいる寺院。猿と交流して写真が撮れます（持ち物に注意）。"
+        }
+      },
+      { 
+        name: "붕따우 해산물 시장", 
+        nameVi: "Seafood Market", 
+        mapUrl: "https://maps.app.goo.gl/BLVTP1tarzKrXZN28",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipMx3kLzHqPQKxV7Vf1bT5QGjRy6LPLh8vYKPJmE=w408-h306-k-no",
+        description: {
+          ko: "신선한 해산물을 저렴하게 구입할 수 있는 재래시장. 현지인들의 생활을 엿볼 수 있습니다.",
+          en: "Traditional market for fresh, affordable seafood. Experience local life and culture.",
+          zh: "可以买到便宜新鲜海鲜的传统市场。可以体验当地人的生活。",
+          vi: "Chợ truyền thống bán hải sản tươi giá rẻ. Trải nghiệm cuộc sống và văn hóa địa phương.",
+          ru: "Традиционный рынок свежих морепродуктов по доступным ценам. Местная жизнь и культура.",
+          ja: "新鮮な海産物を安く買える伝統市場。地元の生活を垣間見ることができます。"
+        }
+      },
+      { 
+        name: "붕따우 시장", 
+        nameVi: "Chợ Vũng Tàu 1985", 
+        mapUrl: "https://maps.app.goo.gl/1Zpepi95K4garY268",
+        imageUrl: "https://lh5.googleusercontent.com/p/AF1QipN7gKFLrBz9b8wVPQpLPH5sVJQXxjGQN5QWsKCK=w408-h306-k-no",
+        description: {
+          ko: "1985년부터 운영된 붕따우 중심부의 전통 시장. 현지 음식, 과일, 기념품을 구입할 수 있습니다.",
+          en: "Traditional market in downtown Vung Tau since 1985. Local food, fruits, and souvenirs available.",
+          zh: "1985年起运营的头顿中心传统市场。可购买当地食品、水果和纪念品。",
+          vi: "Chợ truyền thống ở trung tâm Vũng Tàu từ 1985. Có đồ ăn địa phương, trái cây và quà lưu niệm.",
+          ru: "Традиционный рынок в центре с 1985 года. Местная еда, фрукты и сувениры.",
+          ja: "1985年から続くブンタウ中心部の伝統市場。地元の食べ物、果物、お土産が買えます。"
+        }
+      },
     ]
   },
   localFood: {
@@ -153,7 +329,9 @@ const noteLabels: Record<string, Record<string, string>> = {
 
 function PlaceCard({ place, language }: { place: Place; language: string }) {
   const [showMap, setShowMap] = useState(false);
+  const [showDescription, setShowDescription] = useState(false);
   const noteText = place.note ? (noteLabels[place.note]?.[language] || place.note) : null;
+  const descriptionText = place.description?.[language] || place.description?.ko;
 
   const embedUrl = place.mapUrl.includes("goo.gl") 
     ? `https://www.google.com/maps?q=${encodeURIComponent(place.nameVi || place.name)},Vung Tau&output=embed`
@@ -163,6 +341,45 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">
+          {place.imageUrl && (
+            <div 
+              className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group"
+              onClick={() => setShowDescription(!showDescription)}
+              data-testid={`image-${place.name.replace(/\s/g, "-")}`}
+            >
+              <img 
+                src={place.imageUrl} 
+                alt={place.name}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+              {descriptionText && (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                  <span className="text-[10px] text-white/90 flex items-center gap-1">
+                    <Camera className="w-3 h-3" />
+                    {language === "ko" ? "클릭하여 설명 보기" : "Click for details"}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <AnimatePresence>
+            {showDescription && descriptionText && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {descriptionText}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-sm text-foreground truncate">{place.name}</h3>
