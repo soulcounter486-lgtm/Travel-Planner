@@ -311,7 +311,7 @@ export default function Home() {
               <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
             </div>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4 flex flex-wrap gap-3">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4 flex items-center gap-2">
             <WeatherWidget language={language} />
             <ExchangeRateWidget language={language} rates={exchangeRatesData?.rates} />
           </motion.div>
