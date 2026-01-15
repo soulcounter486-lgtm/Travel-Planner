@@ -263,7 +263,7 @@ const placesData: Record<string, Category> = {
     icon: Utensils,
     gradient: "from-rose-500 to-pink-600",
     places: [
-      { name: "이안 돌판 삼겹살", address: "300A Phan Chu Trinh, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/8FXU2u8Cn2AufLGz9", recommended: true },
+      { name: "이안 돌판 삼겹살", address: "300A Phan Chu Trinh, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/8FXU2u8Cn2AufLGz9", recommended: true, note: "partnerRestaurant" },
       { name: "가보정", address: "B12-1/10 Khu Trung Tâm Chí Linh, Phường Nguyễn An Ninh", mapUrl: "https://maps.app.goo.gl/Mr1MXkLFMA5xfBjB6" },
       { name: "비원식당", address: "662A Nguyễn An Ninh, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/UrmsYuMjWGwMhAYq6" },
       { name: "뚱보집 (포차)", address: "151 Thùy Vân, Phường Thắng Tam, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/EXSWLjy4mdcwZkt36" },
@@ -337,7 +337,17 @@ const categoryLabels: Record<string, Record<string, string>> = {
 const noteLabels: Record<string, Record<string, string>> = {
   largeVehicleNo: { ko: "대형차량 진입불가", en: "No large vehicles", zh: "大型车辆禁入", vi: "Xe lớn không vào được", ru: "Большие авто запрещены", ja: "大型車両進入禁止" },
   crowded: { ko: "붐빔", en: "Often crowded", zh: "经常拥挤", vi: "Thường đông", ru: "Часто многолюдно", ja: "混雑あり" },
-  spacious: { ko: "쾌적", en: "Spacious", zh: "宽敞", vi: "Thoáng mát", ru: "Просторно", ja: "快適" }
+  spacious: { ko: "쾌적", en: "Spacious", zh: "宽敞", vi: "Thoáng mát", ru: "Просторно", ja: "快適" },
+  partnerRestaurant: { ko: "붕따우 도깨비 협력식당", en: "Dokkaebi Partner", zh: "道佶比合作餐厅", vi: "Đối tác Dokkaebi", ru: "Партнёр Dokkaebi", ja: "ドッケビ提携店" }
+};
+
+const discountLabel: Record<string, string> = {
+  ko: "로고 제시 시 10% 할인",
+  en: "10% off with logo",
+  zh: "出示标志享10%折扣",
+  vi: "Giảm 10% khi có logo",
+  ru: "Скидка 10% по логотипу",
+  ja: "ロゴ提示で10%OFF"
 };
 
 function PlaceCard({ place, language }: { place: Place; language: string }) {
@@ -395,8 +405,20 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
 
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-sm text-foreground truncate">{place.name}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-bold text-sm text-foreground">{place.name}</h3>
+                {place.note === "partnerRestaurant" && (
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 border-primary text-primary">
+                    {noteLabels.partnerRestaurant[language] || noteLabels.partnerRestaurant.ko}
+                  </Badge>
+                )}
+              </div>
               {place.nameVi && <p className="text-xs text-muted-foreground truncate">{place.nameVi}</p>}
+              {place.note === "partnerRestaurant" && (
+                <p className="text-[10px] text-green-600 dark:text-green-400 font-medium mt-0.5">
+                  {discountLabel[language] || discountLabel.ko}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-1 flex-shrink-0">
               {place.recommended && (
@@ -407,7 +429,7 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
             </div>
           </div>
 
-          {noteText && (
+          {noteText && place.note !== "partnerRestaurant" && (
             <div className="flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 px-2 py-1 rounded">
               <AlertTriangle className="w-3 h-3" />
               {noteText}
