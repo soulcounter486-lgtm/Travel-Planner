@@ -26,7 +26,8 @@ import {
   Wallet,
   LogIn,
   LogOut,
-  Loader2
+  Loader2,
+  Pencil
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
 
@@ -65,6 +66,8 @@ type TranslationType = {
   logout: string;
   loginRequired: string;
   loginDescription: string;
+  editExpense: string;
+  save: string;
 };
 
 const translations: Record<string, TranslationType> = {
@@ -109,7 +112,9 @@ const translations: Record<string, TranslationType> = {
     login: "로그인",
     logout: "로그아웃",
     loginRequired: "로그인이 필요합니다",
-    loginDescription: "여행 가계부를 사용하려면 로그인해주세요. 로그인하면 나만의 여행 가계부를 관리할 수 있습니다."
+    loginDescription: "여행 가계부를 사용하려면 로그인해주세요. 로그인하면 나만의 여행 가계부를 관리할 수 있습니다.",
+    editExpense: "지출 수정",
+    save: "저장"
   },
   en: {
     title: "Travel Expense Tracker",
@@ -152,7 +157,9 @@ const translations: Record<string, TranslationType> = {
     login: "Login",
     logout: "Logout",
     loginRequired: "Login Required",
-    loginDescription: "Please log in to use the travel expense tracker. After logging in, you can manage your own travel expenses."
+    loginDescription: "Please log in to use the travel expense tracker. After logging in, you can manage your own travel expenses.",
+    editExpense: "Edit Expense",
+    save: "Save"
   }
 };
 
@@ -175,6 +182,8 @@ export default function ExpenseTracker() {
   const [selectedGroup, setSelectedGroup] = useState<ExpenseGroup | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showAddExpenseDialog, setShowAddExpenseDialog] = useState(false);
+  const [showEditExpenseDialog, setShowEditExpenseDialog] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [showSettlement, setShowSettlement] = useState(false);
   
   const [newGroupName, setNewGroupName] = useState("");
@@ -186,6 +195,13 @@ export default function ExpenseTracker() {
   const [expensePaidBy, setExpensePaidBy] = useState("");
   const [expenseSplitAmong, setExpenseSplitAmong] = useState<string[]>([]);
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  const [editDescription, setEditDescription] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editCategory, setEditCategory] = useState("food");
+  const [editPaidBy, setEditPaidBy] = useState("");
+  const [editSplitAmong, setEditSplitAmong] = useState<string[]>([]);
+  const [editDate, setEditDate] = useState("");
 
   const { data: groups = [], isLoading: groupsLoading } = useQuery<ExpenseGroup[]>({
     queryKey: ["/api/expense-groups"],
@@ -261,6 +277,32 @@ export default function ExpenseTracker() {
     },
   });
 
+  const editExpenseMutation = useMutation({
+    mutationFn: async (data: {
+      id: number;
+      description: string;
+      amount: number;
+      category: string;
+      paidBy: string;
+      splitAmong: string[];
+      date: string;
+    }) => {
+      const { id, ...body } = data;
+      const res = await apiRequest("PATCH", `/api/expenses/${id}`, body);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/expense-groups", selectedGroup?.id, "expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/expense-groups", selectedGroup?.id, "settlement"] });
+      setShowEditExpenseDialog(false);
+      setEditingExpense(null);
+      toast({ title: "지출이 수정되었습니다" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "오류가 발생했습니다", description: error.message, variant: "destructive" });
+    },
+  });
+
   const resetExpenseForm = () => {
     setExpenseDescription("");
     setExpenseAmount("");
@@ -297,6 +339,39 @@ export default function ExpenseTracker() {
       paidBy: expensePaidBy,
       splitAmong: expenseSplitAmong,
       date: expenseDate,
+    });
+  };
+
+  const handleStartEdit = (expense: Expense) => {
+    setEditingExpense(expense);
+    setEditDescription(expense.description);
+    setEditAmount(String(expense.amount));
+    setEditCategory(expense.category);
+    setEditPaidBy(expense.paidBy);
+    setEditSplitAmong(expense.splitAmong as string[]);
+    setEditDate(expense.date);
+    setShowEditExpenseDialog(true);
+  };
+
+  const handleEditExpense = () => {
+    if (!editingExpense) return;
+    if (!editDescription.trim() || !editAmount || !editPaidBy || editSplitAmong.length === 0) {
+      toast({ title: "모든 필드를 입력해주세요", variant: "destructive" });
+      return;
+    }
+    const amount = parseInt(editAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: "금액은 0보다 커야 합니다", variant: "destructive" });
+      return;
+    }
+    editExpenseMutation.mutate({
+      id: editingExpense.id,
+      description: editDescription.trim(),
+      amount,
+      category: editCategory,
+      paidBy: editPaidBy,
+      splitAmong: editSplitAmong,
+      date: editDate,
     });
   };
 
@@ -377,7 +452,7 @@ export default function ExpenseTracker() {
                       <SelectTrigger data-testid="select-expense-category">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-popover">
                         {Object.entries(categoryLabels).map(([key, label]) => (
                           <SelectItem key={key} value={key}>{label}</SelectItem>
                         ))}
@@ -399,7 +474,7 @@ export default function ExpenseTracker() {
                       <SelectTrigger data-testid="select-expense-paidby">
                         <SelectValue placeholder="결제자 선택" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-popover">
                         {participants.map((p) => (
                           <SelectItem key={p} value={p}>{p}</SelectItem>
                         ))}
@@ -438,6 +513,104 @@ export default function ExpenseTracker() {
                       data-testid="button-submit-expense"
                     >
                       {t.add}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={showEditExpenseDialog} onOpenChange={setShowEditExpenseDialog}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{t.editExpense}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>{t.description}</Label>
+                    <Input
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="점심 식사"
+                      data-testid="input-edit-description"
+                    />
+                  </div>
+                  <div>
+                    <Label>{t.amount}</Label>
+                    <Input
+                      type="number"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      placeholder="500000"
+                      data-testid="input-edit-amount"
+                    />
+                  </div>
+                  <div>
+                    <Label>{t.category}</Label>
+                    <Select value={editCategory} onValueChange={setEditCategory}>
+                      <SelectTrigger data-testid="select-edit-category">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {Object.entries(categoryLabels).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>{t.date}</Label>
+                    <Input
+                      type="date"
+                      value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
+                      data-testid="input-edit-date"
+                    />
+                  </div>
+                  <div>
+                    <Label>{t.paidBy}</Label>
+                    <Select value={editPaidBy} onValueChange={setEditPaidBy}>
+                      <SelectTrigger data-testid="select-edit-paidby">
+                        <SelectValue placeholder="결제자 선택" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover">
+                        {participants.map((p) => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>{t.splitAmong}</Label>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {participants.map((p) => (
+                        <label key={p} className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={editSplitAmong.includes(p)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setEditSplitAmong([...editSplitAmong, p]);
+                              } else {
+                                setEditSplitAmong(editSplitAmong.filter(x => x !== p));
+                              }
+                            }}
+                            data-testid={`checkbox-edit-split-${p}`}
+                          />
+                          <span className="text-sm">{p}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <Button variant="outline" className="flex-1" onClick={() => setShowEditExpenseDialog(false)}>
+                      {t.cancel}
+                    </Button>
+                    <Button 
+                      className="flex-1" 
+                      onClick={handleEditExpense}
+                      disabled={editExpenseMutation.isPending}
+                      data-testid="button-save-expense"
+                    >
+                      {t.save}
                     </Button>
                   </div>
                 </div>
@@ -533,8 +706,17 @@ export default function ExpenseTracker() {
                           <span>{t.split}: {(expense.splitAmong as string[]).join(", ")}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-bold text-primary">{formatVND(expense.amount)}</span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="font-bold text-primary mr-1">{formatVND(expense.amount)}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-primary"
+                          onClick={() => handleStartEdit(expense)}
+                          data-testid={`button-edit-expense-${expense.id}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

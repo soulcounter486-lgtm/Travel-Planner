@@ -472,6 +472,61 @@ export async function registerRoutes(
     }
   });
 
+  // 지출 수정 (본인 그룹의 지출만)
+  app.patch("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const id = parseInt(req.params.id);
+      
+      // 해당 지출의 그룹이 본인 것인지 확인
+      const [expense] = await db.select().from(expenses).where(eq(expenses.id, id));
+      if (!expense) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+      
+      const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, expense.groupId), eq(expenseGroups.userId, userId)));
+      if (!group) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const participants = group.participants as string[];
+      const { description, amount, category, paidBy, splitAmong, date } = req.body;
+      
+      // 금액 검증
+      if (amount !== undefined && amount <= 0) {
+        return res.status(400).json({ message: "Amount must be a positive number" });
+      }
+      
+      // 결제자 검증
+      if (paidBy !== undefined && !participants.includes(paidBy)) {
+        return res.status(400).json({ message: "Payer must be a group participant" });
+      }
+      
+      // 분담자 검증
+      if (splitAmong !== undefined) {
+        for (const person of splitAmong) {
+          if (!participants.includes(person)) {
+            return res.status(400).json({ message: `${person} is not a group participant` });
+          }
+        }
+      }
+      
+      const updateData: any = {};
+      if (description !== undefined) updateData.description = description;
+      if (amount !== undefined) updateData.amount = parseInt(amount);
+      if (category !== undefined) updateData.category = category;
+      if (paidBy !== undefined) updateData.paidBy = paidBy;
+      if (splitAmong !== undefined) updateData.splitAmong = Array.from(new Set(splitAmong));
+      if (date !== undefined) updateData.date = date;
+      
+      const [updated] = await db.update(expenses).set(updateData).where(eq(expenses.id, id)).returning();
+      res.json(updated);
+    } catch (err) {
+      console.error("Expense update error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // 정산 계산 (그룹별, 본인 그룹만)
   app.get("/api/expense-groups/:id/settlement", isAuthenticated, async (req: any, res) => {
     try {
