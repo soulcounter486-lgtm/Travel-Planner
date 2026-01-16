@@ -838,7 +838,13 @@ export async function registerRoutes(
         adventure: "관광명소 탐험과 액티비티에 중점",
         culture: "문화 유적지와 역사 탐방에 중점",
         family: "가족과 함께 즐길 수 있는 활동에 중점",
+        nightlife: "클럽, 바 등 신나는 밤문화 체험에 중점",
       };
+
+      const purposes = purpose.split(",").map((p: string) => p.trim());
+      const purposeDescription = purposes
+        .map((p: string) => purposeDescriptions[p] || p)
+        .join(", ");
 
       const languagePrompts: Record<string, string> = {
         ko: "한국어로 답변해주세요.",
@@ -880,16 +886,17 @@ ${languagePrompts[language] || languagePrompts.ko}
       const userPrompt = `붕따우 ${days}일 여행 일정을 만들어주세요.
 
 여행 기간: ${format(start, 'yyyy-MM-dd')} ~ ${format(end, 'yyyy-MM-dd')} (${days}일)
-여행 목적: ${purposeDescriptions[purpose]}
+여행 목적: ${purposeDescription}
 
 사용 가능한 장소 데이터:
 ${JSON.stringify(placesData, null, 2)}
 
 위 장소 데이터를 활용하여 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함한 상세 여행 계획을 만들어주세요.
 식사 시간에는 맛집을, 관광 시간에는 관광명소를 적절히 배치해주세요.
-${purpose === 'golf' ? '매일 또는 격일로 골프 라운딩을 포함해주세요.' : ''}
-${purpose === 'relaxing' ? '마사지나 스파, 카페 시간을 충분히 포함해주세요.' : ''}
-${purpose === 'gourmet' ? '다양한 현지 음식과 한식을 골고루 포함해주세요.' : ''}`;
+${purposes.includes('golf') ? '매일 또는 격일로 골프 라운딩을 포함해주세요.' : ''}
+${purposes.includes('relaxing') ? '마사지나 스파, 카페 시간을 충분히 포함해주세요.' : ''}
+${purposes.includes('gourmet') ? '다양한 현지 음식과 한식을 골고루 포함해주세요.' : ''}
+${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활동을 포함해주세요. (88 비어클럽, Revo 클럽, Lox 클럽, U.S Bar Club 등)' : ''}`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4.1-mini",
