@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -25,8 +25,10 @@ import {
   Calculator,
   Eye,
   Wallet,
-  MessageCircle
+  MessageCircle,
+  Download
 } from "lucide-react";
+import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, addDays } from "date-fns";
 import type { Locale } from "date-fns";
@@ -89,6 +91,8 @@ export default function TravelPlanner() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [travelPlan, setTravelPlan] = useState<TravelPlan | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const planRef = useRef<HTMLDivElement>(null);
 
   const locales: Record<string, Locale> = { ko, en: enUS, zh: zhCN, vi, ru, ja };
   const currentLocale = locales[language] || ko;
@@ -118,6 +122,28 @@ export default function TravelPlanner() {
   const handleRegenerate = () => {
     setTravelPlan(null);
     generatePlanMutation.mutate();
+  };
+
+  const handleSaveImage = async () => {
+    if (!planRef.current) return;
+    
+    setIsSaving(true);
+    try {
+      const canvas = await html2canvas(planRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+      });
+      
+      const link = document.createElement("a");
+      link.download = `VungTau_TravelPlan_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Failed to save image:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -293,26 +319,45 @@ export default function TravelPlanner() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-purple-500/5">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-2xl">{travelPlan.title}</CardTitle>
-                      <p className="text-muted-foreground mt-2">{travelPlan.summary}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRegenerate}
-                      disabled={generatePlanMutation.isPending}
-                      data-testid="regenerate-btn"
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-1 ${generatePlanMutation.isPending ? 'animate-spin' : ''}`} />
-                      {t("planner.regenerate")}
-                    </Button>
-                  </div>
-                </CardHeader>
-              </Card>
+              <div className="flex justify-end gap-2 mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRegenerate}
+                  disabled={generatePlanMutation.isPending}
+                  data-testid="regenerate-btn"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-1 ${generatePlanMutation.isPending ? 'animate-spin' : ''}`} />
+                  {t("planner.regenerate")}
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleSaveImage}
+                  disabled={isSaving}
+                  data-testid="save-image-btn"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-1" />
+                  )}
+                  {language === "ko" ? "이미지 저장" : 
+                   language === "en" ? "Save Image" :
+                   language === "zh" ? "保存图片" :
+                   language === "vi" ? "Lưu ảnh" :
+                   language === "ru" ? "Сохранить" :
+                   language === "ja" ? "画像保存" : "이미지 저장"}
+                </Button>
+              </div>
+              
+              <div ref={planRef} className="space-y-6 bg-white p-4 rounded-lg">
+                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-purple-500/5">
+                  <CardHeader>
+                    <CardTitle className="text-2xl">{travelPlan.title}</CardTitle>
+                    <p className="text-muted-foreground mt-2">{travelPlan.summary}</p>
+                  </CardHeader>
+                </Card>
 
               {travelPlan.days.map((day, dayIndex) => (
                 <motion.div
@@ -403,6 +448,7 @@ export default function TravelPlanner() {
                   </CardContent>
                 </Card>
               )}
+              </div>
 
               <div className="flex justify-center">
                 <Button
