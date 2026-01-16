@@ -15,6 +15,7 @@ import { useUpload } from "@/hooks/use-upload";
 import { 
   Calculator,
   Eye,
+  EyeOff,
   Wallet,
   MessageCircle,
   Sparkles,
@@ -443,6 +444,21 @@ export default function Board() {
     },
   });
 
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest("PATCH", `/api/posts/${id}/toggle-visibility`);
+      return res.json();
+    },
+    onSuccess: (updatedPost) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      setSelectedPost(updatedPost);
+      toast({ title: updatedPost.isHidden ? "게시글이 숨겨졌습니다" : "게시글이 공개되었습니다" });
+    },
+    onError: (error: any) => {
+      toast({ title: error.message || "게시글 상태 변경 실패", variant: "destructive" });
+    },
+  });
+
   const createCommentMutation = useMutation({
     mutationFn: async (data: { postId: number; authorName: string; content: string }) => {
       const res = await apiRequest("POST", `/api/posts/${data.postId}/comments`, { 
@@ -788,6 +804,14 @@ export default function Board() {
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleVisibilityMutation.mutate(selectedPost.id)}
+                        data-testid="btn-toggle-visibility"
+                      >
+                        {selectedPost.isHidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </Button>
+                      <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => deletePostMutation.mutate(selectedPost.id)}
@@ -934,7 +958,9 @@ export default function Board() {
               </Card>
             ) : (
               <AnimatePresence>
-                {posts.map((post, idx) => (
+                {posts
+                  .filter(post => isAdmin || !post.isHidden)
+                  .map((post, idx) => (
                   <motion.div
                     key={post.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -942,7 +968,7 @@ export default function Board() {
                     transition={{ delay: idx * 0.05 }}
                   >
                     <Card
-                      className="cursor-pointer hover-elevate transition-all"
+                      className={`cursor-pointer hover-elevate transition-all ${post.isHidden ? 'opacity-50' : ''}`}
                       onClick={() => handleSelectPost(post)}
                       data-testid={`post-card-${post.id}`}
                     >
