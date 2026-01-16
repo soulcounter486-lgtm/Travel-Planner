@@ -224,7 +224,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Travel Planner
     "nav.planner": "AI 여행플래너",
     "nav.chat": "채팅방",
-    "nav.board": "게시판",
+    "nav.board": "붕따우 소식",
     "planner.title": "AI 여행 플래너",
     "planner.subtitle": "여행 목적과 일정을 선택하면 AI가 최적의 여행 계획을 만들어 드립니다",
     "planner.purpose": "여행 목적",
@@ -449,7 +449,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Travel Planner
     "nav.planner": "AI Travel Planner",
     "nav.chat": "Chat Room",
-    "nav.board": "Board",
+    "nav.board": "Vung Tau News",
     "planner.title": "AI Travel Planner",
     "planner.subtitle": "Select your travel purpose and dates, and AI will create the perfect itinerary for you",
     "planner.purpose": "Travel Purpose",
@@ -674,7 +674,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Travel Planner
     "nav.planner": "AI旅行规划",
     "nav.chat": "聊天室",
-    "nav.board": "公告板",
+    "nav.board": "头顿资讯",
     "planner.title": "AI旅行规划师",
     "planner.subtitle": "选择您的旅行目的和日期，AI将为您创建完美的行程",
     "planner.purpose": "旅行目的",
@@ -899,7 +899,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Travel Planner
     "nav.planner": "AI Lập kế hoạch",
     "nav.chat": "Phòng chat",
-    "nav.board": "Bảng tin",
+    "nav.board": "Tin Vũng Tàu",
     "planner.title": "AI Lập Kế Hoạch Du Lịch",
     "planner.subtitle": "Chọn mục đích và ngày du lịch, AI sẽ tạo lịch trình hoàn hảo cho bạn",
     "planner.purpose": "Mục đích du lịch",
@@ -1124,7 +1124,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Travel Planner
     "nav.planner": "AI Планировщик",
     "nav.chat": "Чат",
-    "nav.board": "Доска",
+    "nav.board": "Новости Вунгтау",
     "planner.title": "AI Планировщик путешествий",
     "planner.subtitle": "Выберите цель и даты путешествия, AI создаст идеальный маршрут",
     "planner.purpose": "Цель путешествия",
@@ -1349,7 +1349,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Travel Planner
     "nav.planner": "AI旅行プランナー",
     "nav.chat": "チャットルーム",
-    "nav.board": "掲示板",
+    "nav.board": "ブンタウニュース",
     "planner.title": "AI旅行プランナー",
     "planner.subtitle": "旅行の目的と日程を選ぶと、AIが最適な旅行プランを作成します",
     "planner.purpose": "旅行の目的",
