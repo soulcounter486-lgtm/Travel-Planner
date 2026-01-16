@@ -1097,6 +1097,34 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
     }
   });
 
+  // 게시판 - 게시글 숨기기/보이기 토글 (관리자 전용)
+  app.patch("/api/posts/:id/toggle-visibility", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      if (!userId || userId !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can toggle post visibility" });
+      }
+
+      const id = parseInt(req.params.id);
+      const [post] = await db.select().from(posts).where(eq(posts.id, id));
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const [updated] = await db.update(posts)
+        .set({ isHidden: !post.isHidden })
+        .where(eq(posts.id, id))
+        .returning();
+
+      res.json(updated);
+    } catch (err) {
+      console.error("Toggle post visibility error:", err);
+      res.status(500).json({ message: "Failed to toggle post visibility" });
+    }
+  });
+
   // 게시판 - 댓글 목록 조회
   app.get("/api/posts/:postId/comments", async (req, res) => {
     try {
