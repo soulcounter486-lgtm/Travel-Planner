@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import PlacesGuide from "@/pages/PlacesGuide";
 import ExpenseTracker from "@/pages/ExpenseTracker";
 import NearbyPlaces from "@/pages/NearbyPlaces";
+import TravelPlanner from "@/pages/TravelPlanner";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/guide" component={PlacesGuide} />
       <Route path="/expenses" component={ExpenseTracker} />
       <Route path="/nearby" component={NearbyPlaces} />
+      <Route path="/planner" component={TravelPlanner} />
       <Route component={NotFound} />
     </Switch>
   );
