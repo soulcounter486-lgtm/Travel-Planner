@@ -8,7 +8,7 @@ import { addDays, getDay, parseISO, format } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
@@ -755,11 +755,8 @@ export async function registerRoutes(
     }
   });
 
-  // AI 여행 플랜 생성 API
-  const openai = new OpenAI({
-    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  });
+  // AI 여행 플랜 생성 API (Gemini 사용 - 무료)
+  const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
   const travelPlanRequestSchema = z.object({
     purpose: z.string().min(1),
@@ -898,17 +895,16 @@ ${purposes.includes('relaxing') ? '마사지나 스파, 카페 시간을 충분�
 ${purposes.includes('gourmet') ? '다양한 현지 음식과 한식을 골고루 포함해주세요.' : ''}
 ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활동을 포함해주세요. (88 비어클럽, Revo 클럽, Lox 클럽, U.S Bar Club 등)' : ''}`;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4.1-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-        max_completion_tokens: 4096,
+      const response = await gemini.models.generateContent({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: systemPrompt,
+          responseMimeType: "application/json",
+        },
+        contents: userPrompt,
       });
 
-      const content = response.choices[0]?.message?.content;
+      const content = response.text;
       if (!content) {
         return res.status(500).json({ message: "AI 응답을 받지 못했습니다." });
       }
