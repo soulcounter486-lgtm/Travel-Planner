@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -194,14 +194,27 @@ export default function Board() {
   const [showNewPostDialog, setShowNewPostDialog] = useState(false);
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
-  const [newPostImage, setNewPostImage] = useState<string | null>(null);
   const [commentNickname, setCommentNickname] = useState(() => localStorage.getItem("comment_nickname") || "");
   const [commentContent, setCommentContent] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
-      setNewPostImage(response.objectPath);
-      toast({ title: "이미지가 업로드되었습니다" });
+      const imageMarkdown = `\n![이미지](${response.objectPath})\n`;
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newContent = newPostContent.substring(0, start) + imageMarkdown + newPostContent.substring(end);
+        setNewPostContent(newContent);
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
+        }, 0);
+      } else {
+        setNewPostContent(prev => prev + imageMarkdown);
+      }
+      toast({ title: "이미지가 삽입되었습니다" });
     },
     onError: (error) => {
       toast({ title: "이미지 업로드 실패", variant: "destructive" });
@@ -226,7 +239,7 @@ export default function Board() {
   });
 
   const createPostMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string; imageUrl?: string }) => {
+    mutationFn: async (data: { title: string; content: string }) => {
       const res = await apiRequest("POST", "/api/posts", data);
       return res.json();
     },
@@ -235,7 +248,6 @@ export default function Board() {
       setShowNewPostDialog(false);
       setNewPostTitle("");
       setNewPostContent("");
-      setNewPostImage(null);
       toast({ title: "게시글이 등록되었습니다" });
     },
     onError: (error: any) => {
@@ -287,6 +299,29 @@ export default function Board() {
     }
   };
 
+  const renderContentWithImages = (content: string) => {
+    const parts = content.split(/!\[([^\]]*)\]\(([^)]+)\)/g);
+    const result: React.ReactNode[] = [];
+    
+    for (let i = 0; i < parts.length; i++) {
+      if (i % 3 === 0) {
+        if (parts[i]) {
+          result.push(<span key={i}>{parts[i]}</span>);
+        }
+      } else if (i % 3 === 2) {
+        result.push(
+          <img 
+            key={i} 
+            src={parts[i]} 
+            alt={parts[i-1] || "이미지"} 
+            className="max-w-full rounded-lg my-4"
+          />
+        );
+      }
+    }
+    return result;
+  };
+
   const handleCreatePost = () => {
     if (!newPostTitle.trim() || !newPostContent.trim()) {
       toast({ title: "제목과 내용을 입력해주세요", variant: "destructive" });
@@ -295,7 +330,6 @@ export default function Board() {
     createPostMutation.mutate({
       title: newPostTitle,
       content: newPostContent,
-      imageUrl: newPostImage || undefined,
     });
   };
 
@@ -398,40 +432,38 @@ export default function Board() {
                     onChange={(e) => setNewPostTitle(e.target.value)}
                     data-testid="input-post-title"
                   />
-                  <Textarea
-                    placeholder={labels.postContent}
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    rows={8}
-                    data-testid="input-post-content"
-                  />
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id="image-upload"
-                      disabled={isUploading}
+                  <div className="relative">
+                    <Textarea
+                      ref={textareaRef}
+                      placeholder={labels.postContent}
+                      value={newPostContent}
+                      onChange={(e) => setNewPostContent(e.target.value)}
+                      rows={10}
+                      data-testid="input-post-content"
                     />
-                    <label htmlFor="image-upload">
-                      <Button variant="outline" asChild disabled={isUploading}>
-                        <span className="gap-2 cursor-pointer">
-                          {isUploading ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" />{labels.uploading}</>
-                          ) : (
-                            <><ImagePlus className="w-4 h-4" />{labels.addImage}</>
-                          )}
-                        </span>
-                      </Button>
-                    </label>
-                    {newPostImage && (
-                      <span className="text-sm text-green-600">이미지 첨부됨</span>
-                    )}
+                    <div className="absolute bottom-2 right-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                        disabled={isUploading}
+                      />
+                      <label htmlFor="image-upload">
+                        <Button variant="outline" size="sm" asChild disabled={isUploading}>
+                          <span className="gap-1.5 cursor-pointer">
+                            {isUploading ? (
+                              <><Loader2 className="w-3.5 h-3.5 animate-spin" /></>
+                            ) : (
+                              <><ImagePlus className="w-3.5 h-3.5" />{labels.addImage}</>
+                            )}
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
                   </div>
-                  {newPostImage && (
-                    <img src={newPostImage} alt="Preview" className="max-h-48 rounded-lg object-cover" />
-                  )}
+                  <p className="text-xs text-muted-foreground">커서 위치에 이미지가 삽입됩니다</p>
                   <div className="flex gap-2 justify-end">
                     <Button variant="outline" onClick={() => setShowNewPostDialog(false)}>
                       {labels.cancel}
@@ -484,15 +516,8 @@ export default function Board() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                {selectedPost.imageUrl && (
-                  <img
-                    src={selectedPost.imageUrl}
-                    alt="Post image"
-                    className="w-full max-h-96 object-cover rounded-lg"
-                  />
-                )}
                 <div className="prose prose-sm max-w-none whitespace-pre-wrap">
-                  {selectedPost.content}
+                  {renderContentWithImages(selectedPost.content)}
                 </div>
 
                 <div className="border-t pt-6">
