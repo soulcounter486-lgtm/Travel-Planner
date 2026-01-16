@@ -142,3 +142,33 @@ export type ExpenseGroup = typeof expenseGroups.$inferSelect;
 export type InsertExpenseGroup = z.infer<typeof insertExpenseGroupSchema>;
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+
+// 게시판 - 게시글 (관리자만 작성 가능)
+export const posts = pgTable("posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"), // Object Storage 이미지 URL
+  authorId: text("author_id").notNull(), // Replit Auth 사용자 ID
+  authorName: text("author_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// 게시판 - 댓글 (누구나 작성 가능)
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull(),
+  authorName: text("author_name").notNull(), // 닉네임 (로그인 불필요)
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// 게시판 스키마
+export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true, updatedAt: true, authorId: true, authorName: true });
+export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true, postId: true });
+
+export type Post = typeof posts.$inferSelect;
+export type InsertPost = z.infer<typeof insertPostSchema>;
+export type Comment = typeof comments.$inferSelect;
+export type InsertComment = z.infer<typeof insertCommentSchema>;

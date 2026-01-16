@@ -3,13 +3,14 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
@@ -951,6 +952,175 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
       console.error("Place photo error:", err);
       res.status(500).json({ message: "Internal server error" });
     }
+  });
+
+  // Object Storage 라우트 등록
+  registerObjectStorageRoutes(app);
+
+  // 관리자 ID (Replit Auth 사용자 ID)
+  const ADMIN_USER_ID = process.env.ADMIN_USER_ID || "";
+
+  // 게시판 - 게시글 목록 조회
+  app.get("/api/posts", async (req, res) => {
+    try {
+      const allPosts = await db.select().from(posts).orderBy(desc(posts.createdAt));
+      res.json(allPosts);
+    } catch (err) {
+      console.error("Get posts error:", err);
+      res.status(500).json({ message: "Failed to get posts" });
+    }
+  });
+
+  // 게시판 - 게시글 상세 조회
+  app.get("/api/posts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [post] = await db.select().from(posts).where(eq(posts.id, id));
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      res.json(post);
+    } catch (err) {
+      console.error("Get post error:", err);
+      res.status(500).json({ message: "Failed to get post" });
+    }
+  });
+
+  // 게시판 - 게시글 작성 (관리자만)
+  app.post("/api/posts", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user || user.id !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can create posts" });
+      }
+
+      const result = insertPostSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid post data", errors: result.error.errors });
+      }
+
+      const [newPost] = await db.insert(posts).values({
+        ...result.data,
+        authorId: user.id,
+        authorName: user.username || user.email || "관리자",
+      }).returning();
+
+      res.status(201).json(newPost);
+    } catch (err) {
+      console.error("Create post error:", err);
+      res.status(500).json({ message: "Failed to create post" });
+    }
+  });
+
+  // 게시판 - 게시글 수정 (관리자만)
+  app.patch("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user || user.id !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can edit posts" });
+      }
+
+      const id = parseInt(req.params.id);
+      const [existingPost] = await db.select().from(posts).where(eq(posts.id, id));
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const [updatedPost] = await db.update(posts)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(posts.id, id))
+        .returning();
+
+      res.json(updatedPost);
+    } catch (err) {
+      console.error("Update post error:", err);
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
+  // 게시판 - 게시글 삭제 (관리자만)
+  app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user || user.id !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can delete posts" });
+      }
+
+      const id = parseInt(req.params.id);
+      // 댓글도 함께 삭제
+      await db.delete(comments).where(eq(comments.postId, id));
+      await db.delete(posts).where(eq(posts.id, id));
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Delete post error:", err);
+      res.status(500).json({ message: "Failed to delete post" });
+    }
+  });
+
+  // 게시판 - 댓글 목록 조회
+  app.get("/api/posts/:postId/comments", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.postId);
+      const allComments = await db.select().from(comments).where(eq(comments.postId, postId)).orderBy(comments.createdAt);
+      res.json(allComments);
+    } catch (err) {
+      console.error("Get comments error:", err);
+      res.status(500).json({ message: "Failed to get comments" });
+    }
+  });
+
+  // 게시판 - 댓글 작성 (누구나)
+  app.post("/api/posts/:postId/comments", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.postId);
+      
+      // 게시글 존재 확인
+      const [post] = await db.select().from(posts).where(eq(posts.id, postId));
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      const result = insertCommentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid comment data", errors: result.error.errors });
+      }
+
+      const [newComment] = await db.insert(comments).values({
+        ...result.data,
+        postId,
+      }).returning();
+
+      res.status(201).json(newComment);
+    } catch (err) {
+      console.error("Create comment error:", err);
+      res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // 게시판 - 댓글 삭제 (관리자만)
+  app.delete("/api/comments/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user || user.id !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can delete comments" });
+      }
+
+      const id = parseInt(req.params.id);
+      await db.delete(comments).where(eq(comments.id, id));
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Delete comment error:", err);
+      res.status(500).json({ message: "Failed to delete comment" });
+    }
+  });
+
+  // 관리자 여부 확인
+  app.get("/api/admin/check", isAuthenticated, (req, res) => {
+    const user = req.user as any;
+    const isAdmin = user && user.id === ADMIN_USER_ID;
+    res.json({ isAdmin });
   });
 
   // WebSocket 채팅 서버
