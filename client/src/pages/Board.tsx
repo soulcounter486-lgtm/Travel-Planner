@@ -28,8 +28,10 @@ import {
   Calendar,
   User,
   LogIn,
-  LogOut
+  LogOut,
+  RefreshCw
 } from "lucide-react";
+import { SiInstagram } from "react-icons/si";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
@@ -352,6 +354,20 @@ export default function Board() {
     },
   });
 
+  const instagramSyncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/instagram/sync");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      toast({ title: data.message || "인스타그램 동기화 완료" });
+    },
+    onError: (error: any) => {
+      toast({ title: error.message || "인스타그램 동기화 실패", variant: "destructive" });
+    },
+  });
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -482,7 +498,21 @@ export default function Board() {
         </div>
 
         {isAdmin && (
-          <div className="mb-6 flex justify-end">
+          <div className="mb-6 flex justify-end gap-2">
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={() => instagramSyncMutation.mutate()}
+              disabled={instagramSyncMutation.isPending}
+              data-testid="btn-instagram-sync"
+            >
+              {instagramSyncMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <SiInstagram className="w-4 h-4" />
+              )}
+              Instagram 동기화
+            </Button>
             <Dialog open={showNewPostDialog} onOpenChange={setShowNewPostDialog}>
               <DialogTrigger asChild>
                 <Button className="gap-2" data-testid="btn-new-post">

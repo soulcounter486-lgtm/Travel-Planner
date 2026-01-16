@@ -172,3 +172,13 @@ export type Post = typeof posts.$inferSelect;
 export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+// 인스타그램 동기화 추적
+export const instagramSyncedPosts = pgTable("instagram_synced_posts", {
+  id: serial("id").primaryKey(),
+  instagramId: text("instagram_id").notNull().unique(), // 인스타그램 게시물 ID
+  postId: integer("post_id").notNull(), // 연결된 게시판 게시물 ID
+  syncedAt: timestamp("synced_at").defaultNow(),
+});
+
+export type InstagramSyncedPost = typeof instagramSyncedPosts.$inferSelect;

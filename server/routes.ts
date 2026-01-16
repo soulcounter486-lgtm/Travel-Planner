@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts } from "@shared/schema";
 import { addDays, getDay, parseISO, format } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -1127,6 +1127,173 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
     const isAdmin = userId && String(userId) === String(ADMIN_USER_ID);
     console.log("Admin check - userId:", userId, "ADMIN_USER_ID:", ADMIN_USER_ID, "isAdmin:", isAdmin);
     res.json({ isAdmin, isLoggedIn: !!user, userId });
+  });
+
+  // === 인스타그램 동기화 ===
+  interface InstagramPost {
+    id: string;
+    caption?: string;
+    media_url: string;
+    media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
+    timestamp: string;
+    permalink?: string;
+  }
+
+  async function fetchInstagramPosts(): Promise<InstagramPost[]> {
+    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
+    if (!accessToken) {
+      throw new Error("Instagram Access Token not configured");
+    }
+
+    try {
+      // 먼저 Instagram User ID 가져오기
+      const meResponse = await fetch(
+        `https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`
+      );
+      
+      if (!meResponse.ok) {
+        const errorData = await meResponse.text();
+        console.error("Instagram me API error:", errorData);
+        throw new Error("Failed to get Instagram user info");
+      }
+      
+      const meData = await meResponse.json();
+      const userId = meData.id;
+
+      // 게시물 가져오기
+      const mediaResponse = await fetch(
+        `https://graph.instagram.com/${userId}/media?fields=id,caption,media_url,media_type,timestamp,permalink&limit=10&access_token=${accessToken}`
+      );
+
+      if (!mediaResponse.ok) {
+        const errorData = await mediaResponse.text();
+        console.error("Instagram media API error:", errorData);
+        throw new Error("Failed to fetch Instagram posts");
+      }
+
+      const mediaData = await mediaResponse.json();
+      return mediaData.data || [];
+    } catch (error) {
+      console.error("Instagram API error:", error);
+      throw error;
+    }
+  }
+
+  // 인스타그램 동기화 상태 확인
+  app.get("/api/instagram/status", isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    const isAdmin = userId && String(userId) === String(ADMIN_USER_ID);
+    
+    if (!isAdmin) {
+      return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+    }
+
+    try {
+      const hasToken = !!process.env.INSTAGRAM_ACCESS_TOKEN;
+      const syncedPosts = await db.select().from(instagramSyncedPosts).orderBy(desc(instagramSyncedPosts.syncedAt)).limit(5);
+      
+      res.json({
+        configured: hasToken,
+        lastSynced: syncedPosts.length > 0 ? syncedPosts[0].syncedAt : null,
+        syncedCount: syncedPosts.length,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "상태 확인 실패" });
+    }
+  });
+
+  // 인스타그램 게시물 수동 동기화
+  app.post("/api/instagram/sync", isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    const isAdmin = userId && String(userId) === String(ADMIN_USER_ID);
+    
+    if (!isAdmin) {
+      return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+    }
+
+    try {
+      const instaPosts = await fetchInstagramPosts();
+      let syncedCount = 0;
+
+      for (const instaPost of instaPosts) {
+        // 이미 동기화된 게시물인지 확인
+        const existing = await db.select().from(instagramSyncedPosts).where(eq(instagramSyncedPosts.instagramId, instaPost.id));
+        
+        if (existing.length > 0) {
+          continue; // 이미 동기화됨
+        }
+
+        // 새 게시물 생성
+        const title = instaPost.caption?.split("\n")[0]?.substring(0, 100) || "Instagram 게시물";
+        let content = instaPost.caption || "";
+        
+        // 이미지 추가
+        if (instaPost.media_type === "IMAGE" || instaPost.media_type === "CAROUSEL_ALBUM") {
+          content = `![Instagram](${instaPost.media_url})\n\n${content}`;
+        }
+
+        const adminName = user?.claims?.nickname || user?.claims?.name || "관리자";
+        
+        const [newPost] = await db.insert(posts).values({
+          title,
+          content,
+          authorId: String(userId),
+          authorName: `${adminName} (Instagram)`,
+        }).returning();
+
+        // 동기화 기록 저장
+        await db.insert(instagramSyncedPosts).values({
+          instagramId: instaPost.id,
+          postId: newPost.id,
+        });
+
+        syncedCount++;
+      }
+
+      res.json({ 
+        success: true, 
+        syncedCount,
+        message: syncedCount > 0 ? `${syncedCount}개의 새 게시물이 동기화되었습니다` : "새로운 게시물이 없습니다"
+      });
+    } catch (error: any) {
+      console.error("Instagram sync error:", error);
+      res.status(500).json({ error: error.message || "동기화 실패" });
+    }
+  });
+
+  // 인스타그램 게시물 미리보기 (동기화 전 확인)
+  app.get("/api/instagram/preview", isAuthenticated, async (req, res) => {
+    const user = req.user as any;
+    const userId = user?.claims?.sub;
+    const isAdmin = userId && String(userId) === String(ADMIN_USER_ID);
+    
+    if (!isAdmin) {
+      return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+    }
+
+    try {
+      const instaPosts = await fetchInstagramPosts();
+      
+      // 이미 동기화된 게시물 ID 가져오기
+      const syncedIds = await db.select({ instagramId: instagramSyncedPosts.instagramId }).from(instagramSyncedPosts);
+      const syncedIdSet = new Set(syncedIds.map(s => s.instagramId));
+      
+      const previewPosts = instaPosts.map(post => ({
+        id: post.id,
+        caption: post.caption?.substring(0, 200) || "",
+        mediaUrl: post.media_url,
+        mediaType: post.media_type,
+        timestamp: post.timestamp,
+        alreadySynced: syncedIdSet.has(post.id),
+      }));
+
+      res.json({ posts: previewPosts });
+    } catch (error: any) {
+      console.error("Instagram preview error:", error);
+      res.status(500).json({ error: error.message || "미리보기 실패" });
+    }
   });
 
   // WebSocket 채팅 서버
