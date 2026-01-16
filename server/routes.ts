@@ -338,6 +338,7 @@ export async function registerRoutes(
         userId: userId,
         name: input.name,
         participants: input.participants as string[],
+        budget: parseInt(req.body.budget) || 0,
       }).returning();
       res.status(201).json(group);
     } catch (err) {
@@ -347,6 +348,31 @@ export async function registerRoutes(
         console.error("Expense group create error:", err);
         res.status(500).json({ message: "Internal server error" });
       }
+    }
+  });
+
+  // 그룹 예산 수정 (본인 그룹만)
+  app.patch("/api/expense-groups/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const id = parseInt(req.params.id);
+      
+      const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, id), eq(expenseGroups.userId, userId)));
+      if (!group) {
+        return res.status(404).json({ message: "Group not found" });
+      }
+      
+      const { budget } = req.body;
+      const parsedBudget = parseInt(budget) || 0;
+      if (parsedBudget < 0) {
+        return res.status(400).json({ message: "Budget cannot be negative" });
+      }
+      
+      const [updated] = await db.update(expenseGroups).set({ budget: parsedBudget }).where(eq(expenseGroups.id, id)).returning();
+      res.json(updated);
+    } catch (err) {
+      console.error("Expense group update error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

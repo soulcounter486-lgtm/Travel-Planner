@@ -25,6 +25,7 @@ export const expenseGroups = pgTable("expense_groups", {
   userId: text("user_id").notNull(), // 그룹 생성자 ID (로그인 사용자)
   name: text("name").notNull(),
   participants: jsonb("participants").notNull().$type<string[]>(), // 참여자 이름 배열
+  budget: integer("budget").default(0), // 총 예산 (VND)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
