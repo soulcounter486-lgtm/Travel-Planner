@@ -866,7 +866,7 @@ export default function Board() {
                           animate={{ opacity: 1, y: 0 }}
                           className="bg-muted/50 rounded-lg p-4"
                         >
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center justify-between mb-1">
                             <span className="text-xs text-muted-foreground font-medium">{comment.authorName}</span>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground">
