@@ -322,6 +322,15 @@ export default function Board() {
     return result;
   };
 
+  const getFirstImageFromContent = (content: string): string | null => {
+    const match = content.match(/!\[[^\]]*\]\(([^)]+)\)/);
+    return match ? match[1] : null;
+  };
+
+  const getTextWithoutImages = (content: string): string => {
+    return content.replace(/!\[[^\]]*\]\([^)]+\)/g, "").trim();
+  };
+
   const handleCreatePost = () => {
     if (!newPostTitle.trim() || !newPostContent.trim()) {
       toast({ title: "제목과 내용을 입력해주세요", variant: "destructive" });
@@ -432,36 +441,46 @@ export default function Board() {
                     onChange={(e) => setNewPostTitle(e.target.value)}
                     data-testid="input-post-title"
                   />
-                  <div className="relative">
-                    <Textarea
-                      ref={textareaRef}
-                      placeholder={labels.postContent}
-                      value={newPostContent}
-                      onChange={(e) => setNewPostContent(e.target.value)}
-                      rows={10}
-                      data-testid="input-post-content"
-                    />
-                    <div className="absolute bottom-2 right-2">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="image-upload"
-                        disabled={isUploading}
+                  <div className="flex gap-4">
+                    <div className="flex-1 relative">
+                      <Textarea
+                        ref={textareaRef}
+                        placeholder={labels.postContent}
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                        rows={10}
+                        data-testid="input-post-content"
                       />
-                      <label htmlFor="image-upload">
-                        <Button variant="outline" size="sm" asChild disabled={isUploading}>
-                          <span className="gap-1.5 cursor-pointer">
-                            {isUploading ? (
-                              <><Loader2 className="w-3.5 h-3.5 animate-spin" /></>
-                            ) : (
-                              <><ImagePlus className="w-3.5 h-3.5" />{labels.addImage}</>
-                            )}
-                          </span>
-                        </Button>
-                      </label>
+                      <div className="absolute bottom-2 right-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          id="image-upload"
+                          disabled={isUploading}
+                        />
+                        <label htmlFor="image-upload">
+                          <Button variant="outline" size="sm" asChild disabled={isUploading}>
+                            <span className="gap-1.5 cursor-pointer">
+                              {isUploading ? (
+                                <><Loader2 className="w-3.5 h-3.5 animate-spin" /></>
+                              ) : (
+                                <><ImagePlus className="w-3.5 h-3.5" />{labels.addImage}</>
+                              )}
+                            </span>
+                          </Button>
+                        </label>
+                      </div>
                     </div>
+                    {newPostContent && (
+                      <div className="flex-1 border rounded-lg p-3 overflow-auto max-h-64 bg-muted/30">
+                        <p className="text-xs text-muted-foreground mb-2">미리보기</p>
+                        <div className="prose prose-sm max-w-none whitespace-pre-wrap">
+                          {renderContentWithImages(newPostContent)}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">커서 위치에 이미지가 삽입됩니다</p>
                   <div className="flex gap-2 justify-end">
@@ -617,9 +636,9 @@ export default function Board() {
                     >
                       <CardContent className="p-4">
                         <div className="flex gap-4">
-                          {post.imageUrl && (
+                          {(post.imageUrl || getFirstImageFromContent(post.content)) && (
                             <img
-                              src={post.imageUrl}
+                              src={post.imageUrl || getFirstImageFromContent(post.content) || ""}
                               alt=""
                               className="w-24 h-24 object-cover rounded-lg shrink-0"
                             />
@@ -627,7 +646,7 @@ export default function Board() {
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-lg mb-1 truncate">{post.title}</h3>
                             <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                              {post.content}
+                              {getTextWithoutImages(post.content)}
                             </p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
