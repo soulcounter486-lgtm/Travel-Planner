@@ -1124,7 +1124,8 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   app.get("/api/admin/check", (req, res) => {
     const user = req.user as any;
     const userId = user?.claims?.sub;
-    const isAdmin = userId && userId === ADMIN_USER_ID;
+    const isAdmin = userId && String(userId) === String(ADMIN_USER_ID);
+    console.log("Admin check - userId:", userId, "ADMIN_USER_ID:", ADMIN_USER_ID, "isAdmin:", isAdmin);
     res.json({ isAdmin, isLoggedIn: !!user, userId });
   });
 
