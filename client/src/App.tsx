@@ -9,6 +9,7 @@ import PlacesGuide from "@/pages/PlacesGuide";
 import ExpenseTracker from "@/pages/ExpenseTracker";
 import NearbyPlaces from "@/pages/NearbyPlaces";
 import TravelPlanner from "@/pages/TravelPlanner";
+import ChatRoom from "@/pages/ChatRoom";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/expenses" component={ExpenseTracker} />
       <Route path="/nearby" component={NearbyPlaces} />
       <Route path="/planner" component={TravelPlanner} />
+      <Route path="/chat" component={ChatRoom} />
       <Route component={NotFound} />
     </Switch>
   );

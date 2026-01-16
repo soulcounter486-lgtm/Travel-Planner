@@ -9,6 +9,7 @@ import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 import { GoogleGenAI } from "@google/genai";
+import { WebSocketServer, WebSocket } from "ws";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
@@ -951,6 +952,102 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
       res.status(500).json({ message: "Internal server error" });
     }
   });
+
+  // WebSocket 채팅 서버
+  const wss = new WebSocketServer({ server: httpServer, path: "/ws/chat" });
+  
+  interface ChatUser {
+    ws: WebSocket;
+    nickname: string;
+    joinedAt: Date;
+  }
+  
+  const chatUsers = new Map<WebSocket, ChatUser>();
+  const chatHistory: Array<{ nickname: string; message: string; timestamp: Date; type: string }> = [];
+  const MAX_HISTORY = 100;
+  
+  wss.on("connection", (ws: WebSocket) => {
+    console.log("New WebSocket connection");
+    
+    ws.on("message", (data: Buffer) => {
+      try {
+        const msg = JSON.parse(data.toString());
+        
+        if (msg.type === "join") {
+          const nickname = msg.nickname || "익명";
+          chatUsers.set(ws, { ws, nickname, joinedAt: new Date() });
+          
+          // 최근 채팅 기록 전송
+          ws.send(JSON.stringify({
+            type: "history",
+            messages: chatHistory.slice(-50),
+          }));
+          
+          // 입장 알림
+          const joinMsg = {
+            type: "system",
+            nickname: "시스템",
+            message: `${nickname}님이 입장했습니다.`,
+            timestamp: new Date(),
+          };
+          chatHistory.push(joinMsg);
+          if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+          
+          broadcast(JSON.stringify(joinMsg));
+          
+          // 온라인 유저 목록 전송
+          broadcastUserList();
+        } else if (msg.type === "message") {
+          const user = chatUsers.get(ws);
+          if (user) {
+            const chatMsg = {
+              type: "message",
+              nickname: user.nickname,
+              message: msg.message,
+              timestamp: new Date(),
+            };
+            chatHistory.push(chatMsg);
+            if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+            
+            broadcast(JSON.stringify(chatMsg));
+          }
+        }
+      } catch (err) {
+        console.error("WebSocket message error:", err);
+      }
+    });
+    
+    ws.on("close", () => {
+      const user = chatUsers.get(ws);
+      if (user) {
+        const leaveMsg = {
+          type: "system",
+          nickname: "시스템",
+          message: `${user.nickname}님이 퇴장했습니다.`,
+          timestamp: new Date(),
+        };
+        chatHistory.push(leaveMsg);
+        if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
+        
+        chatUsers.delete(ws);
+        broadcast(JSON.stringify(leaveMsg));
+        broadcastUserList();
+      }
+    });
+  });
+  
+  function broadcast(message: string) {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+  
+  function broadcastUserList() {
+    const users = Array.from(chatUsers.values()).map((u) => u.nickname);
+    broadcast(JSON.stringify({ type: "users", users }));
+  }
 
   return httpServer;
 }
