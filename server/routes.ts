@@ -1002,8 +1002,8 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
 
       const [newPost] = await db.insert(posts).values({
         ...result.data,
-        authorId: user.id,
-        authorName: user.username || user.email || "관리자",
+        authorId: userId,
+        authorName: user.claims?.first_name || user.claims?.email || "관리자",
       }).returning();
 
       res.status(201).json(newPost);
