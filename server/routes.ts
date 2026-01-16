@@ -762,7 +762,7 @@ export async function registerRoutes(
   });
 
   const travelPlanRequestSchema = z.object({
-    purpose: z.enum(["gourmet", "relaxing", "golf", "adventure", "culture", "family"]),
+    purpose: z.string().min(1),
     startDate: z.string(),
     endDate: z.string(),
     language: z.string().default("ko"),
