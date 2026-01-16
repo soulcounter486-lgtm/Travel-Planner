@@ -270,6 +270,9 @@ export default function Board() {
   const [newPostContent, setNewPostContent] = useState("");
   const [commentNickname, setCommentNickname] = useState(() => localStorage.getItem("comment_nickname") || "");
   const [commentContent, setCommentContent] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
 
@@ -419,6 +422,24 @@ export default function Board() {
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
       setSelectedPost(null);
       toast({ title: "게시글이 삭제되었습니다" });
+    },
+  });
+
+  const updatePostMutation = useMutation({
+    mutationFn: async (data: { id: number; title: string; content: string }) => {
+      const res = await apiRequest("PUT", `/api/posts/${data.id}`, { title: data.title, content: data.content });
+      return res.json();
+    },
+    onSuccess: (updatedPost) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      setSelectedPost(updatedPost);
+      setIsEditing(false);
+      setEditTitle("");
+      setEditContent("");
+      toast({ title: "게시글이 수정되었습니다" });
+    },
+    onError: (error: any) => {
+      toast({ title: error.message || "게시글 수정 실패", variant: "destructive" });
     },
   });
 
@@ -753,21 +774,82 @@ export default function Board() {
                     </div>
                   </div>
                   {isAdmin && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deletePostMutation.mutate(selectedPost.id)}
-                      data-testid="btn-delete-post"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditing(true);
+                          setEditTitle(selectedPost.title);
+                          setEditContent(selectedPost.content);
+                        }}
+                        data-testid="btn-edit-post"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deletePostMutation.mutate(selectedPost.id)}
+                        data-testid="btn-delete-post"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-6 overflow-hidden">
-                <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words overflow-hidden">
-                  {renderContentWithImages(selectedPost.content)}
-                </div>
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <Input
+                      placeholder={labels.postTitle}
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      data-testid="input-edit-title"
+                    />
+                    <Textarea
+                      placeholder={labels.postContent}
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="min-h-[200px]"
+                      data-testid="input-edit-content"
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setIsEditing(false);
+                          setEditTitle("");
+                          setEditContent("");
+                        }}
+                      >
+                        {labels.cancel}
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (editTitle.trim() && editContent.trim()) {
+                            updatePostMutation.mutate({
+                              id: selectedPost.id,
+                              title: editTitle,
+                              content: editContent,
+                            });
+                          } else {
+                            toast({ title: "제목과 내용을 입력해주세요", variant: "destructive" });
+                          }
+                        }}
+                        disabled={updatePostMutation.isPending}
+                        data-testid="btn-save-edit"
+                      >
+                        {updatePostMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : labels.save}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words overflow-hidden">
+                    {renderContentWithImages(selectedPost.content)}
+                  </div>
+                )}
 
                 <div className="border-t pt-6">
                   <h3 className="font-semibold mb-4 flex items-center gap-2">

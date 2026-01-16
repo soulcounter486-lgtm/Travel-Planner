@@ -1041,6 +1041,42 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   });
 
   // 게시판 - 게시글 삭제 (관리자만)
+  // 게시글 수정
+  app.put("/api/posts/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      if (!userId || String(userId) !== String(ADMIN_USER_ID)) {
+        return res.status(403).json({ message: "Only admin can edit posts" });
+      }
+
+      const id = parseInt(req.params.id);
+      const { title, content } = req.body;
+
+      if (!title || !content) {
+        return res.status(400).json({ message: "Title and content are required" });
+      }
+
+      const [updated] = await db.update(posts)
+        .set({ 
+          title, 
+          content,
+          updatedAt: new Date()
+        })
+        .where(eq(posts.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      res.json(updated);
+    } catch (err) {
+      console.error("Update post error:", err);
+      res.status(500).json({ message: "Failed to update post" });
+    }
+  });
+
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
