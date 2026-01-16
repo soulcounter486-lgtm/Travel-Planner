@@ -27,7 +27,8 @@ import {
   Wallet,
   MessageCircle,
   Download,
-  Music
+  Music,
+  ExternalLink
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
@@ -113,6 +114,26 @@ export default function TravelPlanner() {
     );
   };
 
+  const autoSaveImage = async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!planRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(planRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+      });
+      
+      const link = document.createElement("a");
+      link.download = `VungTau_TravelPlan_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Failed to auto-save image:", error);
+    }
+  };
+
   const generatePlanMutation = useMutation({
     mutationFn: async () => {
       if (selectedPurposes.length === 0 || !startDate || !endDate) {
@@ -128,6 +149,7 @@ export default function TravelPlanner() {
     },
     onSuccess: (data) => {
       setTravelPlan(data);
+      setTimeout(() => autoSaveImage(), 1000);
     },
   });
 
@@ -420,7 +442,13 @@ export default function TravelPlanner() {
                                   <div className="w-px h-8 bg-border mt-2" />
                                 )}
                               </div>
-                              <div className="flex-1 bg-muted/50 rounded-lg p-3">
+                              <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.placeVi || item.place)}+Vung+Tau+Vietnam`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 bg-muted/50 rounded-lg p-3 hover-elevate cursor-pointer transition-all border border-transparent hover:border-primary/30"
+                                data-testid={`schedule-item-${dayIndex}-${itemIndex}`}
+                              >
                                 <div className="flex items-start gap-2 flex-wrap">
                                   <Badge className={typeColor}>
                                     <TypeIcon className="h-3 w-3 mr-1" />
@@ -428,15 +456,16 @@ export default function TravelPlanner() {
                                   </Badge>
                                   <span className="font-medium">{item.activity}</span>
                                 </div>
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  <MapPin className="h-3 w-3 inline mr-1" />
+                                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
                                   {item.place}
-                                  {item.placeVi && <span className="text-xs ml-1">({item.placeVi})</span>}
+                                  {item.placeVi && <span className="text-xs">({item.placeVi})</span>}
+                                  <ExternalLink className="h-3 w-3 ml-1 text-primary" />
                                 </p>
                                 {item.note && (
                                   <p className="text-xs text-muted-foreground mt-1 italic">{item.note}</p>
                                 )}
-                              </div>
+                              </a>
                             </motion.div>
                           );
                         })}
