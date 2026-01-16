@@ -591,30 +591,30 @@ export default function PlacesGuide() {
       </div>
 
       <div className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 py-3">
+        <div className="container mx-auto px-4 overflow-x-auto">
+          <div className="flex items-center gap-1 sm:gap-2 py-3 min-w-max">
             <Link href="/">
-              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-calculator">
+              <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-calculator">
                 <Calculator className="w-4 h-4" />
-                {navLabels.calculator[language as keyof typeof navLabels.calculator] || navLabels.calculator.ko}
+                <span className="hidden sm:inline">{navLabels.calculator[language as keyof typeof navLabels.calculator] || navLabels.calculator.ko}</span>
               </Button>
             </Link>
             <Link href="/guide">
-              <Button variant="default" className="flex items-center gap-2" data-testid="nav-guide">
+              <Button variant="default" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-guide">
                 <MapPin className="w-4 h-4" />
-                {navLabels.guide[language as keyof typeof navLabels.guide] || navLabels.guide.ko}
+                <span className="hidden sm:inline">{navLabels.guide[language as keyof typeof navLabels.guide] || navLabels.guide.ko}</span>
               </Button>
             </Link>
             <Link href="/expenses">
-              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-expenses">
+              <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-expenses">
                 <Wallet className="w-4 h-4" />
-                {navLabels.expenses[language as keyof typeof navLabels.expenses] || navLabels.expenses.ko}
+                <span className="hidden sm:inline">{navLabels.expenses[language as keyof typeof navLabels.expenses] || navLabels.expenses.ko}</span>
               </Button>
             </Link>
             <Link href="/planner">
-              <Button variant="outline" className="flex items-center gap-2" data-testid="nav-planner">
+              <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-planner">
                 <Sparkles className="w-4 h-4" />
-                {t("nav.planner")}
+                <span className="hidden sm:inline">{t("nav.planner")}</span>
               </Button>
             </Link>
           </div>
