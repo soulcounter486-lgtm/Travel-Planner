@@ -15,6 +15,7 @@ import {
   Send,
   Users,
   LogIn,
+  LogOut,
   Bell,
   BellOff
 } from "lucide-react";
@@ -30,7 +31,9 @@ interface ChatMessage {
 
 export default function ChatRoom() {
   const { language, t } = useLanguage();
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState(() => {
+    return localStorage.getItem("chat_nickname") || "";
+  });
   const [isJoined, setIsJoined] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -40,11 +43,21 @@ export default function ChatRoom() {
   const wsRef = useRef<WebSocket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const savedNicknameRef = useRef<string>("");
+  const savedNicknameRef = useRef<string>(localStorage.getItem("chat_nickname") || "");
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "granted") {
       setNotificationsEnabled(true);
+    }
+  }, []);
+
+  // Auto-join if nickname is saved
+  useEffect(() => {
+    const savedNick = localStorage.getItem("chat_nickname");
+    if (savedNick && !isJoined) {
+      savedNicknameRef.current = savedNick;
+      setIsJoined(true);
+      connectWebSocket(savedNick);
     }
   }, []);
 
@@ -184,10 +197,24 @@ export default function ChatRoom() {
 
   const handleJoin = () => {
     if (nickname.trim()) {
-      savedNicknameRef.current = nickname.trim();
+      const trimmedNick = nickname.trim();
+      savedNicknameRef.current = trimmedNick;
+      localStorage.setItem("chat_nickname", trimmedNick);
       setIsJoined(true);
-      connectWebSocket(nickname.trim());
+      connectWebSocket(trimmedNick);
     }
+  };
+
+  const handleLeave = () => {
+    localStorage.removeItem("chat_nickname");
+    savedNicknameRef.current = "";
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    setIsJoined(false);
+    setMessages([]);
+    setOnlineUsers([]);
+    setNickname("");
   };
 
   const handleSend = () => {
@@ -314,20 +341,30 @@ export default function ChatRoom() {
                 <div className="flex flex-col h-[500px]">
                   <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
                     <span className="text-sm font-medium">{savedNicknameRef.current}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={requestNotificationPermission}
-                      className="gap-1"
-                      data-testid="btn-toggle-notifications"
-                    >
-                      {notificationsEnabled ? (
-                        <Bell className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <BellOff className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <span className="text-xs">{notificationsEnabled ? "알림 켜짐" : "알림 켜기"}</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={requestNotificationPermission}
+                        className="gap-1"
+                        data-testid="btn-toggle-notifications"
+                      >
+                        {notificationsEnabled ? (
+                          <Bell className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <BellOff className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLeave}
+                        className="gap-1 text-red-500 hover:text-red-600"
+                        data-testid="btn-leave-chat"
+                      >
+                        <LogOut className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div
                     ref={scrollRef}
