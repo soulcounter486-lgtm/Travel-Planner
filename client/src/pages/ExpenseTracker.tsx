@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
@@ -27,7 +28,10 @@ import {
   LogIn,
   LogOut,
   Loader2,
-  Pencil
+  Pencil,
+  Settings,
+  AlertTriangle,
+  AlertCircle
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
 
@@ -69,6 +73,14 @@ type TranslationType = {
   editExpense: string;
   save: string;
   memo: string;
+  budget: string;
+  budgetPlaceholder: string;
+  budgetUsed: string;
+  budgetRemaining: string;
+  budgetWarning: string;
+  budgetDanger: string;
+  setBudget: string;
+  noBudget: string;
 };
 
 const translations: Record<string, TranslationType> = {
@@ -116,7 +128,15 @@ const translations: Record<string, TranslationType> = {
     loginDescription: "여행 가계부를 사용하려면 로그인해주세요. 로그인하면 나만의 여행 가계부를 관리할 수 있습니다.",
     editExpense: "지출 수정",
     save: "저장",
-    memo: "메모"
+    memo: "메모",
+    budget: "총 예산 (VND)",
+    budgetPlaceholder: "예: 10000000",
+    budgetUsed: "사용",
+    budgetRemaining: "남은 예산",
+    budgetWarning: "예산의 80%를 사용했습니다!",
+    budgetDanger: "예산을 초과했습니다!",
+    setBudget: "예산 설정",
+    noBudget: "예산 미설정"
   },
   en: {
     title: "Travel Expense Tracker",
@@ -162,7 +182,15 @@ const translations: Record<string, TranslationType> = {
     loginDescription: "Please log in to use the travel expense tracker. After logging in, you can manage your own travel expenses.",
     editExpense: "Edit Expense",
     save: "Save",
-    memo: "Memo"
+    memo: "Memo",
+    budget: "Total Budget (VND)",
+    budgetPlaceholder: "e.g. 10000000",
+    budgetUsed: "Used",
+    budgetRemaining: "Remaining",
+    budgetWarning: "You've used 80% of your budget!",
+    budgetDanger: "Budget exceeded!",
+    setBudget: "Set Budget",
+    noBudget: "No budget set"
   }
 };
 
@@ -191,6 +219,9 @@ export default function ExpenseTracker() {
   
   const [newGroupName, setNewGroupName] = useState("");
   const [newParticipants, setNewParticipants] = useState("");
+  const [newBudget, setNewBudget] = useState("");
+  const [showBudgetDialog, setShowBudgetDialog] = useState(false);
+  const [editBudget, setEditBudget] = useState("");
   
   const [expenseDescription, setExpenseDescription] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
@@ -224,7 +255,7 @@ export default function ExpenseTracker() {
   });
 
   const createGroupMutation = useMutation({
-    mutationFn: async (data: { name: string; participants: string[] }) => {
+    mutationFn: async (data: { name: string; participants: string[]; budget: number }) => {
       return apiRequest("POST", "/api/expense-groups", data);
     },
     onSuccess: () => {
@@ -232,7 +263,22 @@ export default function ExpenseTracker() {
       setShowCreateDialog(false);
       setNewGroupName("");
       setNewParticipants("");
+      setNewBudget("");
       toast({ title: "여행이 생성되었습니다" });
+    },
+  });
+
+  const updateBudgetMutation = useMutation({
+    mutationFn: async (data: { id: number; budget: number }) => {
+      return apiRequest("PATCH", `/api/expense-groups/${data.id}`, { budget: data.budget });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/expense-groups"] });
+      if (selectedGroup) {
+        setSelectedGroup({ ...selectedGroup, budget: variables.budget });
+      }
+      setShowBudgetDialog(false);
+      toast({ title: "예산이 설정되었습니다" });
     },
   });
 
@@ -327,8 +373,28 @@ export default function ExpenseTracker() {
       toast({ title: "최소 1명 이상의 참여자가 필요합니다", variant: "destructive" });
       return;
     }
-    createGroupMutation.mutate({ name: newGroupName.trim(), participants });
+    const budget = parseInt(newBudget) || 0;
+    createGroupMutation.mutate({ name: newGroupName.trim(), participants, budget });
   };
+
+  const handleUpdateBudget = () => {
+    if (!selectedGroup) return;
+    const budget = parseInt(editBudget) || 0;
+    updateBudgetMutation.mutate({ id: selectedGroup.id, budget });
+  };
+
+  const openBudgetDialog = () => {
+    if (selectedGroup) {
+      setEditBudget(String(selectedGroup.budget || 0));
+      setShowBudgetDialog(true);
+    }
+  };
+
+  const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const safeBudget = Math.max(0, selectedGroup?.budget || 0);
+  const budgetUsedPercent = safeBudget > 0 
+    ? Math.round((totalExpense / safeBudget) * 100) 
+    : 0;
 
   const handleAddExpense = () => {
     const amount = expenseAmount ? parseInt(expenseAmount) : 0;
@@ -640,6 +706,90 @@ export default function ExpenseTracker() {
             </Button>
           </div>
 
+          <Card className={`mb-4 ${budgetUsedPercent >= 100 ? 'border-red-500 bg-red-50 dark:bg-red-950/20' : budgetUsedPercent >= 80 ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20' : 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20'}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  <span className="font-bold">{t.budget.replace(" (VND)", "")}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={openBudgetDialog} data-testid="button-edit-budget">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {safeBudget > 0 ? (
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span>{t.budgetUsed}: {formatVND(totalExpense)} / {formatVND(safeBudget)}</span>
+                    <span className={`font-bold ${budgetUsedPercent >= 100 ? 'text-red-600' : budgetUsedPercent >= 80 ? 'text-yellow-600' : 'text-green-600'}`}>
+                      {budgetUsedPercent}%
+                    </span>
+                  </div>
+                  <Progress 
+                    value={Math.min(budgetUsedPercent, 100)} 
+                    className={`h-3 ${budgetUsedPercent >= 100 ? '[&>div]:bg-red-500' : budgetUsedPercent >= 80 ? '[&>div]:bg-yellow-500' : '[&>div]:bg-green-500'}`}
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>{t.budgetRemaining}: {formatVND(Math.max(0, safeBudget - totalExpense))}</span>
+                  </div>
+                  {budgetUsedPercent >= 100 && (
+                    <div className="flex items-center gap-2 text-red-600 font-medium bg-red-100 dark:bg-red-900/30 rounded-lg p-2">
+                      <AlertCircle className="h-4 w-4" />
+                      {t.budgetDanger}
+                    </div>
+                  )}
+                  {budgetUsedPercent >= 80 && budgetUsedPercent < 100 && (
+                    <div className="flex items-center gap-2 text-yellow-600 font-medium bg-yellow-100 dark:bg-yellow-900/30 rounded-lg p-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      {t.budgetWarning}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground py-2">
+                  <p>{t.noBudget}</p>
+                  <Button variant="ghost" className="text-primary" onClick={openBudgetDialog}>
+                    {t.setBudget}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Dialog open={showBudgetDialog} onOpenChange={setShowBudgetDialog}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>{t.setBudget}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>{t.budget}</Label>
+                  <Input
+                    type="number"
+                    value={editBudget}
+                    onChange={(e) => setEditBudget(e.target.value)}
+                    placeholder={t.budgetPlaceholder}
+                    data-testid="input-edit-budget"
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setShowBudgetDialog(false)}>
+                    {t.cancel}
+                  </Button>
+                  <Button 
+                    className="flex-1" 
+                    onClick={handleUpdateBudget}
+                    disabled={updateBudgetMutation.isPending}
+                    data-testid="button-save-budget"
+                  >
+                    {t.save}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           {showSettlement && settlement && (
             <Card className="border-primary/50 bg-primary/5">
               <CardHeader className="pb-2">
@@ -854,6 +1004,16 @@ export default function ExpenseTracker() {
                   onChange={(e) => setNewParticipants(e.target.value)}
                   placeholder={t.participantsPlaceholder}
                   data-testid="input-group-participants"
+                />
+              </div>
+              <div>
+                <Label>{t.budget}</Label>
+                <Input
+                  type="number"
+                  value={newBudget}
+                  onChange={(e) => setNewBudget(e.target.value)}
+                  placeholder={t.budgetPlaceholder}
+                  data-testid="input-group-budget"
                 />
               </div>
               <div className="flex gap-2 pt-4">

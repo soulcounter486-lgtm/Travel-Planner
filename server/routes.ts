@@ -334,11 +334,15 @@ export async function registerRoutes(
     try {
       const userId = req.user?.claims?.sub;
       const input = insertExpenseGroupSchema.parse(req.body);
+      const budget = parseInt(req.body.budget) || 0;
+      if (budget < 0) {
+        return res.status(400).json({ message: "Budget cannot be negative" });
+      }
       const [group] = await db.insert(expenseGroups).values({
         userId: userId,
         name: input.name,
         participants: input.participants as string[],
-        budget: parseInt(req.body.budget) || 0,
+        budget,
       }).returning();
       res.status(201).json(group);
     } catch (err) {
