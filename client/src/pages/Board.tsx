@@ -275,8 +275,10 @@ export default function Board() {
 
   // 뒤로가기 시 게시판 목록으로 돌아가기
   useEffect(() => {
-    const handlePopState = () => {
-      setSelectedPost(null);
+    const handlePopState = (e: PopStateEvent) => {
+      if (e.state?.viewingPost === false || !e.state) {
+        setSelectedPost(null);
+      }
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -284,13 +286,13 @@ export default function Board() {
   }, []);
 
   const handleSelectPost = (post: Post) => {
+    window.history.pushState({ viewingPost: true, postId: post.id }, "");
     setSelectedPost(post);
-    window.history.pushState({ postId: post.id }, "", `/board/${post.id}`);
   };
 
   const handleBackToList = () => {
+    window.history.pushState({ viewingPost: false }, "");
     setSelectedPost(null);
-    window.history.back();
   };
 
   const saveSelection = () => {
@@ -630,7 +632,7 @@ export default function Board() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 overflow-hidden box-border" style={{ maxWidth: "calc(100vw - 2rem)" }}>
+      <main className="container mx-auto px-4 py-6 overflow-hidden" style={{ maxWidth: "min(72rem, 100vw - 2rem)" }}>
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
             <FileText className="w-8 h-8 text-primary" />
@@ -838,7 +840,7 @@ export default function Board() {
             </Card>
           </motion.div>
         ) : (
-          <div className="grid gap-4 w-full max-w-full">
+          <div className="flex flex-col gap-4">
             {postsLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -856,10 +858,9 @@ export default function Board() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="w-full max-w-full"
                   >
                     <Card
-                      className="cursor-pointer hover-elevate transition-all w-full max-w-full"
+                      className="cursor-pointer hover-elevate transition-all"
                       onClick={() => handleSelectPost(post)}
                       data-testid={`post-card-${post.id}`}
                     >
@@ -872,9 +873,9 @@ export default function Board() {
                               className="w-24 h-24 object-cover rounded-lg shrink-0"
                             />
                           )}
-                          <div className="flex-1 min-w-0 overflow-hidden">
-                            <h3 className="font-semibold text-lg mb-1 break-words">{post.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-3 mb-2 break-words whitespace-pre-wrap overflow-hidden">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg mb-1 line-clamp-2">{post.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                               {getTextWithoutImages(post.content)}
                             </p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
@@ -890,7 +891,7 @@ export default function Board() {
                           </div>
                         </div>
                         {getFirstUrlFromContent(post.content) && (
-                          <div className="mt-3 w-full max-w-full">
+                          <div className="mt-3">
                             <LinkPreview url={getFirstUrlFromContent(post.content)!} />
                           </div>
                         )}
