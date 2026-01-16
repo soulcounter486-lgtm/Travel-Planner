@@ -522,6 +522,12 @@ export default function Board() {
     return content.replace(/!\[[^\]]*\]\([^)]+\)/g, "").trim();
   };
 
+  const getFirstUrlFromContent = (content: string): string | null => {
+    const urlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/;
+    const match = content.match(urlRegex);
+    return match ? match[0] : null;
+  };
+
   const handleCreatePost = () => {
     if (!newPostTitle.trim() || !newPostContent.trim()) {
       toast({ title: "제목과 내용을 입력해주세요", variant: "destructive" });
@@ -861,6 +867,11 @@ export default function Board() {
                             </div>
                           </div>
                         </div>
+                        {getFirstUrlFromContent(post.content) && (
+                          <div className="mt-3">
+                            <LinkPreview url={getFirstUrlFromContent(post.content)!} />
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </motion.div>
