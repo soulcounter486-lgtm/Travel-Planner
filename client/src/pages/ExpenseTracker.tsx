@@ -44,6 +44,7 @@ const navLabels: Record<string, Record<string, string>> = {
   expenses: { ko: "가계부", en: "Expenses", zh: "账本", vi: "Chi tiêu", ru: "Расходы", ja: "家計簿" },
   planner: { ko: "AI 플래너", en: "AI Planner", zh: "AI规划", vi: "AI Lên kế hoạch", ru: "AI Планер", ja: "AIプランナー" },
   chat: { ko: "채팅", en: "Chat", zh: "聊天", vi: "Chat", ru: "Чат", ja: "チャット" },
+  board: { ko: "게시판", en: "Board", zh: "公告板", vi: "Bảng tin", ru: "Доска", ja: "掲示板" },
 };
 
 type TranslationType = {
@@ -964,6 +965,12 @@ export default function ExpenseTracker() {
                   {navLabels.chat[language] || navLabels.chat.ko}
                 </Button>
               </Link>
+              <Link href="/board">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                  <Pencil className="w-3.5 h-3.5" />
+                  {navLabels.board[language] || navLabels.board.ko}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -1036,6 +1043,12 @@ export default function ExpenseTracker() {
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
                 <MessageCircle className="w-3.5 h-3.5" />
                 {navLabels.chat[language] || navLabels.chat.ko}
+              </Button>
+            </Link>
+            <Link href="/board">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                <Pencil className="w-3.5 h-3.5" />
+                {navLabels.board[language] || navLabels.board.ko}
               </Button>
             </Link>
           </div>

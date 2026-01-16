@@ -288,6 +288,12 @@ export default function ChatRoom() {
                 {t("nav.planner")}
               </Button>
             </Link>
+            <Link href="/board">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                <MessageCircle className="w-3.5 h-3.5" />
+                {t("nav.board")}
+              </Button>
+            </Link>
           </nav>
         </div>
       </header>

@@ -354,6 +354,12 @@ export default function Home() {
                 {t("nav.chat")}
               </Button>
             </Link>
+            <Link href="/board">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                <Flag className="w-3.5 h-3.5" />
+                {t("nav.board")}
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
