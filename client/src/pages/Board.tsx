@@ -382,7 +382,7 @@ export default function Board() {
     for (let i = 0; i < parts.length; i++) {
       if (i % 3 === 0) {
         if (parts[i]) {
-          result.push(<span key={i}>{parts[i]}</span>);
+          result.push(<span key={i} className="break-words">{parts[i]}</span>);
         }
       } else if (i % 3 === 2) {
         result.push(
@@ -390,7 +390,7 @@ export default function Board() {
             key={i} 
             src={parts[i]} 
             alt={parts[i-1] || "이미지"} 
-            className="max-w-full rounded-lg my-4"
+            className="w-full max-w-full h-auto rounded-lg my-4 object-contain"
           />
         );
       }
@@ -591,11 +591,11 @@ export default function Board() {
             <Button variant="ghost" onClick={() => setSelectedPost(null)} className="mb-4">
               ← 목록으로
             </Button>
-            <Card>
+            <Card className="overflow-hidden">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-2xl mb-2">{selectedPost.title}</CardTitle>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-2xl mb-2 break-words">{selectedPost.title}</CardTitle>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <User className="w-4 h-4" />
@@ -620,8 +620,8 @@ export default function Board() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="prose prose-sm max-w-none whitespace-pre-wrap">
+              <CardContent className="space-y-6 overflow-hidden">
+                <div className="prose prose-sm max-w-none whitespace-pre-wrap break-words overflow-hidden">
                   {renderContentWithImages(selectedPost.content)}
                 </div>
 
@@ -716,11 +716,11 @@ export default function Board() {
                     transition={{ delay: idx * 0.05 }}
                   >
                     <Card
-                      className="cursor-pointer hover-elevate transition-all"
+                      className="cursor-pointer hover-elevate transition-all overflow-hidden"
                       onClick={() => setSelectedPost(post)}
                       data-testid={`post-card-${post.id}`}
                     >
-                      <CardContent className="p-4">
+                      <CardContent className="p-4 overflow-hidden">
                         <div className="flex gap-4">
                           {(post.imageUrl || getFirstImageFromContent(post.content)) && (
                             <img
