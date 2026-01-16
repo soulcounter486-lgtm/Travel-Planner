@@ -351,14 +351,14 @@ export default function Board() {
               </Button>
             </Link>
             {isLoggedIn ? (
-              <a href="/api/auth/logout">
+              <a href="/api/logout">
                 <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="btn-logout">
                   <LogOut className="w-3.5 h-3.5" />
                   {labels.logout}
                 </Button>
               </a>
             ) : (
-              <a href="/api/auth/login">
+              <a href="/api/login">
                 <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="btn-login">
                   <LogIn className="w-3.5 h-3.5" />
                   {labels.login}
