@@ -5,6 +5,9 @@ import { z } from "zod";
 // Re-export auth models
 export * from "./models/auth";
 
+// Re-export chat models for AI integrations
+export * from "./models/chat";
+
 // === TABLE DEFINITIONS ===
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),

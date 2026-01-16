@@ -4,10 +4,11 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema } from "@shared/schema";
-import { addDays, getDay, parseISO } from "date-fns";
+import { addDays, getDay, parseISO, format } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+import OpenAI from "openai";
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
@@ -751,6 +752,169 @@ export async function registerRoutes(
     } catch (err) {
       console.error("Place details error:", err);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // AI 여행 플랜 생성 API
+  const openai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+
+  const travelPlanRequestSchema = z.object({
+    purpose: z.enum(["gourmet", "relaxing", "golf", "adventure", "culture", "family"]),
+    startDate: z.string(),
+    endDate: z.string(),
+    language: z.string().default("ko"),
+  });
+
+  // 붕따우 관광지 및 맛집 데이터
+  const placesData = {
+    attractions: [
+      { name: "붕따우 거대 예수상", nameVi: "Tượng Chúa Kitô", type: "landmark", note: "811개 계단, 해안 전경" },
+      { name: "붕따우 등대", nameVi: "Hải Đăng Vũng Tàu", type: "landmark", note: "1910년 프랑스 식민지 시대 건설" },
+      { name: "화이트 펠리스", nameVi: "Bạch Dinh", type: "historical", note: "1898년 프랑스 총독 별장" },
+      { name: "놀이동산", nameVi: "Ho May Amusement Park", type: "entertainment", note: "케이블카, 워터파크, 동물원" },
+      { name: "불교사찰", nameVi: "Chơn Không Monastery", type: "religious", note: "명상, 평화로운 분위기" },
+      { name: "붕따우 백비치", nameVi: "Bãi Sau", type: "beach", note: "가장 긴 해변, 수영, 해양스포츠" },
+      { name: "붕따우 프론트 비치", nameVi: "Front Beach", type: "beach", note: "일몰 감상 최적" },
+      { name: "돼지언덕", nameVi: "Đồi Con Heo", type: "viewpoint", note: "일몰 포토존" },
+      { name: "원숭이사원", nameVi: "Chùa Khỉ Viba", type: "temple", note: "야생 원숭이" },
+      { name: "붕따우 해산물 시장", nameVi: "Seafood Market", type: "market", note: "신선한 해산물" },
+      { name: "붕따우 재래시장", nameVi: "Chợ Vũng Tàu", type: "market", note: "현지 문화 체험" },
+    ],
+    restaurants: {
+      localFood: [
+        { name: "반미 티삥", type: "반미", note: "현지인 맛집" },
+        { name: "반쎄오 (베트남 빈대떡)", type: "반쎄오", note: "현지 음식" },
+        { name: "분짜", type: "분짜", note: "하노이 스타일" },
+        { name: "후띠우", type: "쌀국수", note: "베트남 남부 스타일" },
+      ],
+      koreanFood: [
+        { name: "고향 칼국수/냉면", type: "한식" },
+        { name: "이안 소금구이 BBQ", type: "고기구이", recommended: true },
+        { name: "장모님 치맥", type: "치킨" },
+        { name: "돈까스랑 피자랑", type: "돈까스/피자" },
+      ],
+      buffet: [
+        { name: "간하오 스시, 샤브샤브 뷔페", type: "뷔페" },
+        { name: "해산물 뷔페", type: "뷔페", note: "저녁 오픈" },
+      ],
+      chineseFood: [
+        { name: "옌찌에우 딤섬", type: "딤섬", recommended: true },
+        { name: "민 끼", type: "중식" },
+      ],
+      coffee: [
+        { name: "Coffee Suối Bên Biển", type: "카페", note: "바다 전망" },
+        { name: "KATINAT 커피", type: "카페" },
+        { name: "Highlands Coffee", type: "카페" },
+      ],
+    },
+    services: [
+      { name: "Re.en 마사지", type: "마사지" },
+      { name: "그랜드 마사지", type: "마사지" },
+      { name: "DAY SPA", type: "스파" },
+    ],
+    golf: [
+      { name: "Paradise Golf", course: "paradise" },
+      { name: "Chou Duc Golf", course: "chouduc" },
+      { name: "Ho Cham Golf", course: "hocham" },
+    ],
+  };
+
+  app.post("/api/travel-plan", async (req, res) => {
+    try {
+      const input = travelPlanRequestSchema.parse(req.body);
+      const { purpose, startDate, endDate, language } = input;
+
+      const start = parseISO(startDate);
+      const end = parseISO(endDate);
+      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+      const purposeDescriptions: Record<string, string> = {
+        gourmet: "맛집 탐방과 미식 여행에 중점",
+        relaxing: "여유롭고 편안한 힐링 여행에 중점",
+        golf: "골프 라운딩과 휴식에 중점",
+        adventure: "관광명소 탐험과 액티비티에 중점",
+        culture: "문화 유적지와 역사 탐방에 중점",
+        family: "가족과 함께 즐길 수 있는 활동에 중점",
+      };
+
+      const languagePrompts: Record<string, string> = {
+        ko: "한국어로 답변해주세요.",
+        en: "Please respond in English.",
+        zh: "请用中文回答。",
+        vi: "Vui lòng trả lời bằng tiếng Việt.",
+        ru: "Пожалуйста, ответьте на русском языке.",
+        ja: "日本語で回答してください。",
+      };
+
+      const systemPrompt = `당신은 베트남 붕따우(Vung Tau) 전문 여행 플래너입니다. 
+사용자의 여행 목적과 일정에 맞춰 최적의 여행 일정을 만들어주세요.
+${languagePrompts[language] || languagePrompts.ko}
+
+응답은 반드시 다음 JSON 형식으로만 반환해주세요:
+{
+  "title": "여행 제목",
+  "summary": "여행 요약 (2-3문장)",
+  "days": [
+    {
+      "day": 1,
+      "date": "YYYY-MM-DD",
+      "theme": "이 날의 테마",
+      "schedule": [
+        {
+          "time": "09:00",
+          "activity": "활동 내용",
+          "place": "장소명",
+          "placeVi": "베트남어 장소명",
+          "type": "attraction|restaurant|cafe|massage|golf|beach",
+          "note": "참고사항"
+        }
+      ]
+    }
+  ],
+  "tips": ["팁1", "팁2", "팁3"]
+}`;
+
+      const userPrompt = `붕따우 ${days}일 여행 일정을 만들어주세요.
+
+여행 기간: ${format(start, 'yyyy-MM-dd')} ~ ${format(end, 'yyyy-MM-dd')} (${days}일)
+여행 목적: ${purposeDescriptions[purpose]}
+
+사용 가능한 장소 데이터:
+${JSON.stringify(placesData, null, 2)}
+
+위 장소 데이터를 활용하여 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함한 상세 여행 계획을 만들어주세요.
+식사 시간에는 맛집을, 관광 시간에는 관광명소를 적절히 배치해주세요.
+${purpose === 'golf' ? '매일 또는 격일로 골프 라운딩을 포함해주세요.' : ''}
+${purpose === 'relaxing' ? '마사지나 스파, 카페 시간을 충분히 포함해주세요.' : ''}
+${purpose === 'gourmet' ? '다양한 현지 음식과 한식을 골고루 포함해주세요.' : ''}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 4096,
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        return res.status(500).json({ message: "AI 응답을 받지 못했습니다." });
+      }
+
+      const travelPlan = JSON.parse(content);
+      res.json(travelPlan);
+    } catch (err) {
+      console.error("Travel plan error:", err);
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0].message });
+      } else {
+        res.status(500).json({ message: "여행 플랜 생성 중 오류가 발생했습니다." });
+      }
     }
   });
 
