@@ -166,14 +166,14 @@ export default function ChatRoom() {
       const data = JSON.parse(event.data);
       
       if (data.type === "history") {
-        setMessages(data.messages);
+        // 시스템 메시지 필터링
+        const filteredMessages = data.messages.filter((m: ChatMessage) => m.type !== "system");
+        setMessages(filteredMessages);
       } else if (data.type === "users") {
         setOnlineUsers(data.users);
-      } else if (data.type === "message" || data.type === "system") {
+      } else if (data.type === "message") {
         setMessages((prev) => [...prev, data]);
-        if (data.type === "system" && data.message.includes("joined")) {
-          sendNotification("채팅방 알림", `${data.nickname}님이 입장했습니다`);
-        } else if (data.type === "message" && data.nickname !== savedNicknameRef.current) {
+        if (data.nickname !== savedNicknameRef.current) {
           sendNotification(data.nickname, data.message);
         }
       }
@@ -376,31 +376,25 @@ export default function ChatRoom() {
                           key={idx}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${msg.type === "system" ? "justify-center" : msg.nickname === nickname ? "justify-end" : "justify-start"}`}
+                          className={`flex ${msg.nickname === nickname ? "justify-end" : "justify-start"}`}
                         >
-                          {msg.type === "system" ? (
-                            <Badge variant="secondary" className="text-xs">
-                              {msg.message}
-                            </Badge>
-                          ) : (
-                            <div
-                              className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                                msg.nickname === nickname
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-muted"
-                              }`}
-                            >
-                              {msg.nickname !== nickname && (
-                                <p className="text-xs font-semibold mb-1 opacity-70">
-                                  {msg.nickname}
-                                </p>
-                              )}
-                              <p className="text-sm break-words">{msg.message}</p>
-                              <p className="text-xs opacity-50 mt-1 text-right">
-                                {formatTime(msg.timestamp)}
+                          <div
+                            className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                              msg.nickname === nickname
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            }`}
+                          >
+                            {msg.nickname !== nickname && (
+                              <p className="text-xs font-semibold mb-1 opacity-70">
+                                {msg.nickname}
                               </p>
-                            </div>
-                          )}
+                            )}
+                            <p className="text-sm break-words">{msg.message}</p>
+                            <p className="text-xs opacity-50 mt-1 text-right">
+                              {formatTime(msg.timestamp)}
+                            </p>
+                          </div>
                         </motion.div>
                       ))}
                     </AnimatePresence>

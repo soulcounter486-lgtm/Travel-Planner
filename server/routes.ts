@@ -983,19 +983,7 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
             messages: chatHistory.slice(-50),
           }));
           
-          // 입장 알림
-          const joinMsg = {
-            type: "system",
-            nickname: "시스템",
-            message: `${nickname}님이 입장했습니다.`,
-            timestamp: new Date(),
-          };
-          chatHistory.push(joinMsg);
-          if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
-          
-          broadcast(JSON.stringify(joinMsg));
-          
-          // 온라인 유저 목록 전송
+          // 온라인 유저 목록 전송 (입장 메시지 없이)
           broadcastUserList();
         } else if (msg.type === "message") {
           const user = chatUsers.get(ws);
@@ -1020,17 +1008,7 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
     ws.on("close", () => {
       const user = chatUsers.get(ws);
       if (user) {
-        const leaveMsg = {
-          type: "system",
-          nickname: "시스템",
-          message: `${user.nickname}님이 퇴장했습니다.`,
-          timestamp: new Date(),
-        };
-        chatHistory.push(leaveMsg);
-        if (chatHistory.length > MAX_HISTORY) chatHistory.shift();
-        
         chatUsers.delete(ws);
-        broadcast(JSON.stringify(leaveMsg));
         broadcastUserList();
       }
     });
