@@ -26,7 +26,9 @@ import {
   ImagePlus,
   Loader2,
   Calendar,
-  User
+  User,
+  LogIn,
+  LogOut
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -54,6 +56,8 @@ const boardLabels: Record<string, Record<string, string>> = {
     uploading: "업로드 중...",
     admin: "관리자",
     readMore: "자세히 보기",
+    login: "로그인",
+    logout: "로그아웃",
   },
   en: {
     title: "Board",
@@ -75,6 +79,8 @@ const boardLabels: Record<string, Record<string, string>> = {
     uploading: "Uploading...",
     admin: "Admin",
     readMore: "Read More",
+    login: "Login",
+    logout: "Logout",
   },
   zh: {
     title: "公告板",
@@ -96,6 +102,8 @@ const boardLabels: Record<string, Record<string, string>> = {
     uploading: "上传中...",
     admin: "管理员",
     readMore: "查看详情",
+    login: "登录",
+    logout: "登出",
   },
   vi: {
     title: "Bảng tin",
@@ -117,6 +125,8 @@ const boardLabels: Record<string, Record<string, string>> = {
     uploading: "Đang tải...",
     admin: "Quản trị",
     readMore: "Xem thêm",
+    login: "Đăng nhập",
+    logout: "Đăng xuất",
   },
   ru: {
     title: "Доска",
@@ -138,6 +148,8 @@ const boardLabels: Record<string, Record<string, string>> = {
     uploading: "Загрузка...",
     admin: "Админ",
     readMore: "Подробнее",
+    login: "Вход",
+    logout: "Выход",
   },
   ja: {
     title: "掲示板",
@@ -159,6 +171,8 @@ const boardLabels: Record<string, Record<string, string>> = {
     uploading: "アップロード中...",
     admin: "管理者",
     readMore: "詳細を見る",
+    login: "ログイン",
+    logout: "ログアウト",
   },
 };
 
@@ -198,12 +212,13 @@ export default function Board() {
     queryKey: ["/api/posts"],
   });
 
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean; isLoggedIn: boolean; userId?: string }>({
     queryKey: ["/api/admin/check"],
     retry: false,
   });
 
   const isAdmin = adminCheck?.isAdmin || false;
+  const isLoggedIn = adminCheck?.isLoggedIn || false;
 
   const { data: postComments = [], isLoading: commentsLoading } = useQuery<Comment[]>({
     queryKey: ["/api/posts", selectedPost?.id, "comments"],
@@ -335,6 +350,21 @@ export default function Board() {
                 {navLabels.chat[language] || navLabels.chat.ko}
               </Button>
             </Link>
+            {isLoggedIn ? (
+              <a href="/api/auth/logout">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="btn-logout">
+                  <LogOut className="w-3.5 h-3.5" />
+                  {labels.logout}
+                </Button>
+              </a>
+            ) : (
+              <a href="/api/auth/login">
+                <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="btn-login">
+                  <LogIn className="w-3.5 h-3.5" />
+                  {labels.login}
+                </Button>
+              </a>
+            )}
           </nav>
         </div>
       </header>

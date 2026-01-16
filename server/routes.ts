@@ -1117,10 +1117,10 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   });
 
   // 관리자 여부 확인
-  app.get("/api/admin/check", isAuthenticated, (req, res) => {
+  app.get("/api/admin/check", (req, res) => {
     const user = req.user as any;
     const isAdmin = user && user.id === ADMIN_USER_ID;
-    res.json({ isAdmin });
+    res.json({ isAdmin, isLoggedIn: !!user, userId: user?.id });
   });
 
   // WebSocket 채팅 서버
