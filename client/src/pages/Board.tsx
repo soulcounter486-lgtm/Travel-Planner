@@ -273,6 +273,26 @@ export default function Board() {
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
 
+  // 뒤로가기 시 게시판 목록으로 돌아가기
+  useEffect(() => {
+    const handlePopState = () => {
+      setSelectedPost(null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const handleSelectPost = (post: Post) => {
+    setSelectedPost(post);
+    window.history.pushState({ postId: post.id }, "", `/board/${post.id}`);
+  };
+
+  const handleBackToList = () => {
+    setSelectedPost(null);
+    window.history.back();
+  };
+
   const saveSelection = () => {
     const selection = window.getSelection();
     const editor = editorRef.current;
@@ -610,7 +630,7 @@ export default function Board() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 overflow-x-hidden w-full">
+      <main className="max-w-6xl mx-auto px-4 py-6 overflow-hidden box-border" style={{ maxWidth: "calc(100vw - 2rem)" }}>
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
             <FileText className="w-8 h-8 text-primary" />
@@ -710,7 +730,7 @@ export default function Board() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Button variant="ghost" onClick={() => setSelectedPost(null)} className="mb-4">
+            <Button variant="ghost" onClick={handleBackToList} className="mb-4">
               ← 목록으로
             </Button>
             <Card className="overflow-hidden">
@@ -840,7 +860,7 @@ export default function Board() {
                   >
                     <Card
                       className="cursor-pointer hover-elevate transition-all w-full max-w-full"
-                      onClick={() => setSelectedPost(post)}
+                      onClick={() => handleSelectPost(post)}
                       data-testid={`post-card-${post.id}`}
                     >
                       <CardContent className="p-4">
