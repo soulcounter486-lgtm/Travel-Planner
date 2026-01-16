@@ -98,6 +98,8 @@ export default function TravelPlanner() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [travelPlan, setTravelPlan] = useState<TravelPlan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
   const planRef = useRef<HTMLDivElement>(null);
 
   const locales: Record<string, Locale> = { ko, en: enUS, zh: zhCN, vi, ru, ja };
@@ -246,7 +248,7 @@ export default function TravelPlanner() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">{t("planner.startDate")}</label>
-                  <Popover>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -266,6 +268,7 @@ export default function TravelPlanner() {
                           if (date && (!endDate || endDate < date)) {
                             setEndDate(addDays(date, 2));
                           }
+                          setStartDateOpen(false);
                         }}
                         disabled={(date) => date < new Date()}
                         locale={currentLocale}
@@ -276,7 +279,7 @@ export default function TravelPlanner() {
 
                 <div>
                   <label className="text-sm font-medium mb-2 block">{t("planner.endDate")}</label>
-                  <Popover>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -291,7 +294,10 @@ export default function TravelPlanner() {
                       <Calendar
                         mode="single"
                         selected={endDate}
-                        onSelect={setEndDate}
+                        onSelect={(date) => {
+                          setEndDate(date);
+                          setEndDateOpen(false);
+                        }}
                         disabled={(date) => date < (startDate || new Date())}
                         locale={currentLocale}
                       />
