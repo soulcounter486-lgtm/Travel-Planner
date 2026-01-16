@@ -689,6 +689,12 @@ export default function PlacesGuide() {
                 {t("nav.planner")}
               </Button>
             </Link>
+            <Link href="/chat">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
+                <MessageCircle className="w-3.5 h-3.5" />
+                {t("nav.chat")}
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

@@ -31,7 +31,10 @@ import {
   Pencil,
   Settings,
   AlertTriangle,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  Sparkles,
+  MessageCircle
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
 
@@ -926,6 +929,21 @@ export default function ExpenseTracker() {
                 {t.home}
               </Button>
             </Link>
+            <Link href="/guide">
+              <Button variant="ghost" size="sm" data-testid="nav-guide">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/planner">
+              <Button variant="ghost" size="sm" data-testid="nav-planner">
+                <Sparkles className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/chat">
+              <Button variant="ghost" size="sm" data-testid="nav-chat">
+                <MessageCircle className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </header>
         <main className="container mx-auto px-4 py-12 max-w-md text-center">
@@ -967,8 +985,22 @@ export default function ExpenseTracker() {
             </Button>
             <Link href="/">
               <Button variant="ghost" size="sm" data-testid="button-home">
-                <HomeIcon className="h-4 w-4 mr-2" />
-                {t.home}
+                <HomeIcon className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/guide">
+              <Button variant="ghost" size="sm" data-testid="nav-guide">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/planner">
+              <Button variant="ghost" size="sm" data-testid="nav-planner">
+                <Sparkles className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/chat">
+              <Button variant="ghost" size="sm" data-testid="nav-chat">
+                <MessageCircle className="h-4 w-4" />
               </Button>
             </Link>
           </div>
