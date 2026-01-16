@@ -38,6 +38,14 @@ import {
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
 
+const navLabels: Record<string, Record<string, string>> = {
+  calculator: { ko: "견적", en: "Quote", zh: "报价", vi: "Báo giá", ru: "Расчёт", ja: "見積" },
+  guide: { ko: "관광", en: "Guide", zh: "指南", vi: "Hướng dẫn", ru: "Гид", ja: "ガイド" },
+  expenses: { ko: "가계부", en: "Expenses", zh: "账本", vi: "Chi tiêu", ru: "Расходы", ja: "家計簿" },
+  planner: { ko: "AI 플래너", en: "AI Planner", zh: "AI规划", vi: "AI Lên kế hoạch", ru: "AI Планер", ja: "AIプランナー" },
+  chat: { ko: "채팅", en: "Chat", zh: "聊天", vi: "Chat", ru: "Чат", ja: "チャット" },
+};
+
 type TranslationType = {
   title: string;
   createGroup: string;
@@ -923,29 +931,42 @@ export default function ExpenseTracker() {
               <Wallet className="h-6 w-6 text-primary" />
               <h1 className="font-bold text-xl">{t.title}</h1>
             </div>
-            <Link href="/">
-              <Button variant="ghost" size="sm" data-testid="button-home">
-                <HomeIcon className="h-4 w-4 mr-2" />
-                {t.home}
-              </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="ghost" size="sm" data-testid="nav-guide">
-                <Eye className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/planner">
-              <Button variant="ghost" size="sm" data-testid="nav-planner">
-                <Sparkles className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button variant="ghost" size="sm" data-testid="nav-chat">
-                <MessageCircle className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
+            </div>
         </header>
+        <div className="bg-background border-b">
+          <div className="container mx-auto px-4 overflow-x-auto">
+            <div className="flex items-center gap-1.5 py-2 min-w-max">
+              <Link href="/">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
+                  <Calculator className="w-3.5 h-3.5" />
+                  {navLabels.calculator[language] || navLabels.calculator.ko}
+                </Button>
+              </Link>
+              <Link href="/guide">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
+                  <Eye className="w-3.5 h-3.5" />
+                  {navLabels.guide[language] || navLabels.guide.ko}
+                </Button>
+              </Link>
+              <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+                <Wallet className="w-3.5 h-3.5" />
+                {navLabels.expenses[language] || navLabels.expenses.ko}
+              </Button>
+              <Link href="/planner">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {navLabels.planner[language] || navLabels.planner.ko}
+                </Button>
+              </Link>
+              <Link href="/chat">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  {navLabels.chat[language] || navLabels.chat.ko}
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
         <main className="container mx-auto px-4 py-12 max-w-md text-center">
           <Card className="p-8">
             <LogIn className="h-16 w-16 mx-auto mb-6 text-primary" />
@@ -983,29 +1004,43 @@ export default function ExpenseTracker() {
               <LogOut className="h-4 w-4 mr-2" />
               {t.logout}
             </Button>
+            </div>
+        </div>
+      </header>
+      <div className="bg-background border-b">
+        <div className="container mx-auto px-4 overflow-x-auto">
+          <div className="flex items-center gap-1.5 py-2 min-w-max">
             <Link href="/">
-              <Button variant="ghost" size="sm" data-testid="button-home">
-                <HomeIcon className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
+                <Calculator className="w-3.5 h-3.5" />
+                {navLabels.calculator[language] || navLabels.calculator.ko}
               </Button>
             </Link>
             <Link href="/guide">
-              <Button variant="ghost" size="sm" data-testid="nav-guide">
-                <Eye className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
+                <Eye className="w-3.5 h-3.5" />
+                {navLabels.guide[language] || navLabels.guide.ko}
               </Button>
             </Link>
+            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+              <Wallet className="w-3.5 h-3.5" />
+              {navLabels.expenses[language] || navLabels.expenses.ko}
+            </Button>
             <Link href="/planner">
-              <Button variant="ghost" size="sm" data-testid="nav-planner">
-                <Sparkles className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
+                <Sparkles className="w-3.5 h-3.5" />
+                {navLabels.planner[language] || navLabels.planner.ko}
               </Button>
             </Link>
             <Link href="/chat">
-              <Button variant="ghost" size="sm" data-testid="nav-chat">
-                <MessageCircle className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
+                <MessageCircle className="w-3.5 h-3.5" />
+                {navLabels.chat[language] || navLabels.chat.ko}
               </Button>
             </Link>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="container mx-auto px-4 py-6">
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
