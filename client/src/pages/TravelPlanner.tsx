@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -106,32 +106,34 @@ export default function TravelPlanner() {
   const locales: Record<string, Locale> = { ko, en: enUS, zh: zhCN, vi, ru, ja };
   const currentLocale = locales[language] || ko;
 
+  useEffect(() => {
+    if (travelPlan && planRef.current) {
+      const timer = setTimeout(async () => {
+        try {
+          const canvas = await html2canvas(planRef.current!, {
+            backgroundColor: "#ffffff",
+            scale: 2,
+            useCORS: true,
+          });
+          
+          const link = document.createElement("a");
+          link.download = `VungTau_TravelPlan_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        } catch (error) {
+          console.error("Failed to auto-save image:", error);
+        }
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [travelPlan]);
+
   const togglePurpose = (purposeId: string) => {
     setSelectedPurposes((prev) =>
       prev.includes(purposeId)
         ? prev.filter((p) => p !== purposeId)
         : [...prev, purposeId]
     );
-  };
-
-  const autoSaveImage = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    if (!planRef.current) return;
-    
-    try {
-      const canvas = await html2canvas(planRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true,
-      });
-      
-      const link = document.createElement("a");
-      link.download = `VungTau_TravelPlan_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    } catch (error) {
-      console.error("Failed to auto-save image:", error);
-    }
   };
 
   const generatePlanMutation = useMutation({
@@ -149,7 +151,6 @@ export default function TravelPlanner() {
     },
     onSuccess: (data) => {
       setTravelPlan(data);
-      setTimeout(() => autoSaveImage(), 1000);
     },
   });
 
