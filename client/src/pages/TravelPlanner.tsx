@@ -93,7 +93,7 @@ const typeColors: Record<string, string> = {
 
 export default function TravelPlanner() {
   const { language, t } = useLanguage();
-  const [selectedPurpose, setSelectedPurpose] = useState<string | null>(null);
+  const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [travelPlan, setTravelPlan] = useState<TravelPlan | null>(null);
@@ -103,13 +103,21 @@ export default function TravelPlanner() {
   const locales: Record<string, Locale> = { ko, en: enUS, zh: zhCN, vi, ru, ja };
   const currentLocale = locales[language] || ko;
 
+  const togglePurpose = (purposeId: string) => {
+    setSelectedPurposes((prev) =>
+      prev.includes(purposeId)
+        ? prev.filter((p) => p !== purposeId)
+        : [...prev, purposeId]
+    );
+  };
+
   const generatePlanMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedPurpose || !startDate || !endDate) {
+      if (selectedPurposes.length === 0 || !startDate || !endDate) {
         throw new Error("Please fill all fields");
       }
       const response = await apiRequest("POST", "/api/travel-plan", {
-        purpose: selectedPurpose,
+        purpose: selectedPurposes.join(", "),
         startDate: format(startDate, "yyyy-MM-dd"),
         endDate: format(endDate, "yyyy-MM-dd"),
         language,
@@ -205,13 +213,13 @@ export default function TravelPlanner() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {purposeOptions.map((option) => {
                   const Icon = option.icon;
-                  const isSelected = selectedPurpose === option.id;
+                  const isSelected = selectedPurposes.includes(option.id);
                   return (
                     <motion.button
                       key={option.id}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => setSelectedPurpose(option.id)}
+                      onClick={() => togglePurpose(option.id)}
                       className={`relative p-4 rounded-xl border-2 transition-all ${
                         isSelected
                           ? "border-primary bg-primary/5"
@@ -226,11 +234,9 @@ export default function TravelPlanner() {
                         {t(`planner.purpose.${option.id}`)}
                       </span>
                       {isSelected && (
-                        <motion.div
-                          layoutId="purpose-indicator"
-                          className="absolute inset-0 border-2 border-primary rounded-xl"
-                          initial={false}
-                        />
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">{selectedPurposes.indexOf(option.id) + 1}</span>
+                        </div>
                       )}
                     </motion.button>
                   );
@@ -298,7 +304,7 @@ export default function TravelPlanner() {
                 className="w-full"
                 size="lg"
                 onClick={handleGenerate}
-                disabled={!selectedPurpose || !startDate || !endDate || generatePlanMutation.isPending}
+                disabled={selectedPurposes.length === 0 || !startDate || !endDate || generatePlanMutation.isPending}
                 data-testid="generate-plan-btn"
               >
                 {generatePlanMutation.isPending ? (
