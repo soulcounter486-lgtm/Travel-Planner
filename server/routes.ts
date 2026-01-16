@@ -990,7 +990,8 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      if (!user || user.id !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub;
+      if (!userId || userId !== ADMIN_USER_ID) {
         return res.status(403).json({ message: "Only admin can create posts" });
       }
 
@@ -1016,7 +1017,8 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   app.patch("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      if (!user || user.id !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub;
+      if (!userId || userId !== ADMIN_USER_ID) {
         return res.status(403).json({ message: "Only admin can edit posts" });
       }
 
@@ -1042,7 +1044,8 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      if (!user || user.id !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub;
+      if (!userId || userId !== ADMIN_USER_ID) {
         return res.status(403).json({ message: "Only admin can delete posts" });
       }
 
@@ -1102,7 +1105,8 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   app.delete("/api/comments/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      if (!user || user.id !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub;
+      if (!userId || userId !== ADMIN_USER_ID) {
         return res.status(403).json({ message: "Only admin can delete comments" });
       }
 
@@ -1119,8 +1123,9 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
   // 관리자 여부 확인
   app.get("/api/admin/check", (req, res) => {
     const user = req.user as any;
-    const isAdmin = user && user.id === ADMIN_USER_ID;
-    res.json({ isAdmin, isLoggedIn: !!user, userId: user?.id });
+    const userId = user?.claims?.sub;
+    const isAdmin = userId && userId === ADMIN_USER_ID;
+    res.json({ isAdmin, isLoggedIn: !!user, userId });
   });
 
   // WebSocket 채팅 서버
