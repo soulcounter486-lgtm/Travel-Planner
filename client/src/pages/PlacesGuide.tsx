@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
@@ -27,6 +27,10 @@ import reenMassageImg from "@assets/Screenshot_20260115_210912_Maps_176848631116
 import grandMassageImg from "@assets/Screenshot_20260115_210934_Maps_1768486311164.jpg";
 import daySpaImg from "@assets/Screenshot_20260115_210959_Maps_1768486311167.jpg";
 import ianBbqImg from "@assets/Screenshot_20260115_211048_Maps_1768486311169.jpg";
+import club88Img from "@assets/Screenshot_20260116_184507_Maps_1768564285854.jpg";
+import revoClubImg from "@assets/Screenshot_20260116_184614_Maps_1768564285861.jpg";
+import loxClubImg from "@assets/Screenshot_20260116_185045_Maps_1768564285866.jpg";
+import usBarImg from "@assets/Screenshot_20260116_184659_Maps_1768564285873.jpg";
 
 interface Place {
   name: string;
@@ -325,10 +329,77 @@ const placesData: Record<string, Category> = {
       { name: "이발소 Salon Kimha", address: "26 Đinh Tiên Hoàng, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/q2HpipbVVMpvMHYj7" },
       { name: "Bi Roen 현지 고급 이발소", address: "518 Thống Nhất Mới, Phường 8, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/yCMh6jYoLXLq8fgn7", recommended: true, note: "partnerBarber", imageUrl: biRoenImg },
     ]
+  },
+  nightlife: {
+    id: "nightlife",
+    icon: Music,
+    gradient: "from-pink-600 to-purple-700",
+    places: [
+      { 
+        name: "88 비어클럽", 
+        nameVi: "88 Beer Club", 
+        address: "151 Thùy Vân, Phường Thắng Tam, Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/iE9XDvduSDrn1wVc8",
+        imageUrl: club88Img,
+        description: {
+          ko: "붕따우 대표 비어클럽. 라이브 음악과 함께 즐기는 맥주와 야외 분위기.",
+          en: "Popular beer club with live music and outdoor atmosphere.",
+          zh: "头顿代表性啤酒俱乐部，现场音乐和户外氛围。",
+          vi: "Câu lạc bộ bia nổi tiếng với nhạc sống và không gian ngoài trời.",
+          ru: "Популярный пивной клуб с живой музыкой и открытой атмосферой.",
+          ja: "ライブ音楽と屋外の雰囲気が楽しめる人気のビアクラブ。"
+        }
+      },
+      { 
+        name: "Revo 클럽", 
+        nameVi: "Revo Club", 
+        address: "15 Lý Tự Trọng, Phường 1, Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/ddpz3vhHGrWyPo8UA",
+        imageUrl: revoClubImg,
+        description: {
+          ko: "현지인들에게 인기 있는 나이트클럽. EDM 음악과 열정적인 분위기.",
+          en: "Popular nightclub with EDM music and vibrant atmosphere.",
+          zh: "当地人喜爱的夜店，EDM音乐和热情氛围。",
+          vi: "Câu lạc bộ đêm được người địa phương yêu thích với nhạc EDM.",
+          ru: "Популярный ночной клуб с EDM музыкой и яркой атмосферой.",
+          ja: "EDM音楽と活気ある雰囲気が人気のナイトクラブ。"
+        }
+      },
+      { 
+        name: "Lox 클럽", 
+        nameVi: "Lox Night Club", 
+        address: "12b Hoàng Hoa Thám, Phường 3, Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/AaHcBWNUBEWZXxQM7",
+        imageUrl: loxClubImg,
+        description: {
+          ko: "화려한 인테리어의 프리미엄 나이트클럽. VIP 서비스 제공.",
+          en: "Premium nightclub with glamorous interior and VIP services.",
+          zh: "华丽内饰的高级夜店，提供VIP服务。",
+          vi: "Câu lạc bộ đêm cao cấp với nội thất sang trọng và dịch vụ VIP.",
+          ru: "Премиальный ночной клуб с гламурным интерьером и VIP-сервисом.",
+          ja: "豪華なインテリアとVIPサービスを提供するプレミアムナイトクラブ。"
+        }
+      },
+      { 
+        name: "U.S Bar Club", 
+        nameVi: "U.S Bar Club", 
+        address: "120 Ba Cu, Phường 3, Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/p5z6m5vT6qCrEWth6",
+        imageUrl: usBarImg,
+        description: {
+          ko: "아메리칸 스타일 바. 칵테일과 양주를 즐길 수 있는 분위기 좋은 곳.",
+          en: "American-style bar with great cocktails and spirits.",
+          zh: "美式风格酒吧，鸡尾酒和烈酒选择丰富。",
+          vi: "Quán bar phong cách Mỹ với cocktail và rượu mạnh tuyệt vời.",
+          ru: "Бар в американском стиле с отличными коктейлями и крепкими напитками.",
+          ja: "カクテルとスピリッツが楽しめるアメリカンスタイルのバー。"
+        }
+      },
+    ]
   }
 };
 
-const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "coffee", "exchange"];
+const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "coffee", "exchange", "nightlife"];
 
 const categoryLabels: Record<string, Record<string, string>> = {
   attractions: { ko: "관광명소", en: "Attractions", zh: "景点", vi: "Địa điểm du lịch", ru: "Достопримечательности", ja: "観光スポット" },
@@ -338,7 +409,8 @@ const categoryLabels: Record<string, Record<string, string>> = {
   chineseFood: { ko: "중식", en: "Chinese Food", zh: "中餐", vi: "Món Trung Quốc", ru: "Китайская еда", ja: "中華料理" },
   exchange: { ko: "환전소", en: "Currency Exchange", zh: "货币兑换", vi: "Đổi tiền", ru: "Обмен валюты", ja: "両替所" },
   coffee: { ko: "커피숍", en: "Coffee Shops", zh: "咖啡店", vi: "Quán cà phê", ru: "Кофейни", ja: "カフェ" },
-  services: { ko: "마사지/이발소", en: "Massage & Barber", zh: "按摩/理发", vi: "Massage/Cắt tóc", ru: "Массаж/Парикмахерская", ja: "マッサージ/理髪店" }
+  services: { ko: "마사지/이발소", en: "Massage & Barber", zh: "按摩/理发", vi: "Massage/Cắt tóc", ru: "Массаж/Парикмахерская", ja: "マッサージ/理髪店" },
+  nightlife: { ko: "밤문화", en: "Nightlife", zh: "夜生活", vi: "Cuộc sống về đêm", ru: "Ночная жизнь", ja: "ナイトライフ" }
 };
 
 const noteLabels: Record<string, Record<string, string>> = {
