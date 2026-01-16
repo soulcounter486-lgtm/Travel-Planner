@@ -1296,6 +1296,64 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
     }
   });
 
+  // URL 메타데이터 가져오기 (링크 미리보기용)
+  app.get("/api/url-metadata", async (req, res) => {
+    const url = req.query.url as string;
+    
+    if (!url) {
+      return res.status(400).json({ error: "URL이 필요합니다" });
+    }
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; LinkPreview/1.0)",
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch URL");
+      }
+
+      const html = await response.text();
+      
+      // OG 태그 파싱
+      const getMetaContent = (property: string): string | null => {
+        const regex = new RegExp(`<meta[^>]*(?:property|name)=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i');
+        const altRegex = new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*(?:property|name)=["']${property}["']`, 'i');
+        const match = html.match(regex) || html.match(altRegex);
+        return match ? match[1] : null;
+      };
+
+      const getTitle = (): string => {
+        const ogTitle = getMetaContent("og:title");
+        if (ogTitle) return ogTitle;
+        
+        const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+        return titleMatch ? titleMatch[1].trim() : url;
+      };
+
+      const metadata = {
+        url,
+        title: getTitle(),
+        description: getMetaContent("og:description") || getMetaContent("description") || "",
+        image: getMetaContent("og:image") || getMetaContent("twitter:image") || null,
+        siteName: getMetaContent("og:site_name") || new URL(url).hostname,
+      };
+
+      res.json(metadata);
+    } catch (error: any) {
+      console.error("URL metadata error:", error);
+      res.json({
+        url,
+        title: new URL(url).hostname,
+        description: "",
+        image: null,
+        siteName: new URL(url).hostname,
+      });
+    }
+  });
+
   // WebSocket 채팅 서버
   const wss = new WebSocketServer({ server: httpServer, path: "/ws/chat" });
   

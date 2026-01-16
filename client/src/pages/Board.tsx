@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,77 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import type { Post, Comment } from "@shared/schema";
+import { ExternalLink } from "lucide-react";
+
+// 링크 미리보기 컴포넌트
+function LinkPreview({ url }: { url: string }) {
+  const [metadata, setMetadata] = useState<{
+    title: string;
+    description: string;
+    image: string | null;
+    siteName: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const res = await fetch(`/api/url-metadata?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        setMetadata(data);
+      } catch (e) {
+        setMetadata({ title: url, description: "", image: null, siteName: new URL(url).hostname });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetadata();
+  }, [url]);
+
+  if (loading) {
+    return (
+      <div className="border rounded-lg p-3 my-2 animate-pulse bg-muted/50">
+        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+        <div className="h-3 bg-muted rounded w-1/2"></div>
+      </div>
+    );
+  }
+
+  if (!metadata) return null;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block border rounded-lg overflow-hidden my-3 hover-elevate transition-all"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex">
+        {metadata.image && (
+          <div className="w-24 h-24 shrink-0 bg-muted">
+            <img
+              src={metadata.image}
+              alt=""
+              className="w-full h-full object-cover"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+            />
+          </div>
+        )}
+        <div className="flex-1 p-3 min-w-0">
+          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+            <ExternalLink className="w-3 h-3" />
+            {metadata.siteName}
+          </p>
+          <h4 className="font-medium text-sm line-clamp-1 break-words">{metadata.title}</h4>
+          {metadata.description && (
+            <p className="text-xs text-muted-foreground line-clamp-2 mt-1 break-words">{metadata.description}</p>
+          )}
+        </div>
+      </div>
+    </a>
+  );
+}
 
 const boardLabels: Record<string, Record<string, string>> = {
   ko: {
@@ -375,14 +446,45 @@ export default function Board() {
     }
   };
 
+  const renderTextWithLinks = (text: string, keyPrefix: string) => {
+    const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g;
+    const parts = text.split(urlRegex);
+    const urls: string[] = [];
+    
+    const result = parts.map((part, idx) => {
+      if (urlRegex.test(part)) {
+        urlRegex.lastIndex = 0;
+        urls.push(part);
+        return (
+          <a
+            key={`${keyPrefix}-link-${idx}`}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline break-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={`${keyPrefix}-text-${idx}`}>{part}</span>;
+    });
+
+    return { elements: result, urls };
+  };
+
   const renderContentWithImages = (content: string) => {
     const parts = content.split(/!\[([^\]]*)\]\(([^)]+)\)/g);
     const result: React.ReactNode[] = [];
+    const allUrls: string[] = [];
     
     for (let i = 0; i < parts.length; i++) {
       if (i % 3 === 0) {
         if (parts[i]) {
-          result.push(<span key={i} className="break-words">{parts[i]}</span>);
+          const { elements, urls } = renderTextWithLinks(parts[i], `part-${i}`);
+          result.push(<span key={i} className="break-words">{elements}</span>);
+          allUrls.push(...urls);
         }
       } else if (i % 3 === 2) {
         result.push(
@@ -395,6 +497,19 @@ export default function Board() {
         );
       }
     }
+
+    // URL 미리보기 추가 (최대 3개)
+    const uniqueUrls = Array.from(new Set(allUrls)).slice(0, 3);
+    if (uniqueUrls.length > 0) {
+      result.push(
+        <div key="link-previews" className="mt-4 space-y-2">
+          {uniqueUrls.map((url, idx) => (
+            <LinkPreview key={`preview-${idx}`} url={url} />
+          ))}
+        </div>
+      );
+    }
+
     return result;
   };
 
