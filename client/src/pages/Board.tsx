@@ -441,14 +441,13 @@ export default function Board() {
                     onChange={(e) => setNewPostTitle(e.target.value)}
                     data-testid="input-post-title"
                   />
-                  <div className="flex gap-4">
-                    <div className="flex-1 relative">
+                  <div className="relative">
                       <Textarea
                         ref={textareaRef}
                         placeholder={labels.postContent}
                         value={newPostContent}
                         onChange={(e) => setNewPostContent(e.target.value)}
-                        rows={10}
+                        rows={6}
                         data-testid="input-post-content"
                       />
                       <div className="absolute bottom-2 right-2">
@@ -473,16 +472,14 @@ export default function Board() {
                         </label>
                       </div>
                     </div>
-                    {newPostContent && (
-                      <div className="flex-1 border rounded-lg p-3 overflow-auto max-h-64 bg-muted/30">
-                        <p className="text-xs text-muted-foreground mb-2">미리보기</p>
-                        <div className="prose prose-sm max-w-none whitespace-pre-wrap">
-                          {renderContentWithImages(newPostContent)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
                   <p className="text-xs text-muted-foreground">커서 위치에 이미지가 삽입됩니다</p>
+                  {newPostContent && (
+                    <div className="border rounded-lg p-4 bg-muted/30 max-h-80 overflow-auto">
+                      <div className="prose prose-sm max-w-none whitespace-pre-wrap dark:prose-invert">
+                        {renderContentWithImages(newPostContent)}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex gap-2 justify-end">
                     <Button variant="outline" onClick={() => setShowNewPostDialog(false)}>
                       {labels.cancel}
