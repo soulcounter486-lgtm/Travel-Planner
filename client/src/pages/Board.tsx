@@ -809,7 +809,7 @@ export default function Board() {
                         onClick={() => toggleVisibilityMutation.mutate(selectedPost.id)}
                         data-testid="btn-toggle-visibility"
                       >
-                        {selectedPost.isHidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        {selectedPost.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
                       <Button
                         variant="destructive"
