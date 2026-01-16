@@ -197,41 +197,50 @@ export default function Board() {
   const [commentNickname, setCommentNickname] = useState(() => localStorage.getItem("comment_nickname") || "");
   const [commentContent, setCommentContent] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    const editor = editorRef.current;
+    if (selection && selection.rangeCount > 0 && editor) {
+      const range = selection.getRangeAt(0);
+      if (editor.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    }
+  };
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
       const editor = editorRef.current;
       if (editor) {
-        editor.focus();
-        
         const img = document.createElement("img");
         img.src = response.objectPath;
         img.alt = "이미지";
         img.className = "max-w-full rounded-lg my-2 inline-block";
         img.style.maxHeight = "300px";
         
-        const selection = window.getSelection();
-        let inserted = false;
+        editor.focus();
         
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          if (editor.contains(range.commonAncestorContainer)) {
-            range.deleteContents();
-            range.insertNode(img);
-            range.setStartAfter(img);
-            range.collapse(true);
+        if (savedRangeRef.current && editor.contains(savedRangeRef.current.commonAncestorContainer)) {
+          const range = savedRangeRef.current;
+          range.deleteContents();
+          range.insertNode(img);
+          range.setStartAfter(img);
+          range.collapse(true);
+          
+          const selection = window.getSelection();
+          if (selection) {
             selection.removeAllRanges();
             selection.addRange(range);
-            inserted = true;
           }
-        }
-        
-        if (!inserted) {
+        } else {
           editor.appendChild(document.createElement("br"));
           editor.appendChild(img);
           editor.appendChild(document.createElement("br"));
         }
         
+        savedRangeRef.current = null;
         updateContentFromEditor();
       }
       toast({ title: "이미지가 삽입되었습니다" });
@@ -498,6 +507,9 @@ export default function Board() {
                       contentEditable
                       className="min-h-[200px] max-h-[400px] overflow-auto p-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring prose prose-sm max-w-none dark:prose-invert"
                       onInput={updateContentFromEditor}
+                      onBlur={saveSelection}
+                      onMouseUp={saveSelection}
+                      onKeyUp={saveSelection}
                       data-testid="input-post-content"
                       data-placeholder={labels.postContent}
                       style={{ whiteSpace: "pre-wrap" }}
