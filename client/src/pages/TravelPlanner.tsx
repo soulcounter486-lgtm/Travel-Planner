@@ -26,7 +26,8 @@ import {
   Eye,
   Wallet,
   MessageCircle,
-  Download
+  Download,
+  Music
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,6 +66,7 @@ const purposeOptions = [
   { id: "adventure", icon: Mountain, gradient: "from-blue-500 to-indigo-600" },
   { id: "culture", icon: Landmark, gradient: "from-purple-500 to-violet-600" },
   { id: "family", icon: Users, gradient: "from-pink-500 to-rose-500" },
+  { id: "nightlife", icon: Music, gradient: "from-pink-600 to-purple-700" },
 ];
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -74,6 +76,8 @@ const typeIcons: Record<string, React.ElementType> = {
   massage: Palmtree,
   golf: CircleDot,
   beach: Palmtree,
+  club: Music,
+  bar: Music,
 };
 
 const typeColors: Record<string, string> = {
@@ -83,6 +87,8 @@ const typeColors: Record<string, string> = {
   massage: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
   golf: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
   beach: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
+  club: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",
+  bar: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
 };
 
 export default function TravelPlanner() {
