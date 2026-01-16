@@ -47,6 +47,7 @@ function LinkPreview({ url }: { url: string }) {
     siteName: string;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -54,6 +55,7 @@ function LinkPreview({ url }: { url: string }) {
         const res = await fetch(`/api/url-metadata?url=${encodeURIComponent(url)}`);
         const data = await res.json();
         setMetadata(data);
+        setImageError(false);
       } catch (e) {
         setMetadata({ title: url, description: "", image: null, siteName: new URL(url).hostname });
       } finally {
@@ -79,30 +81,29 @@ function LinkPreview({ url }: { url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="block border rounded-lg overflow-hidden my-3 hover-elevate transition-all"
+      className="block border rounded-lg overflow-hidden my-2 bg-muted/30 hover:bg-muted/50 transition-all"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="flex">
-        {metadata.image && (
-          <div className="w-24 h-24 shrink-0 bg-muted">
-            <img
-              src={metadata.image}
-              alt=""
-              className="w-full h-full object-cover"
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
-          </div>
-        )}
-        <div className="flex-1 p-3 min-w-0">
-          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-            <ExternalLink className="w-3 h-3" />
-            {metadata.siteName}
-          </p>
-          <h4 className="font-medium text-sm line-clamp-1 break-words">{metadata.title}</h4>
-          {metadata.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mt-1 break-words">{metadata.description}</p>
-          )}
+      {metadata.image && !imageError && (
+        <div className="w-full h-40 bg-muted">
+          <img
+            src={metadata.image}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
+            referrerPolicy="no-referrer"
+          />
         </div>
+      )}
+      <div className="p-3">
+        <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+          <ExternalLink className="w-3 h-3" />
+          {metadata.siteName}
+        </p>
+        <h4 className="font-medium text-sm line-clamp-2 break-words">{metadata.title}</h4>
+        {metadata.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 mt-1 break-words">{metadata.description}</p>
+        )}
       </div>
     </a>
   );
@@ -817,7 +818,7 @@ export default function Board() {
             </Card>
           </motion.div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-4 w-full max-w-full">
             {postsLoading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -835,13 +836,14 @@ export default function Board() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
+                    className="w-full max-w-full"
                   >
                     <Card
-                      className="cursor-pointer hover-elevate transition-all overflow-hidden"
+                      className="cursor-pointer hover-elevate transition-all w-full max-w-full"
                       onClick={() => setSelectedPost(post)}
                       data-testid={`post-card-${post.id}`}
                     >
-                      <CardContent className="p-4 overflow-hidden">
+                      <CardContent className="p-4">
                         <div className="flex gap-4">
                           {(post.imageUrl || getFirstImageFromContent(post.content)) && (
                             <img
@@ -850,12 +852,12 @@ export default function Board() {
                               className="w-24 h-24 object-cover rounded-lg shrink-0"
                             />
                           )}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 overflow-hidden">
                             <h3 className="font-semibold text-lg mb-1 break-words">{post.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-3 mb-2 break-words whitespace-pre-wrap">
+                            <p className="text-sm text-muted-foreground line-clamp-3 mb-2 break-words whitespace-pre-wrap overflow-hidden">
                               {getTextWithoutImages(post.content)}
                             </p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                               <span className="flex items-center gap-1">
                                 <User className="w-3 h-3" />
                                 {post.authorName}
@@ -868,7 +870,7 @@ export default function Board() {
                           </div>
                         </div>
                         {getFirstUrlFromContent(post.content) && (
-                          <div className="mt-3">
+                          <div className="mt-3 w-full max-w-full">
                             <LinkPreview url={getFirstUrlFromContent(post.content)!} />
                           </div>
                         )}
