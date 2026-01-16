@@ -202,23 +202,34 @@ export default function Board() {
     onSuccess: (response) => {
       const editor = editorRef.current;
       if (editor) {
+        editor.focus();
+        
         const img = document.createElement("img");
         img.src = response.objectPath;
         img.alt = "이미지";
-        img.className = "max-w-full rounded-lg my-2";
+        img.className = "max-w-full rounded-lg my-2 inline-block";
         img.style.maxHeight = "300px";
         
         const selection = window.getSelection();
+        let inserted = false;
+        
         if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(img);
-          range.setStartAfter(img);
-          range.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        } else {
+          if (editor.contains(range.commonAncestorContainer)) {
+            range.deleteContents();
+            range.insertNode(img);
+            range.setStartAfter(img);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            inserted = true;
+          }
+        }
+        
+        if (!inserted) {
+          editor.appendChild(document.createElement("br"));
           editor.appendChild(img);
+          editor.appendChild(document.createElement("br"));
         }
         
         updateContentFromEditor();
