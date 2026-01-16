@@ -867,7 +867,7 @@ export default function Board() {
                           className="bg-muted/50 rounded-lg p-4"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">{comment.authorName}</span>
+                            <span className="text-xs text-muted-foreground font-medium">{comment.authorName}</span>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-muted-foreground">
                                 {comment.createdAt && format(new Date(comment.createdAt), "MM.dd HH:mm")}
