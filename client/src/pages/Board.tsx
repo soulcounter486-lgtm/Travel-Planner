@@ -857,14 +857,14 @@ export default function Board() {
                     {labels.comments} ({postComments.length})
                   </h3>
                   
-                  <div className="space-y-2 mb-6">
+                  <div className="space-y-0 mb-6">
                     <AnimatePresence>
                       {postComments.map((comment) => (
                         <motion.div
                           key={comment.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="bg-muted/50 rounded-lg p-3"
+                          className="py-2 border-b border-muted last:border-b-0"
                         >
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground font-medium">{comment.authorName}</span>
