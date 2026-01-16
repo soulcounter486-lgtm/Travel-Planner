@@ -322,30 +322,30 @@ export default function Home() {
       </div>
 
       <div className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 overflow-x-auto">
-          <div className="flex items-center gap-1 sm:gap-2 py-3 min-w-max">
+        <div className="container mx-auto px-4 overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-1.5 py-3 min-w-max">
             <Link href="/">
-              <Button variant="default" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-calculator">
-                <Calculator className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("nav.calculator")}</span>
+              <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
+                <Calculator className="w-3.5 h-3.5" />
+                {t("nav.calculator")}
               </Button>
             </Link>
             <Link href="/guide">
-              <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-guide">
-                <MapPin className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("nav.guide")}</span>
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
+                <MapPin className="w-3.5 h-3.5" />
+                {t("nav.guide")}
               </Button>
             </Link>
             <Link href="/expenses">
-              <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-expenses">
-                <Wallet className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("nav.expenses")}</span>
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+                <Wallet className="w-3.5 h-3.5" />
+                {t("nav.expenses")}
               </Button>
             </Link>
             <Link href="/planner">
-              <Button variant="outline" size="sm" className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3" data-testid="nav-planner">
-                <Sparkles className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("nav.planner")}</span>
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
+                <Sparkles className="w-3.5 h-3.5" />
+                {t("nav.planner")}
               </Button>
             </Link>
           </div>
