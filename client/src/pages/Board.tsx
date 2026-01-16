@@ -431,7 +431,7 @@ export default function Board() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 overflow-x-hidden">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -488,7 +488,7 @@ export default function Board() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 overflow-x-hidden w-full">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
             <FileText className="w-8 h-8 text-primary" />
@@ -729,9 +729,9 @@ export default function Board() {
                               className="w-24 h-24 object-cover rounded-lg shrink-0"
                             />
                           )}
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 overflow-hidden">
                             <h3 className="font-semibold text-lg mb-1 truncate">{post.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2 break-words overflow-hidden">
                               {getTextWithoutImages(post.content)}
                             </p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
