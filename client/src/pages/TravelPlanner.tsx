@@ -126,25 +126,25 @@ export default function TravelPlanner() {
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <img src={logoImg} alt="Logo" className="h-10 w-10 object-contain" />
-            <span className="font-bold text-lg">{t("header.title")}</span>
+            <span className="font-bold text-lg hidden sm:inline">{t("header.title")}</span>
           </Link>
-          <nav className="flex gap-2">
+          <nav className="flex gap-1.5 overflow-x-auto">
             <Link href="/">
-              <Button variant="ghost" size="sm" data-testid="nav-calculator">
-                <Calculator className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">{t("nav.calculator")}</span>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
+                <Calculator className="w-3.5 h-3.5" />
+                {t("nav.calculator")}
               </Button>
             </Link>
             <Link href="/guide">
-              <Button variant="ghost" size="sm" data-testid="nav-guide">
-                <Eye className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">{t("nav.guide")}</span>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
+                <Eye className="w-3.5 h-3.5" />
+                {t("nav.guide")}
               </Button>
             </Link>
             <Link href="/expenses">
-              <Button variant="ghost" size="sm" data-testid="nav-expenses">
-                <Wallet className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">{t("nav.expenses")}</span>
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+                <Wallet className="w-3.5 h-3.5" />
+                {t("nav.expenses")}
               </Button>
             </Link>
           </nav>
