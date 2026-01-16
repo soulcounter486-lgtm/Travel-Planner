@@ -1448,6 +1448,13 @@ ${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활
             messages: chatHistory.slice(-50),
           }));
           
+          // 새 사용자 입장 알림 (관리자 알림용)
+          broadcast(JSON.stringify({
+            type: "user_joined",
+            nickname: nickname,
+            timestamp: new Date(),
+          }));
+          
           // 온라인 유저 목록 전송 (입장 메시지 없이)
           broadcastUserList();
         } else if (msg.type === "message") {

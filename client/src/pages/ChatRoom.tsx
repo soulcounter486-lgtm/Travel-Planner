@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,12 @@ interface ChatMessage {
 
 export default function ChatRoom() {
   const { language, t } = useLanguage();
+  
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean; isLoggedIn: boolean }>({
+    queryKey: ["/api/check-admin"],
+  });
+  const isAdmin = adminCheck?.isAdmin || false;
+  
   const [nickname, setNickname] = useState(() => {
     return localStorage.getItem("chat_nickname") || "";
   });
@@ -171,6 +178,11 @@ export default function ChatRoom() {
         setMessages(filteredMessages);
       } else if (data.type === "users") {
         setOnlineUsers(data.users);
+      } else if (data.type === "user_joined") {
+        // 관리자에게만 새 사용자 입장 알림
+        if (isAdmin && data.nickname !== savedNicknameRef.current) {
+          sendNotification("채팅방 입장", `${data.nickname}님이 입장했습니다`);
+        }
       } else if (data.type === "message") {
         setMessages((prev) => [...prev, data]);
         if (data.nickname !== savedNicknameRef.current) {
