@@ -729,9 +729,9 @@ export default function Board() {
                               className="w-24 h-24 object-cover rounded-lg shrink-0"
                             />
                           )}
-                          <div className="flex-1 min-w-0 overflow-hidden">
-                            <h3 className="font-semibold text-lg mb-1 truncate">{post.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2 break-words overflow-hidden">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg mb-1 break-words">{post.title}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-3 mb-2 break-words whitespace-pre-wrap">
                               {getTextWithoutImages(post.content)}
                             </p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
