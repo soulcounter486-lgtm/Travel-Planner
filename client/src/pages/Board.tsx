@@ -196,23 +196,32 @@ export default function Board() {
   const [newPostContent, setNewPostContent] = useState("");
   const [commentNickname, setCommentNickname] = useState(() => localStorage.getItem("comment_nickname") || "");
   const [commentContent, setCommentContent] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
-      const imageMarkdown = `\n![이미지](${response.objectPath})\n`;
-      const textarea = textareaRef.current;
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const newContent = newPostContent.substring(0, start) + imageMarkdown + newPostContent.substring(end);
-        setNewPostContent(newContent);
-        setTimeout(() => {
-          textarea.focus();
-          textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
-        }, 0);
-      } else {
-        setNewPostContent(prev => prev + imageMarkdown);
+      const editor = editorRef.current;
+      if (editor) {
+        const img = document.createElement("img");
+        img.src = response.objectPath;
+        img.alt = "이미지";
+        img.className = "max-w-full rounded-lg my-2";
+        img.style.maxHeight = "300px";
+        
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(img);
+          range.setStartAfter(img);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else {
+          editor.appendChild(img);
+        }
+        
+        updateContentFromEditor();
       }
       toast({ title: "이미지가 삽입되었습니다" });
     },
@@ -220,6 +229,34 @@ export default function Board() {
       toast({ title: "이미지 업로드 실패", variant: "destructive" });
     }
   });
+
+  const updateContentFromEditor = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    
+    let content = "";
+    editor.childNodes.forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        content += node.textContent;
+      } else if (node.nodeName === "IMG") {
+        const img = node as HTMLImageElement;
+        content += `![이미지](${img.src})`;
+      } else if (node.nodeName === "DIV" || node.nodeName === "P" || node.nodeName === "BR") {
+        content += "\n";
+        if (node.childNodes.length > 0) {
+          node.childNodes.forEach((child) => {
+            if (child.nodeType === Node.TEXT_NODE) {
+              content += child.textContent;
+            } else if (child.nodeName === "IMG") {
+              const img = child as HTMLImageElement;
+              content += `![이미지](${img.src})`;
+            }
+          });
+        }
+      }
+    });
+    setNewPostContent(content);
+  };
 
   const { data: posts = [], isLoading: postsLoading } = useQuery<Post[]>({
     queryKey: ["/api/posts"],
@@ -248,6 +285,9 @@ export default function Board() {
       setShowNewPostDialog(false);
       setNewPostTitle("");
       setNewPostContent("");
+      if (editorRef.current) {
+        editorRef.current.innerHTML = "";
+      }
       toast({ title: "게시글이 등록되었습니다" });
     },
     onError: (error: any) => {
@@ -441,16 +481,19 @@ export default function Board() {
                     onChange={(e) => setNewPostTitle(e.target.value)}
                     data-testid="input-post-title"
                   />
-                  <div className="relative">
-                      <Textarea
-                        ref={textareaRef}
-                        placeholder={labels.postContent}
-                        value={newPostContent}
-                        onChange={(e) => setNewPostContent(e.target.value)}
-                        rows={6}
-                        data-testid="input-post-content"
-                      />
-                      <div className="absolute bottom-2 right-2">
+                  <div className="space-y-2">
+                    <div
+                      ref={editorRef}
+                      contentEditable
+                      className="min-h-[200px] max-h-[400px] overflow-auto p-3 border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-ring prose prose-sm max-w-none dark:prose-invert"
+                      onInput={updateContentFromEditor}
+                      data-testid="input-post-content"
+                      data-placeholder={labels.postContent}
+                      style={{ whiteSpace: "pre-wrap" }}
+                    />
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground">클릭하고 글을 입력하세요. 이미지는 커서 위치에 바로 삽입됩니다.</p>
+                      <div>
                         <input
                           type="file"
                           accept="image/*"
@@ -472,14 +515,7 @@ export default function Board() {
                         </label>
                       </div>
                     </div>
-                  <p className="text-xs text-muted-foreground">커서 위치에 이미지가 삽입됩니다</p>
-                  {newPostContent && (
-                    <div className="border rounded-lg p-4 bg-muted/30 max-h-80 overflow-auto">
-                      <div className="prose prose-sm max-w-none whitespace-pre-wrap dark:prose-invert">
-                        {renderContentWithImages(newPostContent)}
-                      </div>
-                    </div>
-                  )}
+                  </div>
                   <div className="flex gap-2 justify-end">
                     <Button variant="outline" onClick={() => setShowNewPostDialog(false)}>
                       {labels.cancel}
