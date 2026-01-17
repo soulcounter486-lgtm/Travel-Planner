@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import type { Server } from "http";
+import path from "path";
+import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
@@ -100,6 +102,17 @@ export async function registerRoutes(
 Allow: /
 
 Sitemap: https://vungtau.blog/sitemap.xml`);
+  });
+
+  // SEO: og-image.png
+  app.get("/og-image.png", (req, res) => {
+    const imagePath = path.join(process.cwd(), "client/public/og-image.png");
+    if (fs.existsSync(imagePath)) {
+      res.type("image/png");
+      res.sendFile(imagePath);
+    } else {
+      res.status(404).send("Image not found");
+    }
   });
 
   // SEO: sitemap.xml
