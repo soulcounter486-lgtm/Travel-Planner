@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://vungtau-dokkaebi.replit.app/sitemap.xml
+Sitemap: https://vungtau.blog/sitemap.xml
