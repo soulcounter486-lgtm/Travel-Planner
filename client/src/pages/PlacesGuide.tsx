@@ -31,6 +31,7 @@ import club88Img from "@assets/Screenshot_20260116_184507_Maps_1768564285854.jpg
 import revoClubImg from "@assets/Screenshot_20260116_184614_Maps_1768564285861.jpg";
 import loxClubImg from "@assets/Screenshot_20260116_185045_Maps_1768564285866.jpg";
 import usBarImg from "@assets/Screenshot_20260116_184659_Maps_1768564285873.jpg";
+import peaceAndLoveImg from "@assets/20260117_220334_1768668092372.jpg";
 
 interface Place {
   name: string;
@@ -400,6 +401,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Peace and Love Live Bar", 
         address: "126A Phan Chu Trinh, Phường 2, Vũng Tàu, Bà Rịa - Vũng Tàu", 
         mapUrl: "https://maps.app.goo.gl/tF2X5pi7R1UmCamC7",
+        imageUrl: peaceAndLoveImg,
         description: {
           ko: "금, 토 라이브 공연. 간단히 맥주 즐기며 라이브 밴드 감상.",
           en: "Live band performances on Fri & Sat. Enjoy beer with live music.",
