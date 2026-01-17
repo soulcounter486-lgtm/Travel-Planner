@@ -395,6 +395,20 @@ const placesData: Record<string, Category> = {
           ja: "カクテルとスピリッツが楽しめるアメリカンスタイルのバー。"
         }
       },
+      { 
+        name: "Peace and Love 라이브바", 
+        nameVi: "Peace and Love Live Bar", 
+        address: "126A Phan Chu Trinh, Phường 2, Vũng Tàu, Bà Rịa - Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/tF2X5pi7R1UmCamC7",
+        description: {
+          ko: "금, 토 라이브 공연. 간단히 맥주 즐기며 라이브 밴드 감상.",
+          en: "Live band performances on Fri & Sat. Enjoy beer with live music.",
+          zh: "周五、周六现场乐队表演，边喝啤酒边欣赏现场音乐。",
+          vi: "Biểu diễn nhạc sống thứ Sáu và thứ Bảy. Thưởng thức bia với nhạc sống.",
+          ru: "Живые выступления по пятницам и субботам. Наслаждайтесь пивом под живую музыку.",
+          ja: "金・土曜はライブバンド演奏。ビールを楽しみながらライブを鑑賞。"
+        }
+      },
     ]
   }
 };
