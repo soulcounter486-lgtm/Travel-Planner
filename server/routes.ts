@@ -845,57 +845,68 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     language: z.string().default("ko"),
   });
 
-  // 붕따우 관광지 및 맛집 데이터
+  // 붕따우 관광지 및 맛집 데이터 (PlacesGuide.tsx와 동기화)
   const placesData = {
     attractions: [
-      { name: "붕따우 거대 예수상", nameVi: "Tượng Chúa Kitô", type: "landmark", note: "811개 계단, 해안 전경" },
-      { name: "붕따우 등대", nameVi: "Hải Đăng Vũng Tàu", type: "landmark", note: "1910년 프랑스 식민지 시대 건설" },
-      { name: "화이트 펠리스", nameVi: "Bạch Dinh", type: "historical", note: "1898년 프랑스 총독 별장" },
-      { name: "놀이동산", nameVi: "Ho May Amusement Park", type: "entertainment", note: "케이블카, 워터파크, 동물원" },
-      { name: "불교사찰", nameVi: "Chơn Không Monastery", type: "religious", note: "명상, 평화로운 분위기" },
-      { name: "붕따우 백비치", nameVi: "Bãi Sau", type: "beach", note: "가장 긴 해변, 수영, 해양스포츠" },
-      { name: "붕따우 프론트 비치", nameVi: "Front Beach", type: "beach", note: "일몰 감상 최적" },
-      { name: "돼지언덕", nameVi: "Đồi Con Heo", type: "viewpoint", note: "일몰 포토존" },
-      { name: "원숭이사원", nameVi: "Chùa Khỉ Viba", type: "temple", note: "야생 원숭이" },
-      { name: "붕따우 해산물 시장", nameVi: "Seafood Market", type: "market", note: "신선한 해산물" },
-      { name: "붕따우 재래시장", nameVi: "Chợ Vũng Tàu", type: "market", note: "현지 문화 체험" },
+      { name: "붕따우 거대 예수상", nameVi: "Tượng Chúa Kitô", type: "landmark", note: "높이 32m, 811개 계단, 아름다운 해안 전경 감상", priority: 1 },
+      { name: "붕따우 등대", nameVi: "Hải Đăng Vũng Tàu", type: "landmark", note: "1910년 프랑스 식민지 시대 건설, 붕따우 전경 조망", priority: 1 },
+      { name: "화이트 펠리스 (백악관)", nameVi: "Bạch Dinh", type: "historical", note: "1898년 프랑스 총독 별장, 역사적 건축물", priority: 1 },
+      { name: "호메이 놀이동산", nameVi: "Ho May Amusement Park", type: "entertainment", note: "케이블카, 워터파크, 동물원 - 가족 여행 추천", priority: 1 },
+      { name: "쩐꿍 불교사찰", nameVi: "Chơn Không Monastery", type: "religious", note: "명상, 평화로운 분위기, 붕따우 시내 전망", priority: 2 },
+      { name: "붕따우 백비치 (바이싸우)", nameVi: "Bãi Sau (Back Beach)", type: "beach", note: "가장 긴 해변, 수영, 서핑 등 해양스포츠", priority: 1 },
+      { name: "붕따우 프론트 비치", nameVi: "Front Beach", type: "beach", note: "일몰 감상 최적, 해안 산책로", priority: 1 },
+      { name: "탐당탑", nameVi: "Tháp Tam Đăng", type: "viewpoint", note: "붕따우 시내 전경, 야경 포토스팟", priority: 2 },
+      { name: "돼지언덕", nameVi: "Đồi Con Heo", type: "viewpoint", note: "일몰 포토존, 연인들의 명소", priority: 1 },
+      { name: "원숭이사원 (비바사)", nameVi: "Chùa Khỉ Viba", type: "temple", note: "야생 원숭이 서식, 독특한 체험", priority: 2 },
+      { name: "붕따우 야시장 (해산물 시장)", nameVi: "Chợ Đêm Hải Sản", type: "market", note: "신선한 해산물, 저녁 시간 방문 추천", priority: 1 },
+      { name: "붕따우 재래시장", nameVi: "Chợ Vũng Tàu", type: "market", note: "현지 문화 체험, 기념품 쇼핑", priority: 2 },
+      { name: "전쟁박물관", nameVi: "Bảo Tàng Vũ Khí Cổ", type: "museum", note: "베트남 전쟁 역사, 무기 전시", priority: 2 },
     ],
     restaurants: {
       localFood: [
-        { name: "반미 티삥", type: "반미", note: "현지인 맛집" },
-        { name: "반쎄오 (베트남 빈대떡)", type: "반쎄오", note: "현지 음식" },
-        { name: "분짜", type: "분짜", note: "하노이 스타일" },
-        { name: "후띠우", type: "쌀국수", note: "베트남 남부 스타일" },
+        { name: "반미 티삥", nameVi: "Bánh Mì Thiêng", type: "반미", note: "현지인 맛집, 베트남 대표 샌드위치" },
+        { name: "반쎄오", nameVi: "Bánh Xèo", type: "반쎄오", note: "베트남식 빈대떡" },
+        { name: "분짜", nameVi: "Bún Chả", type: "분짜", note: "하노이 스타일 쌀국수" },
+        { name: "후띠우", nameVi: "Hủ Tiếu", type: "쌀국수", note: "베트남 남부 스타일 쌀국수" },
+        { name: "껌땀 (깨진밥)", nameVi: "Cơm Tấm", type: "껌땀", note: "베트남 대표 밥요리" },
       ],
       koreanFood: [
-        { name: "고향 칼국수/냉면", type: "한식" },
-        { name: "이안 소금구이 BBQ", type: "고기구이", recommended: true },
-        { name: "장모님 치맥", type: "치킨" },
-        { name: "돈까스랑 피자랑", type: "돈까스/피자" },
+        { name: "고향 칼국수/냉면", type: "한식", note: "시원한 냉면과 칼국수" },
+        { name: "이안 소금구이 BBQ", nameVi: "Ian BBQ", type: "고기구이", recommended: true, note: "협력업체, 예약 시 할인" },
+        { name: "장모님 치맥", type: "치킨", note: "한국식 치킨과 맥주" },
+        { name: "돈까스랑 피자랑", type: "돈까스/피자", note: "돈까스, 피자 전문점" },
       ],
       buffet: [
-        { name: "간하오 스시, 샤브샤브 뷔페", type: "뷔페" },
-        { name: "해산물 뷔페", type: "뷔페", note: "저녁 오픈" },
+        { name: "간하오 스시, 샤브샤브 뷔페", nameVi: "Gan Hao Buffet", type: "뷔페", note: "일식 뷔페" },
+        { name: "해산물 뷔페", type: "뷔페", note: "저녁 오픈, 다양한 해산물" },
       ],
       chineseFood: [
-        { name: "옌찌에우 딤섬", type: "딤섬", recommended: true },
-        { name: "민 끼", type: "중식" },
+        { name: "옌찌에우 딤섬", nameVi: "Yến Triều Dim Sum", type: "딤섬", recommended: true, note: "인기 딤섬집" },
+        { name: "민 끼", nameVi: "Minh Ký", type: "중식", note: "중화요리 전문" },
       ],
       coffee: [
-        { name: "Coffee Suối Bên Biển", type: "카페", note: "바다 전망" },
-        { name: "KATINAT 커피", type: "카페" },
-        { name: "Highlands Coffee", type: "카페" },
+        { name: "Coffee Suối Bên Biển", type: "카페", note: "바다 전망, 분위기 좋은 카페" },
+        { name: "KATINAT 커피", nameVi: "KATINAT", type: "카페", note: "베트남 유명 카페 체인" },
+        { name: "Highlands Coffee", type: "카페", note: "베트남 대표 카페 체인" },
       ],
     },
     services: [
-      { name: "Re.en 마사지", type: "마사지" },
-      { name: "그랜드 마사지", type: "마사지" },
-      { name: "DAY SPA", type: "스파" },
+      { name: "Re.en 마사지", nameVi: "Re.en Massage", type: "마사지", note: "한국인 운영" },
+      { name: "그랜드 마사지", nameVi: "Grand Massage", type: "마사지", note: "전문 마사지샵" },
+      { name: "DAY SPA", type: "스파", note: "프리미엄 스파" },
+      { name: "김마싸", type: "마사지", note: "한국인 운영" },
+    ],
+    nightlife: [
+      { name: "88 비어클럽", nameVi: "88 Beer Club", type: "비어클럽", note: "라이브 음악, 야외 분위기" },
+      { name: "Revo 클럽", nameVi: "Revo Club", type: "나이트클럽", note: "EDM 음악, 현지인 인기" },
+      { name: "Lox 클럽", nameVi: "Lox Night Club", type: "나이트클럽", note: "프리미엄 클럽, VIP 서비스" },
+      { name: "U.S Bar Club", type: "바", note: "아메리칸 스타일, 칵테일" },
+      { name: "Peace and Love 라이브바", nameVi: "Peace and Love Live Bar", type: "라이브바", note: "금,토 라이브 밴드, 맥주" },
     ],
     golf: [
-      { name: "Paradise Golf", course: "paradise" },
-      { name: "Chou Duc Golf", course: "chouduc" },
-      { name: "Ho Cham Golf", course: "hocham" },
+      { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "평일 $80, 주말 $100" },
+      { name: "쩌우득 골프장", nameVi: "Chou Duc Golf", course: "chouduc", note: "평일 $80, 주말 $120" },
+      { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "평일 $130, 주말 $200" },
     ],
   };
 
@@ -965,15 +976,27 @@ ${languagePrompts[language] || languagePrompts.ko}
 여행 기간: ${format(start, 'yyyy-MM-dd')} ~ ${format(end, 'yyyy-MM-dd')} (${days}일)
 여행 목적: ${purposeDescription}
 
+## 중요: 아래 장소 데이터를 반드시 우선적으로 사용하세요!
+이 데이터는 붕따우 도깨비 사이트에서 검증된 관광명소와 맛집 목록입니다.
+일정에 포함되는 모든 장소는 가능하면 이 목록에서 선택해주세요.
+
 사용 가능한 장소 데이터:
 ${JSON.stringify(placesData, null, 2)}
 
-위 장소 데이터를 활용하여 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함한 상세 여행 계획을 만들어주세요.
-식사 시간에는 맛집을, 관광 시간에는 관광명소를 적절히 배치해주세요.
-${purposes.includes('golf') ? '매일 또는 격일로 골프 라운딩을 포함해주세요.' : ''}
-${purposes.includes('relaxing') ? '마사지나 스파, 카페 시간을 충분히 포함해주세요.' : ''}
-${purposes.includes('gourmet') ? '다양한 현지 음식과 한식을 골고루 포함해주세요.' : ''}
-${purposes.includes('nightlife') ? '저녁에 클럽이나 바 등 밤문화 활동을 포함해주세요. (88 비어클럽, Revo 클럽, Lox 클럽, U.S Bar Club 등)' : ''}`;
+## 일정 작성 규칙:
+1. 관광명소(attractions)에서 priority: 1인 장소를 우선 배치해주세요.
+2. 식사 시간에는 restaurants 목록의 맛집을 사용하세요.
+3. 카페 휴식은 coffee 목록에서 선택하세요.
+4. 마사지/스파는 services 목록에서 선택하세요.
+5. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함해주세요.
+6. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용해주세요.
+
+${purposes.includes('golf') ? '## 골프 여행: golf 목록에서 골프장을 선택하여 매일 또는 격일로 라운딩을 포함해주세요.' : ''}
+${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함해주세요.' : ''}
+${purposes.includes('gourmet') ? '## 맛집 탐방: restaurants의 localFood, koreanFood, chineseFood, buffet를 골고루 포함해주세요.' : ''}
+${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁에 클럽이나 바 활동을 포함해주세요. (88 비어클럽, Revo 클럽, Lox 클럽, Peace and Love 라이브바 등)' : ''}
+${purposes.includes('family') ? '## 가족 여행: 호메이 놀이동산, 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치해주세요.' : ''}
+${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁박물관, 붕따우 등대 등 역사/문화 명소를 우선 배치해주세요.' : ''}`;
 
       const response = await gemini.models.generateContent({
         model: "gemini-2.5-flash",
