@@ -257,6 +257,7 @@ const placesData: Record<string, Category> = {
       { name: "해산물 고급 식당", nameVi: "Gành Hào Seafood Restaurant", phone: "0254 3550 909", mapUrl: "https://maps.app.goo.gl/AVh5Qq9HMRNpbjzBA" },
       { name: "해산물 고급 식당 2호점", nameVi: "Gành Hào 2", mapUrl: "https://maps.app.goo.gl/JLXdK6XZC5SqHntC7" },
       { name: "해산물 야시장 로컬식당", nameVi: "Hải Sản Cô Thy 2", mapUrl: "https://maps.app.goo.gl/rWUGn1MYyzGH7Xg78" },
+      { name: "분짜 하노이", nameVi: "Bún Chả Hà Nội", address: "166 Nguyễn Tri Phương, Phường 7, Vũng Tàu, Bà Rịa - Vũng Tàu", mapUrl: "https://maps.app.goo.gl/4A88UwM3FHaZzaAKA" },
       { name: "88 Food Garden (레스토랑)", nameVi: "88 Food Garden", mapUrl: "https://maps.app.goo.gl/iwaEfxbuxutM9y2t9" },
       { name: "Panda BBQ (현지 바베큐)", address: "150 Hạ Long, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/9ruaWyxg9txKrJ6eA" },
       { name: "해산물 식당", nameVi: "Ốc Tự Nhiên 3", address: "20 Trần Phú, Phường 1, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/37gvjz6hhkzP6ip2A" },
