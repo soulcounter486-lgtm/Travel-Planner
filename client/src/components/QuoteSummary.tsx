@@ -21,7 +21,7 @@ interface QuoteSummaryProps {
 export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSummaryProps) {
   const { t, language } = useLanguage();
   const summaryRef = useRef<HTMLDivElement>(null);
-  const [personCount, setPersonCount] = useState<number>(1);
+  const [personCount, setPersonCount] = useState<string>("");
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -242,7 +242,8 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   min="1"
                   max="100"
                   value={personCount}
-                  onChange={(e) => setPersonCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={(e) => setPersonCount(e.target.value)}
+                  placeholder=""
                   className="w-20 h-10 text-center font-bold text-lg bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-700"
                   data-testid="input-person-count"
                 />
@@ -255,7 +256,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                    language === "ja" ? "名" : "명"}
                 </span>
               </div>
-              {personCount > 1 && (
+              {personCount && parseInt(personCount) > 1 && (
                 <div className="pt-2 border-t border-indigo-200 dark:border-indigo-700">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-indigo-900 dark:text-indigo-100">
@@ -268,11 +269,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     </span>
                     <div className="text-right">
                       <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                        ${Math.round(breakdown.total / personCount).toLocaleString()}
+                        ${Math.round(breakdown.total / parseInt(personCount)).toLocaleString()}
                       </div>
                       {currencyInfo.code !== "USD" && (
                         <div className="text-sm text-indigo-500 dark:text-indigo-300">
-                          ≈ {formatLocalCurrency(Math.round(breakdown.total / personCount))}
+                          ≈ {formatLocalCurrency(Math.round(breakdown.total / parseInt(personCount)))}
                         </div>
                       )}
                     </div>
