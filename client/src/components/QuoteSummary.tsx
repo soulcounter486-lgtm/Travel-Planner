@@ -222,6 +222,26 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   <Separator className="bg-border/50" />
                 </motion.div>
               )}
+
+              {breakdown.fastTrack.price > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between font-semibold text-slate-800">
+                      <span>{language === "ko" ? "패스트트랙" : language === "en" ? "Fast Track" : language === "zh" ? "快速通道" : language === "vi" ? "Fast Track" : language === "ru" ? "Фаст-трек" : language === "ja" ? "ファストトラック" : "패스트트랙"}</span>
+                      <span>${breakdown.fastTrack.price}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground italic pl-1">
+                      {breakdown.fastTrack.description}
+                    </p>
+                  </div>
+                  <Separator className="bg-border/50" />
+                </motion.div>
+              )}
             </AnimatePresence>
 
             <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-indigo-200 dark:border-indigo-800 space-y-3">

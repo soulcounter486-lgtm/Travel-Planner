@@ -101,6 +101,7 @@ export default function Home() {
       golf: { enabled: false, selections: [] },
       ecoGirl: { enabled: false, count: "" as any, nights: "" as any },
       guide: { enabled: false, days: "" as any, groupSize: 4 },
+      fastTrack: { enabled: false, type: "oneway" as const, persons: "" as any },
     },
   });
 
@@ -205,6 +206,18 @@ export default function Home() {
     const totalPrice = dailyTotal * days;
     return { price: totalPrice, days, groupSize, baseRate, extraRate, extraPeople, dailyTotal };
   }, [values.guide?.enabled, values.guide?.days, values.guide?.groupSize]);
+
+  const fastTrackEstimate = useMemo(() => {
+    if (!values.fastTrack?.enabled) {
+      return { price: 0, persons: 0, type: "oneway" as const, pricePerPerson: 25 };
+    }
+    const pricePerPerson = 25;
+    const persons = Number(values.fastTrack.persons) || 0;
+    const type = values.fastTrack.type || "oneway";
+    const multiplier = type === "roundtrip" ? 2 : 1;
+    const totalPrice = pricePerPerson * persons * multiplier;
+    return { price: totalPrice, persons, type, pricePerPerson };
+  }, [values.fastTrack?.enabled, values.fastTrack?.persons, values.fastTrack?.type]);
 
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
@@ -686,6 +699,89 @@ export default function Home() {
                     </div>
                   )}
                 </SectionCard>)} />
+
+            <Controller control={form.control} name="fastTrack.enabled" render={({ field }) => (
+              <SectionCard 
+                title={language === "ko" ? "패스트트랙" : language === "en" ? "Fast Track" : language === "zh" ? "快速通道" : language === "vi" ? "Fast Track" : language === "ru" ? "Фаст-трек" : language === "ja" ? "ファストトラック" : "패스트트랙"} 
+                icon={Plane} 
+                isEnabled={field.value ?? false} 
+                onToggle={field.onChange} 
+                gradient="from-amber-500/10"
+              >
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>{language === "ko" ? "유형" : language === "en" ? "Type" : language === "zh" ? "类型" : language === "vi" ? "Loại" : language === "ru" ? "Тип" : language === "ja" ? "タイプ" : "유형"}</Label>
+                    <Controller 
+                      control={form.control} 
+                      name="fastTrack.type" 
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="h-12 rounded-xl" data-testid="select-fasttrack-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="oneway">
+                              {language === "ko" ? "편도 ($25/인)" : language === "en" ? "One Way ($25/person)" : language === "zh" ? "单程 ($25/人)" : language === "vi" ? "Một chiều ($25/người)" : language === "ru" ? "В одну сторону ($25/чел)" : language === "ja" ? "片道 ($25/名)" : "편도 ($25/인)"}
+                            </SelectItem>
+                            <SelectItem value="roundtrip">
+                              {language === "ko" ? "왕복 ($50/인)" : language === "en" ? "Round Trip ($50/person)" : language === "zh" ? "往返 ($50/人)" : language === "vi" ? "Khứ hồi ($50/người)" : language === "ru" ? "Туда и обратно ($50/чел)" : language === "ja" ? "往復 ($50/名)" : "왕복 ($50/인)"}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{language === "ko" ? "인원수" : language === "en" ? "Number of People" : language === "zh" ? "人数" : language === "vi" ? "Số người" : language === "ru" ? "Количество" : language === "ja" ? "人数" : "인원수"}</Label>
+                    <Controller 
+                      control={form.control} 
+                      name="fastTrack.persons" 
+                      render={({ field }) => (
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          {...field} 
+                          value={field.value ?? ""} 
+                          onChange={(e) => { 
+                            const val = e.target.value; 
+                            field.onChange(val === "" ? "" : parseInt(val)); 
+                          }} 
+                          className="h-12 rounded-xl" 
+                          data-testid="input-fasttrack-persons"
+                        />
+                      )} 
+                    />
+                  </div>
+                </div>
+                <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 font-medium">
+                  {language === "ko" ? "공항 출입국 시 전용 라인으로 빠르게 이동" : language === "en" ? "Expedited airport immigration via priority lane" : language === "zh" ? "机场出入境专用通道快速通行" : language === "vi" ? "Di chuyển nhanh qua làn ưu tiên tại sân bay" : language === "ru" ? "Быстрый проход через приоритетную линию" : language === "ja" ? "専用レーンで空港出入国を迅速に" : "공항 출입국 시 전용 라인으로 빠르게 이동"}
+                </div>
+                {fastTrackEstimate.price > 0 && (
+                  <div className="mt-4 bg-gradient-to-r from-amber-600 to-amber-500 text-white p-4 rounded-xl shadow-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold">{language === "ko" ? "예상 금액" : language === "en" ? "Estimated Price" : language === "zh" ? "预估价格" : language === "vi" ? "Giá dự kiến" : language === "ru" ? "Ориентировочная цена" : language === "ja" ? "見積もり金額" : "예상 금액"}</span>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold">${fastTrackEstimate.price}</span>
+                        {currencyInfo.code !== "USD" && (
+                          <div className="text-sm text-amber-200">≈ {formatLocalCurrency(fastTrackEstimate.price)}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs text-amber-100 space-y-1">
+                      <div className="flex justify-between">
+                        <span>{fastTrackEstimate.type === "roundtrip" ? (language === "ko" ? "왕복" : "Round Trip") : (language === "ko" ? "편도" : "One Way")}</span>
+                        <span>${fastTrackEstimate.pricePerPerson}{fastTrackEstimate.type === "roundtrip" ? " × 2" : ""} × {fastTrackEstimate.persons}{language === "ko" ? "명" : ""}</span>
+                      </div>
+                      {currencyInfo.code !== "USD" && (
+                        <div className="flex justify-end pt-1 text-amber-200">
+                          <span>{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
+            )} />
           </div>
           <div className="lg:col-span-4"><QuoteSummary breakdown={breakdown} isLoading={calculateMutation.isPending} onSave={handleSaveQuote} isSaving={createQuoteMutation.isPending} /></div>
         </div>

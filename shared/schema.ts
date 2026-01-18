@@ -100,6 +100,13 @@ export const calculateQuoteSchema = z.object({
     days: z.number().min(0).default(0),
     groupSize: z.number().min(1).default(1),
   }).optional(),
+
+  // Fast Track
+  fastTrack: z.object({
+    enabled: z.boolean(),
+    type: z.enum(["oneway", "roundtrip"]).default("oneway"),
+    persons: z.number().min(0).default(0),
+  }).optional(),
 });
 
 // Output schema for calculation result
@@ -121,6 +128,10 @@ export const quoteBreakdownSchema = z.object({
     description: z.string(),
   }),
   guide: z.object({
+    price: z.number(),
+    description: z.string(),
+  }),
+  fastTrack: z.object({
     price: z.number(),
     description: z.string(),
   }),

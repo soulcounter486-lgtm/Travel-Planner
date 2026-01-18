@@ -201,6 +201,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         golf: { price: 0, description: "" },
         ecoGirl: { price: 0, description: "" },
         guide: { price: 0, description: "" },
+        fastTrack: { price: 0, description: "" },
         total: 0
       };
 
@@ -338,7 +339,18 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         breakdown.guide.description = `${days} Days for ${groupSize} People (Base $120 + Extra)`;
       }
 
-      breakdown.total = breakdown.villa.price + breakdown.vehicle.price + breakdown.golf.price + breakdown.ecoGirl.price + breakdown.guide.price;
+      // 6. Fast Track Calculation
+      if (input.fastTrack?.enabled) {
+        const pricePerPerson = 25; // $25 per person per way
+        const persons = Number(input.fastTrack.persons) || 0;
+        const isRoundtrip = input.fastTrack.type === "roundtrip";
+        const multiplier = isRoundtrip ? 2 : 1;
+        breakdown.fastTrack.price = pricePerPerson * persons * multiplier;
+        const typeDesc = isRoundtrip ? "왕복" : "편도";
+        breakdown.fastTrack.description = `패스트트랙 ${typeDesc} x ${persons}명 ($${pricePerPerson}/인)`;
+      }
+
+      breakdown.total = breakdown.villa.price + breakdown.vehicle.price + breakdown.golf.price + breakdown.ecoGirl.price + breakdown.guide.price + breakdown.fastTrack.price;
       res.json(breakdown);
     } catch (err) {
       console.error("Calculation route error:", err);
