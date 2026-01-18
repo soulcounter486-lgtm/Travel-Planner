@@ -374,14 +374,34 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     res.json(quotes);
   });
 
+  // Helper function to get today's date in YYYY-MM-DD format (Korea timezone)
+  const getTodayDateString = () => {
+    const now = new Date();
+    const koreaTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+    return koreaTime.toISOString().split("T")[0];
+  };
+
+  // Helper function to get random count between 4000 and 6000
+  const getRandomBaseCount = () => Math.floor(Math.random() * 2001) + 4000;
+
   app.get("/api/visitor-count", async (req, res) => {
     try {
+      const today = getTodayDateString();
       const result = await db.select().from(visitorCount).where(eq(visitorCount.id, 1));
+      
       if (result.length === 0) {
-        await db.insert(visitorCount).values({ id: 1, count: 1 });
-        res.json({ count: 1 });
+        const baseCount = getRandomBaseCount();
+        await db.insert(visitorCount).values({ id: 1, count: baseCount, lastResetDate: today });
+        res.json({ count: baseCount });
       } else {
-        res.json({ count: result[0].count });
+        // Check if we need to reset for a new day
+        if (result[0].lastResetDate !== today) {
+          const baseCount = getRandomBaseCount();
+          await db.update(visitorCount).set({ count: baseCount, lastResetDate: today }).where(eq(visitorCount.id, 1));
+          res.json({ count: baseCount });
+        } else {
+          res.json({ count: result[0].count });
+        }
       }
     } catch (err) {
       console.error("Visitor count get error:", err);
@@ -391,14 +411,24 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
 
   app.post("/api/visitor-count/increment", async (req, res) => {
     try {
+      const today = getTodayDateString();
       const result = await db.select().from(visitorCount).where(eq(visitorCount.id, 1));
+      
       if (result.length === 0) {
-        await db.insert(visitorCount).values({ id: 1, count: 1 });
-        res.json({ count: 1 });
+        const baseCount = getRandomBaseCount();
+        await db.insert(visitorCount).values({ id: 1, count: baseCount, lastResetDate: today });
+        res.json({ count: baseCount });
       } else {
-        const newCount = result[0].count + 1;
-        await db.update(visitorCount).set({ count: newCount }).where(eq(visitorCount.id, 1));
-        res.json({ count: newCount });
+        // Check if we need to reset for a new day
+        if (result[0].lastResetDate !== today) {
+          const baseCount = getRandomBaseCount();
+          await db.update(visitorCount).set({ count: baseCount, lastResetDate: today }).where(eq(visitorCount.id, 1));
+          res.json({ count: baseCount });
+        } else {
+          const newCount = result[0].count + 1;
+          await db.update(visitorCount).set({ count: newCount }).where(eq(visitorCount.id, 1));
+          res.json({ count: newCount });
+        }
       }
     } catch (err) {
       console.error("Visitor count increment error:", err);

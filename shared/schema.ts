@@ -20,6 +20,7 @@ export const quotes = pgTable("quotes", {
 export const visitorCount = pgTable("visitor_count", {
   id: serial("id").primaryKey(),
   count: integer("count").notNull().default(0),
+  lastResetDate: text("last_reset_date"), // YYYY-MM-DD format for daily reset
 });
 
 // 여행 가계부 - 지출 그룹 (여행별)
