@@ -633,6 +633,10 @@ export default function Board() {
                 {navLabels.guide[language] || navLabels.guide.ko}
               </Button>
             </Link>
+            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+              <FileText className="w-3.5 h-3.5" />
+              {navLabels.board[language] || navLabels.board.ko}
+            </Button>
             <Link href="/expenses">
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
                 <Wallet className="w-3.5 h-3.5" />

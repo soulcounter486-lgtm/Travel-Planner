@@ -18,7 +18,8 @@ import {
   LogIn,
   LogOut,
   Bell,
-  BellOff
+  BellOff,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
@@ -288,6 +289,12 @@ export default function ChatRoom() {
                 {t("nav.guide")}
               </Button>
             </Link>
+            <Link href="/board">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                <FileText className="w-3.5 h-3.5" />
+                {t("nav.board")}
+              </Button>
+            </Link>
             <Link href="/expenses">
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
                 <Wallet className="w-3.5 h-3.5" />
@@ -298,12 +305,6 @@ export default function ChatRoom() {
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
                 <Sparkles className="w-3.5 h-3.5" />
                 {t("nav.planner")}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <MessageCircle className="w-3.5 h-3.5" />
-                {t("nav.board")}
               </Button>
             </Link>
           </nav>

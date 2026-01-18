@@ -949,6 +949,12 @@ export default function ExpenseTracker() {
                   {navLabels.guide[language] || navLabels.guide.ko}
                 </Button>
               </Link>
+              <Link href="/board">
+                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                  <Pencil className="w-3.5 h-3.5" />
+                  {navLabels.board[language] || navLabels.board.ko}
+                </Button>
+              </Link>
               <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
                 <Wallet className="w-3.5 h-3.5" />
                 {navLabels.expenses[language] || navLabels.expenses.ko}
@@ -963,12 +969,6 @@ export default function ExpenseTracker() {
                 <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
                   <MessageCircle className="w-3.5 h-3.5" />
                   {navLabels.chat[language] || navLabels.chat.ko}
-                </Button>
-              </Link>
-              <Link href="/board">
-                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                  <Pencil className="w-3.5 h-3.5" />
-                  {navLabels.board[language] || navLabels.board.ko}
                 </Button>
               </Link>
             </div>
@@ -1029,6 +1029,12 @@ export default function ExpenseTracker() {
                 {navLabels.guide[language] || navLabels.guide.ko}
               </Button>
             </Link>
+            <Link href="/board">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                <Pencil className="w-3.5 h-3.5" />
+                {navLabels.board[language] || navLabels.board.ko}
+              </Button>
+            </Link>
             <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
               <Wallet className="w-3.5 h-3.5" />
               {navLabels.expenses[language] || navLabels.expenses.ko}
@@ -1043,12 +1049,6 @@ export default function ExpenseTracker() {
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
                 <MessageCircle className="w-3.5 h-3.5" />
                 {navLabels.chat[language] || navLabels.chat.ko}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <Pencil className="w-3.5 h-3.5" />
-                {navLabels.board[language] || navLabels.board.ko}
               </Button>
             </Link>
           </div>

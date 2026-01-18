@@ -207,6 +207,12 @@ export default function TravelPlanner() {
                 {t("nav.guide")}
               </Button>
             </Link>
+            <Link href="/board">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                <FileText className="w-3.5 h-3.5" />
+                {t("nav.board")}
+              </Button>
+            </Link>
             <Link href="/expenses">
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
                 <Wallet className="w-3.5 h-3.5" />
@@ -217,12 +223,6 @@ export default function TravelPlanner() {
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
                 <MessageCircle className="w-3.5 h-3.5" />
                 {t("nav.chat")}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <FileText className="w-3.5 h-3.5" />
-                {t("nav.board")}
               </Button>
             </Link>
           </nav>
