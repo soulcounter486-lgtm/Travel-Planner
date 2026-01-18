@@ -49,7 +49,8 @@ import {
   Camera,
   Wallet,
   Navigation,
-  Sparkles
+  Sparkles,
+  UserPlus
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -901,22 +902,40 @@ export default function Home() {
                  language === "ru" ? "Бронь / Обмен / Недвижимость" :
                  language === "ja" ? "予約/両替/不動産" : "예약/환전/부동산 문의"}
               </span>
-              <a
-                href="http://pf.kakao.com/_TuxoxfG"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-kakao-reservation-home"
-              >
-                <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                  <MessageCircle className="w-4 h-4" />
-                  {language === "ko" ? "카카오톡 문의" : 
-                   language === "en" ? "KakaoTalk" :
-                   language === "zh" ? "KakaoTalk" :
-                   language === "vi" ? "KakaoTalk" :
-                   language === "ru" ? "KakaoTalk" :
-                   language === "ja" ? "カカオトーク" : "카카오톡 문의"}
-                </Button>
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://buly.kr/58RS4Ao"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="link-kakao-friend-home"
+                >
+                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
+                    <UserPlus className="w-4 h-4" />
+                    {language === "ko" ? "카톡친추" : 
+                     language === "en" ? "Add Friend" :
+                     language === "zh" ? "加好友" :
+                     language === "vi" ? "Kết bạn" :
+                     language === "ru" ? "Добавить" :
+                     language === "ja" ? "友達追加" : "카톡친추"}
+                  </Button>
+                </a>
+                <a
+                  href="http://pf.kakao.com/_TuxoxfG"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="link-kakao-reservation-home"
+                >
+                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
+                    <MessageCircle className="w-4 h-4" />
+                    {language === "ko" ? "카톡채널문의" : 
+                     language === "en" ? "Channel" :
+                     language === "zh" ? "频道咨询" :
+                     language === "vi" ? "Kênh" :
+                     language === "ru" ? "Канал" :
+                     language === "ja" ? "チャンネル" : "카톡채널문의"}
+                  </Button>
+                </a>
+              </div>
             </div>
           </div>
         </div>
