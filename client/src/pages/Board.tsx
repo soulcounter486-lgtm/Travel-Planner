@@ -995,6 +995,12 @@ export default function Board() {
                                 <Calendar className="w-3 h-3" />
                                 {post.createdAt && format(new Date(post.createdAt), "yyyy.MM.dd")}
                               </span>
+                              {(post as any).commentCount > 0 && (
+                                <span className="flex items-center gap-1 text-primary">
+                                  <MessageCircle className="w-3 h-3" />
+                                  {(post as any).commentCount}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>

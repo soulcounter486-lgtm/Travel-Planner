@@ -1065,7 +1065,22 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.get("/api/posts", async (req, res) => {
     try {
       const allPosts = await db.select().from(posts).orderBy(desc(posts.createdAt));
-      res.json(allPosts);
+      
+      // 각 게시글의 댓글 개수 조회
+      const postsWithCommentCount = await Promise.all(
+        allPosts.map(async (post) => {
+          const commentCountResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(comments)
+            .where(eq(comments.postId, post.id));
+          return {
+            ...post,
+            commentCount: Number(commentCountResult[0]?.count || 0)
+          };
+        })
+      );
+      
+      res.json(postsWithCommentCount);
     } catch (err) {
       console.error("Get posts error:", err);
       res.status(500).json({ message: "Failed to get posts" });
