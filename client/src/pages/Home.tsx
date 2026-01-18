@@ -352,6 +352,12 @@ export default function Home() {
                 {t("nav.guide")}
               </Button>
             </Link>
+            <Link href="/board">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
+                <Flag className="w-3.5 h-3.5" />
+                {t("nav.board")}
+              </Button>
+            </Link>
             <Link href="/expenses">
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
                 <Wallet className="w-3.5 h-3.5" />
@@ -368,12 +374,6 @@ export default function Home() {
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
                 <MessageCircle className="w-3.5 h-3.5" />
                 {t("nav.chat")}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <Flag className="w-3.5 h-3.5" />
-                {t("nav.board")}
               </Button>
             </Link>
           </div>
@@ -894,12 +894,12 @@ export default function Home() {
           <div className="container mx-auto px-4 py-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-semibold text-black">
-                {language === "ko" ? "예약 문의" : 
-                 language === "en" ? "Reservation" :
-                 language === "zh" ? "预约" :
-                 language === "vi" ? "Đặt chỗ" :
-                 language === "ru" ? "Бронь" :
-                 language === "ja" ? "予約" : "예약 문의"}
+                {language === "ko" ? "예약/환전 문의" : 
+                 language === "en" ? "Reservation / Exchange" :
+                 language === "zh" ? "预约/换汇" :
+                 language === "vi" ? "Đặt chỗ / Đổi tiền" :
+                 language === "ru" ? "Бронь / Обмен" :
+                 language === "ja" ? "予約/両替" : "예약/환전 문의"}
               </span>
               <a
                 href="http://pf.kakao.com/_TuxoxfG"
