@@ -285,6 +285,9 @@ export default function Home() {
             : { enabled: false },
           guide: value.guide?.enabled
             ? { enabled: true, days: value.guide.days || 0, groupSize: value.guide.groupSize || 1 }
+            : { enabled: false },
+          fastTrack: value.fastTrack?.enabled
+            ? { enabled: true, type: value.fastTrack.type || "oneway", persons: value.fastTrack.persons || 0 }
             : { enabled: false }
         };
 
