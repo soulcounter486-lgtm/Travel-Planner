@@ -29,12 +29,12 @@ export function SectionCard({
       isEnabled ? "ring-2 ring-primary/20 shadow-lg shadow-primary/5" : "opacity-80 grayscale-[0.5] hover:opacity-100 hover:grayscale-0",
       className
     )}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 relative overflow-hidden">
+      <CardHeader 
+        className="flex flex-row items-center justify-between space-y-0 pb-4 relative overflow-hidden cursor-pointer select-none hover:bg-muted/30 transition-colors"
+        onClick={() => onToggle(!isEnabled)}
+      >
         <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-r", gradient)} />
-        <CardTitle 
-          className="text-xl flex items-center gap-3 relative z-10 cursor-pointer select-none hover:opacity-80 transition-opacity"
-          onClick={() => onToggle(!isEnabled)}
-        >
+        <CardTitle className="text-xl flex items-center gap-3 relative z-10">
           <div className={cn(
             "p-2.5 rounded-xl transition-colors",
             isEnabled ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"
@@ -46,6 +46,7 @@ export function SectionCard({
         <Switch 
           checked={isEnabled} 
           onCheckedChange={onToggle}
+          onClick={(e) => e.stopPropagation()}
           className="relative z-10 data-[state=checked]:bg-primary"
         />
       </CardHeader>
