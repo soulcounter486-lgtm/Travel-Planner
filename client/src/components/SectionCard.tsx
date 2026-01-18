@@ -31,7 +31,10 @@ export function SectionCard({
     )}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 relative overflow-hidden">
         <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-r", gradient)} />
-        <CardTitle className="text-xl flex items-center gap-3 relative z-10">
+        <CardTitle 
+          className="text-xl flex items-center gap-3 relative z-10 cursor-pointer select-none hover:opacity-80 transition-opacity"
+          onClick={() => onToggle(!isEnabled)}
+        >
           <div className={cn(
             "p-2.5 rounded-xl transition-colors",
             isEnabled ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"
