@@ -1,11 +1,13 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileText, Info, Save } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, FileText, Info, Save, Users } from "lucide-react";
 import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 
@@ -19,6 +21,7 @@ interface QuoteSummaryProps {
 export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSummaryProps) {
   const { t, language } = useLanguage();
   const summaryRef = useRef<HTMLDivElement>(null);
+  const [personCount, setPersonCount] = useState<number>(1);
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -220,6 +223,63 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-indigo-200 dark:border-indigo-800 space-y-3">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <Label className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
+                  {language === "ko" ? "인원수" : 
+                   language === "en" ? "Number of People" :
+                   language === "zh" ? "人数" :
+                   language === "vi" ? "Số người" :
+                   language === "ru" ? "Количество человек" :
+                   language === "ja" ? "人数" : "인원수"}
+                </Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={personCount}
+                  onChange={(e) => setPersonCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20 h-10 text-center font-bold text-lg bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-700"
+                  data-testid="input-person-count"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {language === "ko" ? "명" : 
+                   language === "en" ? "people" :
+                   language === "zh" ? "人" :
+                   language === "vi" ? "người" :
+                   language === "ru" ? "чел." :
+                   language === "ja" ? "名" : "명"}
+                </span>
+              </div>
+              {personCount > 1 && (
+                <div className="pt-2 border-t border-indigo-200 dark:border-indigo-700">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-indigo-900 dark:text-indigo-100">
+                      {language === "ko" ? "1인당 경비" : 
+                       language === "en" ? "Per Person" :
+                       language === "zh" ? "人均费用" :
+                       language === "vi" ? "Chi phí/người" :
+                       language === "ru" ? "На человека" :
+                       language === "ja" ? "1人あたり" : "1인당 경비"}
+                    </span>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                        ${Math.round(breakdown.total / personCount).toLocaleString()}
+                      </div>
+                      {currencyInfo.code !== "USD" && (
+                        <div className="text-sm text-indigo-500 dark:text-indigo-300">
+                          ≈ {formatLocalCurrency(Math.round(breakdown.total / personCount))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10 space-y-1">
               <div className="text-[10px] text-muted-foreground flex items-center gap-1">
