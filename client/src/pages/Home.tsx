@@ -894,12 +894,12 @@ export default function Home() {
           <div className="container mx-auto px-4 py-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm font-semibold text-black">
-                {language === "ko" ? "예약/환전 문의" : 
-                 language === "en" ? "Reservation / Exchange" :
-                 language === "zh" ? "预约/换汇" :
-                 language === "vi" ? "Đặt chỗ / Đổi tiền" :
-                 language === "ru" ? "Бронь / Обмен" :
-                 language === "ja" ? "予約/両替" : "예약/환전 문의"}
+                {language === "ko" ? "예약/환전/부동산 문의" : 
+                 language === "en" ? "Reservation / Exchange / Real Estate" :
+                 language === "zh" ? "预约/换汇/房产" :
+                 language === "vi" ? "Đặt chỗ / Đổi tiền / Bất động sản" :
+                 language === "ru" ? "Бронь / Обмен / Недвижимость" :
+                 language === "ja" ? "予約/両替/不動産" : "예약/환전/부동산 문의"}
               </span>
               <a
                 href="http://pf.kakao.com/_TuxoxfG"
