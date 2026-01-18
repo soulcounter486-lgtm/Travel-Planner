@@ -894,7 +894,7 @@ export default function Home() {
         <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
           <div className="container mx-auto px-4 py-2">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold text-black">
+              <span className="text-sm font-semibold text-black whitespace-nowrap">
                 {language === "ko" ? "예약/환전/부동산 문의" : 
                  language === "en" ? "Reservation / Exchange / Real Estate" :
                  language === "zh" ? "预约/换汇/房产" :
@@ -904,7 +904,7 @@ export default function Home() {
               </span>
               <div className="flex items-center gap-2">
                 <a
-                  href="https://buly.kr/58RS4Ao"
+                  href="http://qr.kakao.com/talk/5tbdn6_YLR1F7MHQC58jo_O5Gqo-"
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="link-kakao-friend-home"
