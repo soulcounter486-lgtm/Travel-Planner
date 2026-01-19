@@ -901,62 +901,73 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   // 붕따우 관광지 및 맛집 데이터 (PlacesGuide.tsx와 동기화)
+  // 이 데이터는 AI 일정 생성 시 반드시 사용해야 하는 검증된 장소 목록입니다
   const placesData = {
     attractions: [
       { name: "붕따우 거대 예수상", nameVi: "Tượng Chúa Kitô", type: "landmark", note: "높이 32m, 811개 계단, 아름다운 해안 전경 감상", priority: 1 },
       { name: "붕따우 등대", nameVi: "Hải Đăng Vũng Tàu", type: "landmark", note: "1910년 프랑스 식민지 시대 건설, 붕따우 전경 조망", priority: 1 },
-      { name: "화이트 펠리스 (백악관)", nameVi: "Bạch Dinh", type: "historical", note: "1898년 프랑스 총독 별장, 역사적 건축물", priority: 1 },
-      { name: "호메이 놀이동산", nameVi: "Ho May Amusement Park", type: "entertainment", note: "케이블카, 워터파크, 동물원 - 가족 여행 추천", priority: 1 },
-      { name: "쩐꿍 불교사찰", nameVi: "Chơn Không Monastery", type: "religious", note: "명상, 평화로운 분위기, 붕따우 시내 전망", priority: 2 },
-      { name: "붕따우 백비치 (바이싸우)", nameVi: "Bãi Sau (Back Beach)", type: "beach", note: "가장 긴 해변, 수영, 서핑 등 해양스포츠", priority: 1 },
+      { name: "전쟁기념관", nameVi: "Bà Rịa–Vũng Tàu Provincial museum", type: "museum", note: "베트남 전쟁과 지역 역사", priority: 2 },
+      { name: "화이트 펠리스(띠우 별장)", nameVi: "Bạch Dinh (White Palace)", type: "historical", note: "1898년 프랑스 총독 여름 별장", priority: 1 },
+      { name: "놀이동산", nameVi: "Ho May Amusement Park", type: "entertainment", note: "케이블카, 워터파크, 동물원 - 가족 여행 추천", priority: 1 },
+      { name: "불교사찰", nameVi: "Chơn Không Monastery", type: "religious", note: "명상, 평화로운 분위기", priority: 2 },
+      { name: "붕따우 백비치", nameVi: "Bãi Sau", type: "beach", note: "가장 긴 해변, 수영, 서핑 등 해양스포츠", priority: 1 },
       { name: "붕따우 프론트 비치", nameVi: "Front Beach", type: "beach", note: "일몰 감상 최적, 해안 산책로", priority: 1 },
-      { name: "탐당탑", nameVi: "Tháp Tam Đăng", type: "viewpoint", note: "붕따우 시내 전경, 야경 포토스팟", priority: 2 },
+      { name: "땀탕기념타워", nameVi: "Tháp Tầm", type: "viewpoint", note: "베트남 해군 역사적 기념탑", priority: 2 },
       { name: "돼지언덕", nameVi: "Đồi Con Heo", type: "viewpoint", note: "일몰 포토존, 연인들의 명소", priority: 1 },
-      { name: "원숭이사원 (비바사)", nameVi: "Chùa Khỉ Viba", type: "temple", note: "야생 원숭이 서식, 독특한 체험", priority: 2 },
-      { name: "붕따우 야시장 (해산물 시장)", nameVi: "Chợ Đêm Hải Sản", type: "market", note: "신선한 해산물, 저녁 시간 방문 추천", priority: 1 },
-      { name: "붕따우 재래시장", nameVi: "Chợ Vũng Tàu", type: "market", note: "현지 문화 체험, 기념품 쇼핑", priority: 2 },
-      { name: "전쟁박물관", nameVi: "Bảo Tàng Vũ Khí Cổ", type: "museum", note: "베트남 전쟁 역사, 무기 전시", priority: 2 },
+      { name: "원숭이사원", nameVi: "Chùa Khỉ Viba", type: "temple", note: "야생 원숭이 서식, 독특한 체험 (소지품 주의)", priority: 2 },
+      { name: "붕따우 해산물 시장", nameVi: "Seafood Market", type: "market", note: "신선한 해산물, 저녁 시간 방문 추천", priority: 1 },
+      { name: "붕따우 시장", nameVi: "Chợ Vũng Tàu 1985", type: "market", note: "현지 음식, 과일, 기념품", priority: 2 },
     ],
-    restaurants: {
-      localFood: [
-        { name: "반미 티삥", nameVi: "Bánh Mì Thiêng", type: "반미", note: "현지인 맛집, 베트남 대표 샌드위치" },
-        { name: "반쎄오", nameVi: "Bánh Xèo", type: "반쎄오", note: "베트남식 빈대떡" },
-        { name: "분짜", nameVi: "Bún Chả", type: "분짜", note: "하노이 스타일 쌀국수" },
-        { name: "후띠우", nameVi: "Hủ Tiếu", type: "쌀국수", note: "베트남 남부 스타일 쌀국수" },
-        { name: "껌땀 (깨진밥)", nameVi: "Cơm Tấm", type: "껌땀", note: "베트남 대표 밥요리" },
-      ],
-      koreanFood: [
-        { name: "고향 칼국수/냉면", type: "한식", note: "시원한 냉면과 칼국수" },
-        { name: "이안 소금구이 BBQ", nameVi: "Ian BBQ", type: "고기구이", recommended: true, note: "협력업체, 예약 시 할인" },
-        { name: "장모님 치맥", type: "치킨", note: "한국식 치킨과 맥주" },
-        { name: "돈까스랑 피자랑", type: "돈까스/피자", note: "돈까스, 피자 전문점" },
-      ],
-      buffet: [
-        { name: "간하오 스시, 샤브샤브 뷔페", nameVi: "Gan Hao Buffet", type: "뷔페", note: "일식 뷔페" },
-        { name: "해산물 뷔페", type: "뷔페", note: "저녁 오픈, 다양한 해산물" },
-      ],
-      chineseFood: [
-        { name: "옌찌에우 딤섬", nameVi: "Yến Triều Dim Sum", type: "딤섬", recommended: true, note: "인기 딤섬집" },
-        { name: "민 끼", nameVi: "Minh Ký", type: "중식", note: "중화요리 전문" },
-      ],
-      coffee: [
-        { name: "Coffee Suối Bên Biển", type: "카페", note: "바다 전망, 분위기 좋은 카페" },
-        { name: "KATINAT 커피", nameVi: "KATINAT", type: "카페", note: "베트남 유명 카페 체인" },
-        { name: "Highlands Coffee", type: "카페", note: "베트남 대표 카페 체인" },
-      ],
-    },
+    localFood: [
+      { name: "꼬바붕따우 1호점", nameVi: "Cô Ba Restaurant", type: "반콧/반쎄오", note: "현지인 맛집" },
+      { name: "꼬바붕따우 2호점", nameVi: "Cô Ba Restaurant 2", type: "반콧/반쎄오", note: "넓은 공간" },
+      { name: "해산물 고급 식당", nameVi: "Gành Hào Seafood Restaurant", type: "해산물", note: "고급 해산물 전문" },
+      { name: "해산물 야시장 로컬식당", nameVi: "Hải Sản Cô Thy 2", type: "해산물", note: "야시장 분위기" },
+      { name: "분짜 하노이", nameVi: "Bún Chả Hà Nội", type: "분짜", note: "하노이 스타일 쌀국수" },
+      { name: "88 Food Garden", nameVi: "88 Food Garden", type: "레스토랑", note: "다양한 메뉴" },
+      { name: "Panda BBQ", type: "현지 바베큐", note: "로컬 BBQ" },
+      { name: "해산물 식당", nameVi: "Ốc Tự Nhiên 3", type: "해산물", note: "조개류 전문" },
+      { name: "베트남 가정식", nameVi: "Cơm Niêu Quê Nhà", type: "가정식", note: "정통 베트남 가정식" },
+      { name: "해산물 쌀국수", nameVi: "Old Man Cali - Hủ tiểu Mực", type: "쌀국수", note: "추천 맛집", recommended: true },
+      { name: "로컬 식당 (껌땀)", nameVi: "Quán Cơm Tấm Lọ Lem", type: "껌땀", note: "베트남 대표 밥요리" },
+      { name: "오리국수", type: "오리국수", note: "오후 3시반 오픈" },
+    ],
+    koreanFood: [
+      { name: "이안 돌판 삼겹살", type: "삼겹살", note: "도깨비 협력식당, 예약 시 10% 할인", recommended: true },
+      { name: "가보정", type: "한식", note: "다양한 한식" },
+      { name: "비원식당", type: "한식", note: "한국 음식점" },
+      { name: "뚱보집 (포차)", type: "포차", note: "한국식 포차" },
+    ],
+    buffet: [
+      { name: "GoGi House", type: "뷔페", note: "한국식 고기뷔페" },
+      { name: "간하오 스시, 샤브샤브 뷔페", type: "일식뷔페", note: "스시와 샤브샤브" },
+      { name: "해산물 뷔페", type: "해산물뷔페", note: "저녁 오픈, 간하오 1층" },
+    ],
+    chineseFood: [
+      { name: "린차이나", type: "중식", note: "중화요리 전문" },
+    ],
+    coffee: [
+      { name: "Coffee Suối Bên Biển", type: "카페", note: "바다 전망, 분위기 좋은 카페" },
+      { name: "KATINAT 커피", type: "카페", note: "베트남 유명 카페 체인" },
+      { name: "Soho Coffee", type: "카페", note: "조용한 분위기" },
+      { name: "Highlands Coffee", type: "카페", note: "베트남 대표 카페 체인" },
+      { name: "Sea & Sun 2", type: "카페", note: "바다 전망" },
+      { name: "Mi Amor Beach", type: "비치카페", note: "해변 카페" },
+    ],
     services: [
-      { name: "Re.en 마사지", nameVi: "Re.en Massage", type: "마사지", note: "한국인 운영" },
-      { name: "그랜드 마사지", nameVi: "Grand Massage", type: "마사지", note: "전문 마사지샵" },
-      { name: "DAY SPA", type: "스파", note: "프리미엄 스파" },
+      { name: "Re.en 마사지", type: "마사지", note: "도깨비 협력업체" },
+      { name: "그랜드 마사지", type: "마사지", note: "도깨비 협력업체" },
+      { name: "DAY SPA", type: "스파", note: "도깨비 협력업체, 프리미엄 스파" },
       { name: "김마싸", type: "마사지", note: "한국인 운영" },
+      { name: "이발소 Salon Kimha", type: "이발소", note: "한국인 운영" },
+      { name: "Bi Roen 현지 고급 이발소", type: "이발소", note: "도깨비 협력업체, 추천", recommended: true },
     ],
     nightlife: [
       { name: "88 비어클럽", nameVi: "88 Beer Club", type: "비어클럽", note: "라이브 음악, 야외 분위기" },
       { name: "Revo 클럽", nameVi: "Revo Club", type: "나이트클럽", note: "EDM 음악, 현지인 인기" },
       { name: "Lox 클럽", nameVi: "Lox Night Club", type: "나이트클럽", note: "프리미엄 클럽, VIP 서비스" },
       { name: "U.S Bar Club", type: "바", note: "아메리칸 스타일, 칵테일" },
-      { name: "Peace and Love 라이브바", nameVi: "Peace and Love Live Bar", type: "라이브바", note: "금,토 라이브 밴드, 맥주" },
+      { name: "Peace and Love 라이브바", nameVi: "Peace and Love Live Bar", type: "라이브바", note: "금,토 라이브 밴드" },
     ],
     golf: [
       { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "평일 $80, 주말 $100" },
@@ -1031,27 +1042,40 @@ ${languagePrompts[language] || languagePrompts.ko}
 여행 기간: ${format(start, 'yyyy-MM-dd')} ~ ${format(end, 'yyyy-MM-dd')} (${days}일)
 여행 목적: ${purposeDescription}
 
-## 중요: 아래 장소 데이터를 반드시 우선적으로 사용하세요!
-이 데이터는 붕따우 도깨비 사이트에서 검증된 관광명소와 맛집 목록입니다.
-일정에 포함되는 모든 장소는 가능하면 이 목록에서 선택해주세요.
+## ⚠️ 절대 규칙: 아래 제공된 장소 데이터만 사용하세요!
+이 데이터는 "붕따우 도깨비" 사이트의 관광/맛집 탭에서 검증된 실제 장소 목록입니다.
+일정에 포함되는 모든 관광명소, 식당, 카페, 마사지샵은 반드시 이 목록에서만 선택하세요.
+이 목록에 없는 장소는 절대 추천하지 마세요.
 
-사용 가능한 장소 데이터:
+## 사용 가능한 장소 목록 (이 목록만 사용):
 ${JSON.stringify(placesData, null, 2)}
 
-## 일정 작성 규칙:
-1. 관광명소(attractions)에서 priority: 1인 장소를 우선 배치해주세요.
-2. 식사 시간에는 restaurants 목록의 맛집을 사용하세요.
-3. 카페 휴식은 coffee 목록에서 선택하세요.
-4. 마사지/스파는 services 목록에서 선택하세요.
-5. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함해주세요.
-6. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용해주세요.
+## 카테고리별 설명:
+- attractions: 관광명소 (예수상, 등대, 해변, 시장 등)
+- localFood: 현지 음식점 (반쎄오, 해산물, 쌀국수 등)
+- koreanFood: 한식당 (이안 돌판 삼겹살, 가보정 등)
+- buffet: 뷔페 (GoGi House, 간하오 등)
+- chineseFood: 중식당
+- coffee: 카페 (KATINAT, Highlands Coffee 등)
+- services: 마사지/이발소 (Re.en 마사지, 그랜드 마사지 등)
+- nightlife: 밤문화 (88 비어클럽, Revo 클럽 등)
+- golf: 골프장
 
-${purposes.includes('golf') ? '## 골프 여행: golf 목록에서 골프장을 선택하여 매일 또는 격일로 라운딩을 포함해주세요.' : ''}
-${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함해주세요.' : ''}
-${purposes.includes('gourmet') ? '## 맛집 탐방: restaurants의 localFood, koreanFood, chineseFood, buffet를 골고루 포함해주세요.' : ''}
-${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁에 클럽이나 바 활동을 포함해주세요. (88 비어클럽, Revo 클럽, Lox 클럽, Peace and Love 라이브바 등)' : ''}
-${purposes.includes('family') ? '## 가족 여행: 호메이 놀이동산, 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치해주세요.' : ''}
-${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁박물관, 붕따우 등대 등 역사/문화 명소를 우선 배치해주세요.' : ''}`;
+## 일정 작성 규칙:
+1. 관광명소(attractions)에서 priority: 1인 장소를 우선 배치하세요.
+2. 식사 시간에는 localFood, koreanFood, buffet, chineseFood 목록에서 선택하세요.
+3. 카페 휴식은 coffee 목록에서만 선택하세요.
+4. 마사지/스파는 services 목록에서만 선택하세요.
+5. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함하세요.
+6. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용하세요.
+7. recommended: true 표시된 장소는 특히 추천합니다.
+
+${purposes.includes('golf') ? '## 골프 여행: golf 목록에서 골프장을 선택하여 매일 또는 격일로 라운딩을 포함하세요.' : ''}
+${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함하세요.' : ''}
+${purposes.includes('gourmet') ? '## 맛집 탐방: localFood, koreanFood, chineseFood, buffet를 골고루 포함하세요.' : ''}
+${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁에 클럽이나 바 활동을 포함하세요.' : ''}
+${purposes.includes('family') ? '## 가족 여행: 놀이동산(Ho May), 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치하세요.' : ''}
+${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁기념관, 붕따우 등대 등 역사/문화 명소를 우선 배치하세요.' : ''}`;
 
       const response = await gemini.models.generateContent({
         model: "gemini-2.5-flash",
