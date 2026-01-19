@@ -415,16 +415,6 @@ export default function DietProducts() {
                         <h3 className="font-semibold text-amber-700 mb-1">{labels.caution}</h3>
                         <p className="text-xs text-amber-600">{productCaution}</p>
                       </div>
-
-                      <Button 
-                        onClick={handleInquiry}
-                        className="w-full bg-yellow-400 hover:bg-yellow-500 text-black"
-                        size="lg"
-                        data-testid={`button-inquiry-${product.id}`}
-                      >
-                        <SiKakaotalk className="w-5 h-5 mr-2" />
-                        {labels.inquiry}
-                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -451,31 +441,19 @@ export default function DietProducts() {
           </div>
         </Card>
 
-        <div className="mt-8 text-center">
-          <Card className="p-6 bg-gradient-to-r from-green-100 to-emerald-100 border-green-200">
-            <div className="flex flex-col items-center gap-4">
-              <Phone className="w-12 h-12 text-green-600" />
-              <div>
-                <h3 className="text-lg font-bold text-green-800 mb-1">
-                  {language === "ko" ? "제품 문의 및 주문" : "Product Inquiry & Order"}
-                </h3>
-                <p className="text-sm text-green-700 mb-4">
-                  {language === "ko" ? "카카오톡으로 편하게 문의하세요!" : "Contact us easily via KakaoTalk!"}
-                </p>
-              </div>
-              <Button 
-                onClick={handleInquiry}
-                size="lg"
-                className="bg-yellow-400 hover:bg-yellow-500 text-black"
-                data-testid="button-main-inquiry"
-              >
-                <SiKakaotalk className="w-5 h-5 mr-2" />
-                {labels.inquiry}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </main>
+        </main>
+
+      <div className="fixed bottom-4 right-4 z-50">
+        <Button 
+          onClick={handleInquiry}
+          size="sm"
+          className="bg-yellow-400 hover:bg-yellow-500 text-black shadow-lg"
+          data-testid="button-fixed-inquiry"
+        >
+          <SiKakaotalk className="w-4 h-4 mr-1.5" />
+          {labels.inquiry}
+        </Button>
+      </div>
     </div>
   );
 }
