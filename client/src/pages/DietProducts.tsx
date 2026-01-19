@@ -273,7 +273,7 @@ export default function DietProducts() {
   const labels = translations[language] || translations.ko;
 
   const handleInquiry = () => {
-    window.open("http://pf.kakao.com/_xnVxjxnxj/chat", "_blank");
+    window.open("http://pf.kakao.com/_ttfxcj/chat", "_blank");
   };
 
   return (
