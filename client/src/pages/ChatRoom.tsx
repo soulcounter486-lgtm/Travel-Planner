@@ -19,7 +19,8 @@ import {
   LogOut,
   Bell,
   BellOff,
-  FileText
+  FileText,
+  ShoppingBag
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
@@ -293,6 +294,12 @@ export default function ChatRoom() {
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
                 <FileText className="w-3.5 h-3.5" />
                 {t("nav.board")}
+              </Button>
+            </Link>
+            <Link href="/diet">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                {t("nav.diet")}
               </Button>
             </Link>
             <Link href="/planner">

@@ -29,7 +29,8 @@ import {
   Download,
   Music,
   ExternalLink,
-  FileText
+  FileText,
+  ShoppingBag
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
@@ -211,6 +212,12 @@ export default function TravelPlanner() {
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
                 <FileText className="w-3.5 h-3.5" />
                 {t("nav.board")}
+              </Button>
+            </Link>
+            <Link href="/diet">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                {t("nav.diet")}
               </Button>
             </Link>
             <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">

@@ -11,6 +11,7 @@ import NearbyPlaces from "@/pages/NearbyPlaces";
 import TravelPlanner from "@/pages/TravelPlanner";
 import ChatRoom from "@/pages/ChatRoom";
 import Board from "@/pages/Board";
+import DietProducts from "@/pages/DietProducts";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/planner" component={TravelPlanner} />
       <Route path="/chat" component={ChatRoom} />
       <Route path="/board" component={Board} />
+      <Route path="/diet" component={DietProducts} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -31,14 +31,15 @@ import {
   User,
   LogIn,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  ExternalLink,
+  ShoppingBag
 } from "lucide-react";
 import { SiInstagram } from "react-icons/si";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import type { Post, Comment } from "@shared/schema";
-import { ExternalLink } from "lucide-react";
 
 // 링크 미리보기 컴포넌트
 function LinkPreview({ url }: { url: string }) {
@@ -259,6 +260,7 @@ const navLabels: Record<string, Record<string, string>> = {
   planner: { ko: "AI 플래너", en: "AI Planner", zh: "AI规划", vi: "AI Lên kế hoạch", ru: "AI Планер", ja: "AIプランナー" },
   chat: { ko: "채팅", en: "Chat", zh: "聊天", vi: "Chat", ru: "Чат", ja: "チャット" },
   board: { ko: "게시판", en: "Board", zh: "公告板", vi: "Bảng tin", ru: "Доска", ja: "掲示板" },
+  diet: { ko: "다이어트", en: "Diet", zh: "减肥产品", vi: "Giảm cân", ru: "Диета", ja: "ダイエット" },
 };
 
 export default function Board() {
@@ -637,6 +639,12 @@ export default function Board() {
               <FileText className="w-3.5 h-3.5" />
               {navLabels.board[language] || navLabels.board.ko}
             </Button>
+            <Link href="/diet">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                {navLabels.diet[language] || navLabels.diet.ko}
+              </Button>
+            </Link>
             <Link href="/planner">
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
                 <Sparkles className="w-3.5 h-3.5" />

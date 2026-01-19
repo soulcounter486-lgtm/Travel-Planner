@@ -50,7 +50,8 @@ import {
   Wallet,
   Navigation,
   Sparkles,
-  UserPlus
+  UserPlus,
+  ShoppingBag
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -357,6 +358,12 @@ export default function Home() {
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
                 <Flag className="w-3.5 h-3.5" />
                 {t("nav.board")}
+              </Button>
+            </Link>
+            <Link href="/diet">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                {t("nav.diet")}
               </Button>
             </Link>
             <Link href="/planner">
