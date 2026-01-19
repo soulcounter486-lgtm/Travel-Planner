@@ -20,7 +20,7 @@ import { SiKakaotalk } from "react-icons/si";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import dietCoffeeImg from "@assets/호아캡슐의_사본의_사본의_사본_20251026_153621_0000_1768826502337.png";
 import goDetoxImg from "@assets/Photo_1715141472014_1768826502343.png";
-import goCoffeeImg from "@assets/IMG_20220428_182957_509_1768826502351.jpg";
+import goCoffeeImg from "@assets/Photo_1715141466258_1768837758578.png";
 
 const translations: Record<string, {
   title: string;
