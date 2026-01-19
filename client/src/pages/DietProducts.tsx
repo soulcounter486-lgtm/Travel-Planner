@@ -31,6 +31,11 @@ const translations: Record<string, {
   usage: string;
   caution: string;
   perBox: string;
+  priceLabel: string;
+  shippingInfo: string;
+  freeShipping: string;
+  shippingFee: string;
+  deliveryTime: string;
 }> = {
   ko: {
     title: "베트남 쇼핑",
@@ -41,6 +46,11 @@ const translations: Record<string, {
     usage: "복용방법",
     caution: "주의사항",
     perBox: "1박스",
+    priceLabel: "가격",
+    shippingInfo: "배송 안내",
+    freeShipping: "3박스 이상 구매시 해외 무료배송",
+    shippingFee: "3박스 미만 구매시 해외 배송료 10,000원 추가",
+    deliveryTime: "배송 소요: 영업일 기준 3~4일",
   },
   en: {
     title: "Vietnam Shop",
@@ -51,6 +61,11 @@ const translations: Record<string, {
     usage: "How to Use",
     caution: "Caution",
     perBox: "1 Box",
+    priceLabel: "Price",
+    shippingInfo: "Shipping Info",
+    freeShipping: "Free international shipping for 3+ boxes",
+    shippingFee: "10,000 KRW shipping fee for less than 3 boxes",
+    deliveryTime: "Delivery: 3-4 business days",
   },
   zh: {
     title: "越南购物",
@@ -61,6 +76,11 @@ const translations: Record<string, {
     usage: "服用方法",
     caution: "注意事项",
     perBox: "1盒",
+    priceLabel: "价格",
+    shippingInfo: "配送信息",
+    freeShipping: "购买3盒以上免国际运费",
+    shippingFee: "少于3盒需加收10,000韩元运费",
+    deliveryTime: "配送时间：3-4个工作日",
   },
   vi: {
     title: "Mua sắm Việt Nam",
@@ -71,6 +91,11 @@ const translations: Record<string, {
     usage: "Cách dùng",
     caution: "Lưu ý",
     perBox: "1 hộp",
+    priceLabel: "Giá",
+    shippingInfo: "Thông tin vận chuyển",
+    freeShipping: "Miễn phí vận chuyển quốc tế từ 3 hộp trở lên",
+    shippingFee: "Phí vận chuyển 10,000 KRW cho dưới 3 hộp",
+    deliveryTime: "Thời gian giao hàng: 3-4 ngày làm việc",
   },
   ru: {
     title: "Вьетнамский магазин",
@@ -81,6 +106,11 @@ const translations: Record<string, {
     usage: "Способ применения",
     caution: "Предупреждение",
     perBox: "1 упаковка",
+    priceLabel: "Цена",
+    shippingInfo: "Информация о доставке",
+    freeShipping: "Бесплатная международная доставка от 3 упаковок",
+    shippingFee: "Стоимость доставки 10,000 KRW при заказе менее 3 упаковок",
+    deliveryTime: "Срок доставки: 3-4 рабочих дня",
   },
   ja: {
     title: "ベトナムショッピング",
@@ -91,6 +121,11 @@ const translations: Record<string, {
     usage: "服用方法",
     caution: "注意事項",
     perBox: "1箱",
+    priceLabel: "価格",
+    shippingInfo: "配送について",
+    freeShipping: "3箱以上ご購入で海外送料無料",
+    shippingFee: "3箱未満のご購入は海外送料10,000ウォン追加",
+    deliveryTime: "配送日数：営業日基準3〜4日",
   },
 };
 
@@ -100,6 +135,7 @@ const products = [
     name: { ko: "다이어트 커피", en: "Diet Coffee", zh: "减肥咖啡", vi: "Cà phê giảm cân", ru: "Диетический кофе", ja: "ダイエットコーヒー" },
     brand: "Pluscoffee Diet",
     image: dietCoffeeImg,
+    price: 45000,
     quantity: { ko: "15개 (15일분)", en: "15 packs (15 days)", zh: "15包（15天）", vi: "15 gói (15 ngày)", ru: "15 пакетов (15 дней)", ja: "15個（15日分）" },
     icon: Coffee,
     gradient: "from-amber-500 to-orange-600",
@@ -141,6 +177,7 @@ const products = [
     name: { ko: "고디톡스", en: "Go Detox", zh: "Go Detox", vi: "Go Detox", ru: "Go Detox", ja: "ゴーデトックス" },
     brand: "Go Detox",
     image: goDetoxImg,
+    price: 38000,
     quantity: { ko: "28알", en: "28 pills", zh: "28粒", vi: "28 viên", ru: "28 таблеток", ja: "28錠" },
     icon: Pill,
     gradient: "from-emerald-500 to-teal-600",
@@ -182,6 +219,7 @@ const products = [
     name: { ko: "고커피", en: "Go Coffee", zh: "Go Coffee", vi: "Go Coffee", ru: "Go Coffee", ja: "ゴーコーヒー" },
     brand: "MAX HEALTH Go Coffee",
     image: goCoffeeImg,
+    price: 38000,
     quantity: { ko: "12포", en: "12 packs", zh: "12包", vi: "12 gói", ru: "12 пакетов", ja: "12包" },
     icon: Coffee,
     gradient: "from-gray-700 to-gray-900",
@@ -327,6 +365,9 @@ export default function DietProducts() {
                       <p className="text-sm opacity-90">{product.brand}</p>
                     </div>
                     <div className="ml-auto text-right">
+                      <div className="text-2xl font-bold mb-1">
+                        {product.price.toLocaleString()}원
+                      </div>
                       <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
                         {labels.perBox} {productQuantity}
                       </span>
@@ -391,6 +432,24 @@ export default function DietProducts() {
             );
           })}
         </div>
+
+        <Card className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200" data-testid="card-shipping-info">
+          <h3 className="text-lg font-bold text-blue-800 mb-4 text-center">{labels.shippingInfo}</h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 bg-green-100 p-3 rounded-lg">
+              <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+              <span className="text-sm text-green-800 font-medium">{labels.freeShipping}</span>
+            </div>
+            <div className="flex items-center gap-3 bg-amber-100 p-3 rounded-lg">
+              <ShoppingBag className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <span className="text-sm text-amber-800 font-medium">{labels.shippingFee}</span>
+            </div>
+            <div className="flex items-center gap-3 bg-blue-100 p-3 rounded-lg">
+              <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <span className="text-sm text-blue-800 font-medium">{labels.deliveryTime}</span>
+            </div>
+          </div>
+        </Card>
 
         <div className="mt-8 text-center">
           <Card className="p-6 bg-gradient-to-r from-green-100 to-emerald-100 border-green-200">
