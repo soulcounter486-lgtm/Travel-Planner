@@ -381,7 +381,7 @@ export default function DietProducts() {
                       <img 
                         src={product.image} 
                         alt={productName} 
-                        className="w-full h-auto rounded-lg object-cover"
+                        className="w-full h-auto rounded-lg object-contain"
                       />
                     </div>
 
