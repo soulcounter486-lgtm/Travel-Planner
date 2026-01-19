@@ -33,8 +33,8 @@ const translations: Record<string, {
   perBox: string;
 }> = {
   ko: {
-    title: "베트남 다이어트 상품",
-    subtitle: "건강한 다이어트를 위한 베트남 프리미엄 제품",
+    title: "베트남 쇼핑",
+    subtitle: "베트남 프리미엄 제품을 만나보세요",
     inquiry: "카카오톡 문의",
     benefits: "효과",
     ingredients: "성분",
@@ -43,8 +43,8 @@ const translations: Record<string, {
     perBox: "1박스",
   },
   en: {
-    title: "Vietnam Diet Products",
-    subtitle: "Premium Vietnamese products for healthy diet",
+    title: "Vietnam Shop",
+    subtitle: "Discover premium Vietnamese products",
     inquiry: "KakaoTalk Inquiry",
     benefits: "Benefits",
     ingredients: "Ingredients",
@@ -53,8 +53,8 @@ const translations: Record<string, {
     perBox: "1 Box",
   },
   zh: {
-    title: "越南减肥产品",
-    subtitle: "健康减肥的越南优质产品",
+    title: "越南购物",
+    subtitle: "探索越南优质产品",
     inquiry: "KakaoTalk咨询",
     benefits: "效果",
     ingredients: "成分",
@@ -63,8 +63,8 @@ const translations: Record<string, {
     perBox: "1盒",
   },
   vi: {
-    title: "Sản phẩm giảm cân Việt Nam",
-    subtitle: "Sản phẩm cao cấp Việt Nam cho chế độ ăn kiêng lành mạnh",
+    title: "Mua sắm Việt Nam",
+    subtitle: "Khám phá sản phẩm cao cấp Việt Nam",
     inquiry: "Liên hệ KakaoTalk",
     benefits: "Hiệu quả",
     ingredients: "Thành phần",
@@ -73,8 +73,8 @@ const translations: Record<string, {
     perBox: "1 hộp",
   },
   ru: {
-    title: "Вьетнамские продукты для диеты",
-    subtitle: "Премиальные вьетнамские продукты для здоровой диеты",
+    title: "Вьетнамский магазин",
+    subtitle: "Откройте для себя премиальные вьетнамские продукты",
     inquiry: "Запрос KakaoTalk",
     benefits: "Преимущества",
     ingredients: "Ингредиенты",
@@ -83,8 +83,8 @@ const translations: Record<string, {
     perBox: "1 упаковка",
   },
   ja: {
-    title: "ベトナムダイエット商品",
-    subtitle: "健康的なダイエットのためのベトナムプレミアム製品",
+    title: "ベトナムショッピング",
+    subtitle: "ベトナムプレミアム製品をご紹介",
     inquiry: "カカオトーク問い合わせ",
     benefits: "効果",
     ingredients: "成分",
@@ -224,7 +224,7 @@ const navLabels = {
   calculator: { ko: "견적", en: "Quote", zh: "报价", vi: "Báo giá", ru: "Цена", ja: "見積" },
   guide: { ko: "관광/맛집", en: "Guide", zh: "指南", vi: "Hướng dẫn", ru: "Гид", ja: "ガイド" },
   board: { ko: "소식", en: "News", zh: "新闻", vi: "Tin tức", ru: "Новости", ja: "ニュース" },
-  diet: { ko: "다이어트", en: "Diet", zh: "减肥", vi: "Giảm cân", ru: "Диета", ja: "ダイエット" },
+  diet: { ko: "쇼핑", en: "Shop", zh: "购物", vi: "Mua sắm", ru: "Магазин", ja: "ショッピング" },
   planner: { ko: "AI플래너", en: "AI Planner", zh: "AI计划", vi: "AI Planner", ru: "AI Планер", ja: "AIプランナー" },
   expenses: { ko: "가계부", en: "Expenses", zh: "记账", vi: "Chi tiêu", ru: "Расходы", ja: "家計簿" },
   chat: { ko: "단톡방", en: "Chat", zh: "聊天", vi: "Trò chuyện", ru: "Чат", ja: "チャット" },
