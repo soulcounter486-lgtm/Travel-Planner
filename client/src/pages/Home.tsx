@@ -359,16 +359,16 @@ export default function Home() {
                 {t("nav.board")}
               </Button>
             </Link>
-            <Link href="/expenses">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {t("nav.expenses")}
-              </Button>
-            </Link>
             <Link href="/planner">
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
                 <Sparkles className="w-3.5 h-3.5" />
                 {t("nav.planner")}
+              </Button>
+            </Link>
+            <Link href="/expenses">
+              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+                <Wallet className="w-3.5 h-3.5" />
+                {t("nav.expenses")}
               </Button>
             </Link>
             <Link href="/chat">

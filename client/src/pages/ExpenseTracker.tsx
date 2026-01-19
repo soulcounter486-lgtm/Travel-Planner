@@ -955,16 +955,16 @@ export default function ExpenseTracker() {
                   {navLabels.board[language] || navLabels.board.ko}
                 </Button>
               </Link>
-              <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {navLabels.expenses[language] || navLabels.expenses.ko}
-              </Button>
               <Link href="/planner">
                 <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
                   <Sparkles className="w-3.5 h-3.5" />
                   {navLabels.planner[language] || navLabels.planner.ko}
                 </Button>
               </Link>
+              <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+                <Wallet className="w-3.5 h-3.5" />
+                {navLabels.expenses[language] || navLabels.expenses.ko}
+              </Button>
               <Link href="/chat">
                 <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
                   <MessageCircle className="w-3.5 h-3.5" />
@@ -1035,16 +1035,16 @@ export default function ExpenseTracker() {
                 {navLabels.board[language] || navLabels.board.ko}
               </Button>
             </Link>
-            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-              <Wallet className="w-3.5 h-3.5" />
-              {navLabels.expenses[language] || navLabels.expenses.ko}
-            </Button>
             <Link href="/planner">
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
                 <Sparkles className="w-3.5 h-3.5" />
                 {navLabels.planner[language] || navLabels.planner.ko}
               </Button>
             </Link>
+            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+              <Wallet className="w-3.5 h-3.5" />
+              {navLabels.expenses[language] || navLabels.expenses.ko}
+            </Button>
             <Link href="/chat">
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
                 <MessageCircle className="w-3.5 h-3.5" />

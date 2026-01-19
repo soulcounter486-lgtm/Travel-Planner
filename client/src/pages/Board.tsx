@@ -637,16 +637,16 @@ export default function Board() {
               <FileText className="w-3.5 h-3.5" />
               {navLabels.board[language] || navLabels.board.ko}
             </Button>
-            <Link href="/expenses">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {navLabels.expenses[language] || navLabels.expenses.ko}
-              </Button>
-            </Link>
             <Link href="/planner">
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
                 <Sparkles className="w-3.5 h-3.5" />
                 {navLabels.planner[language] || navLabels.planner.ko}
+              </Button>
+            </Link>
+            <Link href="/expenses">
+              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
+                <Wallet className="w-3.5 h-3.5" />
+                {navLabels.expenses[language] || navLabels.expenses.ko}
               </Button>
             </Link>
             <Link href="/chat">
