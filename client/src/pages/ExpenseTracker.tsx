@@ -46,7 +46,7 @@ const navLabels: Record<string, Record<string, string>> = {
   planner: { ko: "AI 플래너", en: "AI Planner", zh: "AI规划", vi: "AI Lên kế hoạch", ru: "AI Планер", ja: "AIプランナー" },
   chat: { ko: "채팅", en: "Chat", zh: "聊天", vi: "Chat", ru: "Чат", ja: "チャット" },
   board: { ko: "게시판", en: "Board", zh: "公告板", vi: "Bảng tin", ru: "Доска", ja: "掲示板" },
-  diet: { ko: "다이어트", en: "Diet", zh: "减肥产品", vi: "Giảm cân", ru: "Диета", ja: "ダイエット" },
+  diet: { ko: "쇼핑", en: "Shop", zh: "购物", vi: "Mua sắm", ru: "Магазин", ja: "ショッピング" },
 };
 
 type TranslationType = {
