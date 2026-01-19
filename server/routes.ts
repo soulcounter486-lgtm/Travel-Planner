@@ -46,10 +46,23 @@ async function fetchNaverRate(currencyCode: string): Promise<number | null> {
     });
     const html = await response.text();
     
-    // 매매기준율 추출 (네이버 금융 페이지 구조)
-    const match = html.match(/class="no_today"[^>]*>[\s\S]*?<span class="blind">([0-9,]+\.?[0-9]*)<\/span>/);
-    if (match && match[1]) {
-      return parseFloat(match[1].replace(/,/g, ''));
+    // 새로운 네이버 금융 페이지 구조: span 태그들에서 숫자 추출
+    // <p class="no_today">...<span class="no1">1</span><span class="shim">,</span><span class="no4">4</span>...
+    const noTodayMatch = html.match(/<p class="no_today">([\s\S]*?)<\/p>/);
+    if (noTodayMatch) {
+      const noTodayContent = noTodayMatch[1];
+      // span 태그들에서 숫자와 점(.)만 추출
+      const numbers = noTodayContent.match(/<span class="(?:no\d|jum)">[0-9.]<\/span>/g);
+      if (numbers) {
+        const rateStr = numbers.map(span => {
+          const numMatch = span.match(/>([0-9.])<\/span>/);
+          return numMatch ? numMatch[1] : '';
+        }).join('');
+        const rate = parseFloat(rateStr);
+        if (!isNaN(rate) && rate > 0) {
+          return rate;
+        }
+      }
     }
     return null;
   } catch (error) {
