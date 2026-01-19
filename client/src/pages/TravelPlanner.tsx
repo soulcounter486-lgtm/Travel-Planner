@@ -535,6 +535,39 @@ export default function TravelPlanner() {
           )}
         </AnimatePresence>
       </main>
+
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-black">
+                {language === "ko" ? "예약 문의" : 
+                 language === "en" ? "Reservation" :
+                 language === "zh" ? "预约" :
+                 language === "vi" ? "Đặt chỗ" :
+                 language === "ru" ? "Бронь" :
+                 language === "ja" ? "予約" : "예약 문의"}
+              </span>
+              <a
+                href="http://pf.kakao.com/_TuxoxfG"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-testid="link-kakao-reservation"
+              >
+                <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
+                  <MessageCircle className="w-4 h-4" />
+                  {language === "ko" ? "카카오톡 문의" : 
+                   language === "en" ? "KakaoTalk" :
+                   language === "zh" ? "KakaoTalk" :
+                   language === "vi" ? "KakaoTalk" :
+                   language === "ru" ? "KakaoTalk" :
+                   language === "ja" ? "カカオトーク" : "카카오톡 문의"}
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
