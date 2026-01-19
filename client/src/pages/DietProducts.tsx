@@ -377,11 +377,11 @@ export default function DietProducts() {
 
                 <CardContent className="p-0">
                   <div className="grid md:grid-cols-2">
-                    <div className="p-4 border-b md:border-b-0 md:border-r">
+                    <div className="p-4 border-b md:border-b-0 md:border-r flex items-center justify-center">
                       <img 
                         src={product.image} 
                         alt={productName} 
-                        className="w-full h-auto rounded-lg object-contain"
+                        className="max-w-full max-h-64 rounded-lg object-contain mx-auto"
                       />
                     </div>
 
