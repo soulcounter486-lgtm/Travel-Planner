@@ -329,6 +329,19 @@ const placesData: Record<string, Category> = {
     places: [
       { name: "Coffee Suối Bên Biển", mapUrl: "https://maps.app.goo.gl/Sd7JGZiZ1n6TrvmJ7" },
       { name: "KATINAT 커피", mapUrl: "https://maps.app.goo.gl/ptgkTbJnVzwUzYPGA" },
+      { 
+        name: "Ten 커피숍", 
+        nameVi: "Ten Coffee", 
+        mapUrl: "https://maps.app.goo.gl/2c67Nd3hhjFGdZj36",
+        description: {
+          ko: "현지인들에게 인기 있는 분위기 좋은 커피숍. 다양한 음료와 편안한 공간에서 여유를 즐길 수 있습니다.",
+          en: "Popular local coffee shop with great atmosphere. Enjoy various drinks in a cozy space.",
+          zh: "深受当地人喜爱的咖啡店，氛围极佳。在舒适的空间享受各种饮品。",
+          vi: "Quán cà phê được người địa phương yêu thích với không gian tuyệt vời. Thưởng thức đồ uống đa dạng.",
+          ru: "Популярная местная кофейня с отличной атмосферой. Разнообразные напитки в уютном пространстве.",
+          ja: "地元で人気の雰囲気の良いコーヒーショップ。居心地の良い空間で様々なドリンクを楽しめます。"
+        }
+      },
       { name: "Soho Coffee", phone: "094 641 40 31", mapUrl: "https://maps.app.goo.gl/fK1SdiHaNH9SoVeZ6" },
       { name: "Highlands Coffee", mapUrl: "https://maps.app.goo.gl/kuiVrXHGih2vkQQa9" },
       { name: "Sea & Sun 2", phone: "0822 056 419", mapUrl: "https://maps.app.goo.gl/VKm9bZifEX9Lob477" },
