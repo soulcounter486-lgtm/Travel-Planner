@@ -10,6 +10,18 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // APK 파일 직접 다운로드 라우트
+  app.get("/vungtau-dokkaebi.apk", (_req, res) => {
+    const apkPath = path.resolve(distPath, "vungtau-dokkaebi.apk");
+    if (fs.existsSync(apkPath)) {
+      res.setHeader("Content-Type", "application/vnd.android.package-archive");
+      res.setHeader("Content-Disposition", "attachment; filename=vungtau-dokkaebi.apk");
+      res.sendFile(apkPath);
+    } else {
+      res.status(404).send("APK file not found");
+    }
+  });
+
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist

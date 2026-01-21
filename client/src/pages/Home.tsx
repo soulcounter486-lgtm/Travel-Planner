@@ -373,7 +373,7 @@ export default function Home() {
                 className="cursor-pointer hover:scale-105 transition-transform"
                 data-testid="btn-download-apk"
               >
-                <img src={logoImg} alt={t("header.title")} className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-md" />
+                <img src={logoImg} alt={t("header.title")} className="w-32 h-32 md:w-40 md:h-40 object-contain drop-shadow-md" />
               </a>
               <div className="flex flex-col items-center mt-1 animate-bounce">
                 <span className="text-[10px] text-primary font-medium">↑ 앱 다운로드</span>
