@@ -162,6 +162,18 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // APK 다운로드 라우트
+  app.get("/vungtau-dokkaebi.apk", (req, res) => {
+    const apkPath = path.join(process.cwd(), "client/public/vungtau-dokkaebi.apk");
+    if (fs.existsSync(apkPath)) {
+      res.setHeader("Content-Type", "application/vnd.android.package-archive");
+      res.setHeader("Content-Disposition", "attachment; filename=vungtau-dokkaebi.apk");
+      res.sendFile(apkPath);
+    } else {
+      res.status(404).send("APK file not found");
+    }
+  });
+
   // SEO: sitemap.xml
   app.get("/sitemap.xml", (req, res) => {
     res.type("application/xml");
