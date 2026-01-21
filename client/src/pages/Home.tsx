@@ -376,7 +376,7 @@ export default function Home() {
                 <img src={logoImg} alt={t("header.title")} className="w-28 h-28 sm:w-36 sm:h-36 md:w-52 md:h-52 lg:w-60 lg:h-60 object-contain drop-shadow-md" />
               </a>
               <div className="flex flex-col items-center mt-1 animate-bounce">
-                <span className="text-[10px] text-primary font-medium">↑ 앱 다운로드</span>
+                <span className="text-[10px] text-primary font-medium whitespace-nowrap">↑ 앱 다운로드</span>
               </div>
             </div>
             <div>
