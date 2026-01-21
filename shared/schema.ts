@@ -195,3 +195,13 @@ export const instagramSyncedPosts = pgTable("instagram_synced_posts", {
 });
 
 export type InstagramSyncedPost = typeof instagramSyncedPosts.$inferSelect;
+
+// 푸시 알림 구독
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  endpoint: text("endpoint").notNull().unique(),
+  keys: jsonb("keys").notNull(), // { p256dh, auth }
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
