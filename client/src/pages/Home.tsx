@@ -366,7 +366,19 @@ export default function Home() {
         <div className="absolute inset-0 bg-primary/5" />
         <div className="container mx-auto px-4 py-12 relative z-10">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl flex items-center gap-6">
-            <img src={logoImg} alt={t("header.title")} className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-md" />
+            <div className="flex flex-col items-center">
+              <a 
+                href="/vungtau-dokkaebi.apk" 
+                download="붕따우_도깨비.apk"
+                className="cursor-pointer hover:scale-105 transition-transform"
+                data-testid="btn-download-apk"
+              >
+                <img src={logoImg} alt={t("header.title")} className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-md" />
+              </a>
+              <div className="flex flex-col items-center mt-1 animate-bounce">
+                <span className="text-[10px] text-primary font-medium">↑ 앱 다운로드</span>
+              </div>
+            </div>
             <div>
               <h1 className="text-3xl md:text-5xl font-display font-bold text-primary mb-4 leading-tight">{t("header.title")}<br className="md:hidden" /> {t("header.subtitle")}</h1>
               <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
