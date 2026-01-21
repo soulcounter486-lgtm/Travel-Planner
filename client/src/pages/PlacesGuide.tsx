@@ -253,9 +253,53 @@ const placesData: Record<string, Category> = {
     icon: Utensils,
     gradient: "from-orange-500 to-red-500",
     places: [
-      { name: "꼬바붕따우 1호점 (반콧,반쎄오)", nameVi: "Cô Ba Restaurant", phone: "0254 3526 165", mapUrl: "https://maps.app.goo.gl/LvFosNMLSi1LSRvz6", note: "crowded" },
-      { name: "꼬바붕따우 2호점 (반콧,반쎄오)", nameVi: "Cô Ba Restaurant 2", mapUrl: "https://maps.app.goo.gl/ftQz4Z437ZJZn5g68", note: "spacious", recommended: true },
-      { name: "해산물 고급 식당", nameVi: "Gành Hào Seafood Restaurant", phone: "0254 3550 909", mapUrl: "https://maps.app.goo.gl/AVh5Qq9HMRNpbjzBA" },
+      { 
+        name: "꼬바붕따우 1호점 (반콧,반쎄오)", 
+        nameVi: "Cô Ba Restaurant", 
+        phone: "0254 3526 165", 
+        mapUrl: "https://maps.app.goo.gl/LvFosNMLSi1LSRvz6", 
+        note: "crowded",
+        imageUrl: "/attached_assets/Screenshot_20260122_000550_Maps_1769015581771.jpg",
+        description: {
+          ko: "붕따우에서 가장 유명한 반콧, 반쎄오 전문점. 현지인과 관광객 모두에게 사랑받는 맛집입니다.",
+          en: "Most famous Bánh Khọt and Bánh Xèo restaurant in Vung Tau. Loved by locals and tourists alike.",
+          zh: "头顿最著名的越南煎饼专卖店。深受当地人和游客喜爱。",
+          vi: "Quán Bánh Khọt và Bánh Xèo nổi tiếng nhất Vũng Tàu. Được cả người địa phương và du khách yêu thích.",
+          ru: "Самый известный ресторан Bánh Khọt и Bánh Xèo в Вунгтау. Любим местными и туристами.",
+          ja: "ブンタウで最も有名なバインコット・バインセオ専門店。地元民と観光客に愛されています。"
+        }
+      },
+      { 
+        name: "꼬바붕따우 2호점 (반콧,반쎄오)", 
+        nameVi: "Cô Ba Restaurant 2", 
+        mapUrl: "https://maps.app.goo.gl/ftQz4Z437ZJZn5g68", 
+        note: "spacious", 
+        recommended: true,
+        imageUrl: "/attached_assets/Screenshot_20260122_000613_Maps_1769015581776.jpg",
+        description: {
+          ko: "꼬바 2호점은 더 넓고 쾌적한 공간에서 동일한 맛을 즐길 수 있습니다. 단체 손님에게 추천.",
+          en: "Cô Ba 2nd branch offers the same great taste in a more spacious setting. Recommended for groups.",
+          zh: "Cô Ba 2号店在更宽敞舒适的空间提供同样美味。推荐团体用餐。",
+          vi: "Chi nhánh 2 Cô Ba có không gian rộng rãi hơn với cùng hương vị. Phù hợp cho nhóm đông.",
+          ru: "2-й филиал Cô Ba предлагает тот же вкус в более просторном помещении. Рекомендуется для групп.",
+          ja: "コーバー2号店はより広い空間で同じ味を楽しめます。団体客におすすめ。"
+        }
+      },
+      { 
+        name: "해산물 고급 식당", 
+        nameVi: "Gành Hào Seafood Restaurant", 
+        phone: "0254 3550 909", 
+        mapUrl: "https://maps.app.goo.gl/AVh5Qq9HMRNpbjzBA",
+        imageUrl: "/attached_assets/Screenshot_20260122_000631_Maps_1769015581781.jpg",
+        description: {
+          ko: "바다가 보이는 고급 해산물 레스토랑. 일몰과 함께 신선한 해산물 요리를 즐길 수 있습니다.",
+          en: "Premium seafood restaurant with ocean view. Enjoy fresh seafood dishes while watching the sunset.",
+          zh: "可以看到海景的高级海鲜餐厅。可以边看日落边享用新鲜海鲜。",
+          vi: "Nhà hàng hải sản cao cấp với view biển. Thưởng thức hải sản tươi sống trong khi ngắm hoàng hôn.",
+          ru: "Ресторан премиум-класса с видом на море. Свежие морепродукты на закате.",
+          ja: "オーシャンビューの高級シーフードレストラン。夕日を見ながら新鮮な海鮮料理を楽しめます。"
+        }
+      },
       { 
         name: "Texas BBQ", 
         nameVi: "Texas BBQ", 
@@ -271,18 +315,177 @@ const placesData: Record<string, Category> = {
           ja: "本格テキサススタイルのBBQレストラン。燻製肉と冷たいビールが楽しめる雰囲気の良いお店。営業時間11AM-9PM。"
         }
       },
-      { name: "해산물 고급 식당 2호점", nameVi: "Gành Hào 2", mapUrl: "https://maps.app.goo.gl/JLXdK6XZC5SqHntC7", recommended: true },
-      { name: "해산물 야시장 로컬식당", nameVi: "Hải Sản Cô Thy 2", mapUrl: "https://maps.app.goo.gl/rWUGn1MYyzGH7Xg78" },
-      { name: "분짜 하노이", nameVi: "Bún Chả Hà Nội", address: "32 Lê Lai, Phường 3, Vũng Tàu, Bà Rịa - Vũng Tàu 780000", mapUrl: "https://maps.app.goo.gl/DbdLER7cjNZhcMJ19" },
-      { name: "88 Food Garden (레스토랑)", nameVi: "88 Food Garden", mapUrl: "https://maps.app.goo.gl/iwaEfxbuxutM9y2t9" },
-      { name: "Panda BBQ (현지 바베큐)", address: "150 Hạ Long, Phường 2, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/9ruaWyxg9txKrJ6eA" },
-      { name: "해산물 식당", nameVi: "Ốc Tự Nhiên 3", address: "20 Trần Phú, Phường 1, Vũng Tàu", mapUrl: "https://maps.app.goo.gl/37gvjz6hhkzP6ip2A" },
-      { name: "베트남 가정식", nameVi: "Cơm Niêu Quê Nhà", phone: "090 645 69 05", mapUrl: "https://maps.app.goo.gl/Qcx6sfwFh7jrm9HU9" },
-      { name: "해산물 쌀국수", nameVi: "Old Man Cali - Hủ tiểu Mực", mapUrl: "https://maps.app.goo.gl/hBzPccq4d6E2ufj66", recommended: true },
-      { name: "소고기 쌀국수 (에어컨)", mapUrl: "https://maps.app.goo.gl/9hYEyyeQ1HFFCqY7A" },
-      { name: "로컬 식당 (껌땀)", nameVi: "Quán Cơm Tấm Lọ Lem", phone: "0254 3521 212", mapUrl: "https://maps.app.goo.gl/M5g8ya358jC1YNYh7" },
-      { name: "오리국수 (오후 3시반 오픈)", mapUrl: "https://maps.app.goo.gl/HrorS5czrq91WqPUA" },
-      { name: "토끼구이", mapUrl: "https://maps.app.goo.gl/Cxpum3ne3fnLiBDz6" },
+      { 
+        name: "해산물 고급 식당 2호점", 
+        nameVi: "Gành Hào 2", 
+        mapUrl: "https://maps.app.goo.gl/JLXdK6XZC5SqHntC7", 
+        recommended: true,
+        imageUrl: "/attached_assets/Screenshot_20260122_000656_Maps_1769015581784.jpg",
+        description: {
+          ko: "간하오 2호점은 현대적인 건물에서 대규모 연회와 행사에 적합한 해산물 전문점입니다.",
+          en: "Gành Hào 2nd branch features a modern building, perfect for large banquets and events.",
+          zh: "Gành Hào 2号店位于现代化建筑，适合大型宴会和活动。",
+          vi: "Chi nhánh 2 Gành Hào có kiến trúc hiện đại, phù hợp tiệc lớn và sự kiện.",
+          ru: "Филиал 2 Gành Hào в современном здании, идеален для банкетов и мероприятий.",
+          ja: "ガンハオ2号店はモダンな建物で、大規模な宴会やイベントに最適です。"
+        }
+      },
+      { 
+        name: "해산물 야시장 로컬식당", 
+        nameVi: "Hải Sản Cô Thy 2", 
+        mapUrl: "https://maps.app.goo.gl/rWUGn1MYyzGH7Xg78",
+        imageUrl: "/attached_assets/Screenshot_20260122_000711_Maps_1769015581789.jpg",
+        description: {
+          ko: "야시장 분위기의 해산물 로컬 식당. 합리적인 가격에 신선한 해산물을 즐길 수 있습니다.",
+          en: "Local seafood restaurant with night market atmosphere. Fresh seafood at reasonable prices.",
+          zh: "夜市风格的当地海鲜餐厅。价格实惠，海鲜新鲜。",
+          vi: "Quán hải sản địa phương phong cách chợ đêm. Hải sản tươi giá phải chăng.",
+          ru: "Местный ресторан морепродуктов в атмосфере ночного рынка. Свежие морепродукты по разумным ценам.",
+          ja: "ナイトマーケット風のローカル海鮮食堂。リーズナブルな価格で新鮮な海鮮が楽しめます。"
+        }
+      },
+      { 
+        name: "분짜 하노이", 
+        nameVi: "Bún Chả Hà Nội", 
+        address: "32 Lê Lai, Phường 3, Vũng Tàu, Bà Rịa - Vũng Tàu 780000", 
+        mapUrl: "https://maps.app.goo.gl/DbdLER7cjNZhcMJ19",
+        imageUrl: "/attached_assets/Screenshot_20260122_000727_Maps_1769015581794.jpg",
+        description: {
+          ko: "하노이 스타일 분짜 전문점. 숯불에 구운 돼지고기와 쌀국수, 신선한 채소가 어우러진 맛.",
+          en: "Hanoi-style Bún Chả specialty restaurant. Charcoal-grilled pork with rice noodles and fresh vegetables.",
+          zh: "河内风格烤肉米粉专卖店。炭烤猪肉配米粉和新鲜蔬菜。",
+          vi: "Quán chuyên Bún Chả Hà Nội. Thịt nướng than hoa với bún và rau tươi.",
+          ru: "Специализированный ресторан Bún Chả в ханойском стиле. Свинина на углях с рисовой лапшой и овощами.",
+          ja: "ハノイスタイルのブンチャー専門店。炭火焼き豚肉と米麺、新鮮な野菜のハーモニー。"
+        }
+      },
+      { 
+        name: "88 Food Garden (레스토랑)", 
+        nameVi: "88 Food Garden", 
+        mapUrl: "https://maps.app.goo.gl/iwaEfxbuxutM9y2t9",
+        imageUrl: "/attached_assets/Screenshot_20260122_000755_Maps_1769015581799.jpg",
+        description: {
+          ko: "세련된 인테리어의 대형 해산물 정원 레스토랑. 가족 모임이나 특별한 날에 적합합니다.",
+          en: "Large seafood garden restaurant with stylish interior. Perfect for family gatherings and special occasions.",
+          zh: "装修精致的大型海鲜花园餐厅。适合家庭聚会和特殊场合。",
+          vi: "Nhà hàng hải sản sân vườn lớn với nội thất sang trọng. Phù hợp họp mặt gia đình và dịp đặc biệt.",
+          ru: "Большой ресторан морепродуктов с садом и стильным интерьером. Для семейных встреч и особых случаев.",
+          ja: "スタイリッシュな内装の大型シーフードガーデンレストラン。家族の集まりや特別な日に最適。"
+        }
+      },
+      { 
+        name: "Panda BBQ (현지 바베큐)", 
+        address: "150 Hạ Long, Phường 2, Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/9ruaWyxg9txKrJ6eA",
+        imageUrl: "/attached_assets/Screenshot_20260122_000818_Maps_1769015581803.jpg",
+        description: {
+          ko: "현지에서 인기 있는 바베큐 & 핫팟 레스토랑. 다양한 고기와 해산물을 구워 먹을 수 있습니다.",
+          en: "Popular local BBQ & hotpot restaurant. Grill various meats and seafood at your table.",
+          zh: "当地人气烧烤火锅餐厅。可以自己烤各种肉类和海鲜。",
+          vi: "Quán nướng & lẩu được yêu thích. Tự nướng các loại thịt và hải sản tại bàn.",
+          ru: "Популярный местный ресторан барбекю и хот-пот. Жарьте мясо и морепродукты за столом.",
+          ja: "地元で人気のBBQ＆鍋レストラン。テーブルで様々な肉と海鮮を焼いて楽しめます。"
+        }
+      },
+      { 
+        name: "해산물 식당", 
+        nameVi: "Ốc Tự Nhiên 3", 
+        address: "20 Trần Phú, Phường 1, Vũng Tàu", 
+        mapUrl: "https://maps.app.goo.gl/37gvjz6hhkzP6ip2A",
+        imageUrl: "/attached_assets/Screenshot_20260122_000835_Maps_1769015581806.jpg",
+        description: {
+          ko: "다양한 조개 요리 전문점. 현지인들이 자주 찾는 해산물 맛집입니다.",
+          en: "Specialty restaurant for various shellfish dishes. A seafood favorite among locals.",
+          zh: "各种贝类料理专卖店。当地人常去的海鲜美食店。",
+          vi: "Quán chuyên các món ốc đa dạng. Địa điểm hải sản được người địa phương yêu thích.",
+          ru: "Ресторан, специализирующийся на моллюсках. Любимое место местных жителей.",
+          ja: "様々な貝料理の専門店。地元民がよく訪れる海鮮の名店です。"
+        }
+      },
+      { 
+        name: "베트남 가정식", 
+        nameVi: "Cơm Niêu Quê Nhà", 
+        phone: "090 645 69 05", 
+        mapUrl: "https://maps.app.goo.gl/Qcx6sfwFh7jrm9HU9",
+        imageUrl: "/attached_assets/Screenshot_20260122_000856_Maps_1769015581809.jpg",
+        description: {
+          ko: "베트남 전통 가정식을 맛볼 수 있는 식당. 뚝배기 밥과 다양한 반찬이 특징입니다.",
+          en: "Restaurant serving traditional Vietnamese home-style dishes. Features clay pot rice with various side dishes.",
+          zh: "可以品尝越南传统家常菜的餐厅。特色是砂锅饭配各种小菜。",
+          vi: "Nhà hàng phục vụ món ăn gia đình truyền thống Việt Nam. Đặc trưng cơm niêu với nhiều món ăn kèm.",
+          ru: "Ресторан традиционной вьетнамской домашней кухни. Рис в глиняном горшке с гарнирами.",
+          ja: "ベトナム伝統の家庭料理が味わえるレストラン。土鍋ご飯と様々なおかずが特徴です。"
+        }
+      },
+      { 
+        name: "해산물 쌀국수", 
+        nameVi: "Old Man Cali - Hủ tiểu Mực", 
+        mapUrl: "https://maps.app.goo.gl/hBzPccq4d6E2ufj66", 
+        recommended: true,
+        imageUrl: "/attached_assets/Screenshot_20260122_000535_Maps_1769015581719.jpg",
+        description: {
+          ko: "오징어 쌀국수(후띠우 먹) 전문점. 진한 해산물 육수와 쫄깃한 면이 일품입니다.",
+          en: "Specialty squid rice noodle (Hủ Tiếu Mực) restaurant. Rich seafood broth with chewy noodles.",
+          zh: "鱿鱼米粉专卖店。浓郁海鲜汤底配弹牙米粉。",
+          vi: "Quán chuyên Hủ Tiếu Mực. Nước dùng hải sản đậm đà với sợi hủ tiếu dai.",
+          ru: "Ресторан рисовой лапши с кальмаром. Насыщенный бульон из морепродуктов с жевательной лапшой.",
+          ja: "イカ入りライスヌードル（フーティウ・ムック）専門店。濃厚な海鮮スープとモチモチ麺が絶品。"
+        }
+      },
+      { 
+        name: "소고기 쌀국수 (에어컨)", 
+        mapUrl: "https://maps.app.goo.gl/9hYEyyeQ1HFFCqY7A",
+        imageUrl: "/attached_assets/Screenshot_20260122_000924_Maps_1769015581814.jpg",
+        description: {
+          ko: "시원한 에어컨이 있는 깔끔한 소고기 쌀국수 전문점. 더운 날씨에 쾌적하게 식사할 수 있습니다.",
+          en: "Clean beef noodle restaurant with air conditioning. Enjoy a comfortable meal on hot days.",
+          zh: "有空调的干净牛肉粉店。炎热天气可以舒适用餐。",
+          vi: "Quán phở bò sạch sẽ có máy lạnh. Dùng bữa thoải mái trong thời tiết nóng.",
+          ru: "Чистый ресторан говяжьей лапши с кондиционером. Комфортный обед в жаркую погоду.",
+          ja: "エアコン完備の清潔な牛肉フォー専門店。暑い日でも快適に食事できます。"
+        }
+      },
+      { 
+        name: "로컬 식당 (껌땀)", 
+        nameVi: "Quán Cơm Tấm Lọ Lem", 
+        phone: "0254 3521 212", 
+        mapUrl: "https://maps.app.goo.gl/M5g8ya358jC1YNYh7",
+        imageUrl: "/attached_assets/Screenshot_20260122_000952_Maps_1769015581817.jpg",
+        description: {
+          ko: "베트남 대표 음식 껌땀(부서진 쌀밥) 전문점. 구운 돼지갈비와 함께 먹는 현지인 맛집.",
+          en: "Specialty Cơm Tấm (broken rice) restaurant. Served with grilled pork ribs, a local favorite.",
+          zh: "越南代表美食碎米饭专卖店。配烤猪排，当地人最爱。",
+          vi: "Quán chuyên Cơm Tấm. Ăn kèm sườn nướng, được người địa phương yêu thích.",
+          ru: "Ресторан Cơm Tấm (дроблёный рис). Подаётся с жареными свиными рёбрышками, любимое место местных.",
+          ja: "ベトナム代表料理コムタム（砕き米ご飯）専門店。焼き豚リブと一緒に楽しむ地元の人気店。"
+        }
+      },
+      { 
+        name: "오리국수 (오후 3시반 오픈)", 
+        mapUrl: "https://maps.app.goo.gl/HrorS5czrq91WqPUA",
+        imageUrl: "/attached_assets/Screenshot_20260122_001013_Maps_1769015581823.jpg",
+        description: {
+          ko: "오리고기 국수와 완탕 전문점. 오후 3시 30분부터 영업하며 현지인들에게 인기가 많습니다.",
+          en: "Duck noodle and wonton specialty restaurant. Opens at 3:30 PM, very popular among locals.",
+          zh: "鸭肉面和云吞专卖店。下午3:30开门，深受当地人欢迎。",
+          vi: "Quán chuyên mì vịt tiềm và sủi cảo. Mở cửa 3:30 chiều, rất được người địa phương yêu thích.",
+          ru: "Ресторан утиной лапши и вонтонов. Открывается в 15:30, очень популярен у местных.",
+          ja: "鴨肉麺とワンタン専門店。午後3時半オープン、地元民に大人気です。"
+        }
+      },
+      { 
+        name: "토끼구이", 
+        mapUrl: "https://maps.app.goo.gl/Cxpum3ne3fnLiBDz6",
+        imageUrl: "/attached_assets/Screenshot_20260122_001100_Maps_1769015581829.jpg",
+        description: {
+          ko: "베트남 스타일 토끼구이 전문점. 독특한 현지 음식을 경험하고 싶다면 추천합니다.",
+          en: "Vietnamese-style grilled rabbit specialty restaurant. Recommended for trying unique local cuisine.",
+          zh: "越南风格烤兔肉专卖店。想体验独特当地美食推荐尝试。",
+          vi: "Quán chuyên thỏ nướng kiểu Việt Nam. Khuyến khích cho ai muốn thử ẩm thực địa phương độc đáo.",
+          ru: "Ресторан вьетнамского жареного кролика. Рекомендуется для уникального местного опыта.",
+          ja: "ベトナムスタイルのウサギ焼き専門店。ユニークな現地料理を体験したい方におすすめ。"
+        }
+      },
     ]
   },
   koreanFood: {
