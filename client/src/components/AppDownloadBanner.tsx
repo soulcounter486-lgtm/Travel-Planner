@@ -3,19 +3,19 @@ import { X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AppDownloadBanner() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    const dismissed = sessionStorage.getItem("app-banner-dismissed");
-    if (!dismissed) {
-      setIsVisible(true);
+    const dismissed = localStorage.getItem("app-banner-dismissed-v2");
+    if (dismissed) {
+      setIsVisible(false);
     }
   }, []);
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    sessionStorage.setItem("app-banner-dismissed", "true");
+    localStorage.setItem("app-banner-dismissed-v2", "true");
     setTimeout(() => setIsVisible(false), 300);
   };
 
@@ -23,10 +23,10 @@ export function AppDownloadBanner() {
 
   return (
     <div 
-      className={`fixed top-4 right-4 z-50 transition-all duration-300 ${isDismissed ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}
+      className={`fixed top-20 right-4 z-[9999] transition-all duration-300 ${isDismissed ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}
       data-testid="app-download-banner"
     >
-      <div className="bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg rounded-lg">
+      <div className="bg-gradient-to-r from-primary to-purple-600 text-white shadow-xl rounded-full border-2 border-white/30">
         <div className="px-3 py-2 flex items-center gap-2">
           <a 
             href="/vungtau-dokkaebi.apk" 
@@ -36,9 +36,9 @@ export function AppDownloadBanner() {
             <Button 
               variant="secondary" 
               size="sm" 
-              className="bg-white text-primary hover:bg-white/90 font-semibold h-7 text-xs px-2"
+              className="bg-white text-primary hover:bg-white/90 font-bold h-8 text-sm px-3 rounded-full shadow-md"
             >
-              <Download className="w-3 h-3 mr-1" />
+              <Download className="w-4 h-4 mr-1" />
               앱 설치
             </Button>
           </a>
@@ -46,10 +46,10 @@ export function AppDownloadBanner() {
             variant="ghost"
             size="icon"
             onClick={handleDismiss}
-            className="text-white hover:bg-white/20 h-6 w-6"
+            className="text-white hover:bg-white/20 h-7 w-7 rounded-full"
             data-testid="btn-dismiss-banner"
           >
-            <X className="w-3 h-3" />
+            <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
