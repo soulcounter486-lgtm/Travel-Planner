@@ -33,6 +33,21 @@ import loxClubImg from "@assets/Screenshot_20260116_185045_Maps_1768564285866.jp
 import usBarImg from "@assets/Screenshot_20260116_184659_Maps_1768564285873.jpg";
 import peaceAndLoveImg from "@assets/20260117_220334_1768668092372.jpg";
 import texasBbqImg from "@assets/Screenshot_20260121_234910_Maps_1769014231476.jpg";
+import cobaImg from "@assets/Screenshot_20260122_000550_Maps_1769015581771.jpg";
+import coba2Img from "@assets/Screenshot_20260122_000613_Maps_1769015581776.jpg";
+import ganhHaoImg from "@assets/Screenshot_20260122_000631_Maps_1769015581781.jpg";
+import ganhHao2Img from "@assets/Screenshot_20260122_000656_Maps_1769015581784.jpg";
+import coThy2Img from "@assets/Screenshot_20260122_000711_Maps_1769015581789.jpg";
+import bunChaImg from "@assets/Screenshot_20260122_000727_Maps_1769015581794.jpg";
+import foodGarden88Img from "@assets/Screenshot_20260122_000755_Maps_1769015581799.jpg";
+import pandaBbqImg from "@assets/Screenshot_20260122_000818_Maps_1769015581803.jpg";
+import ocTuNhien3Img from "@assets/Screenshot_20260122_000835_Maps_1769015581806.jpg";
+import comNieuImg from "@assets/Screenshot_20260122_000856_Maps_1769015581809.jpg";
+import huTieuMucImg from "@assets/Screenshot_20260122_000535_Maps_1769015581719.jpg";
+import phoBoImg from "@assets/Screenshot_20260122_000924_Maps_1769015581814.jpg";
+import comTamImg from "@assets/Screenshot_20260122_000952_Maps_1769015581817.jpg";
+import miVitImg from "@assets/Screenshot_20260122_001013_Maps_1769015581823.jpg";
+import thoNuongImg from "@assets/Screenshot_20260122_001100_Maps_1769015581829.jpg";
 
 interface Place {
   name: string;
@@ -259,7 +274,7 @@ const placesData: Record<string, Category> = {
         phone: "0254 3526 165", 
         mapUrl: "https://maps.app.goo.gl/LvFosNMLSi1LSRvz6", 
         note: "crowded",
-        imageUrl: "/attached_assets/Screenshot_20260122_000550_Maps_1769015581771.jpg",
+        imageUrl: cobaImg,
         description: {
           ko: "붕따우에서 가장 유명한 반콧, 반쎄오 전문점. 현지인과 관광객 모두에게 사랑받는 맛집입니다.",
           en: "Most famous Bánh Khọt and Bánh Xèo restaurant in Vung Tau. Loved by locals and tourists alike.",
@@ -275,7 +290,7 @@ const placesData: Record<string, Category> = {
         mapUrl: "https://maps.app.goo.gl/ftQz4Z437ZJZn5g68", 
         note: "spacious", 
         recommended: true,
-        imageUrl: "/attached_assets/Screenshot_20260122_000613_Maps_1769015581776.jpg",
+        imageUrl: coba2Img,
         description: {
           ko: "꼬바 2호점은 더 넓고 쾌적한 공간에서 동일한 맛을 즐길 수 있습니다. 단체 손님에게 추천.",
           en: "Cô Ba 2nd branch offers the same great taste in a more spacious setting. Recommended for groups.",
@@ -290,7 +305,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Gành Hào Seafood Restaurant", 
         phone: "0254 3550 909", 
         mapUrl: "https://maps.app.goo.gl/AVh5Qq9HMRNpbjzBA",
-        imageUrl: "/attached_assets/Screenshot_20260122_000631_Maps_1769015581781.jpg",
+        imageUrl: ganhHaoImg,
         description: {
           ko: "바다가 보이는 고급 해산물 레스토랑. 일몰과 함께 신선한 해산물 요리를 즐길 수 있습니다.",
           en: "Premium seafood restaurant with ocean view. Enjoy fresh seafood dishes while watching the sunset.",
@@ -320,7 +335,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Gành Hào 2", 
         mapUrl: "https://maps.app.goo.gl/JLXdK6XZC5SqHntC7", 
         recommended: true,
-        imageUrl: "/attached_assets/Screenshot_20260122_000656_Maps_1769015581784.jpg",
+        imageUrl: ganhHao2Img,
         description: {
           ko: "간하오 2호점은 현대적인 건물에서 대규모 연회와 행사에 적합한 해산물 전문점입니다.",
           en: "Gành Hào 2nd branch features a modern building, perfect for large banquets and events.",
@@ -334,7 +349,7 @@ const placesData: Record<string, Category> = {
         name: "해산물 야시장 로컬식당", 
         nameVi: "Hải Sản Cô Thy 2", 
         mapUrl: "https://maps.app.goo.gl/rWUGn1MYyzGH7Xg78",
-        imageUrl: "/attached_assets/Screenshot_20260122_000711_Maps_1769015581789.jpg",
+        imageUrl: coThy2Img,
         description: {
           ko: "야시장 분위기의 해산물 로컬 식당. 합리적인 가격에 신선한 해산물을 즐길 수 있습니다.",
           en: "Local seafood restaurant with night market atmosphere. Fresh seafood at reasonable prices.",
@@ -349,7 +364,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Bún Chả Hà Nội", 
         address: "32 Lê Lai, Phường 3, Vũng Tàu, Bà Rịa - Vũng Tàu 780000", 
         mapUrl: "https://maps.app.goo.gl/DbdLER7cjNZhcMJ19",
-        imageUrl: "/attached_assets/Screenshot_20260122_000727_Maps_1769015581794.jpg",
+        imageUrl: bunChaImg,
         description: {
           ko: "하노이 스타일 분짜 전문점. 숯불에 구운 돼지고기와 쌀국수, 신선한 채소가 어우러진 맛.",
           en: "Hanoi-style Bún Chả specialty restaurant. Charcoal-grilled pork with rice noodles and fresh vegetables.",
@@ -363,7 +378,7 @@ const placesData: Record<string, Category> = {
         name: "88 Food Garden (레스토랑)", 
         nameVi: "88 Food Garden", 
         mapUrl: "https://maps.app.goo.gl/iwaEfxbuxutM9y2t9",
-        imageUrl: "/attached_assets/Screenshot_20260122_000755_Maps_1769015581799.jpg",
+        imageUrl: foodGarden88Img,
         description: {
           ko: "세련된 인테리어의 대형 해산물 정원 레스토랑. 가족 모임이나 특별한 날에 적합합니다.",
           en: "Large seafood garden restaurant with stylish interior. Perfect for family gatherings and special occasions.",
@@ -377,7 +392,7 @@ const placesData: Record<string, Category> = {
         name: "Panda BBQ (현지 바베큐)", 
         address: "150 Hạ Long, Phường 2, Vũng Tàu", 
         mapUrl: "https://maps.app.goo.gl/9ruaWyxg9txKrJ6eA",
-        imageUrl: "/attached_assets/Screenshot_20260122_000818_Maps_1769015581803.jpg",
+        imageUrl: pandaBbqImg,
         description: {
           ko: "현지에서 인기 있는 바베큐 & 핫팟 레스토랑. 다양한 고기와 해산물을 구워 먹을 수 있습니다.",
           en: "Popular local BBQ & hotpot restaurant. Grill various meats and seafood at your table.",
@@ -392,7 +407,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Ốc Tự Nhiên 3", 
         address: "20 Trần Phú, Phường 1, Vũng Tàu", 
         mapUrl: "https://maps.app.goo.gl/37gvjz6hhkzP6ip2A",
-        imageUrl: "/attached_assets/Screenshot_20260122_000835_Maps_1769015581806.jpg",
+        imageUrl: ocTuNhien3Img,
         description: {
           ko: "다양한 조개 요리 전문점. 현지인들이 자주 찾는 해산물 맛집입니다.",
           en: "Specialty restaurant for various shellfish dishes. A seafood favorite among locals.",
@@ -407,7 +422,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Cơm Niêu Quê Nhà", 
         phone: "090 645 69 05", 
         mapUrl: "https://maps.app.goo.gl/Qcx6sfwFh7jrm9HU9",
-        imageUrl: "/attached_assets/Screenshot_20260122_000856_Maps_1769015581809.jpg",
+        imageUrl: comNieuImg,
         description: {
           ko: "베트남 전통 가정식을 맛볼 수 있는 식당. 뚝배기 밥과 다양한 반찬이 특징입니다.",
           en: "Restaurant serving traditional Vietnamese home-style dishes. Features clay pot rice with various side dishes.",
@@ -422,7 +437,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Old Man Cali - Hủ tiểu Mực", 
         mapUrl: "https://maps.app.goo.gl/hBzPccq4d6E2ufj66", 
         recommended: true,
-        imageUrl: "/attached_assets/Screenshot_20260122_000535_Maps_1769015581719.jpg",
+        imageUrl: huTieuMucImg,
         description: {
           ko: "오징어 쌀국수(후띠우 먹) 전문점. 진한 해산물 육수와 쫄깃한 면이 일품입니다.",
           en: "Specialty squid rice noodle (Hủ Tiếu Mực) restaurant. Rich seafood broth with chewy noodles.",
@@ -435,7 +450,7 @@ const placesData: Record<string, Category> = {
       { 
         name: "소고기 쌀국수 (에어컨)", 
         mapUrl: "https://maps.app.goo.gl/9hYEyyeQ1HFFCqY7A",
-        imageUrl: "/attached_assets/Screenshot_20260122_000924_Maps_1769015581814.jpg",
+        imageUrl: phoBoImg,
         description: {
           ko: "시원한 에어컨이 있는 깔끔한 소고기 쌀국수 전문점. 더운 날씨에 쾌적하게 식사할 수 있습니다.",
           en: "Clean beef noodle restaurant with air conditioning. Enjoy a comfortable meal on hot days.",
@@ -450,7 +465,7 @@ const placesData: Record<string, Category> = {
         nameVi: "Quán Cơm Tấm Lọ Lem", 
         phone: "0254 3521 212", 
         mapUrl: "https://maps.app.goo.gl/M5g8ya358jC1YNYh7",
-        imageUrl: "/attached_assets/Screenshot_20260122_000952_Maps_1769015581817.jpg",
+        imageUrl: comTamImg,
         description: {
           ko: "베트남 대표 음식 껌땀(부서진 쌀밥) 전문점. 구운 돼지갈비와 함께 먹는 현지인 맛집.",
           en: "Specialty Cơm Tấm (broken rice) restaurant. Served with grilled pork ribs, a local favorite.",
@@ -463,7 +478,7 @@ const placesData: Record<string, Category> = {
       { 
         name: "오리국수 (오후 3시반 오픈)", 
         mapUrl: "https://maps.app.goo.gl/HrorS5czrq91WqPUA",
-        imageUrl: "/attached_assets/Screenshot_20260122_001013_Maps_1769015581823.jpg",
+        imageUrl: miVitImg,
         description: {
           ko: "오리고기 국수와 완탕 전문점. 오후 3시 30분부터 영업하며 현지인들에게 인기가 많습니다.",
           en: "Duck noodle and wonton specialty restaurant. Opens at 3:30 PM, very popular among locals.",
@@ -476,7 +491,7 @@ const placesData: Record<string, Category> = {
       { 
         name: "토끼구이", 
         mapUrl: "https://maps.app.goo.gl/Cxpum3ne3fnLiBDz6",
-        imageUrl: "/attached_assets/Screenshot_20260122_001100_Maps_1769015581829.jpg",
+        imageUrl: thoNuongImg,
         description: {
           ko: "베트남 스타일 토끼구이 전문점. 독특한 현지 음식을 경험하고 싶다면 추천합니다.",
           en: "Vietnamese-style grilled rabbit specialty restaurant. Recommended for trying unique local cuisine.",
