@@ -34,8 +34,11 @@ import {
   RefreshCw,
   ExternalLink,
   ShoppingBag,
-  UserPlus
+  UserPlus,
+  Bell,
+  BellOff
 } from "lucide-react";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { SiInstagram } from "react-icons/si";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -268,6 +271,7 @@ export default function Board() {
   const { language, t } = useLanguage();
   const labels = boardLabels[language] || boardLabels.ko;
   const { toast } = useToast();
+  const { isSupported, isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showNewPostDialog, setShowNewPostDialog] = useState(false);
@@ -685,10 +689,42 @@ export default function Board() {
 
       <main className="container mx-auto px-4 py-6 overflow-hidden" style={{ maxWidth: "min(72rem, 100vw - 2rem)" }}>
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
-            <FileText className="w-8 h-8 text-primary" />
-            {labels.title}
-          </h1>
+          <div className="flex items-center justify-center gap-3">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent flex items-center gap-2">
+              <FileText className="w-8 h-8 text-primary" />
+              {labels.title}
+            </h1>
+            {isSupported && (
+              <Button
+                variant={isSubscribed ? "default" : "outline"}
+                size="icon"
+                onClick={async () => {
+                  if (isSubscribed) {
+                    await unsubscribe();
+                    toast({ title: "알림이 해제되었습니다" });
+                  } else {
+                    const success = await subscribe();
+                    if (success) {
+                      toast({ title: "알림이 설정되었습니다", description: "새 게시물이 등록되면 알림을 받습니다" });
+                    } else {
+                      toast({ title: "알림 설정 실패", description: "알림 권한을 허용해주세요", variant: "destructive" });
+                    }
+                  }
+                }}
+                disabled={pushLoading}
+                data-testid="btn-notification"
+                title={isSubscribed ? "알림 해제" : "알림 받기"}
+              >
+                {pushLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isSubscribed ? (
+                  <Bell className="w-4 h-4" />
+                ) : (
+                  <BellOff className="w-4 h-4" />
+                )}
+              </Button>
+            )}
+          </div>
           <p className="text-muted-foreground mt-2">{labels.subtitle}</p>
         </div>
 
