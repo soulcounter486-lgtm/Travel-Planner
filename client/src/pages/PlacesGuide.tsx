@@ -48,6 +48,12 @@ import phoBoImg from "@assets/Screenshot_20260122_000924_Maps_1769015581814.jpg"
 import comTamImg from "@assets/Screenshot_20260122_000952_Maps_1769015581817.jpg";
 import miVitImg from "@assets/Screenshot_20260122_001013_Maps_1769015581823.jpg";
 import thoNuongImg from "@assets/Screenshot_20260122_001100_Maps_1769015581829.jpg";
+import coffeeSuoiImg from "@assets/Screenshot_20260122_002226_Maps_1769016389675.jpg";
+import katinatImg from "@assets/Screenshot_20260122_002241_Maps_1769016389683.jpg";
+import sohoCoffeeImg from "@assets/Screenshot_20260122_002254_Maps_1769016389688.jpg";
+import highlandsCoffeeImg from "@assets/Screenshot_20260122_002412_Maps_1769016389696.jpg";
+import seaSunImg from "@assets/Screenshot_20260122_002507_Maps_1769016389702.jpg";
+import miAmorImg from "@assets/Screenshot_20260122_002546_Maps_1769016389710.jpg";
 
 interface Place {
   name: string;
@@ -545,8 +551,32 @@ const placesData: Record<string, Category> = {
     icon: Coffee,
     gradient: "from-amber-700 to-yellow-800",
     places: [
-      { name: "Coffee Suối Bên Biển", mapUrl: "https://maps.app.goo.gl/Sd7JGZiZ1n6TrvmJ7" },
-      { name: "KATINAT 커피", mapUrl: "https://maps.app.goo.gl/ptgkTbJnVzwUzYPGA" },
+      { 
+        name: "Coffee Suối Bên Biển", 
+        mapUrl: "https://maps.app.goo.gl/Sd7JGZiZ1n6TrvmJ7",
+        imageUrl: coffeeSuoiImg,
+        description: {
+          ko: "바다를 바라보며 즐기는 야외 카페. 밤에는 조명과 함께 로맨틱한 분위기를 자아냅니다.",
+          en: "Outdoor café with ocean views. At night, the lighting creates a romantic atmosphere.",
+          zh: "可以欣赏海景的户外咖啡馆。夜晚灯光营造浪漫氛围。",
+          vi: "Quán cà phê ngoài trời với view biển. Buổi tối ánh đèn tạo không gian lãng mạn.",
+          ru: "Кафе на открытом воздухе с видом на море. Вечером освещение создаёт романтическую атмосферу.",
+          ja: "海を眺めながら楽しめる野外カフェ。夜はライトアップでロマンチックな雰囲気に。"
+        }
+      },
+      { 
+        name: "KATINAT 커피", 
+        mapUrl: "https://maps.app.goo.gl/ptgkTbJnVzwUzYPGA",
+        imageUrl: katinatImg,
+        description: {
+          ko: "베트남 유명 프랜차이즈 커피숍. 해변가 테라스에서 시원한 음료를 즐길 수 있습니다.",
+          en: "Famous Vietnamese coffee franchise. Enjoy cool drinks on the beachside terrace.",
+          zh: "越南知名连锁咖啡店。可在海边露台享用冷饮。",
+          vi: "Thương hiệu cà phê nổi tiếng Việt Nam. Thưởng thức đồ uống mát trên sân thượng view biển.",
+          ru: "Известная вьетнамская сеть кофеен. Прохладные напитки на террасе у пляжа.",
+          ja: "ベトナムの有名チェーン店。海辺のテラスで冷たいドリンクを楽しめます。"
+        }
+      },
       { 
         name: "Ten 커피숍", 
         nameVi: "Ten Coffee", 
@@ -560,10 +590,60 @@ const placesData: Record<string, Category> = {
           ja: "地元で人気の雰囲気の良いコーヒーショップ。居心地の良い空間で様々なドリンクを楽しめます。"
         }
       },
-      { name: "Soho Coffee", phone: "094 641 40 31", mapUrl: "https://maps.app.goo.gl/fK1SdiHaNH9SoVeZ6" },
-      { name: "Highlands Coffee", mapUrl: "https://maps.app.goo.gl/BfdzBXcKDiLBBmd96" },
-      { name: "Sea & Sun 2", phone: "0822 056 419", mapUrl: "https://maps.app.goo.gl/VKm9bZifEX9Lob477" },
-      { name: "Mi Amor Beach", mapUrl: "https://maps.app.goo.gl/o12qFzH1ggCwee5Y7" },
+      { 
+        name: "Soho Coffee", 
+        phone: "094 641 40 31", 
+        mapUrl: "https://maps.app.goo.gl/fK1SdiHaNH9SoVeZ6",
+        imageUrl: sohoCoffeeImg,
+        description: {
+          ko: "아치형 창문이 인상적인 세련된 카페. 바다 전망과 함께 고급스러운 분위기를 즐길 수 있습니다.",
+          en: "Stylish café with impressive arched windows. Enjoy a luxurious atmosphere with ocean views.",
+          zh: "拱形窗户令人印象深刻的时尚咖啡馆。可欣赏海景享受高档氛围。",
+          vi: "Quán cà phê sang trọng với cửa sổ vòm ấn tượng. Thưởng thức không gian cao cấp với view biển.",
+          ru: "Стильное кафе с впечатляющими арочными окнами. Роскошная атмосфера с видом на море.",
+          ja: "アーチ型の窓が印象的なスタイリッシュなカフェ。海の眺めと高級感のある雰囲気を楽しめます。"
+        }
+      },
+      { 
+        name: "Highlands Coffee", 
+        mapUrl: "https://maps.app.goo.gl/BfdzBXcKDiLBBmd96",
+        imageUrl: highlandsCoffeeImg,
+        description: {
+          ko: "베트남 대표 커피 프랜차이즈. 에어컨이 완비된 쾌적한 공간에서 다양한 커피를 즐길 수 있습니다.",
+          en: "Vietnam's leading coffee franchise. Enjoy various coffees in a comfortable air-conditioned space.",
+          zh: "越南代表性咖啡连锁品牌。在舒适的空调环境中享用各种咖啡。",
+          vi: "Thương hiệu cà phê hàng đầu Việt Nam. Thưởng thức cà phê đa dạng trong không gian máy lạnh thoải mái.",
+          ru: "Ведущая вьетнамская сеть кофеен. Разнообразный кофе в комфортном кондиционированном помещении.",
+          ja: "ベトナム代表的なコーヒーチェーン。エアコン完備の快適な空間で様々なコーヒーを楽しめます。"
+        }
+      },
+      { 
+        name: "Sea & Sun 2", 
+        phone: "0822 056 419", 
+        mapUrl: "https://maps.app.goo.gl/VKm9bZifEX9Lob477",
+        imageUrl: seaSunImg,
+        description: {
+          ko: "일몰 명소로 유명한 해변 카페. 탁 트인 바다 전망과 함께 석양을 감상하기 좋습니다.",
+          en: "Beach café famous for sunset views. Perfect for watching the sunset with panoramic ocean views.",
+          zh: "以日落景观闻名的海滩咖啡馆。欣赏壮观海景和日落的好地方。",
+          vi: "Quán cà phê bãi biển nổi tiếng với view hoàng hôn. Lý tưởng ngắm hoàng hôn với view biển toàn cảnh.",
+          ru: "Пляжное кафе, известное закатами. Идеально для наблюдения заката с панорамным видом на море.",
+          ja: "夕日の名所として有名なビーチカフェ。パノラマオーシャンビューで夕焼けを楽しめます。"
+        }
+      },
+      { 
+        name: "Mi Amor Beach", 
+        mapUrl: "https://maps.app.goo.gl/o12qFzH1ggCwee5Y7",
+        imageUrl: miAmorImg,
+        description: {
+          ko: "벚꽃 장식이 아름다운 해변 카페. 인스타그램 사진 찍기 좋은 포토존이 많습니다.",
+          en: "Beach café with beautiful cherry blossom decorations. Many Instagram-worthy photo spots.",
+          zh: "樱花装饰美丽的海滩咖啡馆。有很多适合拍照的网红打卡点。",
+          vi: "Quán cà phê bãi biển với trang trí hoa anh đào đẹp. Nhiều điểm check-in sống ảo cho Instagram.",
+          ru: "Пляжное кафе с красивым декором из сакуры. Много фотозон для Instagram.",
+          ja: "桜の装飾が美しいビーチカフェ。インスタ映えするフォトスポットがたくさんあります。"
+        }
+      },
     ]
   },
   services: {
