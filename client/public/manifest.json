@@ -1,7 +1,7 @@
 {
   "name": "붕따우 도깨비",
   "short_name": "붕따우",
-  "description": "베트남 붕따우 여행의 모든것 - 실시간 견적, 관광명소, AI 플래너",
+  "description": "베트남 붕따우 여행 실시간 견적내기, 붕따우 소식, 여행가계부, AI플래너",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
