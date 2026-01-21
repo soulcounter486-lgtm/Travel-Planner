@@ -561,7 +561,7 @@ const placesData: Record<string, Category> = {
         }
       },
       { name: "Soho Coffee", phone: "094 641 40 31", mapUrl: "https://maps.app.goo.gl/fK1SdiHaNH9SoVeZ6" },
-      { name: "Highlands Coffee", mapUrl: "https://maps.app.goo.gl/kuiVrXHGih2vkQQa9" },
+      { name: "Highlands Coffee", mapUrl: "https://maps.app.goo.gl/BfdzBXcKDiLBBmd96" },
       { name: "Sea & Sun 2", phone: "0822 056 419", mapUrl: "https://maps.app.goo.gl/VKm9bZifEX9Lob477" },
       { name: "Mi Amor Beach", mapUrl: "https://maps.app.goo.gl/o12qFzH1ggCwee5Y7" },
     ]
