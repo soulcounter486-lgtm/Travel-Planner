@@ -32,6 +32,7 @@ import revoClubImg from "@assets/Screenshot_20260116_184614_Maps_1768564285861.j
 import loxClubImg from "@assets/Screenshot_20260116_185045_Maps_1768564285866.jpg";
 import usBarImg from "@assets/Screenshot_20260116_184659_Maps_1768564285873.jpg";
 import peaceAndLoveImg from "@assets/20260117_220334_1768668092372.jpg";
+import texasBbqImg from "@assets/Screenshot_20260121_234910_Maps_1769014231476.jpg";
 
 interface Place {
   name: string;
@@ -255,6 +256,21 @@ const placesData: Record<string, Category> = {
       { name: "꼬바붕따우 1호점 (반콧,반쎄오)", nameVi: "Cô Ba Restaurant", phone: "0254 3526 165", mapUrl: "https://maps.app.goo.gl/LvFosNMLSi1LSRvz6", note: "crowded" },
       { name: "꼬바붕따우 2호점 (반콧,반쎄오)", nameVi: "Cô Ba Restaurant 2", mapUrl: "https://maps.app.goo.gl/ftQz4Z437ZJZn5g68", note: "spacious" },
       { name: "해산물 고급 식당", nameVi: "Gành Hào Seafood Restaurant", phone: "0254 3550 909", mapUrl: "https://maps.app.goo.gl/AVh5Qq9HMRNpbjzBA" },
+      { 
+        name: "Texas BBQ", 
+        nameVi: "Texas BBQ", 
+        mapUrl: "https://maps.app.goo.gl/nUQVw6bfdqiu8jMy7",
+        imageUrl: texasBbqImg,
+        recommended: true,
+        description: {
+          ko: "정통 텍사스 스타일 바베큐 레스토랑. 훈연 고기와 시원한 맥주를 즐길 수 있는 분위기 좋은 곳. 영업시간 11AM-9PM.",
+          en: "Authentic Texas-style BBQ restaurant. Enjoy smoked meats and cold beers in a great atmosphere. Open 11AM-9PM.",
+          zh: "正宗德州风格烧烤餐厅。享受烟熏肉和冰啤酒，氛围极佳。营业时间11AM-9PM。",
+          vi: "Nhà hàng BBQ phong cách Texas chính thống. Thưởng thức thịt hun khói và bia lạnh trong không gian tuyệt vời. Mở cửa 11AM-9PM.",
+          ru: "Аутентичный техасский барбекю-ресторан. Копчёное мясо и холодное пиво в отличной атмосфере. Время работы 11:00-21:00.",
+          ja: "本格テキサススタイルのBBQレストラン。燻製肉と冷たいビールが楽しめる雰囲気の良いお店。営業時間11AM-9PM。"
+        }
+      },
       { name: "해산물 고급 식당 2호점", nameVi: "Gành Hào 2", mapUrl: "https://maps.app.goo.gl/JLXdK6XZC5SqHntC7" },
       { name: "해산물 야시장 로컬식당", nameVi: "Hải Sản Cô Thy 2", mapUrl: "https://maps.app.goo.gl/rWUGn1MYyzGH7Xg78" },
       { name: "분짜 하노이", nameVi: "Bún Chả Hà Nội", address: "32 Lê Lai, Phường 3, Vũng Tàu, Bà Rịa - Vũng Tàu 780000", mapUrl: "https://maps.app.goo.gl/DbdLER7cjNZhcMJ19" },
