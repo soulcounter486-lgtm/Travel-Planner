@@ -51,7 +51,9 @@ import {
   Navigation,
   Sparkles,
   UserPlus,
-  ShoppingBag
+  ShoppingBag,
+  Download,
+  Smartphone
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -64,6 +66,44 @@ export default function Home() {
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [visitorCount, setVisitorCount] = useState<number>(0);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsAppInstalled(true);
+      setDeferredPrompt(null);
+    };
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsAppInstalled(true);
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      window.open('https://www.pwabuilder.com/', '_blank');
+    }
+  };
 
   useEffect(() => {
     apiRequest("POST", "/api/visitor-count/increment")
@@ -894,6 +934,23 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      
+      {!isAppInstalled && deferredPrompt && (
+        <Button
+          onClick={handleInstallClick}
+          className="fixed top-4 right-20 z-50 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg gap-2"
+          size="sm"
+          data-testid="button-install-app"
+        >
+          <Smartphone className="w-4 h-4" />
+          {language === "ko" ? "앱 설치" :
+           language === "en" ? "Install App" :
+           language === "zh" ? "安装应用" :
+           language === "vi" ? "Cài đặt" :
+           language === "ru" ? "Установить" :
+           language === "ja" ? "アプリ" : "앱 설치"}
+        </Button>
+      )}
       
       <LanguageSelector />
 
