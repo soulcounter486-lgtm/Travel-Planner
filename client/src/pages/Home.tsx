@@ -373,10 +373,10 @@ export default function Home() {
                 className="cursor-pointer hover:scale-105 transition-transform"
                 data-testid="btn-download-apk"
               >
-                <img src={logoImg} alt={t("header.title")} className="w-56 h-56 sm:w-72 sm:h-72 md:w-96 md:h-96 lg:w-[30rem] lg:h-[30rem] object-contain drop-shadow-md" />
+                <img src={logoImg} alt={t("header.title")} className="w-28 h-28 sm:w-36 sm:h-36 md:w-52 md:h-52 lg:w-60 lg:h-60 object-contain drop-shadow-md" />
               </a>
-              <div className="flex flex-col items-center mt-2">
-                <span className="text-xs sm:text-sm text-primary font-medium text-center">앱 다운로드를 하려면<br/>로고를 클릭해 주세요</span>
+              <div className="flex flex-col items-center mt-1 animate-bounce">
+                <span className="text-[10px] text-primary font-medium">↑ 앱 다운로드</span>
               </div>
             </div>
             <div>
