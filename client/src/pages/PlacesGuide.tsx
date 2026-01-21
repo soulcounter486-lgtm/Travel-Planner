@@ -54,6 +54,7 @@ import sohoCoffeeImg from "@assets/Screenshot_20260122_002254_Maps_1769016389688
 import highlandsCoffeeImg from "@assets/Screenshot_20260122_002412_Maps_1769016389696.jpg";
 import seaSunImg from "@assets/Screenshot_20260122_002507_Maps_1769016389702.jpg";
 import miAmorImg from "@assets/Screenshot_20260122_002546_Maps_1769016389710.jpg";
+import tenCoffeeImg from "@assets/Screenshot_20260122_000040_Maps_1769016584832.jpg";
 
 interface Place {
   name: string;
@@ -581,6 +582,7 @@ const placesData: Record<string, Category> = {
         name: "Ten 커피숍", 
         nameVi: "Ten Coffee", 
         mapUrl: "https://maps.app.goo.gl/2c67Nd3hhjFGdZj36",
+        imageUrl: tenCoffeeImg,
         description: {
           ko: "현지인들에게 인기 있는 분위기 좋은 커피숍. 다양한 음료와 편안한 공간에서 여유를 즐길 수 있습니다.",
           en: "Popular local coffee shop with great atmosphere. Enjoy various drinks in a cozy space.",
