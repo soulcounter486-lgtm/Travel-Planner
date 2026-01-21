@@ -19,6 +19,13 @@
     <meta name="twitter:description" content="베트남 붕따우 여행의 모든것, 실시간 견적서 확인, 관광명소 및 맛집 소개, AI플래너가 자동으로 일정을 생성해줘요, 여행가계부까지." />
     <meta name="twitter:image" content="https://vungtau.blog/og-image.png" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#f59e0b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="붕따우 도깨비" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <link rel="canonical" href="https://vungtau.blog" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,5 +34,18 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered:', registration);
+            })
+            .catch((error) => {
+              console.log('SW registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
