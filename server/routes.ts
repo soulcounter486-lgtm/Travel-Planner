@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions } from "@shared/schema";
 import { addDays, getDay, parseISO, format } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -13,6 +13,40 @@ import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integra
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import webpush from "web-push";
+
+// Web Push 설정
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || "";
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || "";
+const vapidSubject = process.env.VAPID_SUBJECT || "mailto:admin@vungtau.blog";
+
+if (vapidPublicKey && vapidPrivateKey) {
+  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+}
+
+// 푸시 알림 발송 함수
+async function sendPushNotifications(title: string, body: string, url: string = "/board") {
+  try {
+    const subscriptions = await db.select().from(pushSubscriptions);
+    const payload = JSON.stringify({ title, body, url });
+    
+    for (const sub of subscriptions) {
+      try {
+        await webpush.sendNotification({
+          endpoint: sub.endpoint,
+          keys: sub.keys as { p256dh: string; auth: string }
+        }, payload);
+      } catch (err: any) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
+        }
+        console.error("Push notification error:", err);
+      }
+    }
+  } catch (err) {
+    console.error("Send push notifications error:", err);
+  }
+}
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
@@ -190,6 +224,49 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       res.json({ rates, timestamp: exchangeRatesCache?.timestamp || Date.now() });
     } catch (error) {
       res.status(500).json({ rates: defaultRates, timestamp: Date.now() });
+    }
+  });
+
+  // === 푸시 알림 API ===
+  
+  // VAPID 공개키 조회
+  app.get("/api/push/vapid-public-key", (req, res) => {
+    res.json({ publicKey: vapidPublicKey });
+  });
+  
+  // 푸시 구독 등록
+  app.post("/api/push/subscribe", async (req, res) => {
+    try {
+      const { endpoint, keys } = req.body;
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return res.status(400).json({ message: "Invalid subscription" });
+      }
+      
+      const existing = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+      if (existing.length === 0) {
+        await db.insert(pushSubscriptions).values({ endpoint, keys });
+      }
+      
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Push subscribe error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+  
+  // 푸시 구독 해제
+  app.post("/api/push/unsubscribe", async (req, res) => {
+    try {
+      const { endpoint } = req.body;
+      if (!endpoint) {
+        return res.status(400).json({ message: "Endpoint required" });
+      }
+      
+      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Push unsubscribe error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -1200,6 +1277,13 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         authorId: userId,
         authorName: user.claims?.first_name || user.claims?.email || "관리자",
       }).returning();
+
+      // 푸시 알림 발송 (비동기로 처리)
+      sendPushNotifications(
+        "붕따우 도깨비 새 소식",
+        newPost.title,
+        `/board/${newPost.id}`
+      );
 
       res.status(201).json(newPost);
     } catch (err) {
