@@ -123,39 +123,50 @@ export default function ChatRoom() {
 
   // Update mini map markers
   useEffect(() => {
-    if (!miniMapRef.current) return;
+    const updateMarkers = () => {
+      if (!miniMapRef.current) return;
 
-    miniMapRef.current.eachLayer((layer) => {
-      if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
-        miniMapRef.current?.removeLayer(layer);
+      // Clear existing markers
+      miniMapRef.current.eachLayer((layer) => {
+        if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+          miniMapRef.current?.removeLayer(layer);
+        }
+      });
+
+      // Add markers for each location
+      locations.forEach((loc) => {
+        const isMe = loc.nickname === nickname;
+        const lat = parseFloat(loc.latitude);
+        const lng = parseFloat(loc.longitude);
+
+        L.circleMarker([lat, lng], {
+          radius: isMe ? 10 : 8,
+          fillColor: isMe ? "#22c55e" : "#3b82f6",
+          fillOpacity: 1,
+          color: "#ffffff",
+          weight: 2,
+        }).bindPopup(`<b>${loc.nickname}</b>${loc.message ? `<br/>${loc.message}` : ""}`).addTo(miniMapRef.current!);
+      });
+
+      // Fit bounds
+      if (locations.length > 0) {
+        const bounds = L.latLngBounds(
+          locations.map((loc) => [parseFloat(loc.latitude), parseFloat(loc.longitude)] as L.LatLngTuple)
+        );
+        if (locations.length > 1) {
+          miniMapRef.current.fitBounds(bounds, { padding: [20, 20] });
+        } else {
+          miniMapRef.current.setView([parseFloat(locations[0].latitude), parseFloat(locations[0].longitude)], 14);
+        }
       }
-    });
+      
+      miniMapRef.current.invalidateSize();
+    };
 
-    locations.forEach((loc) => {
-      const isMe = loc.nickname === nickname;
-      const lat = parseFloat(loc.latitude);
-      const lng = parseFloat(loc.longitude);
-
-      L.circleMarker([lat, lng], {
-        radius: isMe ? 10 : 8,
-        fillColor: isMe ? "#22c55e" : "#3b82f6",
-        fillOpacity: 1,
-        color: "#ffffff",
-        weight: 2,
-      }).bindPopup(`<b>${loc.nickname}</b>${loc.message ? `<br/>${loc.message}` : ""}`).addTo(miniMapRef.current!);
-    });
-
-    if (locations.length > 0) {
-      const bounds = L.latLngBounds(
-        locations.map((loc) => [parseFloat(loc.latitude), parseFloat(loc.longitude)] as L.LatLngTuple)
-      );
-      if (locations.length > 1) {
-        miniMapRef.current.fitBounds(bounds, { padding: [20, 20] });
-      } else {
-        miniMapRef.current.setView([parseFloat(locations[0].latitude), parseFloat(locations[0].longitude)], 14);
-      }
-    }
-  }, [locations, nickname]);
+    // Delay to ensure map is initialized
+    const timer = setTimeout(updateMarkers, 200);
+    return () => clearTimeout(timer);
+  }, [locations, nickname, isJoined]);
 
   const requestNotificationPermission = async () => {
     if ("Notification" in window) {
