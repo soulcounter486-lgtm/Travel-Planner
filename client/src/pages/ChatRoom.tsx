@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,16 @@ import {
   ShoppingBag,
   MapPin,
   Navigation,
-  Map
+  Map,
+  Clock,
+  ExternalLink
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+import type { UserLocation } from "@shared/schema";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 interface ChatMessage {
   type: string;
@@ -38,11 +43,17 @@ interface ChatMessage {
 
 export default function ChatRoom() {
   const { language, t } = useLanguage();
+  const queryClient = useQueryClient();
   
   const { data: adminCheck } = useQuery<{ isAdmin: boolean; isLoggedIn: boolean }>({
     queryKey: ["/api/check-admin"],
   });
   const isAdmin = adminCheck?.isAdmin || false;
+  
+  const { data: locations = [] } = useQuery<UserLocation[]>({
+    queryKey: ["/api/locations"],
+    refetchInterval: 30000,
+  });
   
   const [nickname, setNickname] = useState(() => {
     return localStorage.getItem("chat_nickname") || "";
@@ -58,6 +69,8 @@ export default function ChatRoom() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const savedNicknameRef = useRef<string>(localStorage.getItem("chat_nickname") || "");
+  const miniMapRef = useRef<L.Map | null>(null);
+  const miniMapContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "granted") {
@@ -74,6 +87,66 @@ export default function ChatRoom() {
       connectWebSocket(savedNick);
     }
   }, []);
+
+  // Initialize mini map
+  useEffect(() => {
+    if (!miniMapContainerRef.current || !isJoined) return;
+    
+    if (!miniMapRef.current) {
+      const defaultCenter: L.LatLngExpression = [10.3460, 107.0843];
+      miniMapRef.current = L.map(miniMapContainerRef.current, {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView(defaultCenter, 13);
+      
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(miniMapRef.current);
+    }
+
+    return () => {
+      if (miniMapRef.current) {
+        miniMapRef.current.remove();
+        miniMapRef.current = null;
+      }
+    };
+  }, [isJoined]);
+
+  // Update mini map markers
+  useEffect(() => {
+    if (!miniMapRef.current) return;
+
+    miniMapRef.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+        miniMapRef.current?.removeLayer(layer);
+      }
+    });
+
+    locations.forEach((loc) => {
+      const isMe = loc.nickname === nickname;
+      const lat = parseFloat(loc.latitude);
+      const lng = parseFloat(loc.longitude);
+
+      L.circleMarker([lat, lng], {
+        radius: isMe ? 10 : 8,
+        fillColor: isMe ? "#22c55e" : "#3b82f6",
+        fillOpacity: 1,
+        color: "#ffffff",
+        weight: 2,
+      }).bindPopup(`<b>${loc.nickname}</b>${loc.message ? `<br/>${loc.message}` : ""}`).addTo(miniMapRef.current!);
+    });
+
+    if (locations.length > 0) {
+      const bounds = L.latLngBounds(
+        locations.map((loc) => [parseFloat(loc.latitude), parseFloat(loc.longitude)] as L.LatLngTuple)
+      );
+      if (locations.length > 1) {
+        miniMapRef.current.fitBounds(bounds, { padding: [20, 20] });
+      } else {
+        miniMapRef.current.setView([parseFloat(locations[0].latitude), parseFloat(locations[0].longitude)], 14);
+      }
+    }
+  }, [locations, nickname]);
 
   const requestNotificationPermission = async () => {
     if ("Notification" in window) {
@@ -527,7 +600,7 @@ export default function ChatRoom() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px]">
+              <ScrollArea className="h-[200px]">
                 <div className="space-y-2">
                   {onlineUsers.map((user, idx) => (
                     <div
@@ -547,6 +620,65 @@ export default function ChatRoom() {
               </ScrollArea>
             </CardContent>
           </Card>
+
+          {isJoined && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    {language === "ko" ? "위치 공유" : "Locations"} ({locations.length})
+                  </span>
+                  <Link href="/locations">
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      {language === "ko" ? "전체보기" : "View All"}
+                    </Button>
+                  </Link>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div 
+                  ref={miniMapContainerRef}
+                  className="w-full h-[150px] rounded-lg z-0"
+                />
+                {locations.length > 0 ? (
+                  <ScrollArea className="h-[120px]">
+                    <div className="space-y-1.5">
+                      {locations.map((loc) => (
+                        <div
+                          key={loc.id}
+                          className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
+                            loc.nickname === nickname ? "bg-green-500/10 border border-green-500/30" : "bg-muted/50"
+                          }`}
+                        >
+                          <div 
+                            className={`w-2 h-2 rounded-full ${
+                              loc.nickname === nickname ? "bg-green-500" : "bg-blue-500"
+                            }`} 
+                          />
+                          <span className="font-medium truncate flex-1">{loc.nickname}</span>
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {(() => {
+                              const diff = new Date(loc.expiresAt).getTime() - Date.now();
+                              const hours = Math.floor(diff / (1000 * 60 * 60));
+                              return `${hours}h`;
+                            })()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="text-center text-muted-foreground text-xs py-4">
+                    <MapPin className="w-6 h-6 mx-auto mb-1 opacity-50" />
+                    {language === "ko" ? "공유된 위치 없음" : "No shared locations"}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
     </div>
