@@ -180,67 +180,68 @@ export default function LocationShare() {
   const myLocation = locations.find(loc => loc.nickname === myNickname);
 
   const initMap = useCallback(() => {
-    if (!window.google || locations.length === 0) return;
+    if (!window.google || !window.google.maps) return;
     
     const mapElement = document.getElementById("location-map");
     if (!mapElement) return;
+    
+    try {
+      const center = locations.length > 0 
+        ? { lat: parseFloat(locations[0].latitude), lng: parseFloat(locations[0].longitude) }
+        : { lat: 10.3460, lng: 107.0843 };
 
-    const center = locations.length > 0 
-      ? { lat: parseFloat(locations[0].latitude), lng: parseFloat(locations[0].longitude) }
-      : { lat: 10.3460, lng: 107.0843 };
-
-    const map = new google.maps.Map(mapElement, {
-      zoom: 14,
-      center,
-      mapTypeId: "roadmap",
-      styles: [
-        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
-      ],
-    });
-
-    locations.forEach((loc, index) => {
-      const isMe = loc.nickname === myNickname;
-      const marker = new google.maps.Marker({
-        position: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
-        map,
-        title: loc.nickname,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: isMe ? 12 : 10,
-          fillColor: isMe ? "#22c55e" : "#3b82f6",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-        },
-        label: {
-          text: loc.nickname.charAt(0).toUpperCase(),
-          color: "#ffffff",
-          fontSize: "12px",
-          fontWeight: "bold",
-        },
+      const map = new google.maps.Map(mapElement, {
+        zoom: 14,
+        center,
+        mapTypeId: "roadmap",
       });
 
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 8px; min-width: 150px;">
-            <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${loc.nickname}</div>
-            ${loc.message ? `<div style="color: #666; font-size: 12px;">${loc.message}</div>` : ""}
-            ${loc.placeName ? `<div style="color: #3b82f6; font-size: 12px; margin-top: 4px;">${loc.placeName}</div>` : ""}
-          </div>
-        `,
+      locations.forEach((loc) => {
+        const isMe = loc.nickname === myNickname;
+        const marker = new google.maps.Marker({
+          position: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
+          map,
+          title: loc.nickname,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: isMe ? 12 : 10,
+            fillColor: isMe ? "#22c55e" : "#3b82f6",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 3,
+          },
+          label: {
+            text: loc.nickname.charAt(0).toUpperCase(),
+            color: "#ffffff",
+            fontSize: "12px",
+            fontWeight: "bold",
+          },
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: `
+            <div style="padding: 8px; min-width: 150px;">
+              <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${loc.nickname}</div>
+              ${loc.message ? `<div style="color: #666; font-size: 12px;">${loc.message}</div>` : ""}
+              ${loc.placeName ? `<div style="color: #3b82f6; font-size: 12px; margin-top: 4px;">${loc.placeName}</div>` : ""}
+            </div>
+          `,
+        });
+
+        marker.addListener("click", () => {
+          infoWindow.open(map, marker);
+        });
       });
 
-      marker.addListener("click", () => {
-        infoWindow.open(map, marker);
-      });
-    });
-
-    if (locations.length > 1) {
-      const bounds = new google.maps.LatLngBounds();
-      locations.forEach(loc => {
-        bounds.extend({ lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) });
-      });
-      map.fitBounds(bounds);
+      if (locations.length > 1) {
+        const bounds = new google.maps.LatLngBounds();
+        locations.forEach(loc => {
+          bounds.extend({ lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) });
+        });
+        map.fitBounds(bounds);
+      }
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
     }
   }, [locations, myNickname]);
 
@@ -271,7 +272,7 @@ export default function LocationShare() {
   }, []);
 
   useEffect(() => {
-    if (mapLoaded && locations.length > 0) {
+    if (mapLoaded) {
       initMap();
     }
   }, [mapLoaded, locations, initMap]);
