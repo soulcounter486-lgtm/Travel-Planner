@@ -239,6 +239,11 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // Google Maps API Key (for client)
+  app.get("/api/google-maps-key", (req, res) => {
+    res.json({ apiKey: process.env.GOOGLE_MAPS_API_KEY || "" });
+  });
+
   // === 푸시 알림 API ===
   
   // VAPID 공개키 조회

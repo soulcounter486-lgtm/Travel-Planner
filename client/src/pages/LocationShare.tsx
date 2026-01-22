@@ -748,10 +748,3 @@ export default function LocationShare() {
     </div>
   );
 }
-
-declare global {
-  interface Window {
-    google: any;
-  }
-  const google: any;
-}
