@@ -23,13 +23,7 @@ import {
   Trash2,
   Clock,
   Users,
-  Radio,
-  Search,
-  Utensils,
-  Coffee,
-  Camera,
-  Star,
-  ExternalLink
+  Radio
 } from "lucide-react";
 import { motion } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
@@ -43,9 +37,6 @@ export default function LocationShare() {
   const [myNickname] = useState(() => localStorage.getItem("chat_nickname") || "");
   const [isSharing, setIsSharing] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
-  const [nearbyPlaces, setNearbyPlaces] = useState<any[]>([]);
-  const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
-  const [selectedPlaceType, setSelectedPlaceType] = useState<"restaurant" | "cafe" | "tourist">("restaurant");
   const trackingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -70,12 +61,6 @@ export default function LocationShare() {
       realTimeTracking: "실시간 트래킹",
       trackingOn: "2초마다 위치 자동 업데이트",
       trackingOff: "수동 공유 모드",
-      nearbyPlaces: "주변 장소 검색",
-      restaurant: "맛집",
-      cafe: "카페",
-      tourist: "관광지",
-      searchNearby: "주변 검색",
-      noPlacesFound: "검색 결과가 없습니다",
     },
     en: {
       title: "Location Sharing Map",
@@ -91,12 +76,6 @@ export default function LocationShare() {
       realTimeTracking: "Real-time Tracking",
       trackingOn: "Auto-update every 2 seconds",
       trackingOff: "Manual sharing mode",
-      nearbyPlaces: "Nearby Places",
-      restaurant: "Restaurants",
-      cafe: "Cafes",
-      tourist: "Attractions",
-      searchNearby: "Search Nearby",
-      noPlacesFound: "No places found",
     },
     zh: {
       title: "位置共享地图",
@@ -112,12 +91,6 @@ export default function LocationShare() {
       realTimeTracking: "实时跟踪",
       trackingOn: "每2秒自动更新",
       trackingOff: "手动分享模式",
-      nearbyPlaces: "附近地点",
-      restaurant: "餐厅",
-      cafe: "咖啡厅",
-      tourist: "景点",
-      searchNearby: "搜索附近",
-      noPlacesFound: "未找到地点",
     },
     vi: {
       title: "Bản đồ chia sẻ vị trí",
@@ -133,12 +106,6 @@ export default function LocationShare() {
       realTimeTracking: "Theo dõi thời gian thực",
       trackingOn: "Tự động cập nhật mỗi 2 giây",
       trackingOff: "Chế độ chia sẻ thủ công",
-      nearbyPlaces: "Địa điểm gần đây",
-      restaurant: "Nhà hàng",
-      cafe: "Quán cà phê",
-      tourist: "Điểm du lịch",
-      searchNearby: "Tìm gần đây",
-      noPlacesFound: "Không tìm thấy",
     },
     ru: {
       title: "Карта геолокации",
@@ -154,12 +121,6 @@ export default function LocationShare() {
       realTimeTracking: "Отслеживание в реальном времени",
       trackingOn: "Авто-обновление каждые 2 секунды",
       trackingOff: "Ручной режим",
-      nearbyPlaces: "Ближайшие места",
-      restaurant: "Рестораны",
-      cafe: "Кафе",
-      tourist: "Достопримечательности",
-      searchNearby: "Искать рядом",
-      noPlacesFound: "Места не найдены",
     },
     ja: {
       title: "位置共有マップ",
@@ -175,67 +136,10 @@ export default function LocationShare() {
       realTimeTracking: "リアルタイム追跡",
       trackingOn: "2秒ごとに自動更新",
       trackingOff: "手動共有モード",
-      nearbyPlaces: "近くの場所",
-      restaurant: "レストラン",
-      cafe: "カフェ",
-      tourist: "観光地",
-      searchNearby: "近くを検索",
-      noPlacesFound: "場所が見つかりません",
     },
   };
 
   const label = labels[language] || labels.ko;
-
-  // Search nearby places using SerpAPI
-  const searchNearbyPlaces = async () => {
-    if (!myLocation) {
-      alert(language === "ko" ? "먼저 내 위치를 공유해주세요." : "Please share your location first.");
-      return;
-    }
-    
-    setIsSearchingPlaces(true);
-    try {
-      const typeQuery = selectedPlaceType === "restaurant" ? "restaurants" : 
-                        selectedPlaceType === "cafe" ? "cafe" : "tourist attractions";
-      
-      const response = await fetch(
-        `/api/nearby-places?lat=${myLocation.latitude}&lng=${myLocation.longitude}&type=${selectedPlaceType}&query=${encodeURIComponent(typeQuery + " Vung Tau")}`
-      );
-      const data = await response.json();
-      
-      if (data.places) {
-        setNearbyPlaces(data.places);
-        
-        // Add markers to map
-        if (mapRef.current) {
-          data.places.forEach((place: any) => {
-            if (place.latitude && place.longitude) {
-              const marker = L.circleMarker([place.latitude, place.longitude], {
-                radius: 8,
-                fillColor: selectedPlaceType === "restaurant" ? "#ef4444" : 
-                           selectedPlaceType === "cafe" ? "#f59e0b" : "#8b5cf6",
-                fillOpacity: 0.8,
-                color: "#ffffff",
-                weight: 2,
-              }).addTo(mapRef.current!);
-              
-              marker.bindPopup(`
-                <div style="min-width: 150px;">
-                  <b>${place.name}</b>
-                  ${place.rating ? `<div>⭐ ${place.rating} (${place.reviews || 0})</div>` : ""}
-                  ${place.address ? `<div style="font-size: 11px; color: #666;">${place.address}</div>` : ""}
-                </div>
-              `);
-            }
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Search places error:", error);
-    } finally {
-      setIsSearchingPlaces(false);
-    }
-  };
 
   // Update location once (used by both manual and tracking)
   const updateMyLocation = useCallback(async () => {
@@ -621,82 +525,6 @@ export default function LocationShare() {
               </CardContent>
             </Card>
 
-            {/* Nearby Places Search */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Search className="w-4 h-4" />
-                  {label.nearbyPlaces}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant={selectedPlaceType === "restaurant" ? "default" : "outline"}
-                    onClick={() => setSelectedPlaceType("restaurant")}
-                    className="flex-1 text-xs"
-                  >
-                    <Utensils className="w-3 h-3 mr-1" />
-                    {label.restaurant}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={selectedPlaceType === "cafe" ? "default" : "outline"}
-                    onClick={() => setSelectedPlaceType("cafe")}
-                    className="flex-1 text-xs"
-                  >
-                    <Coffee className="w-3 h-3 mr-1" />
-                    {label.cafe}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={selectedPlaceType === "tourist" ? "default" : "outline"}
-                    onClick={() => setSelectedPlaceType("tourist")}
-                    className="flex-1 text-xs"
-                  >
-                    <Camera className="w-3 h-3 mr-1" />
-                    {label.tourist}
-                  </Button>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={searchNearbyPlaces}
-                  disabled={isSearchingPlaces || !myLocation}
-                  data-testid="btn-search-nearby"
-                >
-                  {isSearchingPlaces ? (
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Search className="w-4 h-4 mr-2" />
-                  )}
-                  {label.searchNearby}
-                </Button>
-                
-                {nearbyPlaces.length > 0 && (
-                  <ScrollArea className="h-[200px]">
-                    <div className="space-y-2">
-                      {nearbyPlaces.map((place, idx) => (
-                        <div key={idx} className="p-2 rounded-lg bg-muted/50 text-xs">
-                          <div className="font-medium">{place.name}</div>
-                          {place.rating && (
-                            <div className="flex items-center gap-1 text-yellow-500">
-                              <Star className="w-3 h-3 fill-current" />
-                              <span>{place.rating}</span>
-                              <span className="text-muted-foreground">({place.reviews || 0})</span>
-                            </div>
-                          )}
-                          {place.address && (
-                            <div className="text-muted-foreground truncate">{place.address}</div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                )}
-              </CardContent>
-            </Card>
-
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -747,4 +575,11 @@ export default function LocationShare() {
       </main>
     </div>
   );
+}
+
+declare global {
+  interface Window {
+    google: any;
+  }
+  const google: any;
 }

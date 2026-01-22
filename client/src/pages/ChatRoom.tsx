@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,7 +69,6 @@ export default function ChatRoom() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const savedNicknameRef = useRef<string>(localStorage.getItem("chat_nickname") || "");
-  
   const miniMapRef = useRef<L.Map | null>(null);
   const miniMapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -93,6 +92,7 @@ export default function ChatRoom() {
   useEffect(() => {
     if (!miniMapContainerRef.current || !isJoined) return;
     
+    // Small delay to ensure container is rendered
     const timer = setTimeout(() => {
       if (!miniMapContainerRef.current) return;
       
@@ -108,6 +108,7 @@ export default function ChatRoom() {
         }).addTo(miniMapRef.current);
       }
       
+      // Invalidate size to fix rendering issues
       miniMapRef.current?.invalidateSize();
     }, 100);
 
@@ -125,12 +126,14 @@ export default function ChatRoom() {
     const updateMarkers = () => {
       if (!miniMapRef.current) return;
 
+      // Clear existing markers
       miniMapRef.current.eachLayer((layer) => {
         if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
           miniMapRef.current?.removeLayer(layer);
         }
       });
 
+      // Add markers for each location
       locations.forEach((loc) => {
         const isMe = loc.nickname === nickname;
         const lat = parseFloat(loc.latitude);
@@ -145,6 +148,7 @@ export default function ChatRoom() {
         }).bindPopup(`<b>${loc.nickname}</b>${loc.message ? `<br/>${loc.message}` : ""}`).addTo(miniMapRef.current!);
       });
 
+      // Fit bounds
       if (locations.length > 0) {
         const bounds = L.latLngBounds(
           locations.map((loc) => [parseFloat(loc.latitude), parseFloat(loc.longitude)] as L.LatLngTuple)
@@ -159,6 +163,7 @@ export default function ChatRoom() {
       miniMapRef.current.invalidateSize();
     };
 
+    // Delay to ensure map is initialized
     const timer = setTimeout(updateMarkers, 200);
     return () => clearTimeout(timer);
   }, [locations, nickname, isJoined]);
@@ -654,9 +659,9 @@ export default function ChatRoom() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div 
-                  ref={miniMapContainerRef} 
-                  className="w-full h-[250px] rounded-lg overflow-hidden"
-                  style={{ zIndex: 0 }}
+                  ref={miniMapContainerRef}
+                  className="w-full h-[250px] rounded-lg z-0 border"
+                  style={{ minHeight: "250px" }}
                 />
                 {locations.length > 0 ? (
                   <ScrollArea className="h-[150px]">
