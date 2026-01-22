@@ -1793,6 +1793,97 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // === SerpAPI Google Maps 검색 ===
+  
+  // 주변 장소 검색 (맛집, 관광지, 카페 등)
+  app.get("/api/nearby-places", async (req, res) => {
+    try {
+      const { lat, lng, query, type } = req.query;
+      
+      if (!lat || !lng) {
+        return res.status(400).json({ error: "Latitude and longitude are required" });
+      }
+      
+      const serpApiKey = process.env.SERPAPI_API_KEY;
+      if (!serpApiKey) {
+        return res.status(500).json({ error: "SerpAPI key not configured" });
+      }
+      
+      // 검색어 설정 (기본값: 맛집)
+      const searchQuery = query || (type === "tourist" ? "tourist attractions" : type === "cafe" ? "cafe" : "restaurants");
+      const ll = `@${lat},${lng},15z`; // 위도, 경도, 줌레벨
+      
+      const url = new URL("https://serpapi.com/search");
+      url.searchParams.set("engine", "google_maps");
+      url.searchParams.set("q", String(searchQuery));
+      url.searchParams.set("ll", ll);
+      url.searchParams.set("type", "search");
+      url.searchParams.set("api_key", serpApiKey);
+      
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error("SerpAPI error:", data.error);
+        return res.status(500).json({ error: data.error });
+      }
+      
+      // 결과 가공
+      const places = (data.local_results || []).map((place: any) => ({
+        id: place.place_id || place.data_id,
+        name: place.title,
+        address: place.address,
+        rating: place.rating,
+        reviews: place.reviews,
+        type: place.type,
+        phone: place.phone,
+        website: place.website,
+        hours: place.hours,
+        thumbnail: place.thumbnail,
+        latitude: place.gps_coordinates?.latitude,
+        longitude: place.gps_coordinates?.longitude,
+        price: place.price,
+        description: place.description,
+      }));
+      
+      res.json({ places, searchMetadata: data.search_metadata });
+    } catch (error) {
+      console.error("Nearby places search error:", error);
+      res.status(500).json({ error: "Failed to search nearby places" });
+    }
+  });
+  
+  // 특정 장소 상세 정보
+  app.get("/api/place-details/:placeId", async (req, res) => {
+    try {
+      const { placeId } = req.params;
+      
+      const serpApiKey = process.env.SERPAPI_API_KEY;
+      if (!serpApiKey) {
+        return res.status(500).json({ error: "SerpAPI key not configured" });
+      }
+      
+      const url = new URL("https://serpapi.com/search");
+      url.searchParams.set("engine", "google_maps");
+      url.searchParams.set("type", "place");
+      url.searchParams.set("place_id", placeId);
+      url.searchParams.set("api_key", serpApiKey);
+      
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error("SerpAPI error:", data.error);
+        return res.status(500).json({ error: data.error });
+      }
+      
+      res.json(data.place_results || data);
+    } catch (error) {
+      console.error("Place details error:", error);
+      res.status(500).json({ error: "Failed to get place details" });
+    }
+  });
+
   // WebSocket 채팅 서버
   const wss = new WebSocketServer({ server: httpServer, path: "/ws/chat" });
   
