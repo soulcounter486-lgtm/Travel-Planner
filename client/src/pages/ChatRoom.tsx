@@ -20,8 +20,12 @@ import {
   Bell,
   BellOff,
   FileText,
-  ShoppingBag
+  ShoppingBag,
+  MapPin,
+  Navigation,
+  Map
 } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 
@@ -49,6 +53,7 @@ export default function ChatRoom() {
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [isShareingLocation, setIsSharingLocation] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -236,6 +241,51 @@ export default function ChatRoom() {
       wsRef.current.send(JSON.stringify({ type: "message", message: message.trim() }));
       setMessage("");
     }
+  };
+
+  const handleShareLocation = async () => {
+    if (!navigator.geolocation) {
+      alert(language === "ko" ? "위치 서비스를 지원하지 않는 브라우저입니다." : "Geolocation is not supported by your browser.");
+      return;
+    }
+    
+    setIsSharingLocation(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          
+          await apiRequest("/api/locations", {
+            method: "POST",
+            body: JSON.stringify({
+              nickname: savedNicknameRef.current,
+              latitude,
+              longitude,
+              message: language === "ko" ? "현재 여기 있어요!" : "I'm here now!",
+            }),
+          });
+          
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            const locationMsg = language === "ko" 
+              ? `📍 내 위치를 공유했어요! 위치 지도에서 확인하세요.`
+              : `📍 I shared my location! Check it on the location map.`;
+            wsRef.current.send(JSON.stringify({ type: "message", message: locationMsg }));
+          }
+        } catch (error) {
+          console.error("Failed to share location:", error);
+          alert(language === "ko" ? "위치 공유에 실패했습니다." : "Failed to share location.");
+        } finally {
+          setIsSharingLocation(false);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        setIsSharingLocation(false);
+        alert(language === "ko" ? "위치를 가져올 수 없습니다. 위치 권한을 확인해주세요." : "Could not get your location. Please check location permissions.");
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -435,6 +485,30 @@ export default function ChatRoom() {
                       className="flex-1"
                       data-testid="input-message"
                     />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={handleShareLocation}
+                      disabled={!isConnected || isShareingLocation}
+                      title={language === "ko" ? "내 위치 공유" : "Share my location"}
+                      data-testid="btn-share-location"
+                    >
+                      {isShareingLocation ? (
+                        <div className="w-4 h-4 border-2 border-t-transparent border-primary rounded-full animate-spin" />
+                      ) : (
+                        <MapPin className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <Link href="/locations">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        title={language === "ko" ? "위치 지도 보기" : "View location map"}
+                        data-testid="btn-view-map"
+                      >
+                        <Map className="w-4 h-4" />
+                      </Button>
+                    </Link>
                     <Button
                       onClick={handleSend}
                       disabled={!message.trim() || !isConnected}
