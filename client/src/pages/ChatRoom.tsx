@@ -92,19 +92,28 @@ export default function ChatRoom() {
   useEffect(() => {
     if (!miniMapContainerRef.current || !isJoined) return;
     
-    if (!miniMapRef.current) {
-      const defaultCenter: L.LatLngExpression = [10.3460, 107.0843];
-      miniMapRef.current = L.map(miniMapContainerRef.current, {
-        zoomControl: false,
-        attributionControl: false,
-      }).setView(defaultCenter, 13);
+    // Small delay to ensure container is rendered
+    const timer = setTimeout(() => {
+      if (!miniMapContainerRef.current) return;
       
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-      }).addTo(miniMapRef.current);
-    }
+      if (!miniMapRef.current) {
+        const defaultCenter: L.LatLngExpression = [10.3460, 107.0843];
+        miniMapRef.current = L.map(miniMapContainerRef.current, {
+          zoomControl: false,
+          attributionControl: false,
+        }).setView(defaultCenter, 13);
+        
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+        }).addTo(miniMapRef.current);
+      }
+      
+      // Invalidate size to fix rendering issues
+      miniMapRef.current?.invalidateSize();
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       if (miniMapRef.current) {
         miniMapRef.current.remove();
         miniMapRef.current = null;
@@ -599,18 +608,18 @@ export default function ChatRoom() {
                 {labels.online} ({onlineUsers.length})
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[200px]">
-                <div className="space-y-2">
+            <CardContent className="p-3">
+              <ScrollArea className="h-[100px]">
+                <div className="space-y-1">
                   {onlineUsers.map((user, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+                      className="flex items-center gap-2 p-1.5 rounded bg-muted/50 text-xs"
                     >
                       <div className="w-2 h-2 rounded-full bg-green-500" />
-                      <span className="text-sm truncate">{user}</span>
+                      <span className="truncate">{user}</span>
                       {user === nickname && (
-                        <Badge variant="outline" className="text-xs ml-auto">
+                        <Badge variant="outline" className="text-[10px] ml-auto h-4">
                           You
                         </Badge>
                       )}
@@ -640,10 +649,11 @@ export default function ChatRoom() {
               <CardContent className="space-y-3">
                 <div 
                   ref={miniMapContainerRef}
-                  className="w-full h-[150px] rounded-lg z-0"
+                  className="w-full h-[250px] rounded-lg z-0 border"
+                  style={{ minHeight: "250px" }}
                 />
                 {locations.length > 0 ? (
-                  <ScrollArea className="h-[120px]">
+                  <ScrollArea className="h-[150px]">
                     <div className="space-y-1.5">
                       {locations.map((loc) => (
                         <div
@@ -658,6 +668,9 @@ export default function ChatRoom() {
                             }`} 
                           />
                           <span className="font-medium truncate flex-1">{loc.nickname}</span>
+                          {loc.message && (
+                            <span className="text-muted-foreground truncate max-w-[80px]">{loc.message}</span>
+                          )}
                           <span className="text-muted-foreground flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             {(() => {
