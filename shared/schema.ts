@@ -205,3 +205,21 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
 });
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+
+// 위치 공유 테이블
+export const userLocations = pgTable("user_locations", {
+  id: serial("id").primaryKey(),
+  nickname: text("nickname").notNull(),
+  latitude: text("latitude").notNull(),
+  longitude: text("longitude").notNull(),
+  placeName: text("place_name"), // 선택: 장소 이름 (예: "Bi Roen 이발소")
+  placeCategory: text("place_category"), // 선택: 장소 카테고리 (예: "coffee", "localFood")
+  message: text("message"), // 선택: 메시지 (예: "여기 추천해요!")
+  expiresAt: timestamp("expires_at").notNull(), // 위치 만료 시간 (24시간 후 자동 삭제)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserLocationSchema = createInsertSchema(userLocations).omit({ id: true, createdAt: true });
+
+export type UserLocation = typeof userLocations.$inferSelect;
+export type InsertUserLocation = z.infer<typeof insertUserLocationSchema>;

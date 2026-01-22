@@ -5,8 +5,8 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions } from "@shared/schema";
-import { addDays, getDay, parseISO, format } from "date-fns";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema } from "@shared/schema";
+import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
@@ -1706,6 +1706,81 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         image: null,
         siteName: new URL(url).hostname,
       });
+    }
+  });
+
+  // === 위치 공유 API ===
+  
+  // 모든 활성 위치 조회
+  app.get("/api/locations", async (req, res) => {
+    try {
+      // 만료되지 않은 위치만 조회
+      const now = new Date();
+      const locations = await db.select()
+        .from(userLocations)
+        .where(sql`${userLocations.expiresAt} > ${now}`)
+        .orderBy(desc(userLocations.createdAt));
+      res.json(locations);
+    } catch (error) {
+      console.error("Get locations error:", error);
+      res.status(500).json({ error: "Failed to get locations" });
+    }
+  });
+  
+  // 위치 공유 (현재 위치 또는 장소)
+  app.post("/api/locations", async (req, res) => {
+    try {
+      const { nickname, latitude, longitude, placeName, placeCategory, message } = req.body;
+      
+      if (!nickname || !latitude || !longitude) {
+        return res.status(400).json({ error: "Nickname, latitude, and longitude are required" });
+      }
+      
+      // 24시간 후 만료
+      const expiresAt = addHours(new Date(), 24);
+      
+      // 같은 닉네임의 이전 위치 삭제
+      await db.delete(userLocations).where(eq(userLocations.nickname, nickname));
+      
+      // 새 위치 저장
+      const [location] = await db.insert(userLocations).values({
+        nickname,
+        latitude: String(latitude),
+        longitude: String(longitude),
+        placeName: placeName || null,
+        placeCategory: placeCategory || null,
+        message: message || null,
+        expiresAt,
+      }).returning();
+      
+      res.json(location);
+    } catch (error) {
+      console.error("Share location error:", error);
+      res.status(500).json({ error: "Failed to share location" });
+    }
+  });
+  
+  // 내 위치 삭제
+  app.delete("/api/locations/:nickname", async (req, res) => {
+    try {
+      const { nickname } = req.params;
+      await db.delete(userLocations).where(eq(userLocations.nickname, nickname));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete location error:", error);
+      res.status(500).json({ error: "Failed to delete location" });
+    }
+  });
+  
+  // 만료된 위치 정리 (정기적으로 호출)
+  app.post("/api/locations/cleanup", async (req, res) => {
+    try {
+      const now = new Date();
+      await db.delete(userLocations).where(sql`${userLocations.expiresAt} <= ${now}`);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Cleanup locations error:", error);
+      res.status(500).json({ error: "Failed to cleanup locations" });
     }
   });
 
