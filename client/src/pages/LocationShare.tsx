@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/lib/i18n";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -20,7 +22,8 @@ import {
   RefreshCw,
   Trash2,
   Clock,
-  Users
+  Users,
+  Radio
 } from "lucide-react";
 import { motion } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
@@ -33,6 +36,8 @@ export default function LocationShare() {
   const queryClient = useQueryClient();
   const [myNickname] = useState(() => localStorage.getItem("chat_nickname") || "");
   const [isSharing, setIsSharing] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
+  const trackingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +58,9 @@ export default function LocationShare() {
       expiresIn: "만료까지",
       hours: "시간",
       backToChat: "채팅방으로",
+      realTimeTracking: "실시간 트래킹",
+      trackingOn: "10초마다 위치 자동 업데이트",
+      trackingOff: "수동 공유 모드",
     },
     en: {
       title: "Location Sharing Map",
@@ -65,6 +73,9 @@ export default function LocationShare() {
       expiresIn: "Expires in",
       hours: "hours",
       backToChat: "Back to Chat",
+      realTimeTracking: "Real-time Tracking",
+      trackingOn: "Auto-update every 10 seconds",
+      trackingOff: "Manual sharing mode",
     },
     zh: {
       title: "位置共享地图",
@@ -77,6 +88,9 @@ export default function LocationShare() {
       expiresIn: "到期",
       hours: "小时",
       backToChat: "返回聊天",
+      realTimeTracking: "实时跟踪",
+      trackingOn: "每10秒自动更新",
+      trackingOff: "手动分享模式",
     },
     vi: {
       title: "Bản đồ chia sẻ vị trí",
@@ -89,6 +103,9 @@ export default function LocationShare() {
       expiresIn: "Hết hạn trong",
       hours: "giờ",
       backToChat: "Quay lại chat",
+      realTimeTracking: "Theo dõi thời gian thực",
+      trackingOn: "Tự động cập nhật mỗi 10 giây",
+      trackingOff: "Chế độ chia sẻ thủ công",
     },
     ru: {
       title: "Карта геолокации",
@@ -101,6 +118,9 @@ export default function LocationShare() {
       expiresIn: "Истекает через",
       hours: "часов",
       backToChat: "В чат",
+      realTimeTracking: "Отслеживание в реальном времени",
+      trackingOn: "Авто-обновление каждые 10 секунд",
+      trackingOff: "Ручной режим",
     },
     ja: {
       title: "位置共有マップ",
@@ -113,10 +133,87 @@ export default function LocationShare() {
       expiresIn: "期限まで",
       hours: "時間",
       backToChat: "チャットへ戻る",
+      realTimeTracking: "リアルタイム追跡",
+      trackingOn: "10秒ごとに自動更新",
+      trackingOff: "手動共有モード",
     },
   };
 
   const label = labels[language] || labels.ko;
+
+  // Update location once (used by both manual and tracking)
+  const updateMyLocation = useCallback(async () => {
+    if (!navigator.geolocation || !myNickname) return;
+    
+    return new Promise<void>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            await apiRequest("POST", "/api/locations", {
+              nickname: myNickname,
+              latitude,
+              longitude,
+              message: isTracking 
+                ? (language === "ko" ? "실시간 트래킹 중" : "Live tracking")
+                : (language === "ko" ? "현재 여기 있어요!" : "I'm here now!"),
+            });
+            refetch();
+            resolve();
+          } catch (error) {
+            console.error("Failed to update location:", error);
+            reject(error);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          reject(error);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
+      );
+    });
+  }, [myNickname, isTracking, language, refetch]);
+
+  // Real-time tracking effect
+  useEffect(() => {
+    if (isTracking && myNickname) {
+      // Initial update
+      updateMyLocation().catch(console.error);
+      
+      // Set interval for continuous updates
+      trackingIntervalRef.current = setInterval(() => {
+        updateMyLocation().catch(console.error);
+      }, 10000); // Update every 10 seconds
+      
+      // Also refetch locations more frequently when tracking
+      const locationsInterval = setInterval(() => {
+        refetch();
+      }, 5000); // Refresh list every 5 seconds
+      
+      return () => {
+        if (trackingIntervalRef.current) {
+          clearInterval(trackingIntervalRef.current);
+          trackingIntervalRef.current = null;
+        }
+        clearInterval(locationsInterval);
+      };
+    } else {
+      // Clean up when tracking stops
+      if (trackingIntervalRef.current) {
+        clearInterval(trackingIntervalRef.current);
+        trackingIntervalRef.current = null;
+      }
+    }
+  }, [isTracking, myNickname, updateMyLocation, refetch]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (trackingIntervalRef.current) {
+        clearInterval(trackingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleShareLocation = async () => {
     if (!navigator.geolocation) {
@@ -369,21 +466,45 @@ export default function LocationShare() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button
-                  className="w-full"
-                  onClick={handleShareLocation}
-                  disabled={isSharing || !myNickname}
-                  data-testid="btn-share-my-location"
-                >
-                  {isSharing ? (
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <MapPin className="w-4 h-4 mr-2" />
-                  )}
-                  {label.shareLocation}
-                </Button>
+                {/* Real-time tracking toggle */}
+                <div className={`flex items-center justify-between p-3 rounded-lg border ${isTracking ? "bg-green-500/10 border-green-500/30" : "bg-muted/30"}`}>
+                  <div className="flex items-center gap-2">
+                    <Radio className={`w-4 h-4 ${isTracking ? "text-green-500 animate-pulse" : "text-muted-foreground"}`} />
+                    <div>
+                      <Label htmlFor="tracking-switch" className="text-sm font-medium cursor-pointer">
+                        {label.realTimeTracking}
+                      </Label>
+                      <p className="text-xs text-muted-foreground">
+                        {isTracking ? label.trackingOn : label.trackingOff}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="tracking-switch"
+                    checked={isTracking}
+                    onCheckedChange={setIsTracking}
+                    disabled={!myNickname}
+                    data-testid="switch-tracking"
+                  />
+                </div>
+
+                {!isTracking && (
+                  <Button
+                    className="w-full"
+                    onClick={handleShareLocation}
+                    disabled={isSharing || !myNickname}
+                    data-testid="btn-share-my-location"
+                  >
+                    {isSharing ? (
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <MapPin className="w-4 h-4 mr-2" />
+                    )}
+                    {label.shareLocation}
+                  </Button>
+                )}
                 
-                {myLocation && (
+                {myLocation && !isTracking && (
                   <Button
                     variant="outline"
                     className="w-full text-red-500 hover:text-red-600"
