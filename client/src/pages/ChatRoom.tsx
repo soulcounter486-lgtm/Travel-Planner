@@ -31,7 +31,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import type { UserLocation } from "@shared/schema";
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 interface ChatMessage {
   type: string;
@@ -64,33 +65,13 @@ export default function ChatRoom() {
   const [isConnected, setIsConnected] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isShareingLocation, setIsSharingLocation] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<UserLocation | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const savedNicknameRef = useRef<string>(localStorage.getItem("chat_nickname") || "");
   
-  // Fetch Google Maps API key
-  const { data: mapsKeyData } = useQuery<{ apiKey: string }>({
-    queryKey: ["/api/google-maps-key"],
-  });
-  
-  // Google Maps
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: mapsKeyData?.apiKey || "",
-  });
-  
-  const mapContainerStyle = {
-    width: '100%',
-    height: '250px',
-    borderRadius: '8px',
-  };
-  
-  const defaultCenter = {
-    lat: 10.3460,
-    lng: 107.0843,
-  };
+  const miniMapRef = useRef<L.Map | null>(null);
+  const miniMapContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if ("Notification" in window && Notification.permission === "granted") {
@@ -108,13 +89,79 @@ export default function ChatRoom() {
     }
   }, []);
 
-  // Calculate map center based on locations
-  const getMapCenter = useCallback(() => {
-    if (locations.length === 0) return defaultCenter;
-    const lat = locations.reduce((sum, loc) => sum + parseFloat(loc.latitude), 0) / locations.length;
-    const lng = locations.reduce((sum, loc) => sum + parseFloat(loc.longitude), 0) / locations.length;
-    return { lat, lng };
-  }, [locations]);
+  // Initialize mini map
+  useEffect(() => {
+    if (!miniMapContainerRef.current || !isJoined) return;
+    
+    const timer = setTimeout(() => {
+      if (!miniMapContainerRef.current) return;
+      
+      if (!miniMapRef.current) {
+        const defaultCenter: L.LatLngExpression = [10.3460, 107.0843];
+        miniMapRef.current = L.map(miniMapContainerRef.current, {
+          zoomControl: false,
+          attributionControl: false,
+        }).setView(defaultCenter, 13);
+        
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+        }).addTo(miniMapRef.current);
+      }
+      
+      miniMapRef.current?.invalidateSize();
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (miniMapRef.current) {
+        miniMapRef.current.remove();
+        miniMapRef.current = null;
+      }
+    };
+  }, [isJoined]);
+
+  // Update mini map markers
+  useEffect(() => {
+    const updateMarkers = () => {
+      if (!miniMapRef.current) return;
+
+      miniMapRef.current.eachLayer((layer) => {
+        if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+          miniMapRef.current?.removeLayer(layer);
+        }
+      });
+
+      locations.forEach((loc) => {
+        const isMe = loc.nickname === nickname;
+        const lat = parseFloat(loc.latitude);
+        const lng = parseFloat(loc.longitude);
+
+        L.circleMarker([lat, lng], {
+          radius: isMe ? 10 : 8,
+          fillColor: isMe ? "#22c55e" : "#3b82f6",
+          fillOpacity: 1,
+          color: "#ffffff",
+          weight: 2,
+        }).bindPopup(`<b>${loc.nickname}</b>${loc.message ? `<br/>${loc.message}` : ""}`).addTo(miniMapRef.current!);
+      });
+
+      if (locations.length > 0) {
+        const bounds = L.latLngBounds(
+          locations.map((loc) => [parseFloat(loc.latitude), parseFloat(loc.longitude)] as L.LatLngTuple)
+        );
+        if (locations.length > 1) {
+          miniMapRef.current.fitBounds(bounds, { padding: [20, 20] });
+        } else {
+          miniMapRef.current.setView([parseFloat(locations[0].latitude), parseFloat(locations[0].longitude)], 14);
+        }
+      }
+      
+      miniMapRef.current.invalidateSize();
+    };
+
+    const timer = setTimeout(updateMarkers, 200);
+    return () => clearTimeout(timer);
+  }, [locations, nickname, isJoined]);
 
   const requestNotificationPermission = async () => {
     if ("Notification" in window) {
@@ -606,56 +653,11 @@ export default function ChatRoom() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {isLoaded ? (
-                  <GoogleMap
-                    mapContainerStyle={mapContainerStyle}
-                    center={getMapCenter()}
-                    zoom={locations.length > 0 ? 14 : 13}
-                    options={{
-                      zoomControl: false,
-                      streetViewControl: false,
-                      mapTypeControl: false,
-                      fullscreenControl: false,
-                    }}
-                  >
-                    {locations.map((loc) => (
-                      <Marker
-                        key={loc.id}
-                        position={{
-                          lat: parseFloat(loc.latitude),
-                          lng: parseFloat(loc.longitude),
-                        }}
-                        icon={{
-                          path: google.maps.SymbolPath.CIRCLE,
-                          scale: loc.nickname === nickname ? 10 : 8,
-                          fillColor: loc.nickname === nickname ? "#22c55e" : "#3b82f6",
-                          fillOpacity: 1,
-                          strokeColor: "#ffffff",
-                          strokeWeight: 2,
-                        }}
-                        onClick={() => setSelectedLocation(loc)}
-                      />
-                    ))}
-                    {selectedLocation && (
-                      <InfoWindow
-                        position={{
-                          lat: parseFloat(selectedLocation.latitude),
-                          lng: parseFloat(selectedLocation.longitude),
-                        }}
-                        onCloseClick={() => setSelectedLocation(null)}
-                      >
-                        <div className="p-1">
-                          <b>{selectedLocation.nickname}</b>
-                          {selectedLocation.message && <div className="text-xs text-gray-600">{selectedLocation.message}</div>}
-                        </div>
-                      </InfoWindow>
-                    )}
-                  </GoogleMap>
-                ) : (
-                  <div className="w-full h-[250px] rounded-lg bg-muted flex items-center justify-center">
-                    <span className="text-muted-foreground text-sm">Loading map...</span>
-                  </div>
-                )}
+                <div 
+                  ref={miniMapContainerRef} 
+                  className="w-full h-[250px] rounded-lg overflow-hidden"
+                  style={{ zIndex: 0 }}
+                />
                 {locations.length > 0 ? (
                   <ScrollArea className="h-[150px]">
                     <div className="space-y-1.5">
