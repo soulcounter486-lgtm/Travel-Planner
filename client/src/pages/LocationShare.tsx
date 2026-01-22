@@ -59,7 +59,7 @@ export default function LocationShare() {
       hours: "시간",
       backToChat: "채팅방으로",
       realTimeTracking: "실시간 트래킹",
-      trackingOn: "10초마다 위치 자동 업데이트",
+      trackingOn: "2초마다 위치 자동 업데이트",
       trackingOff: "수동 공유 모드",
     },
     en: {
@@ -74,7 +74,7 @@ export default function LocationShare() {
       hours: "hours",
       backToChat: "Back to Chat",
       realTimeTracking: "Real-time Tracking",
-      trackingOn: "Auto-update every 10 seconds",
+      trackingOn: "Auto-update every 2 seconds",
       trackingOff: "Manual sharing mode",
     },
     zh: {
@@ -89,7 +89,7 @@ export default function LocationShare() {
       hours: "小时",
       backToChat: "返回聊天",
       realTimeTracking: "实时跟踪",
-      trackingOn: "每10秒自动更新",
+      trackingOn: "每2秒自动更新",
       trackingOff: "手动分享模式",
     },
     vi: {
@@ -104,7 +104,7 @@ export default function LocationShare() {
       hours: "giờ",
       backToChat: "Quay lại chat",
       realTimeTracking: "Theo dõi thời gian thực",
-      trackingOn: "Tự động cập nhật mỗi 10 giây",
+      trackingOn: "Tự động cập nhật mỗi 2 giây",
       trackingOff: "Chế độ chia sẻ thủ công",
     },
     ru: {
@@ -119,7 +119,7 @@ export default function LocationShare() {
       hours: "часов",
       backToChat: "В чат",
       realTimeTracking: "Отслеживание в реальном времени",
-      trackingOn: "Авто-обновление каждые 10 секунд",
+      trackingOn: "Авто-обновление каждые 2 секунды",
       trackingOff: "Ручной режим",
     },
     ja: {
@@ -134,7 +134,7 @@ export default function LocationShare() {
       hours: "時間",
       backToChat: "チャットへ戻る",
       realTimeTracking: "リアルタイム追跡",
-      trackingOn: "10秒ごとに自動更新",
+      trackingOn: "2秒ごとに自動更新",
       trackingOff: "手動共有モード",
     },
   };
@@ -183,12 +183,12 @@ export default function LocationShare() {
       // Set interval for continuous updates
       trackingIntervalRef.current = setInterval(() => {
         updateMyLocation().catch(console.error);
-      }, 10000); // Update every 10 seconds
+      }, 2000); // Update every 2 seconds
       
       // Also refetch locations more frequently when tracking
       const locationsInterval = setInterval(() => {
         refetch();
-      }, 5000); // Refresh list every 5 seconds
+      }, 2000); // Refresh list every 2 seconds
       
       return () => {
         if (trackingIntervalRef.current) {
