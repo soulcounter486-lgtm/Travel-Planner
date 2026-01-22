@@ -256,14 +256,11 @@ export default function ChatRoom() {
         try {
           const { latitude, longitude } = position.coords;
           
-          await apiRequest("/api/locations", {
-            method: "POST",
-            body: JSON.stringify({
-              nickname: savedNicknameRef.current,
-              latitude,
-              longitude,
-              message: language === "ko" ? "현재 여기 있어요!" : "I'm here now!",
-            }),
+          await apiRequest("POST", "/api/locations", {
+            nickname: savedNicknameRef.current,
+            latitude,
+            longitude,
+            message: language === "ko" ? "현재 여기 있어요!" : "I'm here now!",
           });
           
           if (wsRef.current?.readyState === WebSocket.OPEN) {

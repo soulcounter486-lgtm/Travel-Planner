@@ -12,6 +12,7 @@ import TravelPlanner from "@/pages/TravelPlanner";
 import ChatRoom from "@/pages/ChatRoom";
 import Board from "@/pages/Board";
 import DietProducts from "@/pages/DietProducts";
+import LocationShare from "@/pages/LocationShare";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/chat" component={ChatRoom} />
       <Route path="/board" component={Board} />
       <Route path="/diet" component={DietProducts} />
+      <Route path="/locations" component={LocationShare} />
       <Route component={NotFound} />
     </Switch>
   );
