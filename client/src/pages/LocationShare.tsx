@@ -245,14 +245,29 @@ export default function LocationShare() {
   }, [locations, myNickname]);
 
   useEffect(() => {
-    const checkGoogle = setInterval(() => {
+    const loadGoogleMaps = async () => {
       if (window.google && window.google.maps) {
         setMapLoaded(true);
-        clearInterval(checkGoogle);
+        return;
       }
-    }, 100);
+      
+      try {
+        const response = await fetch("/api/maps-key");
+        const data = await response.json();
+        if (data.key) {
+          const script = document.createElement("script");
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&libraries=places`;
+          script.async = true;
+          script.defer = true;
+          script.onload = () => setMapLoaded(true);
+          document.head.appendChild(script);
+        }
+      } catch (error) {
+        console.error("Failed to load Google Maps:", error);
+      }
+    };
     
-    return () => clearInterval(checkGoogle);
+    loadGoogleMaps();
   }, []);
 
   useEffect(() => {

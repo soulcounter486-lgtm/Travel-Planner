@@ -884,6 +884,15 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // Google Maps API 키 제공 (클라이언트 지도 로드용)
+  app.get("/api/maps-key", (req, res) => {
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: "Google Maps API key not configured" });
+    }
+    res.json({ key: apiKey });
+  });
+
   // 내 주변 장소 검색 (Google Places API)
   app.get("/api/nearby-places", async (req, res) => {
     try {
