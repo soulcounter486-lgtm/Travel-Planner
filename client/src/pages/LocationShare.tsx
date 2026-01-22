@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,13 +25,16 @@ import {
 import { motion } from "framer-motion";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import type { UserLocation } from "@shared/schema";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 export default function LocationShare() {
   const { language, t } = useLanguage();
   const queryClient = useQueryClient();
   const [myNickname] = useState(() => localStorage.getItem("chat_nickname") || "");
   const [isSharing, setIsSharing] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: locations = [], isLoading, refetch } = useQuery<UserLocation[]>({
     queryKey: ["/api/locations"],
@@ -179,103 +182,87 @@ export default function LocationShare() {
 
   const myLocation = locations.find(loc => loc.nickname === myNickname);
 
-  const initMap = useCallback(() => {
-    if (!window.google || !window.google.maps) return;
-    
-    const mapElement = document.getElementById("location-map");
-    if (!mapElement) return;
-    
-    try {
-      const center = locations.length > 0 
-        ? { lat: parseFloat(locations[0].latitude), lng: parseFloat(locations[0].longitude) }
-        : { lat: 10.3460, lng: 107.0843 };
-
-      const map = new google.maps.Map(mapElement, {
-        zoom: 14,
-        center,
-        mapTypeId: "roadmap",
-      });
-
-      locations.forEach((loc) => {
-        const isMe = loc.nickname === myNickname;
-        const marker = new google.maps.Marker({
-          position: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
-          map,
-          title: loc.nickname,
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: isMe ? 12 : 10,
-            fillColor: isMe ? "#22c55e" : "#3b82f6",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 3,
-          },
-          label: {
-            text: loc.nickname.charAt(0).toUpperCase(),
-            color: "#ffffff",
-            fontSize: "12px",
-            fontWeight: "bold",
-          },
-        });
-
-        const infoWindow = new google.maps.InfoWindow({
-          content: `
-            <div style="padding: 8px; min-width: 150px;">
-              <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${loc.nickname}</div>
-              ${loc.message ? `<div style="color: #666; font-size: 12px;">${loc.message}</div>` : ""}
-              ${loc.placeName ? `<div style="color: #3b82f6; font-size: 12px; margin-top: 4px;">${loc.placeName}</div>` : ""}
-            </div>
-          `,
-        });
-
-        marker.addListener("click", () => {
-          infoWindow.open(map, marker);
-        });
-      });
-
-      if (locations.length > 1) {
-        const bounds = new google.maps.LatLngBounds();
-        locations.forEach(loc => {
-          bounds.extend({ lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) });
-        });
-        map.fitBounds(bounds);
-      }
-    } catch (error) {
-      console.error("Failed to initialize map:", error);
-    }
-  }, [locations, myNickname]);
-
+  // Initialize Leaflet map
   useEffect(() => {
-    const loadGoogleMaps = async () => {
-      if (window.google && window.google.maps) {
-        setMapLoaded(true);
-        return;
-      }
+    if (!mapContainerRef.current) return;
+    
+    // Create map if not exists
+    if (!mapRef.current) {
+      const defaultCenter: L.LatLngExpression = [10.3460, 107.0843]; // Vung Tau
+      mapRef.current = L.map(mapContainerRef.current).setView(defaultCenter, 14);
       
-      try {
-        const response = await fetch("/api/maps-key");
-        const data = await response.json();
-        if (data.key) {
-          const script = document.createElement("script");
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${data.key}&libraries=places`;
-          script.async = true;
-          script.defer = true;
-          script.onload = () => setMapLoaded(true);
-          document.head.appendChild(script);
-        }
-      } catch (error) {
-        console.error("Failed to load Google Maps:", error);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(mapRef.current);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
       }
     };
-    
-    loadGoogleMaps();
   }, []);
 
+  // Update markers when locations change
   useEffect(() => {
-    if (mapLoaded) {
-      initMap();
+    if (!mapRef.current) return;
+
+    // Clear existing markers
+    mapRef.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        mapRef.current?.removeLayer(layer);
+      }
+    });
+
+    // Add markers for each location
+    locations.forEach((loc) => {
+      const isMe = loc.nickname === myNickname;
+      const lat = parseFloat(loc.latitude);
+      const lng = parseFloat(loc.longitude);
+
+      // Create custom circle marker
+      const marker = L.circleMarker([lat, lng], {
+        radius: isMe ? 12 : 10,
+        fillColor: isMe ? "#22c55e" : "#3b82f6",
+        fillOpacity: 1,
+        color: "#ffffff",
+        weight: 3,
+      }).addTo(mapRef.current!);
+
+      // Add popup
+      const popupContent = `
+        <div style="padding: 4px; min-width: 120px;">
+          <div style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${loc.nickname}</div>
+          ${loc.message ? `<div style="color: #666; font-size: 12px;">${loc.message}</div>` : ""}
+          ${loc.placeName ? `<div style="color: #3b82f6; font-size: 12px; margin-top: 4px;">${loc.placeName}</div>` : ""}
+        </div>
+      `;
+      marker.bindPopup(popupContent);
+
+      // Add label
+      const label = L.divIcon({
+        className: "leaflet-label",
+        html: `<div style="background: ${isMe ? "#22c55e" : "#3b82f6"}; color: white; font-weight: bold; font-size: 11px; padding: 2px 6px; border-radius: 4px; white-space: nowrap; transform: translateX(-50%);">${loc.nickname}</div>`,
+        iconSize: [0, 0],
+        iconAnchor: [0, -15],
+      });
+      L.marker([lat, lng], { icon: label }).addTo(mapRef.current!);
+    });
+
+    // Fit bounds if multiple locations
+    if (locations.length > 0) {
+      const bounds = L.latLngBounds(
+        locations.map((loc) => [parseFloat(loc.latitude), parseFloat(loc.longitude)] as L.LatLngTuple)
+      );
+      if (locations.length > 1) {
+        mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+      } else {
+        mapRef.current.setView([parseFloat(locations[0].latitude), parseFloat(locations[0].longitude)], 14);
+      }
     }
-  }, [mapLoaded, locations, initMap]);
+  }, [locations, myNickname]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -323,28 +310,27 @@ export default function LocationShare() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2">
-            <CardContent className="p-0">
+            <CardContent className="p-0 relative">
               <div 
-                id="location-map" 
-                className="w-full h-[500px] rounded-lg bg-muted flex items-center justify-center"
-              >
-                {isLoading ? (
+                ref={mapContainerRef}
+                className="w-full h-[500px] rounded-lg z-0"
+              />
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <RefreshCw className="w-5 h-5 animate-spin" />
                     <span>Loading...</span>
                   </div>
-                ) : locations.length === 0 ? (
+                </div>
+              )}
+              {!isLoading && locations.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg pointer-events-none">
                   <div className="text-center text-muted-foreground">
                     <MapPin className="w-12 h-12 mx-auto mb-2 opacity-50" />
                     <p>{label.noLocations}</p>
                   </div>
-                ) : !mapLoaded ? (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    <span>Loading map...</span>
-                  </div>
-                ) : null}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
