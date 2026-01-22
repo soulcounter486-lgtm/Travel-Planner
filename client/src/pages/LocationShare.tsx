@@ -154,7 +154,23 @@ export default function LocationShare() {
       (error) => {
         console.error("Geolocation error:", error);
         setIsSharing(false);
-        alert(language === "ko" ? "위치를 가져올 수 없습니다." : "Could not get your location.");
+        let message = "";
+        if (error.code === 1) {
+          message = language === "ko" 
+            ? "위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요." 
+            : "Location permission denied. Please allow location access in browser settings.";
+        } else if (error.code === 2) {
+          message = language === "ko" 
+            ? "위치 정보를 사용할 수 없습니다. GPS를 켜주세요." 
+            : "Location unavailable. Please enable GPS.";
+        } else if (error.code === 3) {
+          message = language === "ko" 
+            ? "위치 요청 시간이 초과되었습니다. 다시 시도해주세요." 
+            : "Location request timed out. Please try again.";
+        } else {
+          message = language === "ko" ? "위치를 가져올 수 없습니다." : "Could not get your location.";
+        }
+        alert(message);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
