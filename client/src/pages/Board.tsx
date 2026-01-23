@@ -297,9 +297,18 @@ export default function Board() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const handleSelectPost = (post: Post) => {
+  const handleSelectPost = async (post: Post) => {
     window.history.pushState({ viewingPost: true, postId: post.id }, "");
     setSelectedPost(post);
+    
+    // 조회수 증가
+    try {
+      await apiRequest("POST", `/api/posts/${post.id}/view`);
+      // 게시글 목록 새로고침 (조회수 반영)
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+    } catch (error) {
+      console.error("Failed to increment view count:", error);
+    }
   };
 
   const handleBackToList = () => {
@@ -827,7 +836,7 @@ export default function Board() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <CardTitle className="text-2xl mb-2 break-words">{selectedPost.title}</CardTitle>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                       <span className="flex items-center gap-1">
                         <User className="w-4 h-4" />
                         {selectedPost.authorName}
@@ -837,6 +846,12 @@ export default function Board() {
                         <Calendar className="w-4 h-4" />
                         {selectedPost.createdAt && format(new Date(selectedPost.createdAt), "yyyy.MM.dd HH:mm")}
                       </span>
+                      {isAdmin && (
+                        <span className="flex items-center gap-1 text-primary">
+                          <Eye className="w-4 h-4" />
+                          {selectedPost.viewCount || 0} {language === "ko" ? "조회" : "views"}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {isAdmin && (
@@ -1089,6 +1104,12 @@ export default function Board() {
                                 <span className="flex items-center gap-1 text-primary">
                                   <MessageCircle className="w-3 h-3" />
                                   {(post as any).commentCount}
+                                </span>
+                              )}
+                              {isAdmin && (post.viewCount || 0) > 0 && (
+                                <span className="flex items-center gap-1 text-blue-500">
+                                  <Eye className="w-3 h-3" />
+                                  {post.viewCount}
                                 </span>
                               )}
                             </div>

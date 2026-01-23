@@ -1279,6 +1279,26 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 게시판 - 게시글 조회수 증가
+  app.post("/api/posts/:id/view", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [post] = await db.select().from(posts).where(eq(posts.id, id));
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      await db.update(posts)
+        .set({ viewCount: (post.viewCount || 0) + 1 })
+        .where(eq(posts.id, id));
+      
+      res.json({ success: true, viewCount: (post.viewCount || 0) + 1 });
+    } catch (err) {
+      console.error("Increment view count error:", err);
+      res.status(500).json({ message: "Failed to increment view count" });
+    }
+  });
+
   // 게시판 - 게시글 작성 (관리자만)
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {

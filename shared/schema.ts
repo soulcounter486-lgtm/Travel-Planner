@@ -164,6 +164,7 @@ export const posts = pgTable("posts", {
   authorId: text("author_id").notNull(), // Replit Auth 사용자 ID
   authorName: text("author_name").notNull(),
   isHidden: boolean("is_hidden").default(false), // 게시글 숨김 여부
+  viewCount: integer("view_count").default(0), // 조회수 (관리자만 볼 수 있음)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
