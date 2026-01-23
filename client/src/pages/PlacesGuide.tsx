@@ -12,6 +12,7 @@ import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.p
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
 import lighthouseImg from "@assets/736414b25966415e9006dd674ec2aecf_1768452191679.jpeg";
 import warMuseumImg from "@assets/20230318＿130556_1768452191689.jpg";
+import worldWeaponsMuseumImg from "@assets/Screenshot_20260123_141912_Maps_1769152870673.jpg";
 import whitePalaceImg from "@assets/154eaed7-b483-43eb-983f-b52566331719_(1)_1768452191696.jpeg";
 import amusementParkImg from "@assets/붕따우호메이파크입장권_1768452191701.jpg";
 import buddhistTempleImg from "@assets/static-images.vnncdn.net-vps_images_publish-000001-000003-2025_1768452191705.jpg";
@@ -123,6 +124,21 @@ const placesData: Record<string, Category> = {
           vi: "Bảo tàng trưng bày lịch sử chiến tranh Việt Nam và địa phương với hiện vật và ảnh lịch sử.",
           ru: "Музей истории Вьетнамской войны с военными артефактами и историческими фотографиями.",
           ja: "ベトナム戦争と地域の歴史を展示する博物館。戦争遺物と歴史的写真を展示。"
+        }
+      },
+      { 
+        name: "세계무기박물관", 
+        nameVi: "Bảo tàng vũ khí thế giới", 
+        phone: "", 
+        mapUrl: "https://maps.app.goo.gl/P6G63jRcSRcpwKcP6",
+        imageUrl: worldWeaponsMuseumImg,
+        description: {
+          ko: "전 세계의 다양한 무기와 갑옷을 전시하는 독특한 박물관. 역사적인 무기 컬렉션을 감상할 수 있습니다.",
+          en: "A unique museum showcasing weapons and armor from around the world. Features an impressive collection of historical weapons.",
+          zh: "展示世界各地武器和盔甲的独特博物馆，拥有令人印象深刻的历史武器收藏。",
+          vi: "Bảo tàng độc đáo trưng bày vũ khí và áo giáp từ khắp nơi trên thế giới với bộ sưu tập vũ khí lịch sử ấn tượng.",
+          ru: "Уникальный музей с оружием и доспехами со всего мира. Впечатляющая коллекция исторического оружия.",
+          ja: "世界中の武器と鎧を展示するユニークな博物館。歴史的な武器コレクションが見どころ。"
         }
       },
       { 
