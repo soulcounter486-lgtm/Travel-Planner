@@ -198,14 +198,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
                       <span>{t("quote.villa")}</span>
-                      <span className={villaAdjustment !== 0 ? "text-orange-600" : ""}>
-                        ${adjustedVillaTotal.toLocaleString()}
-                        {villaAdjustment !== 0 && (
-                          <span className="text-xs ml-1">
-                            ({villaAdjustment > 0 ? "+" : ""}{villaAdjustment})
-                          </span>
-                        )}
-                      </span>
+                      <span>${adjustedVillaTotal.toLocaleString()}</span>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1.5 pl-1">
                       {breakdown.villa.details.map((detail, idx) => {
@@ -213,14 +206,13 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                         const currentPrice = villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
                         const dateMatch = detail.match(/^([^:]+):/);
                         const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
-                        const isModified = villaAdjustments[idx] !== undefined && villaAdjustments[idx] !== originalPrice;
                         
                         return (
                           <div key={idx} className="flex items-center gap-2 flex-wrap">
                             <span className="w-1 h-1 rounded-full bg-primary/40" />
                             <span className="flex-1">{dateLabel}</span>
                             <div className="flex items-center gap-1">
-                              <span className={`font-medium ${isModified ? 'text-orange-600' : 'text-slate-700 dark:text-slate-300'}`}>
+                              <span className="font-medium text-slate-700 dark:text-slate-300">
                                 $
                                 <input
                                   type="number"
@@ -231,15 +223,10 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                                     const newVal = val === '' ? 0 : parseInt(val);
                                     setVillaAdjustments(prev => ({ ...prev, [idx]: newVal }));
                                   }}
-                                  className={`w-14 text-center text-xs font-medium bg-transparent border-b ${isModified ? 'border-orange-400' : 'border-slate-300 dark:border-slate-600'} focus:outline-none focus:border-primary`}
+                                  className="w-14 text-center text-xs font-medium bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-primary"
                                   data-testid={`input-villa-price-${idx}`}
                                 />
                               </span>
-                              {isModified && (
-                                <span className="text-[10px] text-orange-500">
-                                  (${originalPrice})
-                                </span>
-                              )}
                             </div>
                           </div>
                         );
@@ -260,20 +247,12 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
                       <span>{t("quote.vehicle")}</span>
-                      <span className={vehicleAdjustment !== 0 ? "text-orange-600" : ""}>
-                        ${adjustedVehicleTotal.toLocaleString()}
-                        {vehicleAdjustment !== 0 && (
-                          <span className="text-xs text-muted-foreground ml-1 line-through">
-                            (${breakdown.vehicle.price})
-                          </span>
-                        )}
-                      </span>
+                      <span>${adjustedVehicleTotal.toLocaleString()}</span>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1 pl-1 italic">
                       {breakdown.vehicle.description.split(" | ").map((detail, idx) => {
                         const originalPrice = parseVehiclePrice(detail);
-                        const adjustedPrice = vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice;
-                        const isModified = vehicleAdjustments[idx] !== undefined && vehicleAdjustments[idx] !== originalPrice;
+                        const currentPrice = vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice;
                         const textWithoutPrice = detail.replace(/\s*\$\d+/, "");
                         
                         return (
@@ -285,26 +264,20 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                             <div className="flex items-center gap-1">
                               <span className="text-xs">$</span>
                               <input
-                                type="text"
-                                inputMode="numeric"
-                                value={vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice}
+                                type="number"
+                                min="0"
+                                value={currentPrice === 0 ? '' : currentPrice}
                                 onChange={(e) => {
                                   const val = e.target.value;
-                                  if (val === "" || /^\d+$/.test(val)) {
-                                    setVehicleAdjustments(prev => ({
-                                      ...prev,
-                                      [idx]: val === "" ? 0 : parseInt(val)
-                                    }));
-                                  }
+                                  const newVal = val === '' ? 0 : parseInt(val);
+                                  setVehicleAdjustments(prev => ({
+                                    ...prev,
+                                    [idx]: newVal
+                                  }));
                                 }}
-                                className={`w-14 text-right text-xs font-medium bg-transparent border-b border-slate-300 focus:border-blue-500 focus:outline-none ${isModified ? "text-orange-600" : ""}`}
+                                className="w-14 text-right text-xs font-medium bg-transparent border-b border-slate-300 focus:border-blue-500 focus:outline-none"
                                 data-testid={`input-vehicle-price-${idx}`}
                               />
-                              {isModified && (
-                                <span className="text-xs text-muted-foreground line-through ml-1">
-                                  (${originalPrice})
-                                </span>
-                              )}
                             </div>
                           </div>
                         );
@@ -453,11 +426,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     </span>
                     <div className="text-right">
                       <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                        ${Math.round((discountRate > 0 ? discountedTotal : breakdown.total) / parseInt(personCount)).toLocaleString()}
+                        ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
                       </div>
                       {currencyInfo.code !== "USD" && (
                         <div className="text-sm text-indigo-500 dark:text-indigo-300">
-                          ≈ {formatLocalCurrency(Math.round((discountRate > 0 ? discountedTotal : breakdown.total) / parseInt(personCount)))}
+                          ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
                         </div>
                       )}
                     </div>
