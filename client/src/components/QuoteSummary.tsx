@@ -198,11 +198,35 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   </div>
                 )}
               </CardTitle>
-              <img 
-                src={logoImage} 
-                alt="붕따우 도깨비" 
-                className="w-20 h-20 object-contain"
-              />
+              <div className="flex flex-col items-center gap-2">
+                <img 
+                  src={logoImage} 
+                  alt="붕따우 도깨비" 
+                  className="w-16 h-16 object-contain"
+                />
+                <div 
+                  className={`rounded-lg p-2 text-center ${isCapturing ? '' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'}`}
+                  style={isCapturing ? { backgroundColor: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', padding: '8px' } : {}}
+                >
+                  <span 
+                    className="text-[10px] font-medium text-amber-700 dark:text-amber-300 block"
+                    style={isCapturing ? { fontSize: '10px', fontWeight: 500, color: '#b45309', display: 'block' } : {}}
+                  >
+                    {language === "ko" ? "예약금" : 
+                     language === "en" ? "Deposit" :
+                     language === "zh" ? "订金" :
+                     language === "vi" ? "Đặt cọc" :
+                     language === "ru" ? "Депозит" :
+                     language === "ja" ? "予約金" : "예약금"}
+                  </span>
+                  <span 
+                    className="text-sm font-bold text-amber-800 dark:text-amber-200"
+                    style={isCapturing ? { fontSize: '13px', fontWeight: 'bold', color: '#92400e' } : {}}
+                  >
+                    ${Math.round(finalTotal * 0.3).toLocaleString()}
+                  </span>
+                </div>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
