@@ -206,61 +206,54 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   className="w-20 h-20 object-contain"
                 />
                 <div 
-                  className={`rounded-lg p-1.5 text-center ${isCapturing ? '' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'}`}
-                  style={isCapturing ? { backgroundColor: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '6px', padding: '6px' } : {}}
+                  className="flex items-center gap-1"
+                  style={isCapturing ? { display: 'flex', alignItems: 'center', gap: '4px' } : {}}
                 >
-                  <span 
-                    className="text-[9px] font-medium text-amber-700 dark:text-amber-300 block mb-0.5"
-                    style={isCapturing ? { fontSize: '9px', fontWeight: 500, color: '#b45309', display: 'block', marginBottom: '2px' } : {}}
+                  <div 
+                    className={`rounded p-1 text-center ${isCapturing ? '' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'}`}
+                    style={isCapturing ? { backgroundColor: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '4px', padding: '4px' } : {}}
                   >
-                    {language === "ko" ? "예약금" : 
-                     language === "en" ? "Deposit" :
-                     language === "zh" ? "订金" :
-                     language === "vi" ? "Đặt cọc" :
-                     language === "ru" ? "Депозит" :
-                     language === "ja" ? "予約金" : "예약금"}
-                  </span>
-                  {isCapturing ? (
                     <span 
-                      style={{ fontSize: '12px', fontWeight: 'bold', color: '#92400e' }}
+                      className="text-[8px] font-medium text-amber-700 dark:text-amber-300 block"
+                      style={isCapturing ? { fontSize: '8px', fontWeight: 500, color: '#b45309', display: 'block' } : {}}
                     >
-                      ${(depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3)).toLocaleString()}
+                      {language === "ko" ? "예약금" : "Deposit"}
                     </span>
-                  ) : (
-                    <div className="flex items-center justify-center gap-0.5">
-                      <span className="text-xs font-bold text-amber-800 dark:text-amber-200">$</span>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={depositAmount || Math.round(finalTotal * 0.3)}
-                        onChange={(e) => setDepositAmount(e.target.value)}
-                        className="w-16 h-6 text-center font-bold text-xs bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-700 p-1"
-                        data-testid="input-deposit-amount"
-                      />
-                    </div>
-                  )}
-                </div>
-                <div 
-                  className={`rounded-md p-1 text-center ${isCapturing ? '' : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'}`}
-                  style={isCapturing ? { backgroundColor: '#f0fdf4', border: '1px solid #86efac', borderRadius: '4px', padding: '4px' } : {}}
-                >
-                  <span 
-                    className="text-[8px] font-medium text-green-700 dark:text-green-300 block"
-                    style={isCapturing ? { fontSize: '8px', fontWeight: 500, color: '#15803d', display: 'block' } : {}}
+                    {isCapturing ? (
+                      <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#92400e' }}>
+                        ${(depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3)).toLocaleString()}
+                      </span>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span className="text-[10px] font-bold text-amber-800 dark:text-amber-200">$</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={depositAmount || Math.round(finalTotal * 0.3)}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          className="w-12 h-5 text-center font-bold text-[10px] bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-700 p-0.5"
+                          data-testid="input-deposit-amount"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div 
+                    className={`rounded p-1 text-center ${isCapturing ? '' : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'}`}
+                    style={isCapturing ? { backgroundColor: '#f0fdf4', border: '1px solid #86efac', borderRadius: '4px', padding: '4px' } : {}}
                   >
-                    {language === "ko" ? "잔금" : 
-                     language === "en" ? "Balance" :
-                     language === "zh" ? "余额" :
-                     language === "vi" ? "Còn lại" :
-                     language === "ru" ? "Остаток" :
-                     language === "ja" ? "残金" : "잔금"}
-                  </span>
-                  <span 
-                    className="text-[10px] font-bold text-green-800 dark:text-green-200"
-                    style={isCapturing ? { fontSize: '10px', fontWeight: 'bold', color: '#166534' } : {}}
-                  >
-                    ${(finalTotal - (depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3))).toLocaleString()}
-                  </span>
+                    <span 
+                      className="text-[8px] font-medium text-green-700 dark:text-green-300 block"
+                      style={isCapturing ? { fontSize: '8px', fontWeight: 500, color: '#15803d', display: 'block' } : {}}
+                    >
+                      {language === "ko" ? "잔금" : "Balance"}
+                    </span>
+                    <span 
+                      className="text-[10px] font-bold text-green-800 dark:text-green-200"
+                      style={isCapturing ? { fontSize: '10px', fontWeight: 'bold', color: '#166534' } : {}}
+                    >
+                      ${(finalTotal - (depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3))).toLocaleString()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
