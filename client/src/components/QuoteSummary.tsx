@@ -413,16 +413,22 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 </Label>
               </div>
               <div className="flex items-center gap-3">
-                <Input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={personCount}
-                  onChange={(e) => setPersonCount(e.target.value)}
-                  placeholder=""
-                  className="w-20 h-10 text-center font-bold text-lg bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-700"
-                  data-testid="input-person-count"
-                />
+                {isCapturing ? (
+                  <span className="w-20 h-10 flex items-center justify-center font-bold text-lg text-indigo-900 dark:text-indigo-100">
+                    {personCount || "-"}
+                  </span>
+                ) : (
+                  <Input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={personCount}
+                    onChange={(e) => setPersonCount(e.target.value)}
+                    placeholder=""
+                    className="w-20 h-10 text-center font-bold text-lg bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-700"
+                    data-testid="input-person-count"
+                  />
+                )}
                 <span className="text-sm text-muted-foreground">
                   {language === "ko" ? "명" : 
                    language === "en" ? "people" :
