@@ -394,7 +394,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
             let courseName = "";
             switch (selection.course) {
               case "paradise":
-                price = isWeekend ? 100 : 80;
+                price = isWeekend ? 110 : 90;
                 tip = "40만동";
                 courseName = "파라다이스";
                 break;
@@ -1068,7 +1068,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       { name: "Peace and Love 라이브바", nameVi: "Peace and Love Live Bar", type: "라이브바", note: "금,토 라이브 밴드" },
     ],
     golf: [
-      { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "평일 $80, 주말 $100" },
+      { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "평일 $90, 주말 $110" },
       { name: "쩌우득 골프장", nameVi: "Chou Duc Golf", course: "chouduc", note: "평일 $80, 주말 $120" },
       { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "평일 $130, 주말 $200" },
     ],

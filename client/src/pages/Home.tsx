@@ -217,7 +217,7 @@ export default function Home() {
         let courseName = "";
         switch (selection.course) {
           case "paradise":
-            price = isWeekend ? 100 : 80;
+            price = isWeekend ? 110 : 90;
             tip = "40만동";
             courseName = t("golf.course.paradise");
             break;
