@@ -24,13 +24,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
   const summaryRef = useRef<HTMLDivElement>(null);
   const [personCount, setPersonCount] = useState<string>("");
   const [discountPercent, setDiscountPercent] = useState<string>("");
+  const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
   });
-  
-  const discountRate = parseFloat(discountPercent) || 0;
-  const discountedTotal = breakdown ? Math.round(breakdown.total * (1 - discountRate / 100)) : 0;
 
   const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
     ko: { code: "KRW", symbol: "₩", locale: "ko-KR" },
@@ -43,6 +41,32 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
 
   const currencyInfo = languageCurrencyMap[language] || languageCurrencyMap.ko;
   const exchangeRate = exchangeRatesData?.rates?.[currencyInfo.code] || 1;
+
+  // 빌라 날짜별 금액 파싱 함수
+  const parseVillaPrice = (detail: string): number => {
+    const match = detail.match(/\$(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
+
+  // 조정된 빌라 총액 계산
+  const getAdjustedVillaTotal = () => {
+    if (!breakdown) return 0;
+    let total = 0;
+    breakdown.villa.details.forEach((detail, idx) => {
+      const originalPrice = parseVillaPrice(detail);
+      total += villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
+    });
+    return total;
+  };
+
+  // 조정된 전체 총액 계산
+  const adjustedVillaTotal = breakdown ? getAdjustedVillaTotal() : 0;
+  const villaAdjustment = breakdown ? adjustedVillaTotal - breakdown.villa.price : 0;
+  const adjustedGrandTotal = breakdown ? breakdown.total + villaAdjustment : 0;
+  
+  const discountRate = parseFloat(discountPercent) || 0;
+  const finalTotal = adjustedGrandTotal;
+  const discountedTotal = Math.round(finalTotal * (1 - discountRate / 100));
   
   const formatLocalCurrency = (usd: number) => {
     if (currencyInfo.code === "USD") return `$${usd.toLocaleString()}`;
@@ -105,7 +129,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 {discountRate > 0 ? (
                   <>
                     <span className="text-xl text-muted-foreground line-through">
-                      ${breakdown.total.toLocaleString()}
+                      ${finalTotal.toLocaleString()}
                     </span>
                     <span className="text-4xl text-primary font-bold">
                       ${discountedTotal.toLocaleString()}
@@ -113,13 +137,13 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   </>
                 ) : (
                   <span className="text-4xl text-primary font-bold">
-                    ${breakdown.total.toLocaleString()}
+                    ${finalTotal.toLocaleString()}
                   </span>
                 )}
                 {currencyInfo.code !== "USD" && (
                   <>
                     <span className="text-xl text-primary/70 font-semibold">
-                      ≈ {formatLocalCurrency(discountRate > 0 ? discountedTotal : breakdown.total)}
+                      ≈ {formatLocalCurrency(discountRate > 0 ? discountedTotal : finalTotal)}
                     </span>
                     <span className="text-xs text-muted-foreground mt-1">
                       {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
@@ -162,15 +186,48 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
                       <span>{t("quote.villa")}</span>
-                      <span>${breakdown.villa.price}</span>
+                      <span className={villaAdjustment !== 0 ? "text-orange-600" : ""}>
+                        ${adjustedVillaTotal.toLocaleString()}
+                        {villaAdjustment !== 0 && (
+                          <span className="text-xs ml-1">
+                            ({villaAdjustment > 0 ? "+" : ""}{villaAdjustment})
+                          </span>
+                        )}
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground space-y-0.5 pl-1">
-                      {breakdown.villa.details.map((detail, idx) => (
-                        <p key={idx} className="flex items-center gap-2">
-                          <span className="w-1 h-1 rounded-full bg-primary/40" />
-                          {detail}
-                        </p>
-                      ))}
+                    <div className="text-xs text-muted-foreground space-y-1.5 pl-1">
+                      {breakdown.villa.details.map((detail, idx) => {
+                        const originalPrice = parseVillaPrice(detail);
+                        const currentPrice = villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
+                        const dateMatch = detail.match(/^([^:]+):/);
+                        const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
+                        
+                        return (
+                          <div key={idx} className="flex items-center gap-2 flex-wrap">
+                            <span className="w-1 h-1 rounded-full bg-primary/40" />
+                            <span className="flex-1">{dateLabel}</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-muted-foreground">$</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                value={currentPrice}
+                                onChange={(e) => {
+                                  const newVal = parseInt(e.target.value) || 0;
+                                  setVillaAdjustments(prev => ({ ...prev, [idx]: newVal }));
+                                }}
+                                className="w-16 h-6 text-center text-xs font-medium bg-white dark:bg-slate-800 border-orange-200 dark:border-orange-700"
+                                data-testid={`input-villa-price-${idx}`}
+                              />
+                              {villaAdjustments[idx] !== undefined && villaAdjustments[idx] !== originalPrice && (
+                                <span className="text-[10px] text-orange-500">
+                                  (${originalPrice})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <Separator className="bg-border/50" />
