@@ -204,7 +204,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.course.hocham": "호짬",
     "golf.course.paradise_price": "파라다이스 (평일 $90 / 주말 $110)",
     "golf.course.chouduc_price": "쩌우득 (평일 $80 / 주말 $120)",
-    "golf.course.hocham_price": "호짬 (평일 $130 / 주말 $200)",
+    "golf.course.hocham_price": "호짬 (평일 $150 / 주말 $200)",
     
     // Footer
     "footer.connect": "채널 연결",
@@ -430,7 +430,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.course.hocham": "Ho Tram",
     "golf.course.paradise_price": "Paradise (Weekday $90 / Weekend $110)",
     "golf.course.chouduc_price": "Chouduc (Weekday $80 / Weekend $120)",
-    "golf.course.hocham_price": "Ho Tram (Weekday $130 / Weekend $200)",
+    "golf.course.hocham_price": "Ho Tram (Weekday $150 / Weekend $200)",
     
     // Footer
     "footer.connect": "Connect Channel",
@@ -656,7 +656,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.course.hocham": "胡济",
     "golf.course.paradise_price": "天堂（平日$90/周末$110）",
     "golf.course.chouduc_price": "쩌우득（平日$80/周末$120）",
-    "golf.course.hocham_price": "胡襄（平日$130/周末$200）",
+    "golf.course.hocham_price": "胡襄（平日$150/周末$200）",
     
     // Footer
     "footer.connect": "连接频道",
@@ -882,7 +882,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.course.hocham": "Ho Tram",
     "golf.course.paradise_price": "Paradise (Ngày thường $90 / Cuối tuần $110)",
     "golf.course.chouduc_price": "Chouduc (Ngày thường $80 / Cuối tuần $120)",
-    "golf.course.hocham_price": "Ho Tram (Ngày thường $130 / Cuối tuần $200)",
+    "golf.course.hocham_price": "Ho Tram (Ngày thường $150 / Cuối tuần $200)",
     
     // Footer
     "footer.connect": "Kết nối kênh",
@@ -1108,7 +1108,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.course.hocham": "Хо Трам",
     "golf.course.paradise_price": "Paradise (Будни $90 / Выходные $110)",
     "golf.course.chouduc_price": "Chouduc (Будни $80 / Выходные $120)",
-    "golf.course.hocham_price": "Ho Tram (Будни $130 / Выходные $200)",
+    "golf.course.hocham_price": "Ho Tram (Будни $150 / Выходные $200)",
     
     // Footer
     "footer.connect": "Подключить канал",
@@ -1334,7 +1334,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "golf.course.hocham": "ホーチャム",
     "golf.course.paradise_price": "パラダイス（平日$90 / 週末$110）",
     "golf.course.chouduc_price": "チョウドゥック（平日$80 / 週末$120）",
-    "golf.course.hocham_price": "ホーチャム（平日$130 / 週末$200）",
+    "golf.course.hocham_price": "ホーチャム（平日$150 / 週末$200）",
     
     // Footer
     "footer.connect": "チャンネル接続",

@@ -404,7 +404,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
                 courseName = "쩌우득";
                 break;
               case "hocham":
-                price = isWeekend ? 200 : 130;
+                price = isWeekend ? 200 : 150;
                 tip = "50만동";
                 courseName = "호짬";
                 break;
@@ -1070,7 +1070,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     golf: [
       { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "평일 $90, 주말 $110" },
       { name: "쩌우득 골프장", nameVi: "Chou Duc Golf", course: "chouduc", note: "평일 $80, 주말 $120" },
-      { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "평일 $130, 주말 $200" },
+      { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "평일 $150, 주말 $200" },
     ],
   };
 

@@ -227,7 +227,7 @@ export default function Home() {
             courseName = t("golf.course.chouduc");
             break;
           case "hocham":
-            price = isWeekend ? 200 : 130;
+            price = isWeekend ? 200 : 150;
             tip = "50만동";
             courseName = t("golf.course.hocham");
             break;
