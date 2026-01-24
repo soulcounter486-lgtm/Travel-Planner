@@ -99,8 +99,8 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
     
     try {
       setIsCapturing(true);
-      // 상태 변경이 반영될 시간을 줌
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // 상태 변경이 반영될 시간을 충분히 줌
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       const canvas = await html2canvas(summaryRef.current, {
         scale: 2,
@@ -109,6 +109,20 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         backgroundColor: "#ffffff",
         logging: false,
         imageTimeout: 0,
+        onclone: (clonedDoc) => {
+          // 클론된 문서에서 모든 flex 컨테이너를 block으로 강제 변경
+          const clonedElement = clonedDoc.querySelector('[data-quote-summary]');
+          if (clonedElement) {
+            const allDivs = clonedElement.querySelectorAll('div');
+            allDivs.forEach((div: Element) => {
+              const htmlDiv = div as HTMLElement;
+              const style = window.getComputedStyle(div);
+              if (style.display === 'flex' && style.flexDirection === 'column') {
+                htmlDiv.style.display = 'block';
+              }
+            });
+          }
+        }
       });
       
       setIsCapturing(false);
@@ -166,7 +180,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
 
   return (
     <div className="sticky top-6 space-y-4">
-      <div ref={summaryRef}>
+      <div ref={summaryRef} data-quote-summary>
         <Card className="overflow-hidden border-0 shadow-xl shadow-primary/5 bg-white">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-indigo-500 to-primary" />
           <CardHeader className="bg-primary/5 pb-6">
