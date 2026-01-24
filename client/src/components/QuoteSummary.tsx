@@ -186,24 +186,34 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
           <CardHeader className="bg-primary/5 pb-6">
             <div className="flex items-start justify-between gap-4">
               {isCapturing ? (
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '12px', fontWeight: 500, color: '#6b7280', marginBottom: '6px' }}>
-                    {t("quote.title")}
-                  </div>
-                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#4f46e5', marginBottom: '8px' }}>
-                    ${finalTotal.toLocaleString()}
-                  </div>
-                  {currencyInfo.code !== "USD" && (
-                    <>
-                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#6366f1', marginBottom: '6px' }}>
-                        ≈ {formatLocalCurrency(finalTotal)}
-                      </div>
-                      <div style={{ fontSize: '9px', color: '#6b7280' }}>
-                        {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
-                      </div>
-                    </>
-                  )}
-                </div>
+                <table style={{ borderCollapse: 'collapse', border: 'none' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ fontSize: '12px', fontWeight: 500, color: '#6b7280', padding: '0 0 6px 0', border: 'none' }}>
+                        {t("quote.title")}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontSize: '28px', fontWeight: 'bold', color: '#4f46e5', padding: '0 0 8px 0', border: 'none', lineHeight: '1.2' }}>
+                        ${finalTotal.toLocaleString()}
+                      </td>
+                    </tr>
+                    {currencyInfo.code !== "USD" && (
+                      <>
+                        <tr>
+                          <td style={{ fontSize: '14px', fontWeight: 600, color: '#6366f1', padding: '0 0 6px 0', border: 'none', lineHeight: '1.2' }}>
+                            ≈ {formatLocalCurrency(finalTotal)}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style={{ fontSize: '9px', color: '#6b7280', padding: '0', border: 'none', lineHeight: '1.2' }}>
+                            {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
+                          </td>
+                        </tr>
+                      </>
+                    )}
+                  </tbody>
+                </table>
               ) : (
                 <CardTitle className="flex flex-col gap-1 flex-1">
                   <span className="text-sm font-medium text-muted-foreground">
@@ -555,21 +565,25 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               {personCount && parseInt(personCount) > 1 && (
                 isCapturing ? (
                   <div style={{ paddingTop: '6px', borderTop: '1px solid #c7d2fe' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 500, color: '#312e81' }}>
-                        {language === "ko" ? "1인당" : "Per Person"}
-                      </span>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#4f46e5', marginBottom: '4px' }}>
-                          ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
-                        </div>
-                        {currencyInfo.code !== "USD" && (
-                          <div style={{ fontSize: '9px', color: '#6366f1' }}>
-                            ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none' }}>
+                      <tbody>
+                        <tr>
+                          <td style={{ fontSize: '11px', fontWeight: 500, color: '#312e81', padding: '0', border: 'none', verticalAlign: 'top' }}>
+                            {language === "ko" ? "1인당" : "Per Person"}
+                          </td>
+                          <td style={{ textAlign: 'right', padding: '0', border: 'none', verticalAlign: 'top' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#4f46e5', lineHeight: '1.3' }}>
+                              ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
+                            </div>
+                            {currencyInfo.code !== "USD" && (
+                              <div style={{ fontSize: '9px', color: '#6366f1', lineHeight: '1.3', marginTop: '2px' }}>
+                                ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 ) : (
                   <div className="pt-1.5 border-t border-indigo-200 dark:border-indigo-700">
