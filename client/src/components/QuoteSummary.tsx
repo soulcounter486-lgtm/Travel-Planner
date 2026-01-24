@@ -214,13 +214,20 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       <span>{t("quote.golf")}</span>
                       <span>${breakdown.golf.price}</span>
                     </div>
-                    <div className="text-xs text-muted-foreground space-y-0.5 pl-1 italic">
-                      {breakdown.golf.description.split(" | ").map((detail, idx) => (
-                        <p key={idx} className="flex items-center gap-2">
-                          <span className="w-1 h-1 rounded-full bg-emerald-500/40" />
-                          {detail}
-                        </p>
-                      ))}
+                    <div className="text-xs text-muted-foreground space-y-2 pl-1 italic">
+                      {breakdown.golf.description.split(" | ").map((round, idx) => {
+                        const parts = round.split(" / ");
+                        return (
+                          <div key={idx} className="space-y-0.5">
+                            {parts.map((part, pIdx) => (
+                              <p key={pIdx} className="flex items-center gap-2">
+                                <span className={`w-1 h-1 rounded-full ${pIdx === 0 ? 'bg-emerald-500' : 'bg-emerald-500/40'}`} />
+                                {part}
+                              </p>
+                            ))}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <Separator className="bg-border/50" />
