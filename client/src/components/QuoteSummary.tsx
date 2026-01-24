@@ -3,7 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, FileText, Info, Save, Users, Percent, AlertTriangle } from "lucide-react";
+import { Loader2, FileText, Info, Save, Users, AlertTriangle } from "lucide-react";
 import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
@@ -110,9 +110,6 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     <span className="text-4xl text-primary font-bold">
                       ${discountedTotal.toLocaleString()}
                     </span>
-                    <span className="text-sm text-green-600 font-semibold">
-                      -{discountRate}% ({language === "ko" ? "할인 적용" : "Discounted"})
-                    </span>
                   </>
                 ) : (
                   <span className="text-4xl text-primary font-bold">
@@ -129,6 +126,22 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     </span>
                   </>
                 )}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-green-700 dark:text-green-400">
+                    {language === "ko" ? "할인" : "Discount"}
+                  </span>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(e.target.value)}
+                    placeholder="0"
+                    className="w-14 h-7 text-center text-sm font-bold bg-white dark:bg-slate-800 border-green-300 dark:border-green-700"
+                    data-testid="input-discount-percent"
+                  />
+                  <span className="text-xs text-green-700 dark:text-green-400">%</span>
+                </div>
               </CardTitle>
               <img 
                 src={logoImage} 
@@ -269,33 +282,6 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl p-4 border border-green-200 dark:border-green-800 space-y-3">
-              <div className="flex items-center gap-2">
-                <Percent className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <Label className="text-sm font-semibold text-green-900 dark:text-green-100">
-                  {language === "ko" ? "할인율" : 
-                   language === "en" ? "Discount" :
-                   language === "zh" ? "折扣" :
-                   language === "vi" ? "Giảm giá" :
-                   language === "ru" ? "Скидка" :
-                   language === "ja" ? "割引率" : "할인율"}
-                </Label>
-              </div>
-              <div className="flex items-center gap-3">
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={discountPercent}
-                  onChange={(e) => setDiscountPercent(e.target.value)}
-                  placeholder="0"
-                  className="w-20 h-10 text-center font-bold text-lg bg-white dark:bg-slate-800 border-green-200 dark:border-green-700"
-                  data-testid="input-discount-percent"
-                />
-                <span className="text-sm text-muted-foreground">%</span>
-              </div>
-            </div>
 
             <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-indigo-200 dark:border-indigo-800 space-y-3">
               <div className="flex items-center gap-2">
