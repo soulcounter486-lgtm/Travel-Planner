@@ -172,27 +172,32 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
           <CardHeader className="bg-primary/5 pb-6">
             <div className="flex items-start justify-between gap-4">
               <CardTitle className="flex flex-col gap-1 flex-1">
-                <span className="text-sm font-medium text-muted-foreground">{t("quote.title")}</span>
+                <span 
+                  className="text-sm font-medium text-muted-foreground"
+                  style={isCapturing ? { fontSize: '12px', fontWeight: 500, color: '#6b7280', display: 'block', marginBottom: '4px' } : {}}
+                >
+                  {t("quote.title")}
+                </span>
                 <span 
                   className="text-4xl text-primary font-bold leading-tight"
-                  style={isCapturing ? { fontSize: '32px', fontWeight: 'bold', color: '#4f46e5', lineHeight: '1.1' } : {}}
+                  style={isCapturing ? { fontSize: '28px', fontWeight: 'bold', color: '#4f46e5', lineHeight: '1', display: 'block' } : {}}
                 >
                   ${finalTotal.toLocaleString()}
                 </span>
                 {currencyInfo.code !== "USD" && (
                   <div 
                     className="flex flex-col gap-0.5 mt-1"
-                    style={isCapturing ? { display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' } : {}}
+                    style={isCapturing ? { display: 'block', marginTop: '8px' } : {}}
                   >
                     <span 
                       className="text-lg text-primary/70 font-semibold leading-tight"
-                      style={isCapturing ? { fontSize: '16px', fontWeight: 600, color: '#6366f1', lineHeight: '1.2' } : {}}
+                      style={isCapturing ? { fontSize: '14px', fontWeight: 600, color: '#6366f1', lineHeight: '1', display: 'block', marginBottom: '4px' } : {}}
                     >
                       ≈ {formatLocalCurrency(finalTotal)}
                     </span>
                     <span 
                       className="text-[10px] text-muted-foreground leading-tight"
-                      style={isCapturing ? { fontSize: '10px', color: '#6b7280', lineHeight: '1.2' } : {}}
+                      style={isCapturing ? { fontSize: '9px', color: '#6b7280', lineHeight: '1', display: 'block' } : {}}
                     >
                       {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
                     </span>
@@ -381,7 +386,12 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
-                      <span>{t("quote.golf")}</span>
+                      <div className="flex items-center gap-1">
+                        <span>{t("quote.golf")}</span>
+                        <span className="text-[9px] text-orange-600 dark:text-orange-400 font-normal">
+                          ({language === "ko" ? "캐디팁 별도" : "Caddy tip extra"})
+                        </span>
+                      </div>
                       <span>${breakdown.golf.price}</span>
                     </div>
                     <div className="text-xs text-muted-foreground space-y-2 pl-1 italic">
@@ -544,18 +554,18 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     </span>
                     <div 
                       className="text-right flex flex-col items-end"
-                      style={isCapturing ? { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', textAlign: 'right' } : {}}
+                      style={isCapturing ? { display: 'block', textAlign: 'right' } : {}}
                     >
                       <span 
                         className="text-sm font-bold text-indigo-600 dark:text-indigo-400 leading-tight"
-                        style={isCapturing ? { fontSize: '13px', fontWeight: 'bold', color: '#4f46e5', lineHeight: '1.2' } : {}}
+                        style={isCapturing ? { fontSize: '12px', fontWeight: 'bold', color: '#4f46e5', lineHeight: '1', display: 'block' } : {}}
                       >
                         ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
                       </span>
                       {currencyInfo.code !== "USD" && (
                         <span 
                           className="text-[10px] text-indigo-500 dark:text-indigo-300 leading-tight"
-                          style={isCapturing ? { fontSize: '10px', color: '#6366f1', lineHeight: '1.2', marginTop: '2px' } : {}}
+                          style={isCapturing ? { fontSize: '9px', color: '#6366f1', lineHeight: '1', display: 'block', marginTop: '3px' } : {}}
                         >
                           ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
                         </span>
