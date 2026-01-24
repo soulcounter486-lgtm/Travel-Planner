@@ -414,7 +414,21 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               </div>
               <div className="flex items-center gap-3">
                 {isCapturing ? (
-                  <span className="w-20 h-10 flex items-center justify-center font-bold text-lg text-indigo-900 bg-white rounded-md border border-indigo-200">
+                  <span 
+                    style={{ 
+                      width: '80px', 
+                      height: '40px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      fontWeight: 'bold',
+                      fontSize: '18px',
+                      color: '#312e81',
+                      backgroundColor: '#ffffff',
+                      borderRadius: '6px',
+                      border: '1px solid #c7d2fe'
+                    }}
+                  >
                     {personCount || "-"}
                   </span>
                 ) : (
