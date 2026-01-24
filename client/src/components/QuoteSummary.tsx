@@ -203,7 +203,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 <img 
                   src={logoImage} 
                   alt="붕따우 도깨비" 
-                  className="w-14 h-14 object-contain"
+                  className="w-20 h-20 object-contain"
                 />
                 <div 
                   className={`rounded-lg p-1.5 text-center ${isCapturing ? '' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'}`}
