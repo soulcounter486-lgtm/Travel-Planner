@@ -414,7 +414,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               </div>
               <div className="flex items-center gap-3">
                 {isCapturing ? (
-                  <span className="w-20 h-10 flex items-center justify-center font-bold text-lg text-indigo-900 dark:text-indigo-100">
+                  <span className="w-20 h-10 flex items-center justify-center font-bold text-lg text-indigo-900 bg-white rounded-md border border-indigo-200">
                     {personCount || "-"}
                   </span>
                 ) : (
