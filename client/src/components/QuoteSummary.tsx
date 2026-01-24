@@ -25,6 +25,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
   const [personCount, setPersonCount] = useState<string>("");
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
+  const [isCapturing, setIsCapturing] = useState(false);
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -96,6 +97,10 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
     if (!summaryRef.current || !breakdown) return;
     
     try {
+      setIsCapturing(true);
+      // 상태 변경이 반영될 시간을 줌
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const canvas = await html2canvas(summaryRef.current, {
         scale: 2,
         useCORS: true,
@@ -105,6 +110,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         imageTimeout: 0,
       });
       
+      setIsCapturing(false);
       const image = canvas.toDataURL("image/png", 1.0);
       
       // 모바일 호환성을 위한 다운로드 방식
@@ -128,6 +134,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
+      setIsCapturing(false);
       console.error("Image capture error:", error);
       alert(language === "ko" ? "이미지 저장에 실패했습니다. 다시 시도해주세요." : "Failed to save image. Please try again.");
     }
@@ -213,19 +220,25 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                             <span className="flex-1">{dateLabel}</span>
                             <div className="flex items-center gap-1">
                               <span className="font-medium text-slate-700 dark:text-slate-300">
-                                $
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={currentPrice === 0 ? '' : currentPrice}
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    const newVal = val === '' ? 0 : parseInt(val);
-                                    setVillaAdjustments(prev => ({ ...prev, [idx]: newVal }));
-                                  }}
-                                  className="w-14 text-center text-xs font-medium bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-primary"
-                                  data-testid={`input-villa-price-${idx}`}
-                                />
+                                {isCapturing ? (
+                                  <span>${currentPrice}</span>
+                                ) : (
+                                  <>
+                                    $
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={currentPrice === 0 ? '' : currentPrice}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        const newVal = val === '' ? 0 : parseInt(val);
+                                        setVillaAdjustments(prev => ({ ...prev, [idx]: newVal }));
+                                      }}
+                                      className="w-14 text-center text-xs font-medium bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-primary"
+                                      data-testid={`input-villa-price-${idx}`}
+                                    />
+                                  </>
+                                )}
                               </span>
                             </div>
                           </div>
@@ -262,22 +275,28 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                               <span>{textWithoutPrice}</span>
                             </p>
                             <div className="flex items-center gap-1">
-                              <span className="text-xs">$</span>
-                              <input
-                                type="number"
-                                min="0"
-                                value={currentPrice === 0 ? '' : currentPrice}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  const newVal = val === '' ? 0 : parseInt(val);
-                                  setVehicleAdjustments(prev => ({
-                                    ...prev,
-                                    [idx]: newVal
-                                  }));
-                                }}
-                                className="w-14 text-right text-xs font-medium bg-transparent border-b border-slate-300 focus:border-blue-500 focus:outline-none"
-                                data-testid={`input-vehicle-price-${idx}`}
-                              />
+                              {isCapturing ? (
+                                <span className="text-xs font-medium">${currentPrice}</span>
+                              ) : (
+                                <>
+                                  <span className="text-xs">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={currentPrice === 0 ? '' : currentPrice}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      const newVal = val === '' ? 0 : parseInt(val);
+                                      setVehicleAdjustments(prev => ({
+                                        ...prev,
+                                        [idx]: newVal
+                                      }));
+                                    }}
+                                    className="w-14 text-right text-xs font-medium bg-transparent border-b border-slate-300 focus:border-blue-500 focus:outline-none"
+                                    data-testid={`input-vehicle-price-${idx}`}
+                                  />
+                                </>
+                              )}
                             </div>
                           </div>
                         );
