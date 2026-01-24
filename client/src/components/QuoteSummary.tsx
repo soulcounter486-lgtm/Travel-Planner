@@ -400,7 +400,10 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               )}
             </AnimatePresence>
 
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-indigo-200 dark:border-indigo-800 space-y-3">
+            <div 
+              className={`rounded-2xl p-4 border space-y-3 ${isCapturing ? '' : 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-200 dark:border-indigo-800'}`}
+              style={isCapturing ? { backgroundColor: '#ffffff', border: '1px solid #c7d2fe' } : {}}
+            >
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 <Label className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
