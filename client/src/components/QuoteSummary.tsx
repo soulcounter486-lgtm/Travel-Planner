@@ -221,7 +221,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     </span>
                     {isCapturing ? (
                       <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#92400e' }}>
-                        ${(depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3)).toLocaleString()}
+                        ${(depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.5)).toLocaleString()}
                       </span>
                     ) : (
                       <div className="flex items-center justify-center">
@@ -229,7 +229,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                         <Input
                           type="number"
                           min="0"
-                          value={depositAmount || Math.round(finalTotal * 0.3)}
+                          value={depositAmount || Math.round(finalTotal * 0.5)}
                           onChange={(e) => setDepositAmount(e.target.value)}
                           className="w-12 h-5 text-center font-bold text-[10px] bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-700 p-0.5"
                           data-testid="input-deposit-amount"
@@ -251,7 +251,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       className="text-[10px] font-bold text-green-800 dark:text-green-200"
                       style={isCapturing ? { fontSize: '10px', fontWeight: 'bold', color: '#166534' } : {}}
                     >
-                      ${(finalTotal - (depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3))).toLocaleString()}
+                      ${(finalTotal - (depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.5))).toLocaleString()}
                     </span>
                   </div>
                 </div>
