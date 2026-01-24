@@ -81,16 +81,37 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
       const canvas = await html2canvas(summaryRef.current, {
         scale: 2,
         useCORS: true,
+        allowTaint: true,
         backgroundColor: "#ffffff",
+        logging: false,
+        imageTimeout: 0,
       });
       
       const image = canvas.toDataURL("image/png", 1.0);
+      
+      // 모바일 호환성을 위한 다운로드 방식
+      const filename = `${t("file.quoteName")}_${new Date().getTime()}.png`;
+      
+      // Blob 방식으로 다운로드 (더 안정적)
+      const byteCharacters = atob(image.split(',')[1]);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
+      
+      const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      link.download = `${t("file.quoteName")}_${new Date().getTime()}.png`;
-      link.href = image;
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Image capture error:", error);
+      alert(language === "ko" ? "이미지 저장에 실패했습니다. 다시 시도해주세요." : "Failed to save image. Please try again.");
     }
   };
 
