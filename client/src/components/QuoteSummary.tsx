@@ -401,79 +401,81 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
             </AnimatePresence>
 
             <div 
-              className={`rounded-2xl p-4 border space-y-3 ${isCapturing ? '' : 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-200 dark:border-indigo-800'}`}
+              className={`rounded-xl p-2.5 border space-y-1.5 ${isCapturing ? '' : 'bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-200 dark:border-indigo-800'}`}
               style={isCapturing ? { backgroundColor: '#ffffff', border: '1px solid #c7d2fe' } : {}}
             >
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <Label className="text-sm font-semibold text-indigo-900 dark:text-indigo-100">
-                  {language === "ko" ? "인원수" : 
-                   language === "en" ? "Number of People" :
-                   language === "zh" ? "人数" :
-                   language === "vi" ? "Số người" :
-                   language === "ru" ? "Количество человек" :
-                   language === "ja" ? "人数" : "인원수"}
-                </Label>
-              </div>
-              <div className="flex items-center gap-3">
-                {isCapturing ? (
-                  <span 
-                    style={{ 
-                      width: '80px', 
-                      height: '40px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      fontWeight: 'bold',
-                      fontSize: '18px',
-                      color: '#312e81',
-                      backgroundColor: '#ffffff',
-                      borderRadius: '6px',
-                      border: '1px solid #c7d2fe'
-                    }}
-                  >
-                    {personCount || "-"}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <Label className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                    {language === "ko" ? "인원수" : 
+                     language === "en" ? "People" :
+                     language === "zh" ? "人数" :
+                     language === "vi" ? "Số người" :
+                     language === "ru" ? "Чел." :
+                     language === "ja" ? "人数" : "인원수"}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isCapturing ? (
+                    <span 
+                      style={{ 
+                        width: '50px', 
+                        height: '28px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        fontWeight: 'bold',
+                        fontSize: '14px',
+                        color: '#312e81',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '4px',
+                        border: '1px solid #c7d2fe'
+                      }}
+                    >
+                      {personCount || "-"}
+                    </span>
+                  ) : (
+                    <Input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={personCount}
+                      onChange={(e) => setPersonCount(e.target.value)}
+                      placeholder=""
+                      className="w-14 h-7 text-center font-bold text-sm bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-700"
+                      data-testid="input-person-count"
+                    />
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {language === "ko" ? "명" : 
+                     language === "en" ? "" :
+                     language === "zh" ? "人" :
+                     language === "vi" ? "" :
+                     language === "ru" ? "" :
+                     language === "ja" ? "名" : "명"}
                   </span>
-                ) : (
-                  <Input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={personCount}
-                    onChange={(e) => setPersonCount(e.target.value)}
-                    placeholder=""
-                    className="w-20 h-10 text-center font-bold text-lg bg-white dark:bg-slate-800 border-indigo-200 dark:border-indigo-700"
-                    data-testid="input-person-count"
-                  />
-                )}
-                <span className="text-sm text-muted-foreground">
-                  {language === "ko" ? "명" : 
-                   language === "en" ? "people" :
-                   language === "zh" ? "人" :
-                   language === "vi" ? "người" :
-                   language === "ru" ? "чел." :
-                   language === "ja" ? "名" : "명"}
-                </span>
+                </div>
               </div>
               {personCount && parseInt(personCount) > 1 && (
-                <div className="pt-2 border-t border-indigo-200 dark:border-indigo-700">
+                <div className="pt-1.5 border-t border-indigo-200 dark:border-indigo-700">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-indigo-900 dark:text-indigo-100">
-                      {language === "ko" ? "1인당 경비" : 
+                    <span className="text-xs font-medium text-indigo-900 dark:text-indigo-100">
+                      {language === "ko" ? "1인당" : 
                        language === "en" ? "Per Person" :
-                       language === "zh" ? "人均费用" :
-                       language === "vi" ? "Chi phí/người" :
-                       language === "ru" ? "На человека" :
-                       language === "ja" ? "1人あたり" : "1인당 경비"}
+                       language === "zh" ? "人均" :
+                       language === "vi" ? "Mỗi người" :
+                       language === "ru" ? "На чел." :
+                       language === "ja" ? "1人" : "1인당"}
                     </span>
                     <div className="text-right">
-                      <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                      <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
                         ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
-                      </div>
+                      </span>
                       {currencyInfo.code !== "USD" && (
-                        <div className="text-sm text-indigo-500 dark:text-indigo-300">
-                          ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
-                        </div>
+                        <span className="text-xs text-indigo-500 dark:text-indigo-300 ml-1">
+                          ({formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))})
+                        </span>
                       )}
                     </div>
                   </div>
