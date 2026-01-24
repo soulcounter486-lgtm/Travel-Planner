@@ -23,8 +23,8 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
   const { t, language } = useLanguage();
   const summaryRef = useRef<HTMLDivElement>(null);
   const [personCount, setPersonCount] = useState<string>("");
-  const [discountPercent, setDiscountPercent] = useState<string>("");
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
+  const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -48,6 +48,12 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
     return match ? parseInt(match[1]) : 0;
   };
 
+  // 차량 날짜별 금액 파싱 함수
+  const parseVehiclePrice = (detail: string): number => {
+    const match = detail.match(/\$(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
+
   // 조정된 빌라 총액 계산
   const getAdjustedVillaTotal = () => {
     if (!breakdown) return 0;
@@ -59,14 +65,26 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
     return total;
   };
 
+  // 조정된 차량 총액 계산
+  const getAdjustedVehicleTotal = () => {
+    if (!breakdown || !breakdown.vehicle.description) return breakdown?.vehicle.price || 0;
+    const details = breakdown.vehicle.description.split(" | ");
+    let total = 0;
+    details.forEach((detail, idx) => {
+      const originalPrice = parseVehiclePrice(detail);
+      total += vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice;
+    });
+    return total;
+  };
+
   // 조정된 전체 총액 계산
   const adjustedVillaTotal = breakdown ? getAdjustedVillaTotal() : 0;
   const villaAdjustment = breakdown ? adjustedVillaTotal - breakdown.villa.price : 0;
-  const adjustedGrandTotal = breakdown ? breakdown.total + villaAdjustment : 0;
+  const adjustedVehicleTotal = breakdown ? getAdjustedVehicleTotal() : 0;
+  const vehicleAdjustment = breakdown ? adjustedVehicleTotal - breakdown.vehicle.price : 0;
+  const adjustedGrandTotal = breakdown ? breakdown.total + villaAdjustment + vehicleAdjustment : 0;
   
-  const discountRate = parseFloat(discountPercent) || 0;
   const finalTotal = adjustedGrandTotal;
-  const discountedTotal = Math.round(finalTotal * (1 - discountRate / 100));
   
   const formatLocalCurrency = (usd: number) => {
     if (currencyInfo.code === "USD") return `$${usd.toLocaleString()}`;
@@ -147,46 +165,19 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
             <div className="flex items-start justify-between gap-4">
               <CardTitle className="flex flex-col gap-1 flex-1">
                 <span className="text-sm font-medium text-muted-foreground">{t("quote.title")}</span>
-                {discountRate > 0 ? (
-                  <>
-                    <span className="text-xl text-muted-foreground line-through">
-                      ${finalTotal.toLocaleString()}
-                    </span>
-                    <span className="text-4xl text-primary font-bold">
-                      ${discountedTotal.toLocaleString()}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-4xl text-primary font-bold">
-                    ${finalTotal.toLocaleString()}
-                  </span>
-                )}
+                <span className="text-4xl text-primary font-bold">
+                  ${finalTotal.toLocaleString()}
+                </span>
                 {currencyInfo.code !== "USD" && (
                   <>
                     <span className="text-xl text-primary/70 font-semibold">
-                      ≈ {formatLocalCurrency(discountRate > 0 ? discountedTotal : finalTotal)}
+                      ≈ {formatLocalCurrency(finalTotal)}
                     </span>
                     <span className="text-xs text-muted-foreground mt-1">
                       {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
                     </span>
                   </>
                 )}
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-green-700 dark:text-green-400">
-                    {language === "ko" ? "할인" : "Discount"}
-                  </span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={discountPercent}
-                    onChange={(e) => setDiscountPercent(e.target.value)}
-                    placeholder="0"
-                    className="w-14 h-7 text-center text-sm font-bold bg-white dark:bg-slate-800 border-green-300 dark:border-green-700"
-                    data-testid="input-discount-percent"
-                  />
-                  <span className="text-xs text-green-700 dark:text-green-400">%</span>
-                </div>
               </CardTitle>
               <img 
                 src={logoImage} 
@@ -269,15 +260,55 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
                       <span>{t("quote.vehicle")}</span>
-                      <span>${breakdown.vehicle.price}</span>
+                      <span className={vehicleAdjustment !== 0 ? "text-orange-600" : ""}>
+                        ${adjustedVehicleTotal.toLocaleString()}
+                        {vehicleAdjustment !== 0 && (
+                          <span className="text-xs text-muted-foreground ml-1 line-through">
+                            (${breakdown.vehicle.price})
+                          </span>
+                        )}
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground space-y-0.5 pl-1 italic">
-                      {breakdown.vehicle.description.split(" | ").map((detail, idx) => (
-                        <p key={idx} className="flex items-center gap-2">
-                          <span className="w-1 h-1 rounded-full bg-blue-500/40" />
-                          {detail}
-                        </p>
-                      ))}
+                    <div className="text-xs text-muted-foreground space-y-1 pl-1 italic">
+                      {breakdown.vehicle.description.split(" | ").map((detail, idx) => {
+                        const originalPrice = parseVehiclePrice(detail);
+                        const adjustedPrice = vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice;
+                        const isModified = vehicleAdjustments[idx] !== undefined && vehicleAdjustments[idx] !== originalPrice;
+                        const textWithoutPrice = detail.replace(/\s*\$\d+/, "");
+                        
+                        return (
+                          <div key={idx} className="flex items-center justify-between gap-2">
+                            <p className="flex items-center gap-2 flex-1">
+                              <span className="w-1 h-1 rounded-full bg-blue-500/40" />
+                              <span>{textWithoutPrice}</span>
+                            </p>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs">$</span>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === "" || /^\d+$/.test(val)) {
+                                    setVehicleAdjustments(prev => ({
+                                      ...prev,
+                                      [idx]: val === "" ? 0 : parseInt(val)
+                                    }));
+                                  }
+                                }}
+                                className={`w-14 text-right text-xs font-medium bg-transparent border-b border-slate-300 focus:border-blue-500 focus:outline-none ${isModified ? "text-orange-600" : ""}`}
+                                data-testid={`input-vehicle-price-${idx}`}
+                              />
+                              {isModified && (
+                                <span className="text-xs text-muted-foreground line-through ml-1">
+                                  (${originalPrice})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                   <Separator className="bg-border/50" />
