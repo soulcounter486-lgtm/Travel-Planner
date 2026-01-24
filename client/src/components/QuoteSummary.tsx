@@ -189,9 +189,14 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       <span>{t("quote.vehicle")}</span>
                       <span>${breakdown.vehicle.price}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed italic pl-1">
-                      {breakdown.vehicle.description}
-                    </p>
+                    <div className="text-xs text-muted-foreground space-y-0.5 pl-1 italic">
+                      {breakdown.vehicle.description.split(" | ").map((detail, idx) => (
+                        <p key={idx} className="flex items-center gap-2">
+                          <span className="w-1 h-1 rounded-full bg-blue-500/40" />
+                          {detail}
+                        </p>
+                      ))}
+                    </div>
                   </div>
                   <Separator className="bg-border/50" />
                 </motion.div>
