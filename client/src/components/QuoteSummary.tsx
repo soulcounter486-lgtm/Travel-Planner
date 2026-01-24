@@ -171,39 +171,45 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-indigo-500 to-primary" />
           <CardHeader className="bg-primary/5 pb-6">
             <div className="flex items-start justify-between gap-4">
-              <CardTitle className="flex flex-col gap-1 flex-1">
-                <span 
-                  className="text-sm font-medium text-muted-foreground"
-                  style={isCapturing ? { fontSize: '12px', fontWeight: 500, color: '#6b7280', display: 'block', marginBottom: '4px' } : {}}
-                >
-                  {t("quote.title")}
-                </span>
-                <span 
-                  className="text-4xl text-primary font-bold leading-tight"
-                  style={isCapturing ? { fontSize: '28px', fontWeight: 'bold', color: '#4f46e5', lineHeight: '1', display: 'block' } : {}}
-                >
-                  ${finalTotal.toLocaleString()}
-                </span>
-                {currencyInfo.code !== "USD" && (
-                  <div 
-                    className="flex flex-col gap-0.5 mt-1"
-                    style={isCapturing ? { display: 'block', marginTop: '8px' } : {}}
-                  >
-                    <span 
-                      className="text-lg text-primary/70 font-semibold leading-tight"
-                      style={isCapturing ? { fontSize: '14px', fontWeight: 600, color: '#6366f1', lineHeight: '1', display: 'block', marginBottom: '4px' } : {}}
-                    >
-                      ≈ {formatLocalCurrency(finalTotal)}
-                    </span>
-                    <span 
-                      className="text-[10px] text-muted-foreground leading-tight"
-                      style={isCapturing ? { fontSize: '9px', color: '#6b7280', lineHeight: '1', display: 'block' } : {}}
-                    >
-                      {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
-                    </span>
+              {isCapturing ? (
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '12px', fontWeight: 500, color: '#6b7280', marginBottom: '6px' }}>
+                    {t("quote.title")}
                   </div>
-                )}
-              </CardTitle>
+                  <div style={{ fontSize: '28px', fontWeight: 'bold', color: '#4f46e5', marginBottom: '8px' }}>
+                    ${finalTotal.toLocaleString()}
+                  </div>
+                  {currencyInfo.code !== "USD" && (
+                    <>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#6366f1', marginBottom: '6px' }}>
+                        ≈ {formatLocalCurrency(finalTotal)}
+                      </div>
+                      <div style={{ fontSize: '9px', color: '#6b7280' }}>
+                        {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <CardTitle className="flex flex-col gap-1 flex-1">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {t("quote.title")}
+                  </span>
+                  <span className="text-4xl text-primary font-bold leading-tight">
+                    ${finalTotal.toLocaleString()}
+                  </span>
+                  {currencyInfo.code !== "USD" && (
+                    <div className="flex flex-col gap-0.5 mt-1">
+                      <span className="text-lg text-primary/70 font-semibold leading-tight">
+                        ≈ {formatLocalCurrency(finalTotal)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground leading-tight">
+                        {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
+                      </span>
+                    </div>
+                  )}
+                </CardTitle>
+              )}
               <div className="flex flex-col items-center gap-1.5">
                 <img 
                   src={logoImage} 
@@ -533,46 +539,48 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 </div>
               </div>
               {personCount && parseInt(personCount) > 1 && (
-                <div 
-                  className="pt-1.5 border-t border-indigo-200 dark:border-indigo-700"
-                  style={isCapturing ? { paddingTop: '6px', borderTop: '1px solid #c7d2fe' } : {}}
-                >
-                  <div 
-                    className="flex justify-between items-center"
-                    style={isCapturing ? { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } : {}}
-                  >
-                    <span 
-                      className="text-xs font-medium text-indigo-900 dark:text-indigo-100"
-                      style={isCapturing ? { fontSize: '11px', fontWeight: 500, color: '#312e81' } : {}}
-                    >
-                      {language === "ko" ? "1인당" : 
-                       language === "en" ? "Per Person" :
-                       language === "zh" ? "人均" :
-                       language === "vi" ? "Mỗi người" :
-                       language === "ru" ? "На чел." :
-                       language === "ja" ? "1人" : "1인당"}
-                    </span>
-                    <div 
-                      className="text-right flex flex-col items-end"
-                      style={isCapturing ? { display: 'block', textAlign: 'right' } : {}}
-                    >
-                      <span 
-                        className="text-sm font-bold text-indigo-600 dark:text-indigo-400 leading-tight"
-                        style={isCapturing ? { fontSize: '12px', fontWeight: 'bold', color: '#4f46e5', lineHeight: '1', display: 'block' } : {}}
-                      >
-                        ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
+                isCapturing ? (
+                  <div style={{ paddingTop: '6px', borderTop: '1px solid #c7d2fe' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 500, color: '#312e81' }}>
+                        {language === "ko" ? "1인당" : "Per Person"}
                       </span>
-                      {currencyInfo.code !== "USD" && (
-                        <span 
-                          className="text-[10px] text-indigo-500 dark:text-indigo-300 leading-tight"
-                          style={isCapturing ? { fontSize: '9px', color: '#6366f1', lineHeight: '1', display: 'block', marginTop: '3px' } : {}}
-                        >
-                          ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
-                        </span>
-                      )}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#4f46e5', marginBottom: '4px' }}>
+                          ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
+                        </div>
+                        {currencyInfo.code !== "USD" && (
+                          <div style={{ fontSize: '9px', color: '#6366f1' }}>
+                            ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="pt-1.5 border-t border-indigo-200 dark:border-indigo-700">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-indigo-900 dark:text-indigo-100">
+                        {language === "ko" ? "1인당" : 
+                         language === "en" ? "Per Person" :
+                         language === "zh" ? "人均" :
+                         language === "vi" ? "Mỗi người" :
+                         language === "ru" ? "На чел." :
+                         language === "ja" ? "1人" : "1인당"}
+                      </span>
+                      <div className="text-right flex flex-col items-end">
+                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 leading-tight">
+                          ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
+                        </span>
+                        {currencyInfo.code !== "USD" && (
+                          <span className="text-[10px] text-indigo-500 dark:text-indigo-300 leading-tight">
+                            ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
               )}
             </div>
 
