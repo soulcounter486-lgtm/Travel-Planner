@@ -207,7 +207,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                         </tr>
                         <tr>
                           <td style={{ fontSize: '9px', color: '#6b7280', padding: '0', border: 'none', lineHeight: '1.2' }}>
-                            {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
+                            {t("common.exchangeRate")}: {currencyInfo.symbol} {exchangeRate.toLocaleString()}/USD
                           </td>
                         </tr>
                       </>
@@ -228,7 +228,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                         ≈ {formatLocalCurrency(finalTotal)}
                       </span>
                       <span className="text-[10px] text-muted-foreground leading-tight">
-                        {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
+                        {t("common.exchangeRate")}: {currencyInfo.symbol} {exchangeRate.toLocaleString()}/USD
                       </span>
                     </div>
                   )}
