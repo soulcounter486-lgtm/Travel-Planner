@@ -468,13 +468,13 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                        language === "ru" ? "На чел." :
                        language === "ja" ? "1人" : "1인당"}
                     </span>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                    <div className="text-right flex flex-col items-end">
+                      <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 leading-tight">
                         ${Math.round(finalTotal / parseInt(personCount)).toLocaleString()}
                       </span>
                       {currencyInfo.code !== "USD" && (
-                        <span className="text-xs text-indigo-500 dark:text-indigo-300 ml-1">
-                          ({formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))})
+                        <span className="text-[10px] text-indigo-500 dark:text-indigo-300 leading-tight">
+                          ≈ {formatLocalCurrency(Math.round(finalTotal / parseInt(personCount)))}
                         </span>
                       )}
                     </div>
