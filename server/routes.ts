@@ -356,7 +356,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
                 case "hocham_oneway": basePrice = prices.oneway; routeDesc = "One Way (Ho Tram)"; break;
                 case "phanthiet_oneway": basePrice = Math.round(prices.oneway * 1.6 * 0.85); routeDesc = "One Way (Phan Thiet)"; break;
                 case "roundtrip": basePrice = prices.roundtrip; routeDesc = "Round Trip"; break;
-                case "city_pickup_drop": basePrice = prices.city * 1.5; routeDesc = "Pickup/Drop + City"; break;
+                case "city_pickup_drop": basePrice = Math.ceil((prices.oneway + prices.city * 0.4) / 10) * 10; routeDesc = "Pickup/Drop + City"; break;
               }
             }
             if (!routeDesc) {
