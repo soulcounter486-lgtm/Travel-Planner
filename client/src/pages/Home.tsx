@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { format, addDays, parseISO, getDay } from "date-fns";
+import { ko, enUS, zhCN, vi, ru, ja } from "date-fns/locale";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
@@ -60,6 +61,19 @@ import { apiRequest } from "@/lib/queryClient";
 export default function Home() {
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  
+  // 언어별 달력 locale 매핑
+  const calendarLocale = useMemo(() => {
+    switch (language) {
+      case "ko": return ko;
+      case "zh": return zhCN;
+      case "vi": return vi;
+      case "ru": return ru;
+      case "ja": return ja;
+      default: return enUS;
+    }
+  }, [language]);
+  
   const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
@@ -484,8 +498,8 @@ export default function Home() {
                           name="villa.checkIn"
                           render={({ field }) => (
                             <Popover open={isCheckInOpen} onOpenChange={setIsCheckInOpen}>
-                              <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>{t("villa.selectDate")}</span>}</Button></PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckInOpen(false); }} initialFocus /></PopoverContent>
+                              <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP", { locale: calendarLocale }) : <span>{t("villa.selectDate")}</span>}</Button></PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" locale={calendarLocale} selected={field.value ? new Date(field.value) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckInOpen(false); }} initialFocus /></PopoverContent>
                             </Popover>
                           )}
                         />
@@ -497,8 +511,8 @@ export default function Home() {
                           name="villa.checkOut"
                           render={({ field }) => (
                             <Popover open={isCheckOutOpen} onOpenChange={setIsCheckOutOpen}>
-                              <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP") : <span>{t("villa.selectDate")}</span>}</Button></PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" selected={field.value ? new Date(field.value) : undefined} defaultMonth={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} fromDate={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckOutOpen(false); }} initialFocus /></PopoverContent>
+                              <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP", { locale: calendarLocale }) : <span>{t("villa.selectDate")}</span>}</Button></PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" locale={calendarLocale} selected={field.value ? new Date(field.value) : undefined} defaultMonth={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} fromDate={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckOutOpen(false); }} initialFocus /></PopoverContent>
                             </Popover>
                           )}
                         />

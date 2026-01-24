@@ -89,9 +89,9 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
   const finalTotal = adjustedGrandTotal;
   
   const formatLocalCurrency = (usd: number) => {
-    if (currencyInfo.code === "USD") return `$${usd.toLocaleString()}`;
+    if (currencyInfo.code === "USD") return `$ ${usd.toLocaleString()}`;
     const converted = Math.round(usd * exchangeRate);
-    return `${currencyInfo.symbol}${new Intl.NumberFormat(currencyInfo.locale).format(converted)}`;
+    return `${currencyInfo.symbol} ${new Intl.NumberFormat(currencyInfo.locale).format(converted)}`;
   };
 
   const handleDownloadImage = async () => {
