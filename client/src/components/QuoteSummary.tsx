@@ -26,6 +26,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
   const [isCapturing, setIsCapturing] = useState(false);
+  const [depositAmount, setDepositAmount] = useState<string>("");
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -198,19 +199,19 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   </div>
                 )}
               </CardTitle>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1.5">
                 <img 
                   src={logoImage} 
                   alt="붕따우 도깨비" 
-                  className="w-16 h-16 object-contain"
+                  className="w-14 h-14 object-contain"
                 />
                 <div 
-                  className={`rounded-lg p-2 text-center ${isCapturing ? '' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'}`}
-                  style={isCapturing ? { backgroundColor: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', padding: '8px' } : {}}
+                  className={`rounded-lg p-1.5 text-center ${isCapturing ? '' : 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800'}`}
+                  style={isCapturing ? { backgroundColor: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '6px', padding: '6px' } : {}}
                 >
                   <span 
-                    className="text-[10px] font-medium text-amber-700 dark:text-amber-300 block"
-                    style={isCapturing ? { fontSize: '10px', fontWeight: 500, color: '#b45309', display: 'block' } : {}}
+                    className="text-[9px] font-medium text-amber-700 dark:text-amber-300 block mb-0.5"
+                    style={isCapturing ? { fontSize: '9px', fontWeight: 500, color: '#b45309', display: 'block', marginBottom: '2px' } : {}}
                   >
                     {language === "ko" ? "예약금" : 
                      language === "en" ? "Deposit" :
@@ -219,11 +220,46 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                      language === "ru" ? "Депозит" :
                      language === "ja" ? "予約金" : "예약금"}
                   </span>
+                  {isCapturing ? (
+                    <span 
+                      style={{ fontSize: '12px', fontWeight: 'bold', color: '#92400e' }}
+                    >
+                      ${(depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3)).toLocaleString()}
+                    </span>
+                  ) : (
+                    <div className="flex items-center justify-center gap-0.5">
+                      <span className="text-xs font-bold text-amber-800 dark:text-amber-200">$</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={depositAmount || Math.round(finalTotal * 0.3)}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        className="w-16 h-6 text-center font-bold text-xs bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-700 p-1"
+                        data-testid="input-deposit-amount"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div 
+                  className={`rounded-md p-1 text-center ${isCapturing ? '' : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'}`}
+                  style={isCapturing ? { backgroundColor: '#f0fdf4', border: '1px solid #86efac', borderRadius: '4px', padding: '4px' } : {}}
+                >
                   <span 
-                    className="text-sm font-bold text-amber-800 dark:text-amber-200"
-                    style={isCapturing ? { fontSize: '13px', fontWeight: 'bold', color: '#92400e' } : {}}
+                    className="text-[8px] font-medium text-green-700 dark:text-green-300 block"
+                    style={isCapturing ? { fontSize: '8px', fontWeight: 500, color: '#15803d', display: 'block' } : {}}
                   >
-                    ${Math.round(finalTotal * 0.3).toLocaleString()}
+                    {language === "ko" ? "잔금" : 
+                     language === "en" ? "Balance" :
+                     language === "zh" ? "余额" :
+                     language === "vi" ? "Còn lại" :
+                     language === "ru" ? "Остаток" :
+                     language === "ja" ? "残金" : "잔금"}
+                  </span>
+                  <span 
+                    className="text-[10px] font-bold text-green-800 dark:text-green-200"
+                    style={isCapturing ? { fontSize: '10px', fontWeight: 'bold', color: '#166534' } : {}}
+                  >
+                    ${(finalTotal - (depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.3))).toLocaleString()}
                   </span>
                 </div>
               </div>
