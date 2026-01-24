@@ -641,14 +641,14 @@ export default function Home() {
                                         if (!type || !route) return <span className="text-lg font-bold text-primary">-</span>;
                                         
                                         const prices: Record<string, any> = {
-                                          "7_seater": { city: 100, oneway: 80, hocham_oneway: 80, phanthiet_oneway: 130, roundtrip: 150, city_pickup_drop: 150 },
-                                          "16_seater": { city: 130, oneway: 130, hocham_oneway: 130, phanthiet_oneway: Math.round(130 * 1.6 * 0.85), roundtrip: 250, city_pickup_drop: 195 },
-                                          "9_limo": { city: 160, oneway: 160, hocham_oneway: 160, phanthiet_oneway: Math.round(160 * 1.6 * 0.85), roundtrip: 300, city_pickup_drop: 240 },
-                                          "9_lux_limo": { city: 210, oneway: 210, hocham_oneway: 210, phanthiet_oneway: Math.round(210 * 1.6 * 0.85), roundtrip: 400, city_pickup_drop: 315 },
-                                          "12_lux_limo": { city: 250, oneway: 250, hocham_oneway: 250, phanthiet_oneway: Math.round(250 * 1.6 * 0.85), roundtrip: 480, city_pickup_drop: 375 },
-                                          "16_lux_limo": { city: 280, oneway: 280, hocham_oneway: 280, phanthiet_oneway: Math.round(280 * 1.6 * 0.85), roundtrip: 530, city_pickup_drop: 420 },
-                                          "29_seater": { city: 230, oneway: 230, hocham_oneway: 230, phanthiet_oneway: Math.round(230 * 1.6 * 0.85), roundtrip: 430, city_pickup_drop: 345 },
-                                          "45_seater": { city: 280, oneway: 290, hocham_oneway: 290, phanthiet_oneway: Math.round(290 * 1.6 * 0.85), roundtrip: 550, city_pickup_drop: 420 },
+                                          "7_seater": { city: 100, oneway: 80, hocham_oneway: 80, phanthiet_oneway: 130, roundtrip: 150, city_pickup_drop: 120 },
+                                          "16_seater": { city: 130, oneway: 130, hocham_oneway: 130, phanthiet_oneway: Math.round(130 * 1.6 * 0.85), roundtrip: 250, city_pickup_drop: 190 },
+                                          "9_limo": { city: 160, oneway: 160, hocham_oneway: 160, phanthiet_oneway: Math.round(160 * 1.6 * 0.85), roundtrip: 300, city_pickup_drop: 230 },
+                                          "9_lux_limo": { city: 210, oneway: 210, hocham_oneway: 210, phanthiet_oneway: Math.round(210 * 1.6 * 0.85), roundtrip: 400, city_pickup_drop: 300 },
+                                          "12_lux_limo": { city: 250, oneway: 250, hocham_oneway: 250, phanthiet_oneway: Math.round(250 * 1.6 * 0.85), roundtrip: 480, city_pickup_drop: 350 },
+                                          "16_lux_limo": { city: 280, oneway: 280, hocham_oneway: 280, phanthiet_oneway: Math.round(280 * 1.6 * 0.85), roundtrip: 530, city_pickup_drop: 400 },
+                                          "29_seater": { city: 230, oneway: 230, hocham_oneway: 230, phanthiet_oneway: Math.round(230 * 1.6 * 0.85), roundtrip: 430, city_pickup_drop: 330 },
+                                          "45_seater": { city: 280, oneway: 290, hocham_oneway: 290, phanthiet_oneway: Math.round(290 * 1.6 * 0.85), roundtrip: 550, city_pickup_drop: 410 },
                                         };
                                         
                                         const price = prices[type]?.[route];
