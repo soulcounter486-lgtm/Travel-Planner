@@ -370,7 +370,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
               }
             }
             vehicleTotalPrice += basePrice;
-            vehicleDescriptions.push(`${selection.date}: ${selection.type.replace(/_/g, " ")} (${routeDesc})`);
+            vehicleDescriptions.push(`${selection.date}: ${selection.type.replace(/_/g, " ")} (${routeDesc}) $${basePrice}`);
           }
         }
         breakdown.vehicle.price = vehicleTotalPrice;

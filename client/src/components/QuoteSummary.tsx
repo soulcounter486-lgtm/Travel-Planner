@@ -444,9 +444,6 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 <Info className="w-3 h-3" />
                 {t("quote.note")}
               </div>
-              <div className="text-[10px] text-primary font-semibold flex items-center gap-1 pl-4">
-                • {t("quote.actualLower")}
-              </div>
             </div>
 
             <div className="bg-amber-50 dark:bg-amber-950/30 rounded-2xl p-4 border border-amber-200 dark:border-amber-800">
