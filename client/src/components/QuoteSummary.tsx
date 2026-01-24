@@ -172,18 +172,18 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
             <div className="flex items-start justify-between gap-4">
               <CardTitle className="flex flex-col gap-1 flex-1">
                 <span className="text-sm font-medium text-muted-foreground">{t("quote.title")}</span>
-                <span className="text-4xl text-primary font-bold">
+                <span className="text-4xl text-primary font-bold leading-tight">
                   ${finalTotal.toLocaleString()}
                 </span>
                 {currencyInfo.code !== "USD" && (
-                  <>
-                    <span className="text-xl text-primary/70 font-semibold">
+                  <div className="flex flex-col gap-0.5 mt-1">
+                    <span className="text-lg text-primary/70 font-semibold leading-tight">
                       ≈ {formatLocalCurrency(finalTotal)}
                     </span>
-                    <span className="text-xs text-muted-foreground mt-1">
+                    <span className="text-[10px] text-muted-foreground leading-tight">
                       {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
                     </span>
-                  </>
+                  </div>
                 )}
               </CardTitle>
               <img 
