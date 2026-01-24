@@ -3,13 +3,14 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, FileText, Info, Save, Users } from "lucide-react";
+import { Loader2, FileText, Info, Save, Users, Percent, AlertTriangle } from "lucide-react";
 import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
+import logoImage from "@assets/BackgroundEraser_20240323_103507859_1768997960669.png";
 
 interface QuoteSummaryProps {
   breakdown: QuoteBreakdown | null;
@@ -22,10 +23,14 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
   const { t, language } = useLanguage();
   const summaryRef = useRef<HTMLDivElement>(null);
   const [personCount, setPersonCount] = useState<string>("");
+  const [discountPercent, setDiscountPercent] = useState<string>("");
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
   });
+  
+  const discountRate = parseFloat(discountPercent) || 0;
+  const discountedTotal = breakdown ? Math.round(breakdown.total * (1 - discountRate / 100)) : 0;
 
   const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
     ko: { code: "KRW", symbol: "₩", locale: "ko-KR" },
@@ -94,22 +99,43 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         <Card className="overflow-hidden border-0 shadow-xl shadow-primary/5 bg-white">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-indigo-500 to-primary" />
           <CardHeader className="bg-primary/5 pb-6">
-            <CardTitle className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-muted-foreground">{t("quote.title")}</span>
-              <span className="text-4xl text-primary font-bold">
-                ${breakdown.total.toLocaleString()}
-              </span>
-              {currencyInfo.code !== "USD" && (
-                <>
-                  <span className="text-xl text-primary/70 font-semibold">
-                    ≈ {formatLocalCurrency(breakdown.total)}
+            <div className="flex items-start justify-between gap-4">
+              <CardTitle className="flex flex-col gap-1 flex-1">
+                <span className="text-sm font-medium text-muted-foreground">{t("quote.title")}</span>
+                {discountRate > 0 ? (
+                  <>
+                    <span className="text-xl text-muted-foreground line-through">
+                      ${breakdown.total.toLocaleString()}
+                    </span>
+                    <span className="text-4xl text-primary font-bold">
+                      ${discountedTotal.toLocaleString()}
+                    </span>
+                    <span className="text-sm text-green-600 font-semibold">
+                      -{discountRate}% ({language === "ko" ? "할인 적용" : "Discounted"})
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-4xl text-primary font-bold">
+                    ${breakdown.total.toLocaleString()}
                   </span>
-                  <span className="text-xs text-muted-foreground mt-1">
-                    {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
-                  </span>
-                </>
-              )}
-            </CardTitle>
+                )}
+                {currencyInfo.code !== "USD" && (
+                  <>
+                    <span className="text-xl text-primary/70 font-semibold">
+                      ≈ {formatLocalCurrency(discountRate > 0 ? discountedTotal : breakdown.total)}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      {t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD
+                    </span>
+                  </>
+                )}
+              </CardTitle>
+              <img 
+                src={logoImage} 
+                alt="붕따우 도깨비" 
+                className="w-20 h-20 object-contain"
+              />
+            </div>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
             <AnimatePresence mode="wait">
@@ -244,6 +270,33 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               )}
             </AnimatePresence>
 
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-2xl p-4 border border-green-200 dark:border-green-800 space-y-3">
+              <div className="flex items-center gap-2">
+                <Percent className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <Label className="text-sm font-semibold text-green-900 dark:text-green-100">
+                  {language === "ko" ? "할인율" : 
+                   language === "en" ? "Discount" :
+                   language === "zh" ? "折扣" :
+                   language === "vi" ? "Giảm giá" :
+                   language === "ru" ? "Скидка" :
+                   language === "ja" ? "割引率" : "할인율"}
+                </Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(e.target.value)}
+                  placeholder="0"
+                  className="w-20 h-10 text-center font-bold text-lg bg-white dark:bg-slate-800 border-green-200 dark:border-green-700"
+                  data-testid="input-discount-percent"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            </div>
+
             <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-4 border border-indigo-200 dark:border-indigo-800 space-y-3">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -289,11 +342,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     </span>
                     <div className="text-right">
                       <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                        ${Math.round(breakdown.total / parseInt(personCount)).toLocaleString()}
+                        ${Math.round((discountRate > 0 ? discountedTotal : breakdown.total) / parseInt(personCount)).toLocaleString()}
                       </div>
                       {currencyInfo.code !== "USD" && (
                         <div className="text-sm text-indigo-500 dark:text-indigo-300">
-                          ≈ {formatLocalCurrency(Math.round(breakdown.total / parseInt(personCount)))}
+                          ≈ {formatLocalCurrency(Math.round((discountRate > 0 ? discountedTotal : breakdown.total) / parseInt(personCount)))}
                         </div>
                       )}
                     </div>
@@ -309,6 +362,28 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
               </div>
               <div className="text-[10px] text-primary font-semibold flex items-center gap-1 pl-4">
                 • {t("quote.actualLower")}
+              </div>
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-950/30 rounded-2xl p-4 border border-amber-200 dark:border-amber-800">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span className="text-sm font-bold text-amber-900 dark:text-amber-100">
+                  {language === "ko" ? "주의사항" : 
+                   language === "en" ? "Notice" :
+                   language === "zh" ? "注意事项" :
+                   language === "vi" ? "Lưu ý" :
+                   language === "ru" ? "Примечание" :
+                   language === "ja" ? "注意事項" : "주의사항"}
+                </span>
+              </div>
+              <div className="text-[10px] text-amber-800 dark:text-amber-200 space-y-2 leading-relaxed">
+                <p>• {language === "ko" ? "저녁 10시 이후에는 소음을 자제해 주세요" : "Please keep noise to a minimum after 10 PM"}</p>
+                <p>• {language === "ko" ? "주방기기 및 식기 사용 후 깨끗히 씻어서 보관해 주세요. 미세척시 30만동~50만동의 금액이 발생 할 수 있습니다." : "Please clean kitchenware after use. Cleaning fee 300,000-500,000 VND if not cleaned."}</p>
+                <p>• {language === "ko" ? "체크아웃 지연시 시간당 25만동~60만동의 요금이 발생 할 수 있습니다. 오후 6시 이후 체크아웃 시 1박으로 계산" : "Late checkout: 250,000-600,000 VND/hour. After 6 PM counts as additional night."}</p>
+                <p>• {language === "ko" ? "임대료에는 방청소(침실,수건)는 포함되어 있으나, 바베큐 청소 및 설거지 비용이 포함되어 있지 않습니다." : "Room cleaning included. BBQ cleaning and dishwashing not included."}</p>
+                <p>• {language === "ko" ? "신분증(여권) 지참 후 체크인 부탁 드립니다." : "Please bring ID/passport for check-in."}</p>
+                <p>• {language === "ko" ? "취소 시 현지 사정상 예약금은 환불 불가 합니다." : "Deposit is non-refundable upon cancellation."}</p>
               </div>
             </div>
           </CardContent>
