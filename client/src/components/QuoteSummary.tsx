@@ -222,25 +222,29 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                         const currentPrice = villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
                         const dateMatch = detail.match(/^([^:]+):/);
                         const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
+                        const isModified = villaAdjustments[idx] !== undefined && villaAdjustments[idx] !== originalPrice;
                         
                         return (
                           <div key={idx} className="flex items-center gap-2 flex-wrap">
                             <span className="w-1 h-1 rounded-full bg-primary/40" />
                             <span className="flex-1">{dateLabel}</span>
                             <div className="flex items-center gap-1">
-                              <span className="text-muted-foreground">$</span>
-                              <Input
-                                type="number"
-                                min="0"
-                                value={currentPrice}
-                                onChange={(e) => {
-                                  const newVal = parseInt(e.target.value) || 0;
-                                  setVillaAdjustments(prev => ({ ...prev, [idx]: newVal }));
-                                }}
-                                className="w-16 h-6 text-center text-xs font-medium bg-white dark:bg-slate-800 border-orange-200 dark:border-orange-700"
-                                data-testid={`input-villa-price-${idx}`}
-                              />
-                              {villaAdjustments[idx] !== undefined && villaAdjustments[idx] !== originalPrice && (
+                              <span className={`font-medium ${isModified ? 'text-orange-600' : 'text-slate-700 dark:text-slate-300'}`}>
+                                $
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={currentPrice === 0 ? '' : currentPrice}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    const newVal = val === '' ? 0 : parseInt(val);
+                                    setVillaAdjustments(prev => ({ ...prev, [idx]: newVal }));
+                                  }}
+                                  className={`w-14 text-center text-xs font-medium bg-transparent border-b ${isModified ? 'border-orange-400' : 'border-slate-300 dark:border-slate-600'} focus:outline-none focus:border-primary`}
+                                  data-testid={`input-villa-price-${idx}`}
+                                />
+                              </span>
+                              {isModified && (
                                 <span className="text-[10px] text-orange-500">
                                   (${originalPrice})
                                 </span>
