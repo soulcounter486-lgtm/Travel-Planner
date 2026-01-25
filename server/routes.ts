@@ -370,7 +370,18 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
               }
             }
             vehicleTotalPrice += basePrice;
-            vehicleDescriptions.push(`${selection.date}: ${selection.type.replace(/_/g, " ")} (${routeDesc}) $${basePrice}`);
+            const vehicleTypeKorean: Record<string, string> = {
+              "7_seater": "7인승",
+              "16_seater": "16인승",
+              "9_limo": "9인승 리무진",
+              "9_lux_limo": "9인승 럭셔리 리무진",
+              "12_lux_limo": "12인승 럭셔리 리무진",
+              "16_lux_limo": "16인승 럭셔리 리무진",
+              "29_seater": "29인승",
+              "45_seater": "45인승",
+            };
+            const vehicleTypeName = vehicleTypeKorean[selection.type] || selection.type.replace(/_/g, " ");
+            vehicleDescriptions.push(`${selection.date}: ${vehicleTypeName} (${routeDesc}) $${basePrice}`);
           }
         }
         breakdown.vehicle.price = vehicleTotalPrice;
