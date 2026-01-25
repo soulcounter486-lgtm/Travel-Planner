@@ -316,16 +316,16 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
             while (current < end) {
               const dayOfWeek = getDay(current);
               let dailyPrice = 350;
-              let dayName = "Weekday";
+              let dayName = "평일";
               if (dayOfWeek === 5) {
                 dailyPrice = 380;
-                dayName = "Friday";
+                dayName = "금요일";
               } else if (dayOfWeek === 6) {
                 dailyPrice = 500;
-                dayName = "Saturday";
+                dayName = "토요일";
               } else if (dayOfWeek === 0) {
                 dailyPrice = 350;
-                dayName = "Sunday (Weekday rate)";
+                dayName = "일요일(평일)";
               }
               breakdown.villa.price += dailyPrice;
               breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
@@ -351,22 +351,22 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
               basePrice = 130;
             } else {
               switch (selection.route) {
-                case "city": basePrice = prices.city; routeDesc = "City Tour"; break;
-                case "oneway": basePrice = prices.oneway; routeDesc = "One Way (Vung Tau)"; break;
-                case "hocham_oneway": basePrice = prices.oneway; routeDesc = "One Way (Ho Tram)"; break;
-                case "phanthiet_oneway": basePrice = Math.round(prices.oneway * 1.6 * 0.85); routeDesc = "One Way (Phan Thiet)"; break;
-                case "roundtrip": basePrice = prices.roundtrip; routeDesc = "Round Trip"; break;
-                case "city_pickup_drop": basePrice = Math.ceil((prices.oneway + prices.city * 0.4) / 10) * 10; routeDesc = "Pickup/Drop + City"; break;
+                case "city": basePrice = prices.city; routeDesc = "시내투어"; break;
+                case "oneway": basePrice = prices.oneway; routeDesc = "편도(붕따우)"; break;
+                case "hocham_oneway": basePrice = prices.oneway; routeDesc = "편도(호짬)"; break;
+                case "phanthiet_oneway": basePrice = Math.round(prices.oneway * 1.6 * 0.85); routeDesc = "편도(판티엣)"; break;
+                case "roundtrip": basePrice = prices.roundtrip; routeDesc = "왕복"; break;
+                case "city_pickup_drop": basePrice = Math.ceil((prices.oneway + prices.city * 0.4) / 10) * 10; routeDesc = "픽드랍+시내"; break;
               }
             }
             if (!routeDesc) {
               switch (selection.route) {
-                case "city": routeDesc = "City Tour"; break;
-                case "oneway": routeDesc = "One Way (Vung Tau)"; break;
-                case "hocham_oneway": routeDesc = "One Way (Ho Tram)"; break;
-                case "phanthiet_oneway": routeDesc = "One Way (Phan Thiet)"; break;
-                case "roundtrip": routeDesc = "Round Trip"; break;
-                case "city_pickup_drop": routeDesc = "Pickup/Drop + City"; break;
+                case "city": routeDesc = "시내투어"; break;
+                case "oneway": routeDesc = "편도(붕따우)"; break;
+                case "hocham_oneway": routeDesc = "편도(호짬)"; break;
+                case "phanthiet_oneway": routeDesc = "편도(판티엣)"; break;
+                case "roundtrip": routeDesc = "왕복"; break;
+                case "city_pickup_drop": routeDesc = "픽드랍+시내"; break;
               }
             }
             vehicleTotalPrice += basePrice;
