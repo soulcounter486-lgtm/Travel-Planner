@@ -36,7 +36,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [depositAmount, setDepositAmount] = useState<number>(Math.round(quote.totalPrice * 0.5));
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
-  const [golfAdjustments, setGolfAdjustments] = useState<Record<number, number>>({});
+  const [golfAdjustments, setGolfAdjustments] = useState<Record<number, { unitPrice: number, players: number }>>({});
   const [memo, setMemo] = useState<string>(quote.memo || "");
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   const queryClient = useQueryClient();
@@ -106,7 +106,12 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     const details = parseGolfDetails(breakdown.golf.description);
     let total = 0;
     details.forEach((detail, idx) => {
-      total += golfAdjustments[idx] !== undefined ? golfAdjustments[idx] : detail.price;
+      const adj = golfAdjustments[idx];
+      if (adj) {
+        total += adj.unitPrice * adj.players;
+      } else {
+        total += parseInt(detail.unitPrice) * parseInt(detail.players);
+      }
     });
     return total;
   };
@@ -494,31 +499,59 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                     </div>
                     <div className="text-[10px] text-muted-foreground pl-2 space-y-2">
                       {parseGolfDetails(breakdown.golf.description).map((detail, idx) => {
-                        const displayPrice = golfAdjustments[idx] !== undefined ? golfAdjustments[idx] : detail.price;
+                        const adj = golfAdjustments[idx];
+                        const displayUnitPrice = adj ? adj.unitPrice : parseInt(detail.unitPrice);
+                        const displayPlayers = adj ? adj.players : parseInt(detail.players);
+                        const displayTotal = displayUnitPrice * displayPlayers;
                         return (
                           <div key={idx} className="border-l-2 border-primary/20 pl-2 py-1">
                             <div className="font-medium text-slate-700 dark:text-slate-300">
                               {detail.date}
                             </div>
                             <div className="flex items-center justify-between gap-2">
-                              <span>{detail.courseName} / {detail.players}명 (${ detail.unitPrice} x {detail.players})</span>
                               {isEditing && !isCapturing ? (
-                                <div className="flex items-center shrink-0">
-                                  <span className="text-[10px]">$</span>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    value={displayPrice === 0 ? "" : displayPrice}
-                                    onChange={(e) => setGolfAdjustments(prev => ({
-                                      ...prev,
-                                      [idx]: e.target.value === "" ? 0 : parseInt(e.target.value)
-                                    }))}
-                                    className="w-14 text-right text-[10px] bg-white border border-slate-300 rounded px-1"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                </div>
+                                <>
+                                  <span>{detail.courseName}</span>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <span className="text-[10px]">$</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={displayUnitPrice === 0 ? "" : displayUnitPrice}
+                                      onChange={(e) => setGolfAdjustments(prev => ({
+                                        ...prev,
+                                        [idx]: {
+                                          unitPrice: e.target.value === "" ? 0 : parseInt(e.target.value),
+                                          players: prev[idx]?.players ?? parseInt(detail.players)
+                                        }
+                                      }))}
+                                      className="w-12 text-right text-[10px] bg-white border border-slate-300 rounded px-1"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <span className="text-[10px]">x</span>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={displayPlayers === 0 ? "" : displayPlayers}
+                                      onChange={(e) => setGolfAdjustments(prev => ({
+                                        ...prev,
+                                        [idx]: {
+                                          unitPrice: prev[idx]?.unitPrice ?? parseInt(detail.unitPrice),
+                                          players: e.target.value === "" ? 1 : parseInt(e.target.value)
+                                        }
+                                      }))}
+                                      className="w-8 text-right text-[10px] bg-white border border-slate-300 rounded px-1"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <span className="text-[10px]">{language === "ko" ? "명" : "p"}</span>
+                                    <span className="text-[10px] font-medium ml-1">= ${displayTotal.toLocaleString()}</span>
+                                  </div>
+                                </>
                               ) : (
-                                <span className="shrink-0 font-medium">${displayPrice.toLocaleString()}</span>
+                                <>
+                                  <span>{detail.courseName} / {displayPlayers}명 (${displayUnitPrice} x {displayPlayers})</span>
+                                  <span className="shrink-0 font-medium">${displayTotal.toLocaleString()}</span>
+                                </>
                               )}
                             </div>
                             {detail.caddyTip && (
