@@ -98,7 +98,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `quote-${quote.customerName}-${format(new Date(quote.createdAt || new Date()), "yyyyMMdd")}.png`;
+      link.download = `quote-${customerName}-${format(new Date(quote.createdAt || new Date()), "yyyyMMdd")}.png`;
       link.href = dataUrl;
       link.click();
     } catch (error) {
@@ -119,7 +119,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${isExpanded ? "rotate-90" : ""}`} />
               <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
-                {quote.customerName}
+                {customerName}
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -146,8 +146,8 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                     </AlertDialogTitle>
                     <AlertDialogDescription>
                       {language === "ko" 
-                        ? `"${quote.customerName}" 견적서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.` 
-                        : `Are you sure you want to delete the quote for "${quote.customerName}"? This action cannot be undone.`}
+                        ? `"${customerName}" 견적서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.` 
+                        : `Are you sure you want to delete the quote for "${customerName}"? This action cannot be undone.`}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
