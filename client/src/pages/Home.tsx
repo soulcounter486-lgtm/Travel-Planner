@@ -399,9 +399,9 @@ export default function Home() {
             </div>
             <div className="flex-1">
               <div className="flex items-start justify-between gap-2">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-primary mb-3 leading-tight">
-                  {t("header.title")}<br />
-                  <span className="text-xl sm:text-2xl md:text-3xl">{language === "ko" ? "실시간 여행견적" : "Live Travel Quote"}</span>
+                <h1 className="text-lg sm:text-2xl md:text-3xl font-display font-bold text-primary mb-3 leading-tight">
+                  <span className="whitespace-nowrap">{t("header.title")}</span><br />
+                  <span className="whitespace-nowrap text-base sm:text-xl md:text-2xl">{language === "ko" ? "실시간 여행견적" : "Live Travel Quote"}</span>
                 </h1>
                 {isAuthLoading ? null : isAuthenticated ? (
                   <Button
