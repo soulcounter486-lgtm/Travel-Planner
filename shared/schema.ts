@@ -137,6 +137,7 @@ export const quoteBreakdownSchema = z.object({
   ecoGirl: z.object({
     price: z.number(),
     description: z.string(),
+    details: z.array(z.string()).optional(),
   }),
   guide: z.object({
     price: z.number(),

@@ -301,7 +301,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         villa: { price: 0, details: [] as string[], checkIn: "", checkOut: "" },
         vehicle: { price: 0, description: "" },
         golf: { price: 0, description: "" },
-        ecoGirl: { price: 0, description: "" },
+        ecoGirl: { price: 0, description: "", details: [] as string[] },
         guide: { price: 0, description: "" },
         fastTrack: { price: 0, description: "" },
         total: 0
@@ -439,13 +439,22 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         breakdown.golf.description = golfDescriptions.join(" | ");
       }
 
-      // 4. Eco Girl Calculation
-      if (input.ecoGirl?.enabled) {
+      // 4. Eco Calculation
+      if (input.ecoGirl?.enabled && input.ecoGirl.selections && input.ecoGirl.selections.length > 0) {
         const rate = 220;
-        const count = Number(input.ecoGirl.count) || 0;
-        const nights = Number(input.ecoGirl.nights) || 0;
-        breakdown.ecoGirl.price = rate * count * nights;
-        breakdown.ecoGirl.description = `${count} Escort x ${nights} Nights @ $${rate}`;
+        let totalEcoPrice = 0;
+        const ecoDetails: string[] = [];
+        
+        for (const selection of input.ecoGirl.selections) {
+          const count = Number(selection.count) || 1;
+          const price = count * rate;
+          totalEcoPrice += price;
+          ecoDetails.push(`${selection.date}: ${count}명 x $${rate} = $${price}`);
+        }
+        
+        breakdown.ecoGirl.price = totalEcoPrice;
+        breakdown.ecoGirl.details = ecoDetails;
+        breakdown.ecoGirl.description = `${input.ecoGirl.selections.length}일 @ $${rate}/인`;
       }
 
       // 5. Guide Calculation

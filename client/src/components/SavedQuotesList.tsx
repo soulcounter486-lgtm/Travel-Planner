@@ -668,6 +668,25 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   </div>
                 )}
 
+                {breakdown?.ecoGirl?.price > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-semibold text-sm text-slate-800">
+                      <span>{language === "ko" ? "에코" : "Eco"}</span>
+                      <span>${breakdown.ecoGirl.price.toLocaleString()}</span>
+                    </div>
+                    {breakdown.ecoGirl.details && breakdown.ecoGirl.details.length > 0 && (
+                      <div className="text-[10px] text-muted-foreground pl-2">
+                        {breakdown.ecoGirl.details.map((detail: string, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-pink-400" />
+                            <span>{detail}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="pt-2 border-t border-slate-200">
                   <div className="flex justify-between items-center">
                     <span className="font-bold text-slate-800">

@@ -196,9 +196,21 @@ export function DepositCalendar() {
                             )}
                             
                             {breakdown?.ecoGirl?.price > 0 && (
-                              <div className="flex justify-between font-medium text-slate-700 dark:text-slate-300">
-                                <span>{language === "ko" ? "에코걸" : "Eco Girl"}</span>
-                                <span>${breakdown.ecoGirl.price.toLocaleString()}</span>
+                              <div>
+                                <div className="flex justify-between font-medium text-slate-700 dark:text-slate-300">
+                                  <span>{language === "ko" ? "에코" : "Eco"}</span>
+                                  <span>${breakdown.ecoGirl.price.toLocaleString()}</span>
+                                </div>
+                                {breakdown.ecoGirl.details?.length > 0 && (
+                                  <div className="text-[10px] text-muted-foreground pl-2 mt-1">
+                                    {breakdown.ecoGirl.details.map((detail: string, idx: number) => (
+                                      <div key={idx} className="flex items-center gap-1">
+                                        <span className="w-1 h-1 rounded-full bg-pink-400" />
+                                        <span>{detail}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             )}
                             
