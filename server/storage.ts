@@ -7,13 +7,15 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
-  createQuote(quote: InsertQuote & { userId?: string }): Promise<Quote>;
+  createQuote(quote: InsertQuote & { userId?: string; checkInDate?: string; checkOutDate?: string }): Promise<Quote>;
   getQuotesByUser(userId?: string): Promise<Quote[]>;
   deleteQuote(id: number, userId?: string): Promise<void>;
+  updateQuoteDepositStatus(id: number, depositPaid: boolean): Promise<Quote | null>;
+  getDepositPaidQuotes(): Promise<Quote[]>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async createQuote(insertQuote: InsertQuote & { userId?: string }): Promise<Quote> {
+  async createQuote(insertQuote: InsertQuote & { userId?: string; checkInDate?: string; checkOutDate?: string }): Promise<Quote> {
     const [quote] = await db.insert(quotes).values(insertQuote).returning();
     return quote;
   }
@@ -29,6 +31,15 @@ export class DatabaseStorage implements IStorage {
     if (userId) {
       await db.delete(quotes).where(and(eq(quotes.id, id), eq(quotes.userId, userId)));
     }
+  }
+
+  async updateQuoteDepositStatus(id: number, depositPaid: boolean): Promise<Quote | null> {
+    const [quote] = await db.update(quotes).set({ depositPaid }).where(eq(quotes.id, id)).returning();
+    return quote || null;
+  }
+
+  async getDepositPaidQuotes(): Promise<Quote[]> {
+    return await db.select().from(quotes).where(eq(quotes.depositPaid, true)).orderBy(desc(quotes.createdAt));
   }
 }
 

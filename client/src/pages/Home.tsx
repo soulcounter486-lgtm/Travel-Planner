@@ -14,6 +14,7 @@ import { calculateQuoteSchema, type CalculateQuoteRequest, type QuoteBreakdown }
 import { SectionCard } from "@/components/SectionCard";
 import { QuoteSummary } from "@/components/QuoteSummary";
 import { SavedQuotesList } from "@/components/SavedQuotesList";
+import { DepositCalendar } from "@/components/DepositCalendar";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -902,6 +903,10 @@ export default function Home() {
             {language === "ko" ? "로그인 시 견적서 저장 가능" : "Login to save quotes"}
           </p>
           <SavedQuotesList />
+        </div>
+        
+        <div className="mt-8">
+          <DepositCalendar />
         </div>
       </div>
 

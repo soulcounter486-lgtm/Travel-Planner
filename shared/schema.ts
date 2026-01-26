@@ -15,6 +15,9 @@ export const quotes = pgTable("quotes", {
   customerName: text("customer_name").notNull(),
   totalPrice: integer("total_price").notNull(),
   breakdown: jsonb("breakdown").notNull(), // Stores the detailed calculation result
+  depositPaid: boolean("deposit_paid").default(false), // 예약금 입금 완료 여부
+  checkInDate: text("check_in_date"), // 체크인 날짜 (YYYY-MM-DD)
+  checkOutDate: text("check_out_date"), // 체크아웃 날짜 (YYYY-MM-DD)
   createdAt: timestamp("created_at").defaultNow(),
 });
 

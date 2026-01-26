@@ -483,11 +483,48 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     try {
       const input = api.quotes.create.input.parse(req.body);
       const userId = (req as any).user?.claims?.sub;
-      const quote = await storage.createQuote({ ...input, userId });
+      
+      // breakdown에서 체크인/체크아웃 날짜 추출
+      const breakdown = input.breakdown as any;
+      const checkInDate = breakdown?.villa?.checkIn || null;
+      const checkOutDate = breakdown?.villa?.checkOut || null;
+      
+      const quote = await storage.createQuote({ ...input, userId, checkInDate, checkOutDate });
       res.status(201).json(quote);
     } catch (err) {
       if (err instanceof z.ZodError) { res.status(400).json({ message: err.errors[0].message }); }
       else { res.status(500).json({ message: "Internal server error" }); }
+    }
+  });
+
+  // 예약금 입금 상태 업데이트 (관리자만)
+  app.patch("/api/quotes/:id/deposit", async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      if (!userId || String(userId) !== String(ADMIN_USER_ID)) {
+        return res.status(403).json({ message: "Only admin can update deposit status" });
+      }
+      
+      const id = parseInt(req.params.id);
+      const { depositPaid } = req.body;
+      const quote = await storage.updateQuoteDepositStatus(id, depositPaid);
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      res.json(quote);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // 예약금 입금 완료된 견적서 목록 (캘린더용)
+  app.get("/api/quotes/deposit-paid", async (req, res) => {
+    try {
+      const quotes = await storage.getDepositPaidQuotes();
+      res.json(quotes);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 

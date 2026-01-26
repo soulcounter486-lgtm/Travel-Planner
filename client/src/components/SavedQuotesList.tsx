@@ -21,11 +21,13 @@ interface QuoteItemProps {
   onDelete: (id: number) => void;
   isDeleting: boolean;
   isAdmin: boolean;
+  onToggleDeposit: (id: number, depositPaid: boolean) => void;
 }
 
-function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin }: QuoteItemProps) {
+function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit }: QuoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [depositPaid, setDepositPaid] = useState(quote.depositPaid || false);
   const detailRef = useRef<HTMLDivElement>(null);
   const breakdown = quote.breakdown as QuoteBreakdown;
   const [isCapturing, setIsCapturing] = useState(false);
@@ -109,9 +111,19 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     }
   };
 
+  const handleToggleDeposit = () => {
+    const newStatus = !depositPaid;
+    setDepositPaid(newStatus);
+    onToggleDeposit(quote.id, newStatus);
+  };
+
   return (
     <div
-      className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+      className={`rounded-xl border overflow-hidden transition-colors ${
+        depositPaid 
+          ? "bg-green-50 dark:bg-green-950/30 border-green-300 dark:border-green-700" 
+          : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+      }`}
       data-testid={`quote-item-${quote.id}`}
     >
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -119,12 +131,17 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           <div className="flex items-center justify-between p-3 cursor-pointer hover-elevate">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform shrink-0 ${isExpanded ? "rotate-90" : ""}`} />
+              {depositPaid && (
+                <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full shrink-0">
+                  {language === "ko" ? "입금" : "Paid"}
+                </span>
+              )}
               <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
                 {customerName}
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="font-bold text-primary">
+              <span className={`font-bold ${depositPaid ? "text-green-600 dark:text-green-400" : "text-primary"}`}>
                 ${quote.totalPrice.toLocaleString()}
               </span>
               <AlertDialog>
@@ -192,16 +209,28 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   </Button>
                 </>
               ) : isAdmin ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsEditing(true)}
-                  className="h-7 text-xs"
-                  data-testid={`button-edit-quote-${quote.id}`}
-                >
-                  <Pencil className="w-3 h-3 mr-1" />
-                  {language === "ko" ? "수정" : "Edit"}
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    variant={depositPaid ? "default" : "outline"}
+                    onClick={handleToggleDeposit}
+                    className={`h-7 text-xs ${depositPaid ? "bg-green-500 hover:bg-green-600" : ""}`}
+                    data-testid={`button-toggle-deposit-${quote.id}`}
+                  >
+                    <Check className="w-3 h-3 mr-1" />
+                    {language === "ko" ? (depositPaid ? "입금완료" : "입금대기") : (depositPaid ? "Paid" : "Unpaid")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                    className="h-7 text-xs"
+                    data-testid={`button-edit-quote-${quote.id}`}
+                  >
+                    <Pencil className="w-3 h-3 mr-1" />
+                    {language === "ko" ? "수정" : "Edit"}
+                  </Button>
+                </>
               ) : null}
             </div>
 
@@ -503,6 +532,16 @@ export function SavedQuotesList() {
     },
   });
 
+  const depositMutation = useMutation({
+    mutationFn: async ({ id, depositPaid }: { id: number; depositPaid: boolean }) => {
+      await apiRequest("PATCH", `/api/quotes/${id}/deposit`, { depositPaid });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes/deposit-paid"] });
+    },
+  });
+
   const quoteCount = quotes?.length || 0;
 
   return (
@@ -544,6 +583,7 @@ export function SavedQuotesList() {
                   onDelete={(id) => deleteQuoteMutation.mutate(id)}
                   isDeleting={deleteQuoteMutation.isPending}
                   isAdmin={isAdmin}
+                  onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
                 />
               ))
             )}
