@@ -495,6 +495,19 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     res.json(quotes);
   });
 
+  app.delete("/api/quotes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid quote ID" });
+      }
+      await storage.deleteQuote(id);
+      res.status(204).send();
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Helper function to get today's date in YYYY-MM-DD format (Korea timezone)
   const getTodayDateString = () => {
     const now = new Date();

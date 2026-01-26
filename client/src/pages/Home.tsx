@@ -13,6 +13,7 @@ import { calculateQuoteSchema, type CalculateQuoteRequest, type QuoteBreakdown }
 
 import { SectionCard } from "@/components/SectionCard";
 import { QuoteSummary } from "@/components/QuoteSummary";
+import { SavedQuotesList } from "@/components/SavedQuotesList";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -860,7 +861,10 @@ export default function Home() {
               </SectionCard>
             )} />
           </div>
-          <div className="lg:col-span-4"><QuoteSummary breakdown={breakdown} isLoading={calculateMutation.isPending} onSave={handleSaveQuote} isSaving={createQuoteMutation.isPending} /></div>
+          <div className="lg:col-span-4">
+            <QuoteSummary breakdown={breakdown} isLoading={calculateMutation.isPending} onSave={handleSaveQuote} isSaving={createQuoteMutation.isPending} />
+            <SavedQuotesList />
+          </div>
         </div>
       </div>
 

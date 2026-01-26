@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 import {
   quotes,
   type InsertQuote,
@@ -8,6 +9,7 @@ import {
 export interface IStorage {
   createQuote(quote: InsertQuote): Promise<Quote>;
   getQuotes(): Promise<Quote[]>;
+  deleteQuote(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -17,7 +19,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getQuotes(): Promise<Quote[]> {
-    return await db.select().from(quotes).orderBy(quotes.createdAt);
+    return await db.select().from(quotes).orderBy(desc(quotes.createdAt));
+  }
+
+  async deleteQuote(id: number): Promise<void> {
+    await db.delete(quotes).where(eq(quotes.id, id));
   }
 }
 
