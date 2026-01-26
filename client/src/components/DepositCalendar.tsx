@@ -90,10 +90,29 @@ export function DepositCalendar() {
                             </p>
                           </div>
                           {quote.checkInDate && quote.checkOutDate && (
-                            <p className="text-xs text-muted-foreground mb-2">
+                            <p className="text-xs text-muted-foreground mb-1">
                               {quote.checkInDate} ~ {quote.checkOutDate}
                             </p>
                           )}
+                          
+                          <div className="flex gap-3 text-xs mb-2">
+                            <div className="flex items-center gap-1">
+                              <span className="text-orange-600 dark:text-orange-400 font-medium">
+                                {language === "ko" ? "예약금" : "Deposit"}:
+                              </span>
+                              <span className="text-orange-700 dark:text-orange-300 font-bold">
+                                ${(quote.depositAmount || Math.round(quote.totalPrice * 0.5)).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-blue-600 dark:text-blue-400 font-medium">
+                                {language === "ko" ? "잔금" : "Balance"}:
+                              </span>
+                              <span className="text-blue-700 dark:text-blue-300 font-bold">
+                                ${(quote.totalPrice - (quote.depositAmount || Math.round(quote.totalPrice * 0.5))).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
                           
                           <div className="space-y-2 text-xs border-t border-green-200 dark:border-green-700 pt-2 mt-2">
                             {breakdown?.villa?.price > 0 && (
