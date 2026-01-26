@@ -37,6 +37,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
   const [golfAdjustments, setGolfAdjustments] = useState<Record<number, { unitPrice: number, players: number }>>({});
+  const [guideAdjustment, setGuideAdjustment] = useState<number | null>(null);
   const [memo, setMemo] = useState<string>(quote.memo || "");
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   const queryClient = useQueryClient();
@@ -119,10 +120,12 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const villaTotal = getAdjustedVillaTotal();
   const vehicleTotal = getAdjustedVehicleTotal();
   const golfTotal = getAdjustedGolfTotal();
+  const guideTotal = guideAdjustment !== null ? guideAdjustment : (breakdown?.guide?.price || 0);
   const villaAdjustment = villaTotal - (breakdown?.villa?.price || 0);
   const vehicleAdjustment = vehicleTotal - (breakdown?.vehicle?.price || 0);
-  const golfAdjustment = golfTotal - (breakdown?.golf?.price || 0);
-  const adjustedTotal = quote.totalPrice + villaAdjustment + vehicleAdjustment + golfAdjustment;
+  const golfAdjustmentDiff = golfTotal - (breakdown?.golf?.price || 0);
+  const guideAdjustmentDiff = guideTotal - (breakdown?.guide?.price || 0);
+  const adjustedTotal = quote.totalPrice + villaAdjustment + vehicleAdjustment + golfAdjustmentDiff + guideAdjustmentDiff;
   const balanceAmount = adjustedTotal - depositAmount;
 
   const formatLocalCurrency = (usd: number) => {
@@ -136,6 +139,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     setVillaAdjustments({});
     setVehicleAdjustments({});
     setGolfAdjustments({});
+    setGuideAdjustment(null);
     setDepositAmount(Math.round(quote.totalPrice * 0.5));
     setIsEditing(false);
   };
@@ -240,6 +244,14 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         };
       }
       
+      // Guide 수정 반영
+      if (breakdown?.guide && guideAdjustment !== null) {
+        updatedBreakdown.guide = {
+          ...breakdown.guide,
+          price: guideTotal
+        };
+      }
+      
       updatedBreakdown.total = adjustedTotal;
       
       await apiRequest("PATCH", `/api/quotes/${quote.id}/total`, { 
@@ -251,6 +263,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       setVillaAdjustments({});
       setVehicleAdjustments({});
       setGolfAdjustments({});
+      setGuideAdjustment(null);
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to save quote:", error);
@@ -642,7 +655,19 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   <div className="space-y-1">
                     <div className="flex justify-between font-semibold text-sm text-slate-800">
                       <span>{language === "ko" ? "가이드" : "Guide"}</span>
-                      <span>${breakdown.guide.price.toLocaleString()}</span>
+                      {isEditing ? (
+                        <div className="flex items-center gap-1">
+                          <span>$</span>
+                          <input
+                            type="number"
+                            className="w-20 px-1 py-0.5 text-right border rounded text-sm"
+                            value={guideAdjustment !== null ? guideAdjustment : breakdown.guide.price}
+                            onChange={(e) => setGuideAdjustment(parseInt(e.target.value) || 0)}
+                          />
+                        </div>
+                      ) : (
+                        <span>${guideTotal.toLocaleString()}</span>
+                      )}
                     </div>
                     <div className="text-[10px] text-muted-foreground pl-2">
                       <div className="flex items-center gap-1">
