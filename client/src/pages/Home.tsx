@@ -545,7 +545,18 @@ export default function Home() {
                           render={({ field }) => (
                             <Popover open={isCheckOutOpen} onOpenChange={setIsCheckOutOpen}>
                               <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP", { locale: calendarLocale }) : <span>{t("villa.selectDate")}</span>}</Button></PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 z-[9999]" align="start"><Calendar mode="single" locale={calendarLocale} selected={field.value ? new Date(field.value) : undefined} defaultMonth={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} fromDate={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckOutOpen(false); }} initialFocus /></PopoverContent>
+                              <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+                                <Calendar 
+                                  key={`checkout-${form.watch("villa.checkIn")}-${isCheckOutOpen}`}
+                                  mode="single" 
+                                  locale={calendarLocale} 
+                                  selected={field.value ? new Date(field.value) : undefined} 
+                                  defaultMonth={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} 
+                                  fromDate={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} 
+                                  onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckOutOpen(false); }} 
+                                  initialFocus 
+                                />
+                              </PopoverContent>
                             </Popover>
                           )}
                         />
