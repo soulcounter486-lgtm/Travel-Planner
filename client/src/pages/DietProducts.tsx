@@ -17,7 +17,7 @@ import {
   Pill
 } from "lucide-react";
 import { SiKakaotalk } from "react-icons/si";
-import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+import { AppHeader } from "@/components/AppHeader";
 import dietCoffeeImg from "@assets/호아캡슐의_사본의_사본의_사본_20251026_153621_0000_1768826502337.png";
 import goDetoxImg from "@assets/Photo_1715141472014_1768826502343.png";
 import goCoffeeImg from "@assets/Photo_1715141466258_1768837758578.png";
@@ -278,16 +278,9 @@ export default function DietProducts() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-background">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src={logoImg} alt="Logo" className="h-10 w-10 object-contain" />
-            <span className="font-bold text-lg hidden sm:inline">{t("header.title")}</span>
-          </Link>
-        </div>
-      </header>
+      <AppHeader />
 
-      <div className="bg-background border-b shadow-sm sticky top-[60px] z-40">
+      <div className="bg-background border-b shadow-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-1.5 py-3 min-w-max">
             <Link href="/">

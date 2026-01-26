@@ -38,6 +38,7 @@ import {
   ShoppingBag
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
+import { AppHeader } from "@/components/AppHeader";
 
 const navLabels: Record<string, Record<string, string>> = {
   calculator: { ko: "견적", en: "Quote", zh: "报价", vi: "Báo giá", ru: "Расчёт", ja: "見積" },
@@ -999,30 +1000,8 @@ export default function ExpenseTracker() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 shrink-0">
-            <Wallet className="h-6 w-6 text-primary shrink-0" />
-            <h1 className="font-bold text-xl whitespace-nowrap">{t.title}</h1>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {user && (
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "User"} />
-                  <AvatarFallback>{user.firstName?.[0] || "U"}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium hidden sm:inline">{user.firstName}</span>
-              </div>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => window.location.href = "/api/logout"} data-testid="button-logout">
-              <LogOut className="h-4 w-4 mr-2" />
-              {t.logout}
-            </Button>
-            </div>
-        </div>
-      </header>
-      <div className="bg-background border-b">
+      <AppHeader />
+      <div className="bg-background border-b sticky top-0 z-50">
         <div className="container mx-auto px-4 overflow-x-auto">
           <div className="flex items-center gap-1.5 py-2 min-w-max">
             <Link href="/">

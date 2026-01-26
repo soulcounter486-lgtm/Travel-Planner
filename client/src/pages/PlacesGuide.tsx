@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
 import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+import { AppHeader } from "@/components/AppHeader";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
 import lighthouseImg from "@assets/736414b25966415e9006dd674ec2aecf_1768452191679.jpeg";
 import warMuseumImg from "@assets/20230318＿130556_1768452191689.jpg";
@@ -1009,20 +1009,7 @@ export default function PlacesGuide() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-      <div className="relative bg-white border-b border-border/40">
-        <div className="absolute inset-0 bg-primary/5" />
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl flex items-center gap-4">
-            <img src={logoImg} alt="붕따우 도깨비" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-md" />
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-primary">{pageTitle[language] || pageTitle.ko}</h1>
-              <p className="text-sm text-muted-foreground">
-                {language === "ko" ? "붕따우 도깨비가 추천하는 관광명소와 맛집" : "Recommended spots by Vung Tau Dokkaebi"}
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <AppHeader />
 
       <div className="bg-white border-b shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 overflow-x-auto scrollbar-hide">

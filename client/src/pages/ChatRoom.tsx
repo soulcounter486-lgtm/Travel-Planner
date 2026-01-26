@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
-import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+import { AppHeader } from "@/components/AppHeader";
 import type { UserLocation } from "@shared/schema";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -411,13 +411,10 @@ export default function ChatRoom() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <AppHeader />
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src={logoImg} alt="Logo" className="h-10 w-10 object-contain" />
-            <span className="font-bold text-lg hidden sm:inline">{t("header.title")}</span>
-          </Link>
-          <nav className="flex gap-1.5 overflow-x-auto">
+        <div className="max-w-4xl mx-auto px-4 overflow-x-auto scrollbar-hide">
+          <nav className="flex gap-1.5 py-3 min-w-max">
             <Link href="/">
               <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
                 <Calculator className="w-3.5 h-3.5" />
@@ -454,6 +451,10 @@ export default function ChatRoom() {
                 {t("nav.expenses")}
               </Button>
             </Link>
+            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
+              <MessageCircle className="w-3.5 h-3.5" />
+              {t("nav.chat")}
+            </Button>
           </nav>
         </div>
       </header>
