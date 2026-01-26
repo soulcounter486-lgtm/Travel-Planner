@@ -334,9 +334,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
               } else if (dayOfWeek === 6) {
                 dailyPrice = 500;
               }
-              const totalDayPrice = dailyPrice * rooms;
-              breakdown.villa.price += totalDayPrice;
-              breakdown.villa.details.push(`${dateStr}(${dayName})${rooms > 1 ? ` x ${rooms}룸` : ""}: $${totalDayPrice}`);
+              breakdown.villa.price += dailyPrice;
+              breakdown.villa.details.push(`${dateStr}(${dayName}): $${dailyPrice}`);
               current = addDays(current, 1);
             }
           }

@@ -200,8 +200,8 @@ export default function Home() {
           dailyPrice = 500;
           dayName += ` (${t("villa.saturday")})`;
         }
-        totalPrice += dailyPrice * rooms;
-        details.push({ day: dayName, price: dailyPrice * rooms });
+        totalPrice += dailyPrice;
+        details.push({ day: dayName, price: dailyPrice });
         current = addDays(current, 1);
       }
       return { price: totalPrice, nights: details.length, details, rooms };
@@ -637,8 +637,16 @@ export default function Home() {
                                   min={1}
                                   max={10}
                                   className="w-10 bg-white/20 text-white text-center text-sm rounded border-0 focus:outline-none focus:ring-1 focus:ring-white/50"
-                                  value={field.value || 1}
-                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    field.onChange(val === "" ? undefined : parseInt(val) || 1);
+                                  }}
+                                  onBlur={(e) => {
+                                    if (!e.target.value || parseInt(e.target.value) < 1) {
+                                      field.onChange(1);
+                                    }
+                                  }}
                                   data-testid="input-villa-rooms"
                                 />
                               )}
@@ -655,13 +663,13 @@ export default function Home() {
                       <div className="text-xs text-blue-100 space-y-0.5">
                         {villaEstimate.details.map((d, i) => (
                           <div key={i} className="flex justify-between">
-                            <span>{d.day}{villaEstimate.rooms > 1 ? ` x ${villaEstimate.rooms}룸` : ""}</span>
+                            <span>{d.day}</span>
                             <span>${d.price}</span>
                           </div>
                         ))}
                       </div>
                       <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100 flex justify-between">
-                        <span>{villaEstimate.nights}{t("villa.nightsTotal")}{villaEstimate.rooms > 1 ? ` x ${villaEstimate.rooms}룸` : ""}</span>
+                        <span>{villaEstimate.nights}{t("villa.nightsTotal")}{villaEstimate.rooms > 1 ? ` (${villaEstimate.rooms}룸)` : ""}</span>
                         {currencyInfo.code !== "USD" && (
                           <span className="text-blue-200">{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
                         )}
