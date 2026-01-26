@@ -84,6 +84,7 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
+  const [checkOutCalendarMonth, setCheckOutCalendarMonth] = useState<Date | undefined>(undefined);
   const [visitorCount, setVisitorCount] = useState<number>(0);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
@@ -543,15 +544,20 @@ export default function Home() {
                           control={form.control}
                           name="villa.checkOut"
                           render={({ field }) => (
-                            <Popover open={isCheckOutOpen} onOpenChange={setIsCheckOutOpen}>
+                            <Popover open={isCheckOutOpen} onOpenChange={(open) => {
+                              setIsCheckOutOpen(open);
+                              if (open && form.watch("villa.checkIn")) {
+                                setCheckOutCalendarMonth(new Date(form.watch("villa.checkIn")));
+                              }
+                            }}>
                               <PopoverTrigger asChild><Button variant={"outline"} className={cn("w-full justify-start text-left font-normal h-12 rounded-xl", !field.value && "text-muted-foreground")}><CalendarIcon className="mr-2 h-4 w-4" />{field.value ? format(new Date(field.value), "PPP", { locale: calendarLocale }) : <span>{t("villa.selectDate")}</span>}</Button></PopoverTrigger>
                               <PopoverContent className="w-auto p-0 z-[9999]" align="start">
                                 <Calendar 
-                                  key={`checkout-${form.watch("villa.checkIn")}-${isCheckOutOpen}`}
                                   mode="single" 
                                   locale={calendarLocale} 
                                   selected={field.value ? new Date(field.value) : undefined} 
-                                  defaultMonth={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} 
+                                  month={checkOutCalendarMonth}
+                                  onMonthChange={setCheckOutCalendarMonth}
                                   fromDate={form.watch("villa.checkIn") ? new Date(form.watch("villa.checkIn")) : undefined} 
                                   onSelect={(date) => { field.onChange(date ? format(date, "yyyy-MM-dd") : ""); setIsCheckOutOpen(false); }} 
                                   initialFocus 
