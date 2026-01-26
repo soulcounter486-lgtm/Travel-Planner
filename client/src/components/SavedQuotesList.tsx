@@ -141,9 +141,20 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className={`font-bold ${depositPaid ? "text-green-600 dark:text-green-400" : "text-primary"}`}>
-                ${quote.totalPrice.toLocaleString()}
-              </span>
+              {depositPaid ? (
+                <div className="flex flex-col items-end text-[10px]">
+                  <span className="text-amber-600 dark:text-amber-400">
+                    {language === "ko" ? "예약금" : "Deposit"}: ${Math.round(quote.totalPrice * 0.5).toLocaleString()}
+                  </span>
+                  <span className="text-green-600 dark:text-green-400">
+                    {language === "ko" ? "잔금" : "Balance"}: ${Math.round(quote.totalPrice * 0.5).toLocaleString()}
+                  </span>
+                </div>
+              ) : (
+                <span className="font-bold text-primary">
+                  ${quote.totalPrice.toLocaleString()}
+                </span>
+              )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
