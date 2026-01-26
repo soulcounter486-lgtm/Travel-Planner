@@ -51,7 +51,7 @@ export function SavedQuotesList() {
   const quoteCount = quotes?.length || 0;
 
   return (
-    <Card className="mt-4 rounded-2xl border-slate-200 dark:border-slate-700 shadow-lg bg-background relative z-10">
+    <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-lg bg-background relative z-0">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer hover-elevate rounded-t-2xl bg-background">

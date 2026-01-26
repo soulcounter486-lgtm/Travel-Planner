@@ -863,8 +863,11 @@ export default function Home() {
           </div>
           <div className="lg:col-span-4">
             <QuoteSummary breakdown={breakdown} isLoading={calculateMutation.isPending} onSave={handleSaveQuote} isSaving={createQuoteMutation.isPending} />
-            <SavedQuotesList />
           </div>
+        </div>
+        
+        <div className="mt-8">
+          <SavedQuotesList />
         </div>
       </div>
 
