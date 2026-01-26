@@ -36,6 +36,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [depositAmount, setDepositAmount] = useState<number>(Math.round(quote.totalPrice * 0.5));
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
+  const [golfAdjustments, setGolfAdjustments] = useState<Record<number, number>>({});
   const [memo, setMemo] = useState<string>(quote.memo || "");
   const [isSavingMemo, setIsSavingMemo] = useState(false);
   const queryClient = useQueryClient();
@@ -66,11 +67,34 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     return total;
   };
 
+  const parseGolfDetails = (description: string) => {
+    if (!description) return [];
+    return description.split(" | ").map(item => {
+      const priceMatch = item.match(/\$(\d+)/);
+      return {
+        text: item,
+        price: priceMatch ? parseInt(priceMatch[1]) : 0
+      };
+    });
+  };
+
+  const getAdjustedGolfTotal = () => {
+    if (!breakdown?.golf?.description) return breakdown?.golf?.price || 0;
+    const details = parseGolfDetails(breakdown.golf.description);
+    let total = 0;
+    details.forEach((detail, idx) => {
+      total += golfAdjustments[idx] !== undefined ? golfAdjustments[idx] : detail.price;
+    });
+    return total;
+  };
+
   const villaTotal = getAdjustedVillaTotal();
   const vehicleTotal = getAdjustedVehicleTotal();
+  const golfTotal = getAdjustedGolfTotal();
   const villaAdjustment = villaTotal - (breakdown?.villa?.price || 0);
   const vehicleAdjustment = vehicleTotal - (breakdown?.vehicle?.price || 0);
-  const adjustedTotal = quote.totalPrice + villaAdjustment + vehicleAdjustment;
+  const golfAdjustment = golfTotal - (breakdown?.golf?.price || 0);
+  const adjustedTotal = quote.totalPrice + villaAdjustment + vehicleAdjustment + golfAdjustment;
   const balanceAmount = adjustedTotal - depositAmount;
 
   const formatLocalCurrency = (usd: number) => {
@@ -83,6 +107,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     setCustomerName(quote.customerName);
     setVillaAdjustments({});
     setVehicleAdjustments({});
+    setGolfAdjustments({});
     setDepositAmount(Math.round(quote.totalPrice * 0.5));
     setIsEditing(false);
   };
@@ -442,13 +467,39 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   <div className="space-y-1">
                     <div className="flex justify-between font-semibold text-sm text-slate-800">
                       <span>{language === "ko" ? "골프" : "Golf"}</span>
-                      <span>${breakdown.golf.price.toLocaleString()}</span>
+                      <span>${golfTotal.toLocaleString()}</span>
                     </div>
-                    <div className="text-[10px] text-muted-foreground pl-2">
-                      <div className="flex items-center gap-1">
-                        <span className="w-1 h-1 rounded-full bg-primary/40" />
-                        <span>{breakdown.golf.description}</span>
-                      </div>
+                    <div className="text-[10px] text-muted-foreground pl-2 space-y-1">
+                      {parseGolfDetails(breakdown.golf.description).map((detail, idx) => {
+                        const displayPrice = golfAdjustments[idx] !== undefined ? golfAdjustments[idx] : detail.price;
+                        const textWithoutPrice = detail.text.replace(/\$\d+/, '').trim();
+                        return (
+                          <div key={idx} className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                              <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                              <span className="truncate">{textWithoutPrice}</span>
+                            </div>
+                            {isEditing && !isCapturing ? (
+                              <div className="flex items-center shrink-0">
+                                <span className="text-[10px]">$</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={displayPrice === 0 ? "" : displayPrice}
+                                  onChange={(e) => setGolfAdjustments(prev => ({
+                                    ...prev,
+                                    [idx]: e.target.value === "" ? 0 : parseInt(e.target.value)
+                                  }))}
+                                  className="w-14 text-right text-[10px] bg-white border border-slate-300 rounded px-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            ) : (
+                              <span className="shrink-0 font-medium">${displayPrice.toLocaleString()}</span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
