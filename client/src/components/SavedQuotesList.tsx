@@ -185,6 +185,19 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     }
   };
 
+  const handleSaveEdit = async () => {
+    try {
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/total`, { totalPrice: adjustedTotal });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      setVillaAdjustments({});
+      setVehicleAdjustments({});
+      setGolfAdjustments({});
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to save quote:", error);
+    }
+  };
+
   return (
     <div
       className={`rounded-xl border overflow-hidden transition-colors ${
@@ -280,11 +293,11 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   <Button
                     size="sm"
                     variant="default"
-                    onClick={() => setIsEditing(false)}
+                    onClick={handleSaveEdit}
                     className="h-7 text-xs"
                   >
                     <Check className="w-3 h-3 mr-1" />
-                    {language === "ko" ? "완료" : "Done"}
+                    {language === "ko" ? "저장" : "Save"}
                   </Button>
                 </>
               ) : isAdmin ? (

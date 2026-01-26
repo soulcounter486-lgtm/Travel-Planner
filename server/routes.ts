@@ -539,6 +539,31 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // 견적서 총금액 업데이트
+  app.patch("/api/quotes/:id/total", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req as any).user?.claims?.sub;
+      
+      if (userId !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can update total price" });
+      }
+
+      const { totalPrice } = req.body;
+      if (typeof totalPrice !== "number" || totalPrice < 0) {
+        return res.status(400).json({ message: "Invalid total price" });
+      }
+
+      const quote = await storage.updateQuoteTotal(id, totalPrice);
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      res.json(quote);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // 예약금 입금 완료된 견적서 목록 (캘린더용)
   app.get("/api/quotes/deposit-paid", async (req, res) => {
     try {
