@@ -220,8 +220,8 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                             <input
                               type="number"
                               min="0"
-                              value={depositAmount}
-                              onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
+                              value={depositAmount === 0 ? "" : depositAmount}
+                              onChange={(e) => setDepositAmount(e.target.value === "" ? 0 : parseInt(e.target.value))}
                               className="w-12 text-center text-[9px] font-bold text-amber-800 bg-white border border-amber-300 rounded px-0.5"
                               onClick={(e) => e.stopPropagation()}
                             />
@@ -281,9 +281,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                                 <input
                                   type="number"
                                   min="0"
-                                  value={currentPrice}
+                                  value={currentPrice === 0 ? "" : currentPrice}
                                   onChange={(e) => {
-                                    const val = parseInt(e.target.value) || 0;
+                                    const val = e.target.value === "" ? 0 : parseInt(e.target.value);
                                     setVillaAdjustments(prev => ({ ...prev, [idx]: val }));
                                   }}
                                   className="w-14 text-center text-[10px] font-medium bg-white border border-slate-300 rounded px-1"
@@ -325,9 +325,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                                 <input
                                   type="number"
                                   min="0"
-                                  value={currentPrice}
+                                  value={currentPrice === 0 ? "" : currentPrice}
                                   onChange={(e) => {
-                                    const val = parseInt(e.target.value) || 0;
+                                    const val = e.target.value === "" ? 0 : parseInt(e.target.value);
                                     setVehicleAdjustments(prev => ({ ...prev, [idx]: val }));
                                   }}
                                   className="w-14 text-center text-[10px] font-medium bg-white border border-slate-300 rounded px-1"
