@@ -29,6 +29,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const breakdown = quote.breakdown as QuoteBreakdown;
   const [isCapturing, setIsCapturing] = useState(false);
 
+  const [customerName, setCustomerName] = useState<string>(quote.customerName);
   const [depositAmount, setDepositAmount] = useState<number>(Math.round(quote.totalPrice * 0.5));
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
@@ -73,6 +74,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   };
 
   const resetEdits = () => {
+    setCustomerName(quote.customerName);
     setVillaAdjustments({});
     setVehicleAdjustments({});
     setDepositAmount(Math.round(quote.totalPrice * 0.5));
@@ -273,7 +275,18 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               <div className="p-4 space-y-3">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground pb-2 border-b border-slate-100">
                   <Calendar className="w-3 h-3" />
-                  <span>{language === "ko" ? "고객명" : "Customer"}: {quote.customerName}</span>
+                  <span>{language === "ko" ? "고객명" : "Customer"}: </span>
+                  {isEditing && !isCapturing ? (
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="font-medium text-slate-800 bg-white border border-slate-300 rounded px-1 w-20"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span className="font-medium text-slate-800">{customerName}</span>
+                  )}
                   <span className="mx-1">|</span>
                   <span>{quote.createdAt ? format(new Date(quote.createdAt), "yyyy-MM-dd") : "-"}</span>
                 </div>
