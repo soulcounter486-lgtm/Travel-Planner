@@ -641,14 +641,30 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         </Card>
       </div>
 
-      <Button 
-        className="w-full h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
-        onClick={handleDownloadImage}
-        disabled={!breakdown}
-      >
-        <Save className="mr-2 h-6 w-6" />
-        {t("quote.save")}
-      </Button>
+      <div className="flex gap-3">
+        <Button 
+          className="flex-1 h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
+          onClick={handleDownloadImage}
+          disabled={!breakdown}
+          data-testid="button-download-quote-image"
+        >
+          <Save className="mr-2 h-6 w-6" />
+          {t("quote.save")}
+        </Button>
+        <Button 
+          variant="outline"
+          className="h-14 px-6 text-lg font-bold rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98]" 
+          onClick={onSave}
+          disabled={!breakdown || isSaving}
+          data-testid="button-save-quote-db"
+        >
+          {isSaving ? (
+            <Loader2 className="h-6 w-6 animate-spin" />
+          ) : (
+            <FileText className="h-6 w-6" />
+          )}
+        </Button>
+      </div>
     </div>
   );
 }
