@@ -539,7 +539,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
-  // 견적서 총금액 업데이트
+  // 견적서 총금액 및 세부내역 업데이트
   app.patch("/api/quotes/:id/total", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -549,12 +549,12 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         return res.status(403).json({ message: "Only admin can update total price" });
       }
 
-      const { totalPrice } = req.body;
+      const { totalPrice, breakdown } = req.body;
       if (typeof totalPrice !== "number" || totalPrice < 0) {
         return res.status(400).json({ message: "Invalid total price" });
       }
 
-      const quote = await storage.updateQuoteTotal(id, totalPrice);
+      const quote = await storage.updateQuoteTotalAndBreakdown(id, totalPrice, breakdown);
       if (!quote) {
         return res.status(404).json({ message: "Quote not found" });
       }

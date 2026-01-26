@@ -187,7 +187,58 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
 
   const handleSaveEdit = async () => {
     try {
-      await apiRequest("PATCH", `/api/quotes/${quote.id}/total`, { totalPrice: adjustedTotal });
+      // 수정된 breakdown 생성
+      const updatedBreakdown = { ...breakdown };
+      
+      // Villa 수정 반영
+      if (breakdown?.villa) {
+        const villaDetails = breakdown.villa.details || [];
+        const updatedVillaDetails = villaDetails.map((detail: string, idx: number) => {
+          if (villaAdjustments[idx] !== undefined) {
+            const dayMatch = detail.match(/^([^:]+):/);
+            const dayName = dayMatch ? dayMatch[1] : "";
+            return `${dayName}: $${villaAdjustments[idx]}`;
+          }
+          return detail;
+        });
+        updatedBreakdown.villa = {
+          ...breakdown.villa,
+          price: villaTotal,
+          details: updatedVillaDetails
+        };
+      }
+      
+      // Vehicle 수정 반영
+      if (breakdown?.vehicle) {
+        updatedBreakdown.vehicle = {
+          ...breakdown.vehicle,
+          price: vehicleTotal
+        };
+      }
+      
+      // Golf 수정 반영
+      if (breakdown?.golf) {
+        const golfDetails = parseGolfDetails(breakdown.golf.description);
+        const updatedGolfDescriptions = golfDetails.map((detail, idx) => {
+          const adj = golfAdjustments[idx];
+          const unitPrice = adj ? adj.unitPrice : parseInt(detail.unitPrice);
+          const players = adj ? adj.players : parseInt(detail.players);
+          const subtotal = unitPrice * players;
+          return `${detail.date} / ${detail.courseName} / $${unitPrice} x ${players}명 = $${subtotal} (캐디팁: ${detail.caddyTip}/인)`;
+        });
+        updatedBreakdown.golf = {
+          ...breakdown.golf,
+          price: golfTotal,
+          description: updatedGolfDescriptions.join(" | ")
+        };
+      }
+      
+      updatedBreakdown.total = adjustedTotal;
+      
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/total`, { 
+        totalPrice: adjustedTotal,
+        breakdown: updatedBreakdown
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       setVillaAdjustments({});
       setVehicleAdjustments({});
