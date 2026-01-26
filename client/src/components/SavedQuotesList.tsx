@@ -9,7 +9,8 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { type QuoteBreakdown, type Quote } from "@shared/schema";
-import { toPng } from "html-to-image";
+import html2canvas from "html2canvas";
+import logoImage from "@assets/BackgroundEraser_20240323_103507859_1768997960669.png";
 
 interface QuoteItemProps {
   quote: Quote;
@@ -24,6 +25,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [isExpanded, setIsExpanded] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
   const breakdown = quote.breakdown as QuoteBreakdown;
+  const [isCapturing, setIsCapturing] = useState(false);
 
   const formatLocalCurrency = (usd: number) => {
     if (currencyInfo.code === "USD") return `$ ${usd.toLocaleString()}`;
@@ -33,22 +35,33 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
 
   const handleDownloadImage = async () => {
     if (!detailRef.current) return;
+    setIsCapturing(true);
+    
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     try {
-      const dataUrl = await toPng(detailRef.current, {
+      const canvas = await html2canvas(detailRef.current, {
         backgroundColor: "#ffffff",
-        pixelRatio: 2,
-        style: {
-          padding: "16px",
-        },
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
       });
+      
+      const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `quote-${quote.customerName}-${format(new Date(), "yyyyMMdd")}.png`;
+      link.download = `quote-${quote.customerName}-${format(new Date(quote.createdAt || new Date()), "yyyyMMdd")}.png`;
       link.href = dataUrl;
       link.click();
     } catch (error) {
       console.error("Failed to download image:", error);
+    } finally {
+      setIsCapturing(false);
     }
   };
+
+  const depositAmount = Math.round(quote.totalPrice * 0.5);
+  const balanceAmount = quote.totalPrice - depositAmount;
 
   return (
     <div
@@ -88,67 +101,166 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           <div className="border-t border-slate-200 dark:border-slate-600 p-3 space-y-3">
             <div 
               ref={detailRef}
-              className="bg-white dark:bg-slate-900 rounded-lg p-4 space-y-3"
+              className="bg-white rounded-lg overflow-hidden shadow-lg"
+              style={{ maxWidth: "400px" }}
             >
-              <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2">
-                <div>
-                  <div className="font-semibold text-slate-800 dark:text-slate-200 text-lg">
-                    {quote.customerName}
+              <div className="h-1.5 bg-gradient-to-r from-primary via-indigo-500 to-primary" />
+              <div className="bg-primary/5 p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {language === "ko" ? "여행 견적서" : "Travel Quote"}
+                    </span>
+                    <span className="text-2xl text-primary font-bold">
+                      ${quote.totalPrice.toLocaleString()}
+                    </span>
+                    {currencyInfo.code !== "USD" && (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm text-primary/70 font-semibold">
+                          ≈ {formatLocalCurrency(quote.totalPrice)}
+                        </span>
+                        <span className="text-[9px] text-muted-foreground">
+                          {language === "ko" ? "환율" : "Rate"}: {currencyInfo.symbol} {exchangeRate.toLocaleString()}/USD
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="w-3 h-3" />
-                    {quote.createdAt ? format(new Date(quote.createdAt), "yyyy-MM-dd HH:mm") : "-"}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-primary text-xl flex items-center gap-1">
-                    <DollarSign className="w-5 h-5" />
-                    {quote.totalPrice.toLocaleString()}
-                  </div>
-                  {currencyInfo.code !== "USD" && (
-                    <div className="text-sm text-muted-foreground">
-                      ≈ {formatLocalCurrency(quote.totalPrice)}
+                  <div className="flex flex-col items-center gap-1.5">
+                    <img 
+                      src={logoImage} 
+                      alt="붕따우 도깨비" 
+                      className="w-16 h-16 object-contain"
+                    />
+                    <div className="flex items-center gap-1">
+                      <div className="rounded p-1 text-center bg-amber-50 border border-amber-200">
+                        <span className="text-[7px] font-medium text-amber-700 block">
+                          {language === "ko" ? "예약금" : "Deposit"}
+                        </span>
+                        <span className="text-[9px] font-bold text-amber-800">
+                          ${depositAmount.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="rounded p-1 text-center bg-green-50 border border-green-200">
+                        <span className="text-[7px] font-medium text-green-700 block">
+                          {language === "ko" ? "잔금" : "Balance"}
+                        </span>
+                        <span className="text-[9px] font-bold text-green-800">
+                          ${balanceAmount.toLocaleString()}
+                        </span>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
+              
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground pb-2 border-b border-slate-100">
+                  <Calendar className="w-3 h-3" />
+                  <span>{language === "ko" ? "고객명" : "Customer"}: {quote.customerName}</span>
+                  <span className="mx-1">|</span>
+                  <span>{quote.createdAt ? format(new Date(quote.createdAt), "yyyy-MM-dd") : "-"}</span>
+                </div>
 
-              <div className="text-sm text-slate-700 dark:text-slate-300 space-y-2">
                 {breakdown?.villa?.price > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{language === "ko" ? "풀빌라" : "Villa"}</span>
-                    <span className="font-medium">${breakdown.villa.price.toLocaleString()}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-semibold text-sm text-slate-800">
+                      <span>{language === "ko" ? "풀빌라" : "Villa"}</span>
+                      <span>${breakdown.villa.price.toLocaleString()}</span>
+                    </div>
+                    {breakdown.villa.checkIn && breakdown.villa.checkOut && (
+                      <div className="text-[10px] text-primary font-medium pl-2">
+                        {breakdown.villa.checkIn} ~ {breakdown.villa.checkOut}
+                      </div>
+                    )}
+                    <div className="text-[10px] text-muted-foreground space-y-0.5 pl-2">
+                      {breakdown.villa.details.map((detail, idx) => (
+                        <div key={idx} className="flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-primary/40" />
+                          <span>{detail}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                {breakdown?.villa?.checkIn && breakdown?.villa?.checkOut && (
-                  <div className="text-xs text-primary/70 ml-4">
-                    {breakdown.villa.checkIn} ~ {breakdown.villa.checkOut}
-                  </div>
-                )}
+
                 {breakdown?.vehicle?.price > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{language === "ko" ? "차량" : "Vehicle"}</span>
-                    <span className="font-medium">${breakdown.vehicle.price.toLocaleString()}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-semibold text-sm text-slate-800">
+                      <span>{language === "ko" ? "차량" : "Vehicle"}</span>
+                      <span>${breakdown.vehicle.price.toLocaleString()}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground space-y-0.5 pl-2">
+                      {breakdown.vehicle.description.split(" | ").map((detail, idx) => (
+                        <div key={idx} className="flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-primary/40" />
+                          <span>{detail}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
+
                 {breakdown?.golf?.price > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{language === "ko" ? "골프" : "Golf"}</span>
-                    <span className="font-medium">${breakdown.golf.price.toLocaleString()}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-semibold text-sm text-slate-800">
+                      <span>{language === "ko" ? "골프" : "Golf"}</span>
+                      <span>${breakdown.golf.price.toLocaleString()}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground pl-2">
+                      <div className="flex items-center gap-1">
+                        <span className="w-1 h-1 rounded-full bg-primary/40" />
+                        <span>{breakdown.golf.description}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
+
                 {breakdown?.guide?.price > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{language === "ko" ? "가이드" : "Guide"}</span>
-                    <span className="font-medium">${breakdown.guide.price.toLocaleString()}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-semibold text-sm text-slate-800">
+                      <span>{language === "ko" ? "가이드" : "Guide"}</span>
+                      <span>${breakdown.guide.price.toLocaleString()}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground pl-2">
+                      <div className="flex items-center gap-1">
+                        <span className="w-1 h-1 rounded-full bg-primary/40" />
+                        <span>{breakdown.guide.description}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
+
                 {breakdown?.fastTrack?.price > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">{language === "ko" ? "패스트트랙" : "Fast Track"}</span>
-                    <span className="font-medium">${breakdown.fastTrack.price.toLocaleString()}</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between font-semibold text-sm text-slate-800">
+                      <span>{language === "ko" ? "패스트트랙" : "Fast Track"}</span>
+                      <span>${breakdown.fastTrack.price.toLocaleString()}</span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground pl-2">
+                      <div className="flex items-center gap-1">
+                        <span className="w-1 h-1 rounded-full bg-primary/40" />
+                        <span>{breakdown.fastTrack.description}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                <div className="pt-2 border-t border-slate-200">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-800">
+                      {language === "ko" ? "총 금액" : "Total"}
+                    </span>
+                    <span className="font-bold text-lg text-primary">
+                      ${quote.totalPrice.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 text-center">
+                  <span className="text-[9px] text-muted-foreground">
+                    붕따우 도깨비 | vungtau.blog
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -156,10 +268,13 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               onClick={handleDownloadImage}
               className="w-full"
               variant="outline"
+              disabled={isCapturing}
               data-testid={`button-download-quote-${quote.id}`}
             >
               <Download className="w-4 h-4 mr-2" />
-              {language === "ko" ? "이미지 다운로드" : "Download Image"}
+              {isCapturing 
+                ? (language === "ko" ? "이미지 생성 중..." : "Generating...") 
+                : (language === "ko" ? "이미지 다운로드" : "Download Image")}
             </Button>
           </div>
         </CollapsibleContent>
@@ -220,7 +335,7 @@ export function SavedQuotesList() {
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="pt-0 space-y-2 max-h-80 overflow-y-auto bg-background rounded-b-2xl">
+          <CardContent className="pt-0 space-y-2 max-h-[500px] overflow-y-auto bg-background rounded-b-2xl">
             {isLoading ? (
               <div className="text-center py-4 text-muted-foreground text-sm">
                 {language === "ko" ? "로딩 중..." : "Loading..."}
