@@ -488,7 +488,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                 {breakdown?.villa?.price > 0 && (
                   <div className="space-y-1">
                     <div className="flex justify-between font-semibold text-sm text-slate-800">
-                      <span>{language === "ko" ? "풀빌라" : "Villa"}</span>
+                      <span>{language === "ko" ? "풀빌라" : "Villa"}{breakdown.villa.rooms && breakdown.villa.rooms > 0 ? ` (${breakdown.villa.rooms}룸)` : ""}</span>
                       <span>${villaTotal.toLocaleString()}</span>
                     </div>
                     {breakdown.villa.checkIn && breakdown.villa.checkOut && (

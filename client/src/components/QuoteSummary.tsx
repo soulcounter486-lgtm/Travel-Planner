@@ -315,7 +315,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 >
                   <div className="flex flex-col gap-1">
                     <div className="flex justify-between font-semibold text-slate-800">
-                      <span>{t("quote.villa")}</span>
+                      <span>{t("quote.villa")}{breakdown.villa.rooms && breakdown.villa.rooms > 0 ? ` (${breakdown.villa.rooms}룸)` : ""}</span>
                       <span>${adjustedVillaTotal.toLocaleString()}</span>
                     </div>
                     {breakdown.villa.checkIn && breakdown.villa.checkOut && (
