@@ -433,7 +433,7 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50/50 pb-20">
       <div className="relative bg-white border-b border-border/40">
         <div className="absolute inset-0 bg-primary/5" />
-        <div className="container mx-auto px-4 py-12 relative z-10">
+        <div className="container mx-auto px-4 py-4 relative z-10">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl flex items-center gap-6">
             <div className="flex flex-col items-center">
               <a 
@@ -481,13 +481,12 @@ export default function Home() {
               <p className="text-sm md:text-base text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
             </div>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4 flex items-center gap-2">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-2 flex items-center gap-2">
             <WeatherWidget language={language} />
             <ExchangeRateWidget language={language} rates={exchangeRatesData?.rates} />
           </motion.div>
         </div>
       </div>
-
       <TabNavigation language={language} />
 
       <div className="container mx-auto px-4 py-10">
