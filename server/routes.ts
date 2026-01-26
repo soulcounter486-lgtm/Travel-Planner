@@ -482,7 +482,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   app.post(api.quotes.create.path, async (req, res) => {
     try {
       const input = api.quotes.create.input.parse(req.body);
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.claims?.sub;
       const quote = await storage.createQuote({ ...input, userId });
       res.status(201).json(quote);
     } catch (err) {
@@ -492,7 +492,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   app.get(api.quotes.list.path, async (req, res) => {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.claims?.sub;
     const quotes = await storage.getQuotesByUser(userId);
     res.json(quotes);
   });
@@ -503,7 +503,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid quote ID" });
       }
-      const userId = (req as any).user?.id;
+      const userId = (req as any).user?.claims?.sub;
       await storage.deleteQuote(id, userId);
       res.status(204).send();
     } catch (err) {
