@@ -298,7 +298,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       const input = req.body;
       
       const breakdown = {
-        villa: { price: 0, details: [] as string[], checkIn: "", checkOut: "" },
+        villa: { price: 0, details: [] as string[], checkIn: "", checkOut: "", rooms: 1 },
         vehicle: { price: 0, description: "" },
         golf: { price: 0, description: "" },
         ecoGirl: { price: 0, description: "", details: [] as string[] },
@@ -320,6 +320,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         try {
           let current = parseISO(input.villa.checkIn);
           const end = parseISO(input.villa.checkOut);
+          const rooms = input.villa.rooms || 1;
+          breakdown.villa.rooms = rooms;
           if (!isNaN(current.getTime()) && !isNaN(end.getTime())) {
             const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
             while (current < end) {
@@ -332,8 +334,9 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
               } else if (dayOfWeek === 6) {
                 dailyPrice = 500;
               }
-              breakdown.villa.price += dailyPrice;
-              breakdown.villa.details.push(`${dateStr}(${dayName}): $${dailyPrice}`);
+              const totalDayPrice = dailyPrice * rooms;
+              breakdown.villa.price += totalDayPrice;
+              breakdown.villa.details.push(`${dateStr}(${dayName})${rooms > 1 ? ` x ${rooms}룸` : ""}: $${totalDayPrice}`);
               current = addDays(current, 1);
             }
           }

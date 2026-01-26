@@ -163,7 +163,7 @@ export default function Home() {
   const form = useForm<CalculateQuoteRequest>({
     resolver: zodResolver(calculateQuoteSchema),
     defaultValues: {
-      villa: { enabled: true },
+      villa: { enabled: true, rooms: 1 },
       vehicle: { enabled: false, selections: [] },
       golf: { enabled: false, selections: [] },
       ecoGirl: { enabled: false, selections: [] },
@@ -178,16 +178,17 @@ export default function Home() {
 
   const villaEstimate = useMemo(() => {
     if (!values.villa?.enabled || !values.villa?.checkIn || !values.villa?.checkOut) {
-      return { price: 0, nights: 0, details: [] as { day: string; price: number }[] };
+      return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1 };
     }
     try {
       let current = parseISO(values.villa.checkIn);
       const end = parseISO(values.villa.checkOut);
       if (isNaN(current.getTime()) || isNaN(end.getTime()) || current >= end) {
-        return { price: 0, nights: 0, details: [] as { day: string; price: number }[] };
+        return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1 };
       }
       let totalPrice = 0;
       const details: { day: string; price: number }[] = [];
+      const rooms = values.villa.rooms || 1;
       while (current < end) {
         const dayOfWeek = getDay(current);
         let dailyPrice = 350;
@@ -199,15 +200,15 @@ export default function Home() {
           dailyPrice = 500;
           dayName += ` (${t("villa.saturday")})`;
         }
-        totalPrice += dailyPrice;
-        details.push({ day: dayName, price: dailyPrice });
+        totalPrice += dailyPrice * rooms;
+        details.push({ day: dayName, price: dailyPrice * rooms });
         current = addDays(current, 1);
       }
-      return { price: totalPrice, nights: details.length, details };
+      return { price: totalPrice, nights: details.length, details, rooms };
     } catch {
-      return { price: 0, nights: 0, details: [] as { day: string; price: number }[] };
+      return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1 };
     }
-  }, [values.villa?.enabled, values.villa?.checkIn, values.villa?.checkOut, t]);
+  }, [values.villa?.enabled, values.villa?.checkIn, values.villa?.checkOut, values.villa?.rooms, t]);
 
   const golfEstimate = useMemo(() => {
     if (!values.golf?.enabled || !values.golf?.selections || values.golf.selections.length === 0) {
@@ -368,7 +369,7 @@ export default function Home() {
         // This avoids Zod validation errors blocking the update
         const payload: any = {
           villa: value.villa?.enabled && value.villa.checkIn && value.villa.checkOut 
-            ? { enabled: true, checkIn: value.villa.checkIn, checkOut: value.villa.checkOut } 
+            ? { enabled: true, checkIn: value.villa.checkIn, checkOut: value.villa.checkOut, rooms: value.villa.rooms || 1 } 
             : { enabled: false },
           vehicle: value.vehicle?.enabled && value.vehicle.selections && value.vehicle.selections.length > 0
             ? { 
@@ -623,7 +624,27 @@ export default function Home() {
                   {villaEstimate.price > 0 && (
                     <div className="mt-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">{t("villa.estimatedPrice")}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{t("villa.estimatedPrice")}</span>
+                          <div className="flex items-center gap-1 bg-blue-700/50 rounded-lg px-2 py-0.5">
+                            <span className="text-xs text-blue-100">{language === "ko" ? "룸" : "Rooms"}:</span>
+                            <Controller
+                              control={form.control}
+                              name="villa.rooms"
+                              render={({ field }) => (
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={10}
+                                  className="w-10 bg-white/20 text-white text-center text-sm rounded border-0 focus:outline-none focus:ring-1 focus:ring-white/50"
+                                  value={field.value || 1}
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                                  data-testid="input-villa-rooms"
+                                />
+                              )}
+                            />
+                          </div>
+                        </div>
                         <div className="text-right">
                           <span className="text-2xl font-bold">${villaEstimate.price}</span>
                           {currencyInfo.code !== "USD" && (
@@ -634,13 +655,13 @@ export default function Home() {
                       <div className="text-xs text-blue-100 space-y-0.5">
                         {villaEstimate.details.map((d, i) => (
                           <div key={i} className="flex justify-between">
-                            <span>{d.day}</span>
+                            <span>{d.day}{villaEstimate.rooms > 1 ? ` x ${villaEstimate.rooms}룸` : ""}</span>
                             <span>${d.price}</span>
                           </div>
                         ))}
                       </div>
                       <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100 flex justify-between">
-                        <span>{villaEstimate.nights}{t("villa.nightsTotal")}</span>
+                        <span>{villaEstimate.nights}{t("villa.nightsTotal")}{villaEstimate.rooms > 1 ? ` x ${villaEstimate.rooms}룸` : ""}</span>
                         {currencyInfo.code !== "USD" && (
                           <span className="text-blue-200">{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
                         )}
