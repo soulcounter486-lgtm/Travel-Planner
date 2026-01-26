@@ -398,17 +398,20 @@ export default function Home() {
               </a>
             </div>
             <div className="flex-1">
-              <div className="flex items-start gap-3">
-                <h1 className="text-3xl md:text-5xl font-display font-bold text-primary mb-4 leading-tight">{t("header.title")}<br className="md:hidden" /> {t("header.subtitle")}</h1>
+              <div className="flex items-start justify-between gap-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-primary mb-3 leading-tight">
+                  {t("header.title")}<br />
+                  <span className="text-xl sm:text-2xl md:text-3xl">{language === "ko" ? "실시간 여행견적" : "Live Travel Quote"}</span>
+                </h1>
                 {isAuthLoading ? null : isAuthenticated ? (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => logout()}
-                    className="shrink-0 rounded-full h-8 px-3 text-xs"
+                    className="shrink-0 rounded-full h-6 px-2 text-[10px]"
                     data-testid="button-logout"
                   >
-                    <LogOut className="w-3.5 h-3.5 mr-1.5" />
+                    <LogOut className="w-3 h-3 mr-1" />
                     {language === "ko" ? "로그아웃" : "Logout"}
                   </Button>
                 ) : (
@@ -416,15 +419,15 @@ export default function Home() {
                     <Button
                       size="sm"
                       variant="default"
-                      className="shrink-0 rounded-full h-8 px-3 text-xs"
+                      className="shrink-0 rounded-full h-6 px-2 text-[10px]"
                     >
-                      <LogIn className="w-3.5 h-3.5 mr-1.5" />
+                      <LogIn className="w-3 h-3 mr-1" />
                       {language === "ko" ? "로그인" : "Login"}
                     </Button>
                   </a>
                 )}
               </div>
-              <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
+              <p className="text-sm md:text-base text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
             </div>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4 flex items-center gap-2">
