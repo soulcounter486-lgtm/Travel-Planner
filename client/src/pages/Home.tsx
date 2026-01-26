@@ -960,7 +960,12 @@ export default function Home() {
             {isAdmin && (
               <Controller control={form.control} name="ecoGirl.enabled" render={({ field }) => (
                 <SectionCard 
-                  title={language === "ko" ? "에코" : language === "en" ? "Eco" : language === "zh" ? "生态" : language === "vi" ? "Eco" : language === "ru" ? "Эко" : language === "ja" ? "エコ" : "에코"} 
+                  title={
+                    <span className="flex items-center gap-2">
+                      {language === "ko" ? "에코" : language === "en" ? "Eco" : language === "zh" ? "生态" : language === "vi" ? "Eco" : language === "ru" ? "Эко" : language === "ja" ? "エコ" : "에코"}
+                      <span className="text-[10px] font-normal text-muted-foreground">(18시~06시, 12시간 기준)</span>
+                    </span>
+                  } 
                   icon={Users} 
                   isEnabled={field.value ?? false} 
                   onToggle={field.onChange} 

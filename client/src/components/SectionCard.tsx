@@ -5,7 +5,7 @@ import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SectionCardProps {
-  title: string;
+  title: ReactNode;
   icon: LucideIcon;
   isEnabled: boolean;
   onToggle: (enabled: boolean) => void;
