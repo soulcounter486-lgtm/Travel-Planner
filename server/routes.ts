@@ -518,6 +518,27 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // 메모 업데이트 (관리자 전용)
+  app.patch("/api/quotes/:id/memo", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req as any).user?.claims?.sub;
+      
+      if (userId !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can update memo" });
+      }
+
+      const { memo } = req.body;
+      const quote = await storage.updateQuoteMemo(id, memo || "");
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      res.json(quote);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // 예약금 입금 완료된 견적서 목록 (캘린더용)
   app.get("/api/quotes/deposit-paid", async (req, res) => {
     try {

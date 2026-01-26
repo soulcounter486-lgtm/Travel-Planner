@@ -36,6 +36,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [depositAmount, setDepositAmount] = useState<number>(Math.round(quote.totalPrice * 0.5));
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
+  const [memo, setMemo] = useState<string>(quote.memo || "");
+  const [isSavingMemo, setIsSavingMemo] = useState(false);
+  const queryClient = useQueryClient();
 
   const parsePrice = (detail: string): number => {
     const match = detail.match(/\$(\d+)/);
@@ -115,6 +118,18 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     const newStatus = !depositPaid;
     setDepositPaid(newStatus);
     onToggleDeposit(quote.id, newStatus);
+  };
+
+  const handleSaveMemo = async () => {
+    setIsSavingMemo(true);
+    try {
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/memo`, { memo });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+    } catch (error) {
+      console.error("Failed to save memo:", error);
+    } finally {
+      setIsSavingMemo(false);
+    }
   };
 
   return (
@@ -487,9 +502,36 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               </div>
             </div>
 
+            {isAdmin && (
+              <div className="mt-3 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  {language === "ko" ? "메모 (관리자용)" : "Memo (Admin only)"}
+                </label>
+                <textarea
+                  value={memo}
+                  onChange={(e) => setMemo(e.target.value)}
+                  placeholder={language === "ko" ? "메모를 입력하세요..." : "Enter memo..."}
+                  className="w-full p-2 text-sm border rounded-md resize-none bg-white dark:bg-slate-900 dark:text-white"
+                  rows={2}
+                  data-testid={`textarea-memo-${quote.id}`}
+                />
+                <Button
+                  onClick={handleSaveMemo}
+                  size="sm"
+                  className="mt-2"
+                  disabled={isSavingMemo || memo === (quote.memo || "")}
+                  data-testid={`button-save-memo-${quote.id}`}
+                >
+                  {isSavingMemo
+                    ? (language === "ko" ? "저장 중..." : "Saving...")
+                    : (language === "ko" ? "메모 저장" : "Save Memo")}
+                </Button>
+              </div>
+            )}
+
             <Button
               onClick={handleDownloadImage}
-              className="w-full"
+              className="w-full mt-3"
               variant="outline"
               disabled={isCapturing}
               data-testid={`button-download-quote-${quote.id}`}
