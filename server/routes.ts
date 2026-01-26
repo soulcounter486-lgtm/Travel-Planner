@@ -463,9 +463,10 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         const days = Number(input.guide.days) || 0;
         const groupSize = Number(input.guide.groupSize) || 1;
         let dailyTotal = baseRate;
-        if (groupSize > 4) { dailyTotal += (groupSize - 4) * extraRate; }
+        const extraPeople = groupSize > 4 ? groupSize - 4 : 0;
+        if (extraPeople > 0) { dailyTotal += extraPeople * extraRate; }
         breakdown.guide.price = dailyTotal * days;
-        breakdown.guide.description = `${days}일 / ${groupSize}명 (기본 $120 + 추가인원)`;
+        breakdown.guide.description = `${days}일 / ${groupSize}명 (기본 4인 $120${extraPeople > 0 ? ` + 추가 ${extraPeople}인` : ""})`;
       }
 
       // 6. Fast Track Calculation
