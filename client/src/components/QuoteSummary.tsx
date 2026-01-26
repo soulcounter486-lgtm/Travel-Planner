@@ -148,6 +148,9 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      // 이미지 다운로드 후 자동으로 DB 저장 다이얼로그 열기
+      onSave();
     } catch (error) {
       setIsCapturing(false);
       console.error("Image capture error:", error);
@@ -641,28 +644,19 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         </Card>
       </div>
 
-      <div className="sticky bottom-0 left-0 right-0 flex gap-3 z-50 bg-background pt-3 pb-3 border-t border-slate-200 dark:border-slate-700 -mx-4 px-4 mt-4 shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
+      <div className="sticky bottom-0 left-0 right-0 z-50 bg-background pt-3 pb-3 border-t border-slate-200 dark:border-slate-700 -mx-4 px-4 mt-4 shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
         <Button 
-          className="flex-1 h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
+          className="w-full h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
           onClick={handleDownloadImage}
-          disabled={!breakdown}
-          data-testid="button-download-quote-image"
-        >
-          <Save className="mr-2 h-5 w-5" />
-          {t("quote.save")}
-        </Button>
-        <Button 
-          variant="outline"
-          className="h-12 px-5 text-base font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]" 
-          onClick={onSave}
           disabled={!breakdown || isSaving}
-          data-testid="button-save-quote-db"
+          data-testid="button-save-quote"
         >
           {isSaving ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
           ) : (
-            <FileText className="h-5 w-5" />
+            <Save className="mr-2 h-5 w-5" />
           )}
+          {t("quote.save")}
         </Button>
       </div>
     </div>
