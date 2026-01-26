@@ -49,6 +49,7 @@ async function sendPushNotifications(title: string, body: string, url: string = 
 }
 
 let exchangeRatesCache: { rates: Record<string, number>; timestamp: number } | null = null;
+let weatherCache: { data: { temp: string; condition: string; humidity: string; wind: string }; timestamp: number } | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30분 캐시
 
 const defaultRates: Record<string, number> = {
@@ -236,6 +237,45 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       res.json({ rates, timestamp: exchangeRatesCache?.timestamp || Date.now() });
     } catch (error) {
       res.status(500).json({ rates: defaultRates, timestamp: Date.now() });
+    }
+  });
+
+  // 날씨 API (30분 캐시)
+  app.get("/api/weather", async (req, res) => {
+    try {
+      const now = Date.now();
+      if (weatherCache && (now - weatherCache.timestamp) < CACHE_DURATION) {
+        return res.json({ ...weatherCache.data, lastUpdated: weatherCache.timestamp });
+      }
+
+      const response = await fetch("https://wttr.in/Vung+Tau?format=j1", {
+        headers: { "User-Agent": "VungTauDokkaebi/1.0" }
+      });
+      
+      if (!response.ok) {
+        throw new Error("Weather API failed");
+      }
+      
+      const data = await response.json();
+      const current = data.current_condition[0];
+      
+      const weatherData = {
+        temp: current.temp_C,
+        condition: current.weatherDesc[0].value,
+        humidity: current.humidity,
+        wind: current.windspeedKmph
+      };
+      
+      weatherCache = { data: weatherData, timestamp: now };
+      console.log("Weather updated:", weatherData);
+      
+      res.json({ ...weatherData, lastUpdated: now });
+    } catch (error) {
+      console.error("Weather fetch error:", error);
+      if (weatherCache) {
+        return res.json({ ...weatherCache.data, lastUpdated: weatherCache.timestamp });
+      }
+      res.status(500).json({ error: "Failed to fetch weather" });
     }
   });
 
