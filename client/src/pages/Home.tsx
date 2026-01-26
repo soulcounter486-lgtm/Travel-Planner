@@ -895,6 +895,9 @@ export default function Home() {
         </div>
         
         <div className="mt-8">
+          <p className="text-xs text-muted-foreground text-center mb-2">
+            {language === "ko" ? "로그인 시 견적서 저장 가능" : "Login to save quotes"}
+          </p>
           <SavedQuotesList />
         </div>
       </div>
