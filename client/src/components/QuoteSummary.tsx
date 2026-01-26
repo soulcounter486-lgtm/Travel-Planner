@@ -476,9 +476,16 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       <span>{t("quote.ecoGirl")}</span>
                       <span>${breakdown.ecoGirl.price}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground italic pl-1">
-                      {breakdown.ecoGirl.description}
-                    </p>
+                    {breakdown.ecoGirl.details && breakdown.ecoGirl.details.length > 0 && (
+                      <div className="text-xs text-muted-foreground space-y-1 pl-1">
+                        {breakdown.ecoGirl.details.map((detail, idx) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-pink-400/60" />
+                            <span>{detail}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <Separator className="bg-border/50" />
                 </motion.div>

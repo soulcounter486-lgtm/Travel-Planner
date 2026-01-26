@@ -465,7 +465,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         let dailyTotal = baseRate;
         if (groupSize > 4) { dailyTotal += (groupSize - 4) * extraRate; }
         breakdown.guide.price = dailyTotal * days;
-        breakdown.guide.description = `${days} Days for ${groupSize} People (Base $120 + Extra)`;
+        breakdown.guide.description = `${days}일 / ${groupSize}명 (기본 $120 + 추가인원)`;
       }
 
       // 6. Fast Track Calculation
