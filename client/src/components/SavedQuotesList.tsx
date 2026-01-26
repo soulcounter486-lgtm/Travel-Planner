@@ -51,10 +51,10 @@ export function SavedQuotesList() {
   const quoteCount = quotes?.length || 0;
 
   return (
-    <Card className="mt-4 rounded-2xl border-slate-200 dark:border-slate-700 shadow-lg">
+    <Card className="mt-4 rounded-2xl border-slate-200 dark:border-slate-700 shadow-lg bg-background relative z-10">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover-elevate rounded-t-2xl">
+          <CardHeader className="cursor-pointer hover-elevate rounded-t-2xl bg-background">
             <CardTitle className="flex items-center justify-between text-base">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
@@ -68,7 +68,7 @@ export function SavedQuotesList() {
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="pt-0 space-y-3 max-h-96 overflow-y-auto">
+          <CardContent className="pt-0 space-y-3 max-h-64 overflow-y-auto bg-background rounded-b-2xl">
             {isLoading ? (
               <div className="text-center py-4 text-muted-foreground text-sm">
                 {language === "ko" ? "로딩 중..." : "Loading..."}
