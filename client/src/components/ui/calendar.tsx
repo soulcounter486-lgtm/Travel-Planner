@@ -1,28 +1,73 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker } from "react-day-picker"
+import { addMonths, subMonths } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
+  onMonthChange?: (month: Date) => void;
+}
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  onSelect,
+  month,
+  onMonthChange,
   ...props
 }: CalendarProps) {
+  const [currentMonth, setCurrentMonth] = React.useState(month || new Date());
+  const touchStartX = React.useRef<number | null>(null);
+  const touchEndX = React.useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    
+    const diff = touchStartX.current - touchEndX.current;
+    const threshold = 50;
+
+    if (Math.abs(diff) > threshold) {
+      const newMonth = diff > 0 
+        ? addMonths(currentMonth, 1) 
+        : subMonths(currentMonth, 1);
+      setCurrentMonth(newMonth);
+      onMonthChange?.(newMonth);
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
+  React.useEffect(() => {
+    if (month) {
+      setCurrentMonth(month);
+    }
+  }, [month]);
+
   return (
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
     <DayPicker
+      month={currentMonth}
+      onMonthChange={(m) => {
+        setCurrentMonth(m);
+        onMonthChange?.(m);
+      }}
       showOutsideDays={showOutsideDays}
       className={cn("p-3 bg-white border border-border rounded-xl shadow-xl", className)}
-      onSelect={(...args) => {
-        // Find the popover close element or blur active element if needed
-        // but simple onSelect override is cleaner
-        onSelect?.(...args);
-      }}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
@@ -67,6 +112,7 @@ function Calendar({
       }}
       {...props}
     />
+    </div>
   )
 }
 Calendar.displayName = "Calendar"
