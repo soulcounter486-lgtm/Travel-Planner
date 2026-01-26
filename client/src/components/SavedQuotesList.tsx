@@ -70,10 +70,33 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const parseGolfDetails = (description: string) => {
     if (!description) return [];
     return description.split(" | ").map(item => {
-      const priceMatch = item.match(/\$(\d+)/);
+      // Format: "날짜 / 골프장명 / $가격 x 인원명 = $소계 (캐디팁: 팁/인)"
+      const parts = item.split(" / ");
+      const date = parts[0] || "";
+      const courseName = parts[1] || "";
+      
+      // Extract price info and caddy tip
+      const priceInfo = parts[2] || "";
+      const subtotalMatch = priceInfo.match(/= \$(\d+)/);
+      const subtotal = subtotalMatch ? parseInt(subtotalMatch[1]) : 0;
+      
+      const playersMatch = priceInfo.match(/x (\d+)명/);
+      const players = playersMatch ? playersMatch[1] : "1";
+      
+      const unitPriceMatch = priceInfo.match(/\$(\d+) x/);
+      const unitPrice = unitPriceMatch ? unitPriceMatch[1] : "0";
+      
+      const tipMatch = priceInfo.match(/캐디팁: ([^)]+)/);
+      const caddyTip = tipMatch ? tipMatch[1] : "";
+      
       return {
-        text: item,
-        price: priceMatch ? parseInt(priceMatch[1]) : 0
+        date,
+        courseName,
+        players,
+        unitPrice,
+        caddyTip,
+        price: subtotal,
+        text: item
       };
     });
   };
@@ -469,33 +492,39 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                       <span>{language === "ko" ? "골프" : "Golf"}</span>
                       <span>${golfTotal.toLocaleString()}</span>
                     </div>
-                    <div className="text-[10px] text-muted-foreground pl-2 space-y-1">
+                    <div className="text-[10px] text-muted-foreground pl-2 space-y-2">
                       {parseGolfDetails(breakdown.golf.description).map((detail, idx) => {
                         const displayPrice = golfAdjustments[idx] !== undefined ? golfAdjustments[idx] : detail.price;
-                        const textWithoutPrice = detail.text.replace(/\$\d+/, '').trim();
                         return (
-                          <div key={idx} className="flex items-start justify-between gap-2">
-                            <div className="flex items-start gap-1 flex-1 min-w-0">
-                              <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0 mt-1.5" />
-                              <span className="break-words whitespace-normal">{textWithoutPrice}</span>
+                          <div key={idx} className="border-l-2 border-primary/20 pl-2 py-1">
+                            <div className="font-medium text-slate-700 dark:text-slate-300">
+                              {detail.date}
                             </div>
-                            {isEditing && !isCapturing ? (
-                              <div className="flex items-center shrink-0">
-                                <span className="text-[10px]">$</span>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={displayPrice === 0 ? "" : displayPrice}
-                                  onChange={(e) => setGolfAdjustments(prev => ({
-                                    ...prev,
-                                    [idx]: e.target.value === "" ? 0 : parseInt(e.target.value)
-                                  }))}
-                                  className="w-14 text-right text-[10px] bg-white border border-slate-300 rounded px-1"
-                                  onClick={(e) => e.stopPropagation()}
-                                />
+                            <div className="flex items-center justify-between gap-2">
+                              <span>{detail.courseName} / {detail.players}명 (${ detail.unitPrice} x {detail.players})</span>
+                              {isEditing && !isCapturing ? (
+                                <div className="flex items-center shrink-0">
+                                  <span className="text-[10px]">$</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={displayPrice === 0 ? "" : displayPrice}
+                                    onChange={(e) => setGolfAdjustments(prev => ({
+                                      ...prev,
+                                      [idx]: e.target.value === "" ? 0 : parseInt(e.target.value)
+                                    }))}
+                                    className="w-14 text-right text-[10px] bg-white border border-slate-300 rounded px-1"
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                </div>
+                              ) : (
+                                <span className="shrink-0 font-medium">${displayPrice.toLocaleString()}</span>
+                              )}
+                            </div>
+                            {detail.caddyTip && (
+                              <div className="text-[9px] text-amber-600 dark:text-amber-400">
+                                {language === "ko" ? "캐디팁" : "Caddy Tip"}: {detail.caddyTip}
                               </div>
-                            ) : (
-                              <span className="shrink-0 font-medium">${displayPrice.toLocaleString()}</span>
                             )}
                           </div>
                         );
