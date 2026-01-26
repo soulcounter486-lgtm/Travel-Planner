@@ -22,6 +22,7 @@ interface QuoteSummaryProps {
 
 export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSummaryProps) {
   const { t, language } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const summaryRef = useRef<HTMLDivElement>(null);
   const [personCount, setPersonCount] = useState<string>("");
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
@@ -154,9 +155,6 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
-      // 이미지 다운로드 후 자동으로 DB 저장 다이얼로그 열기
-      onSave();
     } catch (error) {
       setIsCapturing(false);
       console.error("Image capture error:", error);
@@ -659,19 +657,36 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
       </div>
 
       <div className="sticky bottom-0 left-0 right-0 z-50 bg-background pt-3 pb-3 border-t border-slate-200 dark:border-slate-700 -mx-4 px-4 mt-4 shadow-[0_-4px_10px_rgba(0,0,0,0.1)]">
-        <Button 
-          className="w-full h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
-          onClick={handleDownloadImage}
-          disabled={!breakdown || isSaving}
-          data-testid="button-save-quote"
-        >
-          {isSaving ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : (
-            <Save className="mr-2 h-5 w-5" />
+        <div className="flex gap-2">
+          <Button 
+            className={`${isAuthenticated ? "flex-1" : "w-full"} h-12 text-base font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]`}
+            onClick={handleDownloadImage}
+            disabled={!breakdown || isCapturing}
+            data-testid="button-save-quote"
+          >
+            {isCapturing ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-5 w-5" />
+            )}
+            {t("quote.save")}
+          </Button>
+          {isAuthenticated && (
+            <Button 
+              className="flex-1 h-12 text-base font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] bg-green-600 hover:bg-green-700"
+              onClick={onSave}
+              disabled={!breakdown || isSaving}
+              data-testid="button-save-data"
+            >
+              {isSaving ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <FileText className="mr-2 h-5 w-5" />
+              )}
+              {language === "ko" ? "데이터 저장" : "Save Data"}
+            </Button>
           )}
-          {t("quote.save")}
-        </Button>
+        </div>
       </div>
     </div>
   );
