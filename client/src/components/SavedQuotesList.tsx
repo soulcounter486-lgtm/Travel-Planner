@@ -214,7 +214,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         <span className="text-[7px] font-medium text-amber-700 block">
                           {language === "ko" ? "예약금" : "Deposit"}
                         </span>
-                        {isEditing ? (
+                        {isEditing && !isCapturing ? (
                           <div className="flex items-center">
                             <span className="text-[9px] font-bold text-amber-800">$</span>
                             <input
@@ -275,7 +275,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                           <div key={idx} className="flex items-center gap-1">
                             <span className="w-1 h-1 rounded-full bg-primary/40" />
                             <span className="flex-1">{dateLabel}</span>
-                            {isEditing ? (
+                            {isEditing && !isCapturing ? (
                               <div className="flex items-center">
                                 <span className="font-medium">$</span>
                                 <input
@@ -319,7 +319,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                           <div key={idx} className="flex items-center gap-1">
                             <span className="w-1 h-1 rounded-full bg-primary/40" />
                             <span className="flex-1">{dateLabel} {routeInfo && `(${routeInfo})`}</span>
-                            {isEditing ? (
+                            {isEditing && !isCapturing ? (
                               <div className="flex items-center">
                                 <span className="font-medium">$</span>
                                 <input
