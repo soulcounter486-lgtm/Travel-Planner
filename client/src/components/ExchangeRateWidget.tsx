@@ -26,10 +26,7 @@ const labels: Record<string, Record<string, string>> = {
 
 const currencyFlags: Record<string, string> = {
   KRW: "🇰🇷",
-  VND: "🇻🇳",
-  CNY: "🇨🇳",
-  JPY: "🇯🇵",
-  RUB: "🇷🇺"
+  VND: "🇻🇳"
 };
 
 export function ExchangeRateWidget({ language, rates }: ExchangeRateWidgetProps) {
@@ -37,7 +34,7 @@ export function ExchangeRateWidget({ language, rates }: ExchangeRateWidgetProps)
     return null;
   }
 
-  const displayCurrencies = ["KRW", "VND", "CNY", "JPY", "RUB"];
+  const displayCurrencies = ["KRW", "VND"];
   const filteredRates = displayCurrencies
     .filter(code => rates[code])
     .map(code => ({
@@ -56,18 +53,15 @@ export function ExchangeRateWidget({ language, rates }: ExchangeRateWidgetProps)
   };
 
   return (
-    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-md px-2.5 py-1.5 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-2">
-      <DollarSign className="w-5 h-5 text-emerald-600" />
-      <div>
-        <p className="text-[9px] text-muted-foreground">{labels.title[language] || labels.title.ko} <span className="text-[8px] opacity-70">({labels.source[language] || labels.source.ko})</span></p>
-        <div className="flex flex-wrap gap-x-2 gap-y-0.5">
-          {filteredRates.map(({ code, flag, rate }) => (
-            <span key={code} className="text-[10px]">
-              <span>{flag}</span>
-              <span className="font-semibold text-foreground ml-0.5">{formatRate(rate)}</span>
-            </span>
-          ))}
-        </div>
+    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-sm px-1.5 py-1 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1">
+      <DollarSign className="w-3 h-3 text-emerald-600" />
+      <div className="flex items-center gap-1.5">
+        {filteredRates.map(({ code, flag, rate }) => (
+          <span key={code} className="text-[9px]">
+            <span>{flag}</span>
+            <span className="font-semibold text-foreground ml-0.5">{formatRate(rate)}</span>
+          </span>
+        ))}
       </div>
     </div>
   );

@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
 import { AppHeader } from "@/components/AppHeader";
+import { TabNavigation } from "@/components/TabNavigation";
 
 const navLabels: Record<string, Record<string, string>> = {
   calculator: { ko: "견적", en: "Quote", zh: "报价", vi: "Báo giá", ru: "Расчёт", ja: "見積" },
@@ -1001,52 +1002,7 @@ export default function ExpenseTracker() {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <div className="bg-background border-b sticky top-0 z-50">
-        <div className="container mx-auto px-4 overflow-x-auto">
-          <div className="flex items-center gap-1.5 py-2 min-w-max">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
-                <Calculator className="w-3.5 h-3.5" />
-                {navLabels.calculator[language] || navLabels.calculator.ko}
-              </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
-                <Eye className="w-3.5 h-3.5" />
-                {navLabels.guide[language] || navLabels.guide.ko}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <Pencil className="w-3.5 h-3.5" />
-                {navLabels.board[language] || navLabels.board.ko}
-              </Button>
-            </Link>
-            <Link href="/diet">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                {navLabels.diet[language] || navLabels.diet.ko}
-              </Button>
-            </Link>
-            <Link href="/planner">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
-                <Sparkles className="w-3.5 h-3.5" />
-                {navLabels.planner[language] || navLabels.planner.ko}
-              </Button>
-            </Link>
-            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-              <Wallet className="w-3.5 h-3.5" />
-              {navLabels.expenses[language] || navLabels.expenses.ko}
-            </Button>
-            <Link href="/chat">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
-                <MessageCircle className="w-3.5 h-3.5" />
-                {navLabels.chat[language] || navLabels.chat.ko}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <TabNavigation language={language} />
 
       <main className="container mx-auto px-4 py-6">
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>

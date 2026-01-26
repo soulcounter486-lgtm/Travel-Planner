@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/i18n";
 import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
+import { TabNavigation } from "@/components/TabNavigation";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
 import lighthouseImg from "@assets/736414b25966415e9006dd674ec2aecf_1768452191679.jpeg";
 import warMuseumImg from "@assets/20230318＿130556_1768452191689.jpg";
@@ -1011,54 +1012,7 @@ export default function PlacesGuide() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
       <AppHeader />
 
-      <div className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-1.5 py-3 min-w-max">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
-                <Calculator className="w-3.5 h-3.5" />
-                {navLabels.calculator[language as keyof typeof navLabels.calculator] || navLabels.calculator.ko}
-              </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
-                <MapPin className="w-3.5 h-3.5" />
-                {navLabels.guide[language as keyof typeof navLabels.guide] || navLabels.guide.ko}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <FileText className="w-3.5 h-3.5" />
-                {t("nav.board")}
-              </Button>
-            </Link>
-            <Link href="/diet">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                {t("nav.diet")}
-              </Button>
-            </Link>
-            <Link href="/planner">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
-                <Sparkles className="w-3.5 h-3.5" />
-                {t("nav.planner")}
-              </Button>
-            </Link>
-            <Link href="/expenses">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {navLabels.expenses[language as keyof typeof navLabels.expenses] || navLabels.expenses.ko}
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
-                <MessageCircle className="w-3.5 h-3.5" />
-                {t("nav.chat")}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <TabNavigation language={language} />
 
       <div className="container mx-auto px-4 max-w-4xl py-8">
 

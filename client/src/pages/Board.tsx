@@ -43,6 +43,7 @@ import { SiInstagram } from "react-icons/si";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
+import { TabNavigation } from "@/components/TabNavigation";
 import type { Post, Comment } from "@shared/schema";
 
 // 링크 미리보기 컴포넌트
@@ -631,67 +632,7 @@ export default function Board() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 overflow-x-hidden">
       <AppHeader />
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-6xl mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <nav className="flex gap-1.5 py-3 min-w-max">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
-                <Calculator className="w-3.5 h-3.5" />
-                {navLabels.calculator[language] || navLabels.calculator.ko}
-              </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
-                <Eye className="w-3.5 h-3.5" />
-                {navLabels.guide[language] || navLabels.guide.ko}
-              </Button>
-            </Link>
-            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-              <FileText className="w-3.5 h-3.5" />
-              {navLabels.board[language] || navLabels.board.ko}
-            </Button>
-            <Link href="/diet">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                {navLabels.diet[language] || navLabels.diet.ko}
-              </Button>
-            </Link>
-            <Link href="/planner">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
-                <Sparkles className="w-3.5 h-3.5" />
-                {navLabels.planner[language] || navLabels.planner.ko}
-              </Button>
-            </Link>
-            <Link href="/expenses">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {navLabels.expenses[language] || navLabels.expenses.ko}
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
-                <MessageCircle className="w-3.5 h-3.5" />
-                {navLabels.chat[language] || navLabels.chat.ko}
-              </Button>
-            </Link>
-            {isLoggedIn ? (
-              <a href="/api/logout">
-                <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="btn-logout">
-                  <LogOut className="w-3.5 h-3.5" />
-                  {labels.logout}
-                </Button>
-              </a>
-            ) : (
-              <a href="/api/login">
-                <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="btn-login">
-                  <LogIn className="w-3.5 h-3.5" />
-                  {labels.login}
-                </Button>
-              </a>
-            )}
-          </nav>
-        </div>
-      </header>
+      <TabNavigation language={language} />
 
       <main className="container mx-auto px-4 py-6 overflow-hidden" style={{ maxWidth: "min(72rem, 100vw - 2rem)" }}>
         <div className="text-center mb-6">

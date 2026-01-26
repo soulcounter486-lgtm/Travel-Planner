@@ -30,6 +30,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
+import { TabNavigation } from "@/components/TabNavigation";
 import type { UserLocation } from "@shared/schema";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -412,52 +413,7 @@ export default function ChatRoom() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <AppHeader />
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-4xl mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <nav className="flex gap-1.5 py-3 min-w-max">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
-                <Calculator className="w-3.5 h-3.5" />
-                {t("nav.calculator")}
-              </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
-                <Eye className="w-3.5 h-3.5" />
-                {t("nav.guide")}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <FileText className="w-3.5 h-3.5" />
-                {t("nav.board")}
-              </Button>
-            </Link>
-            <Link href="/diet">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                {t("nav.diet")}
-              </Button>
-            </Link>
-            <Link href="/planner">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
-                <Sparkles className="w-3.5 h-3.5" />
-                {t("nav.planner")}
-              </Button>
-            </Link>
-            <Link href="/expenses">
-              <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {t("nav.expenses")}
-              </Button>
-            </Link>
-            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
-              <MessageCircle className="w-3.5 h-3.5" />
-              {t("nav.chat")}
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <TabNavigation language={language} />
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         <div className="text-center mb-6">

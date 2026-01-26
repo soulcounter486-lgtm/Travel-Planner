@@ -31,6 +31,7 @@ import villaImg from "@assets/900＿IMG＿1762947034771＿1762948444789_17682814
 import vehicleImg from "@assets/Photo＿1725451852943-1_1768289649378.jpg";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
+import { TabNavigation } from "@/components/TabNavigation";
 
 import { 
   Plane, 
@@ -487,54 +488,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-1.5 py-3 min-w-max">
-            <Link href="/">
-              <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
-                <Calculator className="w-3.5 h-3.5" />
-                {t("nav.calculator")}
-              </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
-                <MapPin className="w-3.5 h-3.5" />
-                {t("nav.guide")}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <Flag className="w-3.5 h-3.5" />
-                {t("nav.board")}
-              </Button>
-            </Link>
-            <Link href="/diet">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
-                <ShoppingBag className="w-3.5 h-3.5" />
-                {t("nav.diet")}
-              </Button>
-            </Link>
-            <Link href="/planner">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
-                <Sparkles className="w-3.5 h-3.5" />
-                {t("nav.planner")}
-              </Button>
-            </Link>
-            <Link href="/expenses">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {t("nav.expenses")}
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
-                <MessageCircle className="w-3.5 h-3.5" />
-                {t("nav.chat")}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <TabNavigation language={language} />
 
       <div className="container mx-auto px-4 py-10">
         <div className="grid lg:grid-cols-12 gap-8">

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { SiKakaotalk } from "react-icons/si";
 import { AppHeader } from "@/components/AppHeader";
+import { TabNavigation } from "@/components/TabNavigation";
 import dietCoffeeImg from "@assets/호아캡슐의_사본의_사본의_사본_20251026_153621_0000_1768826502337.png";
 import goDetoxImg from "@assets/Photo_1715141472014_1768826502343.png";
 import goCoffeeImg from "@assets/Photo_1715141466258_1768837758578.png";
@@ -280,52 +281,7 @@ export default function DietProducts() {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-background">
       <AppHeader />
 
-      <div className="bg-background border-b shadow-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 overflow-x-auto scrollbar-hide">
-          <div className="flex items-center gap-1.5 py-3 min-w-max">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-calculator">
-                <Calculator className="w-3.5 h-3.5" />
-                {navLabels.calculator[language as keyof typeof navLabels.calculator] || navLabels.calculator.ko}
-              </Button>
-            </Link>
-            <Link href="/guide">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-guide">
-                <MapPin className="w-3.5 h-3.5" />
-                {navLabels.guide[language as keyof typeof navLabels.guide] || navLabels.guide.ko}
-              </Button>
-            </Link>
-            <Link href="/board">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-board">
-                <FileText className="w-3.5 h-3.5" />
-                {navLabels.board[language as keyof typeof navLabels.board] || navLabels.board.ko}
-              </Button>
-            </Link>
-            <Button variant="default" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-diet">
-              <ShoppingBag className="w-3.5 h-3.5" />
-              {navLabels.diet[language as keyof typeof navLabels.diet] || navLabels.diet.ko}
-            </Button>
-            <Link href="/planner">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-planner">
-                <Sparkles className="w-3.5 h-3.5" />
-                {navLabels.planner[language as keyof typeof navLabels.planner] || navLabels.planner.ko}
-              </Button>
-            </Link>
-            <Link href="/expenses">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-expenses">
-                <Wallet className="w-3.5 h-3.5" />
-                {navLabels.expenses[language as keyof typeof navLabels.expenses] || navLabels.expenses.ko}
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs whitespace-nowrap" data-testid="nav-chat">
-                <MessageCircle className="w-3.5 h-3.5" />
-                {navLabels.chat[language as keyof typeof navLabels.chat] || navLabels.chat.ko}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <TabNavigation language={language} />
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="text-center mb-8">
