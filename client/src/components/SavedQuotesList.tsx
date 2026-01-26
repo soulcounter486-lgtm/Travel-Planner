@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X } from "lucide-react";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/lib/i18n";
@@ -123,19 +124,43 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               <span className="font-bold text-primary">
                 ${quote.totalPrice.toLocaleString()}
               </span>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(quote.id);
-                }}
-                disabled={isDeleting}
-                data-testid={`button-delete-quote-${quote.id}`}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8"
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={isDeleting}
+                    data-testid={`button-delete-quote-${quote.id}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {language === "ko" ? "견적서 삭제" : "Delete Quote"}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {language === "ko" 
+                        ? `"${quote.customerName}" 견적서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.` 
+                        : `Are you sure you want to delete the quote for "${quote.customerName}"? This action cannot be undone.`}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>
+                      {language === "ko" ? "취소" : "Cancel"}
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => onDelete(quote.id)}
+                      className="bg-red-500 hover:bg-red-600"
+                    >
+                      {language === "ko" ? "삭제" : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </CollapsibleTrigger>
