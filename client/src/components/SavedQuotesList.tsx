@@ -48,9 +48,7 @@ export function SavedQuotesList() {
     },
   });
 
-  if (!quotes || quotes.length === 0) {
-    return null;
-  }
+  const quoteCount = quotes?.length || 0;
 
   return (
     <Card className="mt-4 rounded-2xl border-slate-200 dark:border-slate-700 shadow-lg">
@@ -62,7 +60,7 @@ export function SavedQuotesList() {
                 <FileText className="w-5 h-5 text-primary" />
                 <span>{language === "ko" ? "저장된 견적서" : "Saved Quotes"}</span>
                 <span className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
-                  {quotes.length}
+                  {quoteCount}
                 </span>
               </div>
               {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -75,8 +73,13 @@ export function SavedQuotesList() {
               <div className="text-center py-4 text-muted-foreground text-sm">
                 {language === "ko" ? "로딩 중..." : "Loading..."}
               </div>
+            ) : quoteCount === 0 ? (
+              <div className="text-center py-6 text-muted-foreground text-sm">
+                <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                {language === "ko" ? "저장된 견적서가 없습니다.\n견적서를 저장하면 여기에 표시됩니다." : "No saved quotes.\nSaved quotes will appear here."}
+              </div>
             ) : (
-              quotes.map((quote) => {
+              quotes?.map((quote) => {
                 const breakdown = quote.breakdown as QuoteBreakdown;
                 return (
                   <div
