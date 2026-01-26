@@ -321,22 +321,19 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
           let current = parseISO(input.villa.checkIn);
           const end = parseISO(input.villa.checkOut);
           if (!isNaN(current.getTime()) && !isNaN(end.getTime())) {
+            const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
             while (current < end) {
               const dayOfWeek = getDay(current);
               let dailyPrice = 350;
-              let dayName = "평일";
+              const dateStr = format(current, "M/d");
+              const dayName = dayNames[dayOfWeek];
               if (dayOfWeek === 5) {
                 dailyPrice = 380;
-                dayName = "금요일";
               } else if (dayOfWeek === 6) {
                 dailyPrice = 500;
-                dayName = "토요일";
-              } else if (dayOfWeek === 0) {
-                dailyPrice = 350;
-                dayName = "일요일(평일)";
               }
               breakdown.villa.price += dailyPrice;
-              breakdown.villa.details.push(`${dayName}: $${dailyPrice}`);
+              breakdown.villa.details.push(`${dateStr}(${dayName}): $${dailyPrice}`);
               current = addDays(current, 1);
             }
           }
