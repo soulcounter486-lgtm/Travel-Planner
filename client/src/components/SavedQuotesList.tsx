@@ -210,9 +210,16 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       
       // Vehicle 수정 반영
       if (breakdown?.vehicle) {
+        const vehicleDetails = breakdown.vehicle.description.split(" | ");
+        const updatedVehicleDescriptions = vehicleDetails.map((detail: string, idx: number) => {
+          const currentPrice = vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : parsePrice(detail);
+          // 기존 description에서 가격 부분만 수정
+          return detail.replace(/\$\d+/, `$${currentPrice}`);
+        });
         updatedBreakdown.vehicle = {
           ...breakdown.vehicle,
-          price: vehicleTotal
+          price: vehicleTotal,
+          description: updatedVehicleDescriptions.join(" | ")
         };
       }
       
