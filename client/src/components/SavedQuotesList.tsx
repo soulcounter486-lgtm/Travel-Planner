@@ -20,9 +20,10 @@ interface QuoteItemProps {
   exchangeRate: number;
   onDelete: (id: number) => void;
   isDeleting: boolean;
+  isAdmin: boolean;
 }
 
-function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting }: QuoteItemProps) {
+function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin }: QuoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
@@ -190,7 +191,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                     {language === "ko" ? "완료" : "Done"}
                   </Button>
                 </>
-              ) : (
+              ) : isAdmin ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -201,7 +202,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   <Pencil className="w-3 h-3 mr-1" />
                   {language === "ko" ? "수정" : "Edit"}
                 </Button>
-              )}
+              ) : null}
             </div>
 
             <div 
@@ -471,6 +472,11 @@ export function SavedQuotesList() {
   const { data: quotes, isLoading } = useQuotes();
   const queryClient = useQueryClient();
 
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+  });
+  const isAdmin = adminCheck?.isAdmin || false;
+
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -537,6 +543,7 @@ export function SavedQuotesList() {
                   exchangeRate={exchangeRate}
                   onDelete={(id) => deleteQuoteMutation.mutate(id)}
                   isDeleting={deleteQuoteMutation.isPending}
+                  isAdmin={isAdmin}
                 />
               ))
             )}

@@ -11,6 +11,7 @@ import { useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import logoImage from "@assets/BackgroundEraser_20240323_103507859_1768997960669.png";
+import { useAuth } from "@/hooks/use-auth";
 
 interface QuoteSummaryProps {
   breakdown: QuoteBreakdown | null;
@@ -27,6 +28,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
   const [isCapturing, setIsCapturing] = useState(false);
   const [depositAmount, setDepositAmount] = useState<string>("");
+  
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+  });
+  const isAdmin = adminCheck?.isAdmin || false;
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
@@ -261,7 +267,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#92400e' }}>
                         ${(depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.5)).toLocaleString()}
                       </span>
-                    ) : (
+                    ) : isAdmin ? (
                       <div className="flex items-center justify-center">
                         <span className="text-[10px] font-bold text-amber-800 dark:text-amber-200">$</span>
                         <Input
@@ -273,6 +279,10 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                           data-testid="input-deposit-amount"
                         />
                       </div>
+                    ) : (
+                      <span className="text-[10px] font-bold text-amber-800 dark:text-amber-200">
+                        ${(depositAmount ? parseInt(depositAmount) : Math.round(finalTotal * 0.5)).toLocaleString()}
+                      </span>
                     )}
                   </div>
                   <div 
@@ -330,7 +340,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                               <span className="font-medium text-slate-700 dark:text-slate-300">
                                 {isCapturing ? (
                                   <span>${currentPrice}</span>
-                                ) : (
+                                ) : isAdmin ? (
                                   <>
                                     $
                                     <input
@@ -346,6 +356,8 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                                       data-testid={`input-villa-price-${idx}`}
                                     />
                                   </>
+                                ) : (
+                                  <span>${currentPrice}</span>
                                 )}
                               </span>
                             </div>
@@ -385,7 +397,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                             <div className="flex items-center gap-1">
                               {isCapturing ? (
                                 <span className="text-xs font-medium">${currentPrice}</span>
-                              ) : (
+                              ) : isAdmin ? (
                                 <>
                                   <span className="text-xs">$</span>
                                   <input
@@ -404,6 +416,8 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                                     data-testid={`input-vehicle-price-${idx}`}
                                   />
                                 </>
+                              ) : (
+                                <span className="text-xs font-medium">${currentPrice}</span>
                               )}
                             </div>
                           </div>
