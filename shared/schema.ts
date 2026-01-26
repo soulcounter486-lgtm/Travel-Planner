@@ -20,6 +20,7 @@ export const quotes = pgTable("quotes", {
   checkInDate: text("check_in_date"), // 체크인 날짜 (YYYY-MM-DD)
   checkOutDate: text("check_out_date"), // 체크아웃 날짜 (YYYY-MM-DD)
   memo: text("memo").default(""), // 메모
+  memoImages: jsonb("memo_images").$type<string[]>().default([]), // 메모 이미지 URL 배열
   createdAt: timestamp("created_at").defaultNow(),
 });
 

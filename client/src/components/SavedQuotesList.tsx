@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuotes } from "@/hooks/use-quotes";
@@ -40,6 +40,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [guideAdjustment, setGuideAdjustment] = useState<number | null>(null);
   const [memo, setMemo] = useState<string>(quote.memo || "");
   const [isSavingMemo, setIsSavingMemo] = useState(false);
+  const [memoImages, setMemoImages] = useState<string[]>((quote.memoImages as string[]) || []);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const parsePrice = (detail: string): number => {
@@ -186,6 +189,64 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       console.error("Failed to save memo:", error);
     } finally {
       setIsSavingMemo(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploadingImage(true);
+    try {
+      const newImages: string[] = [...memoImages];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        const urlRes = await fetch("/api/uploads/request-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: file.name,
+            size: file.size,
+            contentType: file.type,
+          }),
+        });
+        
+        if (!urlRes.ok) throw new Error("Failed to get upload URL");
+        
+        const { uploadURL, objectPath } = await urlRes.json();
+        
+        await fetch(uploadURL, {
+          method: "PUT",
+          body: file,
+          headers: { "Content-Type": file.type },
+        });
+        
+        newImages.push(objectPath);
+      }
+      
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/memo-images`, { memoImages: newImages });
+      setMemoImages(newImages);
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+    } finally {
+      setIsUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDeleteImage = async (index: number) => {
+    const newImages = memoImages.filter((_, i) => i !== index);
+    try {
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/memo-images`, { memoImages: newImages });
+      setMemoImages(newImages);
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+    } catch (error) {
+      console.error("Failed to delete image:", error);
     }
   };
 
@@ -744,17 +805,68 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   rows={8}
                   data-testid={`textarea-memo-${quote.id}`}
                 />
-                <Button
-                  onClick={handleSaveMemo}
-                  size="sm"
-                  className="mt-2"
-                  disabled={isSavingMemo || memo === (quote.memo || "")}
-                  data-testid={`button-save-memo-${quote.id}`}
-                >
-                  {isSavingMemo
-                    ? (language === "ko" ? "저장 중..." : "Saving...")
-                    : (language === "ko" ? "메모 저장" : "Save Memo")}
-                </Button>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <Button
+                    onClick={handleSaveMemo}
+                    size="sm"
+                    disabled={isSavingMemo || memo === (quote.memo || "")}
+                    data-testid={`button-save-memo-${quote.id}`}
+                  >
+                    {isSavingMemo
+                      ? (language === "ko" ? "저장 중..." : "Saving...")
+                      : (language === "ko" ? "메모 저장" : "Save Memo")}
+                  </Button>
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    size="sm"
+                    variant="outline"
+                    disabled={isUploadingImage}
+                    data-testid={`button-add-image-${quote.id}`}
+                  >
+                    {isUploadingImage ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <ImagePlus className="w-4 h-4 mr-1" />
+                    )}
+                    {language === "ko" ? "사진 추가" : "Add Image"}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    data-testid={`input-image-${quote.id}`}
+                  />
+                </div>
+                
+                {memoImages.length > 0 && (
+                  <div className="mt-3">
+                    <label className="block text-xs font-medium text-muted-foreground mb-2">
+                      {language === "ko" ? `첨부 이미지 (${memoImages.length}장)` : `Attached Images (${memoImages.length})`}
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {memoImages.map((imagePath, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={imagePath}
+                            alt={`Memo image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-md border"
+                            data-testid={`img-memo-${quote.id}-${index}`}
+                          />
+                          <button
+                            onClick={() => handleDeleteImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                            data-testid={`button-delete-image-${quote.id}-${index}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

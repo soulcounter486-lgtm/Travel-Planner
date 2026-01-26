@@ -548,6 +548,31 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // 메모 이미지 업데이트 (관리자 전용)
+  app.patch("/api/quotes/:id/memo-images", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = (req as any).user?.claims?.sub;
+      
+      if (userId !== ADMIN_USER_ID) {
+        return res.status(403).json({ message: "Only admin can update memo images" });
+      }
+
+      const { memoImages } = req.body;
+      if (!Array.isArray(memoImages)) {
+        return res.status(400).json({ message: "memoImages must be an array" });
+      }
+
+      const quote = await storage.updateQuoteMemoImages(id, memoImages);
+      if (!quote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      res.json(quote);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // 견적서 총금액 및 세부내역 업데이트
   app.patch("/api/quotes/:id/total", async (req, res) => {
     try {

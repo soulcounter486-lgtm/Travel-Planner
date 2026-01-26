@@ -43,6 +43,11 @@ export class DatabaseStorage implements IStorage {
     return quote || null;
   }
 
+  async updateQuoteMemoImages(id: number, memoImages: string[]): Promise<Quote | null> {
+    const [quote] = await db.update(quotes).set({ memoImages }).where(eq(quotes.id, id)).returning();
+    return quote || null;
+  }
+
   async updateQuoteTotal(id: number, totalPrice: number): Promise<Quote | null> {
     const [quote] = await db.update(quotes).set({ totalPrice }).where(eq(quotes.id, id)).returning();
     return quote || null;
