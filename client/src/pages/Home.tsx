@@ -163,7 +163,7 @@ export default function Home() {
   const form = useForm<CalculateQuoteRequest>({
     resolver: zodResolver(calculateQuoteSchema),
     defaultValues: {
-      villa: { enabled: true, rooms: 1 },
+      villa: { enabled: true },
       vehicle: { enabled: false, selections: [] },
       golf: { enabled: false, selections: [] },
       ecoGirl: { enabled: false, selections: [] },
@@ -669,7 +669,7 @@ export default function Home() {
                         ))}
                       </div>
                       <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100 flex justify-between">
-                        <span>{villaEstimate.nights}{t("villa.nightsTotal")}{villaEstimate.rooms > 1 ? ` (${villaEstimate.rooms}룸)` : ""}</span>
+                        <span>{villaEstimate.nights}{t("villa.nightsTotal")}{(values.villa?.rooms && values.villa.rooms > 1) ? ` (${values.villa.rooms}룸)` : ""}</span>
                         {currencyInfo.code !== "USD" && (
                           <span className="text-blue-200">{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
                         )}
