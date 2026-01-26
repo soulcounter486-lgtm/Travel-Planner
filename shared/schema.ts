@@ -94,11 +94,13 @@ export const calculateQuoteSchema = z.object({
     })).optional(),
   }).optional(),
 
-  // Eco Girl
+  // Eco
   ecoGirl: z.object({
     enabled: z.boolean(),
-    count: z.number().min(0).default(0),
-    nights: z.number().min(0).default(0),
+    selections: z.array(z.object({
+      date: z.string(), // YYYY-MM-DD
+      count: z.number().min(1).default(1),
+    })).optional(),
   }).optional(),
 
   // Guide

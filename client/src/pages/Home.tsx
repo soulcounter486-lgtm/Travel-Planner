@@ -166,7 +166,7 @@ export default function Home() {
       villa: { enabled: true },
       vehicle: { enabled: false, selections: [] },
       golf: { enabled: false, selections: [] },
-      ecoGirl: { enabled: false, count: "" as any, nights: "" as any },
+      ecoGirl: { enabled: false, selections: [] },
       guide: { enabled: false, days: "" as any, groupSize: 4 },
       fastTrack: { enabled: false, type: "oneway" as const, persons: "" as any },
     },
@@ -287,15 +287,22 @@ export default function Home() {
   }, [values.fastTrack?.enabled, values.fastTrack?.persons, values.fastTrack?.type]);
 
   const ecoGirlEstimate = useMemo(() => {
-    if (!values.ecoGirl?.enabled) {
-      return { price: 0, count: 0, nights: 0, pricePerNight: 0 };
+    if (!values.ecoGirl?.enabled || !values.ecoGirl?.selections || values.ecoGirl.selections.length === 0) {
+      return { price: 0, details: [] as { date: string; count: number; price: number }[], pricePerNight: 220 };
     }
     const pricePerNight = 220;
-    const count = Number(values.ecoGirl.count) || 0;
-    const nights = Number(values.ecoGirl.nights) || 0;
-    const totalPrice = pricePerNight * count * nights;
-    return { price: totalPrice, count, nights, pricePerNight };
-  }, [values.ecoGirl?.enabled, values.ecoGirl?.count, values.ecoGirl?.nights]);
+    const details: { date: string; count: number; price: number }[] = [];
+    let totalPrice = 0;
+    
+    for (const selection of values.ecoGirl.selections) {
+      const count = Number(selection.count) || 0;
+      const price = count * pricePerNight;
+      details.push({ date: selection.date, count, price });
+      totalPrice += price;
+    }
+    
+    return { price: totalPrice, details, pricePerNight };
+  }, [values.ecoGirl?.enabled, JSON.stringify(values.ecoGirl?.selections)]);
 
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
@@ -335,6 +342,25 @@ export default function Home() {
     form.setValue("golf.selections", currentSelections.filter((_, i) => i !== index));
   };
 
+  const handleAddEcoDay = () => {
+    const currentSelections = form.getValues("ecoGirl.selections") || [];
+    const lastDateStr = currentSelections.length > 0 
+      ? currentSelections[currentSelections.length - 1].date
+      : (values.villa?.checkIn ? values.villa.checkIn : format(new Date(), "yyyy-MM-dd"));
+    const lastDate = new Date(lastDateStr);
+    const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
+    const newSelections = [
+      ...currentSelections,
+      { date: format(nextDate, "yyyy-MM-dd"), count: 1 }
+    ];
+    form.setValue("ecoGirl.selections", [...newSelections], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+  };
+
+  const handleRemoveEcoDay = (index: number) => {
+    const currentSelections = form.getValues("ecoGirl.selections") || [];
+    form.setValue("ecoGirl.selections", currentSelections.filter((_, i) => i !== index));
+  };
+
   useEffect(() => {
     const subscription = form.watch((value) => {
       const timer = setTimeout(() => {
@@ -358,8 +384,13 @@ export default function Home() {
                   .map(s => ({ ...s, players: Number(s.players) || 1 }))
               }
             : { enabled: false },
-          ecoGirl: value.ecoGirl?.enabled 
-            ? { enabled: true, count: value.ecoGirl.count || 0, nights: value.ecoGirl.nights || 0 }
+          ecoGirl: value.ecoGirl?.enabled && value.ecoGirl.selections && value.ecoGirl.selections.length > 0
+            ? { 
+                enabled: true, 
+                selections: value.ecoGirl.selections
+                  .filter((s): s is NonNullable<typeof s> => !!(s && s.date))
+                  .map(s => ({ ...s, count: Number(s.count) || 1 }))
+              }
             : { enabled: false },
           guide: value.guide?.enabled
             ? { enabled: true, days: value.guide.days || 0, groupSize: value.guide.groupSize || 1 }
@@ -935,52 +966,65 @@ export default function Home() {
                   onToggle={field.onChange} 
                   gradient="from-pink-500/10"
                 >
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label>{language === "ko" ? "인원수" : language === "en" ? "Number of People" : language === "zh" ? "人数" : language === "vi" ? "Số người" : language === "ru" ? "Количество" : language === "ja" ? "人数" : "인원수"}</Label>
-                      <Controller 
-                        control={form.control} 
-                        name="ecoGirl.count" 
-                        render={({ field }) => (
-                          <Input 
-                            type="number" 
-                            min="0" 
-                            {...field} 
-                            value={field.value ?? ""} 
-                            onChange={(e) => { 
-                              const val = e.target.value; 
-                              field.onChange(val === "" ? "" : parseInt(val)); 
-                            }} 
-                            className="h-12 rounded-xl" 
-                            data-testid="input-ecogirl-count"
-                          />
-                        )} 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{language === "ko" ? "박수" : language === "en" ? "Nights" : language === "zh" ? "晚数" : language === "vi" ? "Số đêm" : language === "ru" ? "Ночей" : language === "ja" ? "泊数" : "박수"}</Label>
-                      <Controller 
-                        control={form.control} 
-                        name="ecoGirl.nights" 
-                        render={({ field }) => (
-                          <Input 
-                            type="number" 
-                            min="0" 
-                            {...field} 
-                            value={field.value ?? ""} 
-                            onChange={(e) => { 
-                              const val = e.target.value; 
-                              field.onChange(val === "" ? "" : parseInt(val)); 
-                            }} 
-                            className="h-12 rounded-xl" 
-                            data-testid="input-ecogirl-nights"
-                          />
-                        )} 
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-2 text-sm text-pink-600 dark:text-pink-400 font-medium">
+                  <div className="mb-4 text-sm text-pink-600 dark:text-pink-400 font-medium">
                     {language === "ko" ? "$220/인/박" : language === "en" ? "$220/person/night" : language === "zh" ? "$220/人/晚" : language === "vi" ? "$220/người/đêm" : language === "ru" ? "$220/чел/ночь" : language === "ja" ? "$220/名/泊" : "$220/인/박"}
+                  </div>
+                  <div className="space-y-4">
+                    {values.ecoGirl?.selections?.map((selection, index) => (
+                      <div key={`eco-day-${index}`} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 relative group shadow-sm items-end">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "날짜" : "Date"}</Label>
+                          <Controller 
+                            control={form.control} 
+                            name={`ecoGirl.selections.${index}.date`} 
+                            render={({ field }) => (
+                              <Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />
+                            )} 
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "인원수" : "Count"}</Label>
+                          <Controller 
+                            control={form.control} 
+                            name={`ecoGirl.selections.${index}.count`} 
+                            render={({ field }) => (
+                              <Input 
+                                type="number" 
+                                min="1" 
+                                {...field} 
+                                value={field.value ?? ""} 
+                                onChange={(e) => { 
+                                  const val = e.target.value; 
+                                  field.onChange(val === "" ? "" : parseInt(val)); 
+                                }} 
+                                className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" 
+                                data-testid={`input-eco-count-${index}`}
+                              />
+                            )} 
+                          />
+                        </div>
+                        <div className="flex justify-end">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" 
+                            onClick={() => handleRemoveEcoDay(index)} 
+                            type="button"
+                          >
+                            <div className="w-4 h-0.5 bg-current rounded-full" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button 
+                      variant="outline" 
+                      className="w-full h-12 rounded-xl border-dashed border-2 border-pink-300 dark:border-pink-700 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/30" 
+                      onClick={handleAddEcoDay} 
+                      type="button"
+                      data-testid="button-add-eco-day"
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> {language === "ko" ? "날짜 추가" : "Add Date"}
+                    </Button>
                   </div>
                   {ecoGirlEstimate.price > 0 && (
                     <div className="mt-4 bg-gradient-to-r from-pink-600 to-pink-500 text-white p-4 rounded-xl shadow-lg">
@@ -994,10 +1038,12 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="text-xs text-pink-100 space-y-1">
-                        <div className="flex justify-between">
-                          <span>{ecoGirlEstimate.count}{language === "ko" ? "명" : ""} × {ecoGirlEstimate.nights}{language === "ko" ? "박" : " nights"}</span>
-                          <span>${ecoGirlEstimate.pricePerNight} × {ecoGirlEstimate.count} × {ecoGirlEstimate.nights} = ${ecoGirlEstimate.price}</span>
-                        </div>
+                        {ecoGirlEstimate.details.map((detail, idx) => (
+                          <div key={idx} className="flex justify-between">
+                            <span>{detail.date} ({detail.count}{language === "ko" ? "명" : ""})</span>
+                            <span>${detail.price}</span>
+                          </div>
+                        ))}
                         {currencyInfo.code !== "USD" && (
                           <div className="flex justify-end pt-1 text-pink-200">
                             <span>{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
