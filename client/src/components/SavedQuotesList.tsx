@@ -625,7 +625,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   onChange={(e) => setMemo(e.target.value)}
                   placeholder={language === "ko" ? "메모를 입력하세요..." : "Enter memo..."}
                   className="w-full p-2 text-sm border rounded-md resize-none bg-white dark:bg-slate-900 dark:text-white"
-                  rows={2}
+                  rows={5}
                   data-testid={`textarea-memo-${quote.id}`}
                 />
                 <Button
