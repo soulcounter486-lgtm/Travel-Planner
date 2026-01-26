@@ -137,6 +137,11 @@ export default function Home() {
     staleTime: 12 * 60 * 60 * 1000,
   });
 
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+    queryKey: ["/api/admin/check"],
+  });
+  const isAdmin = adminCheck?.isAdmin || false;
+
   const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
     ko: { code: "KRW", symbol: "₩", locale: "ko-KR" },
     en: { code: "USD", symbol: "$", locale: "en-US" },
@@ -280,6 +285,17 @@ export default function Home() {
     const totalPrice = pricePerPerson * persons * multiplier;
     return { price: totalPrice, persons, type, pricePerPerson };
   }, [values.fastTrack?.enabled, values.fastTrack?.persons, values.fastTrack?.type]);
+
+  const ecoGirlEstimate = useMemo(() => {
+    if (!values.ecoGirl?.enabled) {
+      return { price: 0, count: 0, nights: 0, pricePerNight: 0 };
+    }
+    const pricePerNight = 150;
+    const count = Number(values.ecoGirl.count) || 0;
+    const nights = Number(values.ecoGirl.nights) || 0;
+    const totalPrice = pricePerNight * count * nights;
+    return { price: totalPrice, count, nights, pricePerNight };
+  }, [values.ecoGirl?.enabled, values.ecoGirl?.count, values.ecoGirl?.nights]);
 
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
@@ -909,6 +925,90 @@ export default function Home() {
                 )}
               </SectionCard>
             )} />
+
+            {isAdmin && (
+              <Controller control={form.control} name="ecoGirl.enabled" render={({ field }) => (
+                <SectionCard 
+                  title={language === "ko" ? "에코걸" : language === "en" ? "Eco Girl" : language === "zh" ? "生态女孩" : language === "vi" ? "Eco Girl" : language === "ru" ? "Эко-гёрл" : language === "ja" ? "エコガール" : "에코걸"} 
+                  icon={Users} 
+                  isEnabled={field.value ?? false} 
+                  onToggle={field.onChange} 
+                  gradient="from-pink-500/10"
+                >
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>{language === "ko" ? "인원수" : language === "en" ? "Number of People" : language === "zh" ? "人数" : language === "vi" ? "Số người" : language === "ru" ? "Количество" : language === "ja" ? "人数" : "인원수"}</Label>
+                      <Controller 
+                        control={form.control} 
+                        name="ecoGirl.count" 
+                        render={({ field }) => (
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            {...field} 
+                            value={field.value ?? ""} 
+                            onChange={(e) => { 
+                              const val = e.target.value; 
+                              field.onChange(val === "" ? "" : parseInt(val)); 
+                            }} 
+                            className="h-12 rounded-xl" 
+                            data-testid="input-ecogirl-count"
+                          />
+                        )} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>{language === "ko" ? "박수" : language === "en" ? "Nights" : language === "zh" ? "晚数" : language === "vi" ? "Số đêm" : language === "ru" ? "Ночей" : language === "ja" ? "泊数" : "박수"}</Label>
+                      <Controller 
+                        control={form.control} 
+                        name="ecoGirl.nights" 
+                        render={({ field }) => (
+                          <Input 
+                            type="number" 
+                            min="0" 
+                            {...field} 
+                            value={field.value ?? ""} 
+                            onChange={(e) => { 
+                              const val = e.target.value; 
+                              field.onChange(val === "" ? "" : parseInt(val)); 
+                            }} 
+                            className="h-12 rounded-xl" 
+                            data-testid="input-ecogirl-nights"
+                          />
+                        )} 
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-sm text-pink-600 dark:text-pink-400 font-medium">
+                    {language === "ko" ? "$150/인/박" : language === "en" ? "$150/person/night" : language === "zh" ? "$150/人/晚" : language === "vi" ? "$150/người/đêm" : language === "ru" ? "$150/чел/ночь" : language === "ja" ? "$150/名/泊" : "$150/인/박"}
+                  </div>
+                  {ecoGirlEstimate.price > 0 && (
+                    <div className="mt-4 bg-gradient-to-r from-pink-600 to-pink-500 text-white p-4 rounded-xl shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">{language === "ko" ? "예상 금액" : language === "en" ? "Estimated Price" : language === "zh" ? "预估价格" : language === "vi" ? "Giá dự kiến" : language === "ru" ? "Ориентировочная цена" : language === "ja" ? "見積もり金額" : "예상 금액"}</span>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold">${ecoGirlEstimate.price}</span>
+                          {currencyInfo.code !== "USD" && (
+                            <div className="text-sm text-pink-200">≈ {formatLocalCurrency(ecoGirlEstimate.price)}</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs text-pink-100 space-y-1">
+                        <div className="flex justify-between">
+                          <span>{ecoGirlEstimate.count}{language === "ko" ? "명" : ""} × {ecoGirlEstimate.nights}{language === "ko" ? "박" : " nights"}</span>
+                          <span>${ecoGirlEstimate.pricePerNight} × {ecoGirlEstimate.count} × {ecoGirlEstimate.nights} = ${ecoGirlEstimate.price}</span>
+                        </div>
+                        {currencyInfo.code !== "USD" && (
+                          <div className="flex justify-end pt-1 text-pink-200">
+                            <span>{t("common.exchangeRate")}: {currencyInfo.symbol}{exchangeRate.toLocaleString()}/USD</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </SectionCard>
+              )} />
+            )}
           </div>
           <div className="lg:col-span-4">
             <QuoteSummary breakdown={breakdown} isLoading={calculateMutation.isPending} onSave={handleSaveQuote} isSaving={createQuoteMutation.isPending} />
