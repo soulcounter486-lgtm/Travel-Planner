@@ -115,6 +115,8 @@ export const quoteBreakdownSchema = z.object({
   villa: z.object({
     price: z.number(),
     details: z.array(z.string()), // e.g., "Friday: $380"
+    checkIn: z.string().optional(), // YYYY-MM-DD
+    checkOut: z.string().optional(), // YYYY-MM-DD
   }),
   vehicle: z.object({
     price: z.number(),

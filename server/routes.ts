@@ -298,7 +298,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       const input = req.body;
       
       const breakdown = {
-        villa: { price: 0, details: [] as string[] },
+        villa: { price: 0, details: [] as string[], checkIn: "", checkOut: "" },
         vehicle: { price: 0, description: "" },
         golf: { price: 0, description: "" },
         ecoGirl: { price: 0, description: "" },
@@ -306,6 +306,14 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         fastTrack: { price: 0, description: "" },
         total: 0
       };
+      
+      // 체크인/체크아웃 날짜 저장
+      if (input.villa?.checkIn) {
+        breakdown.villa.checkIn = input.villa.checkIn;
+      }
+      if (input.villa?.checkOut) {
+        breakdown.villa.checkOut = input.villa.checkOut;
+      }
 
       // 1. Villa Calculation
       if (input.villa?.enabled && input.villa.checkIn && input.villa.checkOut) {

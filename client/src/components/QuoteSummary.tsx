@@ -307,6 +307,11 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       <span>{t("quote.villa")}</span>
                       <span>${adjustedVillaTotal.toLocaleString()}</span>
                     </div>
+                    {breakdown.villa.checkIn && breakdown.villa.checkOut && (
+                      <div className="text-xs text-primary font-medium pl-1">
+                        {language === "ko" ? "체크인" : "Check-in"}: {breakdown.villa.checkIn} ~ {language === "ko" ? "체크아웃" : "Check-out"}: {breakdown.villa.checkOut}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground space-y-1.5 pl-1">
                       {breakdown.villa.details.map((detail, idx) => {
                         const originalPrice = parseVillaPrice(detail);
