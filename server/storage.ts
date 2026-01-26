@@ -48,8 +48,12 @@ export class DatabaseStorage implements IStorage {
     return quote || null;
   }
 
-  async updateQuoteTotalAndBreakdown(id: number, totalPrice: number, breakdown: any): Promise<Quote | null> {
-    const [quote] = await db.update(quotes).set({ totalPrice, breakdown }).where(eq(quotes.id, id)).returning();
+  async updateQuoteTotalAndBreakdown(id: number, totalPrice: number, breakdown: any, depositAmount?: number): Promise<Quote | null> {
+    const updateData: any = { totalPrice, breakdown };
+    if (depositAmount !== undefined) {
+      updateData.depositAmount = depositAmount;
+    }
+    const [quote] = await db.update(quotes).set(updateData).where(eq(quotes.id, id)).returning();
     return quote || null;
   }
 

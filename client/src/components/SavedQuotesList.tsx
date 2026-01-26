@@ -33,7 +33,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [isCapturing, setIsCapturing] = useState(false);
 
   const [customerName, setCustomerName] = useState<string>(quote.customerName);
-  const [depositAmount, setDepositAmount] = useState<number>(Math.round(quote.totalPrice * 0.5));
+  const [depositAmount, setDepositAmount] = useState<number>(quote.depositAmount || Math.round(quote.totalPrice * 0.5));
   const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
   const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
   const [golfAdjustments, setGolfAdjustments] = useState<Record<number, { unitPrice: number, players: number }>>({});
@@ -237,7 +237,8 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       
       await apiRequest("PATCH", `/api/quotes/${quote.id}/total`, { 
         totalPrice: adjustedTotal,
-        breakdown: updatedBreakdown
+        breakdown: updatedBreakdown,
+        depositAmount: depositAmount
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       setVillaAdjustments({});

@@ -549,12 +549,12 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         return res.status(403).json({ message: "Only admin can update total price" });
       }
 
-      const { totalPrice, breakdown } = req.body;
+      const { totalPrice, breakdown, depositAmount } = req.body;
       if (typeof totalPrice !== "number" || totalPrice < 0) {
         return res.status(400).json({ message: "Invalid total price" });
       }
 
-      const quote = await storage.updateQuoteTotalAndBreakdown(id, totalPrice, breakdown);
+      const quote = await storage.updateQuoteTotalAndBreakdown(id, totalPrice, breakdown, depositAmount);
       if (!quote) {
         return res.status(404).json({ message: "Quote not found" });
       }
