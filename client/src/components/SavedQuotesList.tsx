@@ -474,10 +474,10 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         const displayPrice = golfAdjustments[idx] !== undefined ? golfAdjustments[idx] : detail.price;
                         const textWithoutPrice = detail.text.replace(/\$\d+/, '').trim();
                         return (
-                          <div key={idx} className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
-                              <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                              <span className="truncate">{textWithoutPrice}</span>
+                          <div key={idx} className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-1 flex-1 min-w-0">
+                              <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0 mt-1.5" />
+                              <span className="break-words whitespace-normal">{textWithoutPrice}</span>
                             </div>
                             {isEditing && !isCapturing ? (
                               <div className="flex items-center shrink-0">
