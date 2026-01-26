@@ -290,7 +290,7 @@ export default function Home() {
     if (!values.ecoGirl?.enabled) {
       return { price: 0, count: 0, nights: 0, pricePerNight: 0 };
     }
-    const pricePerNight = 150;
+    const pricePerNight = 220;
     const count = Number(values.ecoGirl.count) || 0;
     const nights = Number(values.ecoGirl.nights) || 0;
     const totalPrice = pricePerNight * count * nights;
@@ -929,7 +929,7 @@ export default function Home() {
             {isAdmin && (
               <Controller control={form.control} name="ecoGirl.enabled" render={({ field }) => (
                 <SectionCard 
-                  title={language === "ko" ? "에코걸" : language === "en" ? "Eco Girl" : language === "zh" ? "生态女孩" : language === "vi" ? "Eco Girl" : language === "ru" ? "Эко-гёрл" : language === "ja" ? "エコガール" : "에코걸"} 
+                  title={language === "ko" ? "에코" : language === "en" ? "Eco" : language === "zh" ? "生态" : language === "vi" ? "Eco" : language === "ru" ? "Эко" : language === "ja" ? "エコ" : "에코"} 
                   icon={Users} 
                   isEnabled={field.value ?? false} 
                   onToggle={field.onChange} 
@@ -980,7 +980,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-pink-600 dark:text-pink-400 font-medium">
-                    {language === "ko" ? "$150/인/박" : language === "en" ? "$150/person/night" : language === "zh" ? "$150/人/晚" : language === "vi" ? "$150/người/đêm" : language === "ru" ? "$150/чел/ночь" : language === "ja" ? "$150/名/泊" : "$150/인/박"}
+                    {language === "ko" ? "$220/인/박" : language === "en" ? "$220/person/night" : language === "zh" ? "$220/人/晚" : language === "vi" ? "$220/người/đêm" : language === "ru" ? "$220/чел/ночь" : language === "ja" ? "$220/名/泊" : "$220/인/박"}
                   </div>
                   {ecoGirlEstimate.price > 0 && (
                     <div className="mt-4 bg-gradient-to-r from-pink-600 to-pink-500 text-white p-4 rounded-xl shadow-lg">
