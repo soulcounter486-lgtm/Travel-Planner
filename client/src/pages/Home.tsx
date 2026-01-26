@@ -58,10 +58,13 @@ import {
   Smartphone
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { LogIn, LogOut } from "lucide-react";
 
 export default function Home() {
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  const { user, isAuthenticated, logout, isLoading: isAuthLoading } = useAuth();
   
   // 언어별 달력 locale 매핑
   const calendarLocale = useMemo(() => {
@@ -394,8 +397,33 @@ export default function Home() {
                 </div>
               </a>
             </div>
-            <div>
-              <h1 className="text-3xl md:text-5xl font-display font-bold text-primary mb-4 leading-tight">{t("header.title")}<br className="md:hidden" /> {t("header.subtitle")}</h1>
+            <div className="flex-1">
+              <div className="flex items-start gap-3">
+                <h1 className="text-3xl md:text-5xl font-display font-bold text-primary mb-4 leading-tight">{t("header.title")}<br className="md:hidden" /> {t("header.subtitle")}</h1>
+                {isAuthLoading ? null : isAuthenticated ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => logout()}
+                    className="shrink-0 rounded-full h-8 px-3 text-xs"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="w-3.5 h-3.5 mr-1.5" />
+                    {language === "ko" ? "로그아웃" : "Logout"}
+                  </Button>
+                ) : (
+                  <a href="/api/login" data-testid="button-login">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="shrink-0 rounded-full h-8 px-3 text-xs"
+                    >
+                      <LogIn className="w-3.5 h-3.5 mr-1.5" />
+                      {language === "ko" ? "로그인" : "Login"}
+                    </Button>
+                  </a>
+                )}
+              </div>
               <p className="text-lg md:text-xl text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
             </div>
           </motion.div>
