@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, FileText, Calendar, DollarSign, Trash2, Download, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X } from "lucide-react";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuotes } from "@/hooks/use-quotes";
@@ -23,14 +23,59 @@ interface QuoteItemProps {
 
 function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting }: QuoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
   const breakdown = quote.breakdown as QuoteBreakdown;
   const [isCapturing, setIsCapturing] = useState(false);
+
+  const [depositAmount, setDepositAmount] = useState<number>(Math.round(quote.totalPrice * 0.5));
+  const [villaAdjustments, setVillaAdjustments] = useState<Record<number, number>>({});
+  const [vehicleAdjustments, setVehicleAdjustments] = useState<Record<number, number>>({});
+
+  const parsePrice = (detail: string): number => {
+    const match = detail.match(/\$(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
+
+  const getAdjustedVillaTotal = () => {
+    if (!breakdown?.villa?.details) return breakdown?.villa?.price || 0;
+    let total = 0;
+    breakdown.villa.details.forEach((detail, idx) => {
+      const originalPrice = parsePrice(detail);
+      total += villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
+    });
+    return total;
+  };
+
+  const getAdjustedVehicleTotal = () => {
+    if (!breakdown?.vehicle?.description) return breakdown?.vehicle?.price || 0;
+    const details = breakdown.vehicle.description.split(" | ");
+    let total = 0;
+    details.forEach((detail, idx) => {
+      const originalPrice = parsePrice(detail);
+      total += vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice;
+    });
+    return total;
+  };
+
+  const villaTotal = getAdjustedVillaTotal();
+  const vehicleTotal = getAdjustedVehicleTotal();
+  const villaAdjustment = villaTotal - (breakdown?.villa?.price || 0);
+  const vehicleAdjustment = vehicleTotal - (breakdown?.vehicle?.price || 0);
+  const adjustedTotal = quote.totalPrice + villaAdjustment + vehicleAdjustment;
+  const balanceAmount = adjustedTotal - depositAmount;
 
   const formatLocalCurrency = (usd: number) => {
     if (currencyInfo.code === "USD") return `$ ${usd.toLocaleString()}`;
     const converted = Math.round(usd * exchangeRate);
     return `${currencyInfo.symbol} ${new Intl.NumberFormat(currencyInfo.locale).format(converted)}`;
+  };
+
+  const resetEdits = () => {
+    setVillaAdjustments({});
+    setVehicleAdjustments({});
+    setDepositAmount(Math.round(quote.totalPrice * 0.5));
+    setIsEditing(false);
   };
 
   const handleDownloadImage = async () => {
@@ -59,9 +104,6 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       setIsCapturing(false);
     }
   };
-
-  const depositAmount = Math.round(quote.totalPrice * 0.5);
-  const balanceAmount = quote.totalPrice - depositAmount;
 
   return (
     <div
@@ -99,6 +141,42 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="border-t border-slate-200 dark:border-slate-600 p-3 space-y-3">
+            <div className="flex justify-end gap-2">
+              {isEditing ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={resetEdits}
+                    className="h-7 text-xs"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    {language === "ko" ? "취소" : "Cancel"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => setIsEditing(false)}
+                    className="h-7 text-xs"
+                  >
+                    <Check className="w-3 h-3 mr-1" />
+                    {language === "ko" ? "완료" : "Done"}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsEditing(true)}
+                  className="h-7 text-xs"
+                  data-testid={`button-edit-quote-${quote.id}`}
+                >
+                  <Pencil className="w-3 h-3 mr-1" />
+                  {language === "ko" ? "수정" : "Edit"}
+                </Button>
+              )}
+            </div>
+
             <div 
               ref={detailRef}
               className="bg-white rounded-lg overflow-hidden shadow-lg"
@@ -112,12 +190,12 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                       {language === "ko" ? "여행 견적서" : "Travel Quote"}
                     </span>
                     <span className="text-2xl text-primary font-bold">
-                      ${quote.totalPrice.toLocaleString()}
+                      ${adjustedTotal.toLocaleString()}
                     </span>
                     {currencyInfo.code !== "USD" && (
                       <div className="flex flex-col gap-0.5">
                         <span className="text-sm text-primary/70 font-semibold">
-                          ≈ {formatLocalCurrency(quote.totalPrice)}
+                          ≈ {formatLocalCurrency(adjustedTotal)}
                         </span>
                         <span className="text-[9px] text-muted-foreground">
                           {language === "ko" ? "환율" : "Rate"}: {currencyInfo.symbol} {exchangeRate.toLocaleString()}/USD
@@ -136,9 +214,23 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         <span className="text-[7px] font-medium text-amber-700 block">
                           {language === "ko" ? "예약금" : "Deposit"}
                         </span>
-                        <span className="text-[9px] font-bold text-amber-800">
-                          ${depositAmount.toLocaleString()}
-                        </span>
+                        {isEditing ? (
+                          <div className="flex items-center">
+                            <span className="text-[9px] font-bold text-amber-800">$</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={depositAmount}
+                              onChange={(e) => setDepositAmount(parseInt(e.target.value) || 0)}
+                              className="w-12 text-center text-[9px] font-bold text-amber-800 bg-white border border-amber-300 rounded px-0.5"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-[9px] font-bold text-amber-800">
+                            ${depositAmount.toLocaleString()}
+                          </span>
+                        )}
                       </div>
                       <div className="rounded p-1 text-center bg-green-50 border border-green-200">
                         <span className="text-[7px] font-medium text-green-700 block">
@@ -165,20 +257,45 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   <div className="space-y-1">
                     <div className="flex justify-between font-semibold text-sm text-slate-800">
                       <span>{language === "ko" ? "풀빌라" : "Villa"}</span>
-                      <span>${breakdown.villa.price.toLocaleString()}</span>
+                      <span>${villaTotal.toLocaleString()}</span>
                     </div>
                     {breakdown.villa.checkIn && breakdown.villa.checkOut && (
                       <div className="text-[10px] text-primary font-medium pl-2">
                         {breakdown.villa.checkIn} ~ {breakdown.villa.checkOut}
                       </div>
                     )}
-                    <div className="text-[10px] text-muted-foreground space-y-0.5 pl-2">
-                      {breakdown.villa.details.map((detail, idx) => (
-                        <div key={idx} className="flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-primary/40" />
-                          <span>{detail}</span>
-                        </div>
-                      ))}
+                    <div className="text-[10px] text-muted-foreground space-y-1 pl-2">
+                      {breakdown.villa.details.map((detail, idx) => {
+                        const originalPrice = parsePrice(detail);
+                        const currentPrice = villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
+                        const dateMatch = detail.match(/^([^:]+):/);
+                        const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
+                        
+                        return (
+                          <div key={idx} className="flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-primary/40" />
+                            <span className="flex-1">{dateLabel}</span>
+                            {isEditing ? (
+                              <div className="flex items-center">
+                                <span className="font-medium">$</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={currentPrice}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value) || 0;
+                                    setVillaAdjustments(prev => ({ ...prev, [idx]: val }));
+                                  }}
+                                  className="w-14 text-center text-[10px] font-medium bg-white border border-slate-300 rounded px-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            ) : (
+                              <span className="font-medium">${currentPrice}</span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -187,15 +304,42 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   <div className="space-y-1">
                     <div className="flex justify-between font-semibold text-sm text-slate-800">
                       <span>{language === "ko" ? "차량" : "Vehicle"}</span>
-                      <span>${breakdown.vehicle.price.toLocaleString()}</span>
+                      <span>${vehicleTotal.toLocaleString()}</span>
                     </div>
-                    <div className="text-[10px] text-muted-foreground space-y-0.5 pl-2">
-                      {breakdown.vehicle.description.split(" | ").map((detail, idx) => (
-                        <div key={idx} className="flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-primary/40" />
-                          <span>{detail}</span>
-                        </div>
-                      ))}
+                    <div className="text-[10px] text-muted-foreground space-y-1 pl-2">
+                      {breakdown.vehicle.description.split(" | ").map((detail, idx) => {
+                        const originalPrice = parsePrice(detail);
+                        const currentPrice = vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice;
+                        const dateMatch = detail.match(/^(\d{4}-\d{2}-\d{2})/);
+                        const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
+                        const routeMatch = detail.match(/\((.*?)\)/);
+                        const routeInfo = routeMatch ? routeMatch[1] : "";
+                        
+                        return (
+                          <div key={idx} className="flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-primary/40" />
+                            <span className="flex-1">{dateLabel} {routeInfo && `(${routeInfo})`}</span>
+                            {isEditing ? (
+                              <div className="flex items-center">
+                                <span className="font-medium">$</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={currentPrice}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value) || 0;
+                                    setVehicleAdjustments(prev => ({ ...prev, [idx]: val }));
+                                  }}
+                                  className="w-14 text-center text-[10px] font-medium bg-white border border-slate-300 rounded px-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </div>
+                            ) : (
+                              <span className="font-medium">${currentPrice}</span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -251,7 +395,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                       {language === "ko" ? "총 금액" : "Total"}
                     </span>
                     <span className="font-bold text-lg text-primary">
-                      ${quote.totalPrice.toLocaleString()}
+                      ${adjustedTotal.toLocaleString()}
                     </span>
                   </div>
                 </div>
