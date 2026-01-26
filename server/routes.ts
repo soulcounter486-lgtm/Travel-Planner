@@ -482,7 +482,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   app.post(api.quotes.create.path, async (req, res) => {
     try {
       const input = api.quotes.create.input.parse(req.body);
-      const quote = await storage.createQuote(input);
+      const userId = (req as any).user?.id;
+      const quote = await storage.createQuote({ ...input, userId });
       res.status(201).json(quote);
     } catch (err) {
       if (err instanceof z.ZodError) { res.status(400).json({ message: err.errors[0].message }); }
@@ -491,7 +492,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   app.get(api.quotes.list.path, async (req, res) => {
-    const quotes = await storage.getQuotes();
+    const userId = (req as any).user?.id;
+    const quotes = await storage.getQuotesByUser(userId);
     res.json(quotes);
   });
 
@@ -501,7 +503,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid quote ID" });
       }
-      await storage.deleteQuote(id);
+      const userId = (req as any).user?.id;
+      await storage.deleteQuote(id, userId);
       res.status(204).send();
     } catch (err) {
       res.status(500).json({ message: "Internal server error" });

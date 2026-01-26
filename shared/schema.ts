@@ -11,6 +11,7 @@ export * from "./models/chat";
 // === TABLE DEFINITIONS ===
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"), // 저장한 사용자 ID (선택사항 - 비로그인 사용자도 저장 가능)
   customerName: text("customer_name").notNull(),
   totalPrice: integer("total_price").notNull(),
   breakdown: jsonb("breakdown").notNull(), // Stores the detailed calculation result
