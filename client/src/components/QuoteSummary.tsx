@@ -641,7 +641,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
         </Card>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 relative z-20 bg-background pb-2">
         <Button 
           className="flex-1 h-14 text-lg font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]" 
           onClick={handleDownloadImage}
