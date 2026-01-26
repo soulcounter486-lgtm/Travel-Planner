@@ -219,7 +219,7 @@ const products = [
     name: { ko: "고커피", en: "Go Coffee", zh: "Go Coffee", vi: "Go Coffee", ru: "Go Coffee", ja: "ゴーコーヒー" },
     brand: "MAX HEALTH Go Coffee",
     image: goCoffeeImg,
-    price: 38000,
+    price: 40000,
     quantity: { ko: "12포", en: "12 packs", zh: "12包", vi: "12 gói", ru: "12 пакетов", ja: "12包" },
     icon: Coffee,
     gradient: "from-gray-700 to-gray-900",
