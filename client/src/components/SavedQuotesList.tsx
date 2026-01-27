@@ -96,7 +96,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       const unitPrice = unitPriceMatch ? unitPriceMatch[1] : "0";
       
       const tipMatch = priceInfo.match(/캐디팁: ([^)]+)/);
-      const caddyTip = tipMatch ? tipMatch[1] : "";
+      let caddyTip = tipMatch ? tipMatch[1] : "";
+      // 중복된 "/인" 제거 - "50만동/인/인/인" -> "50만동/인"
+      caddyTip = caddyTip.replace(/(\/(인|person|人|người|чел|名))+/gi, "/인");
       
       return {
         date,
@@ -381,7 +383,55 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   className="text-primary hover:text-primary/80 hover:bg-primary/10 h-8 w-8"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onLoad(quote);
+                    // 수정된 breakdown 생성
+                    const updatedBreakdown = { ...breakdown };
+                    
+                    // Vehicle 수정 반영
+                    if (breakdown?.vehicle && isExpanded) {
+                      const vehicleParts = breakdown.vehicle.description.split(" | ");
+                      let vehicleTotal = 0;
+                      const updatedVehicleDescriptions = vehicleParts.map((detail: string, idx: number) => {
+                        const currentPrice = vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : parsePrice(detail);
+                        vehicleTotal += currentPrice;
+                        const parts = detail.split(" / ");
+                        return `${parts[0]} / ${parts[1]} / ${parts[2]} / $${currentPrice}`;
+                      });
+                      updatedBreakdown.vehicle = {
+                        ...breakdown.vehicle,
+                        price: vehicleTotal,
+                        description: updatedVehicleDescriptions.join(" | ")
+                      };
+                    }
+                    
+                    // Golf 수정 반영
+                    if (breakdown?.golf && isExpanded) {
+                      const golfDetails = parseGolfDetails(breakdown.golf.description);
+                      let golfTotal = 0;
+                      const updatedGolfDescriptions = golfDetails.map((detail: any, idx: number) => {
+                        const adj = golfAdjustments[idx];
+                        const unitPrice = adj ? adj.unitPrice : parseInt(detail.unitPrice);
+                        const players = adj ? adj.players : parseInt(detail.players);
+                        const subtotal = unitPrice * players;
+                        golfTotal += subtotal;
+                        return `${detail.date} / ${detail.courseName} / $${unitPrice} x ${players}명 = $${subtotal} (캐디팁: ${detail.caddyTip})`;
+                      });
+                      updatedBreakdown.golf = {
+                        ...breakdown.golf,
+                        price: golfTotal,
+                        description: updatedGolfDescriptions.join(" | ")
+                      };
+                    }
+                    
+                    // 총 금액 계산
+                    const newTotal = (updatedBreakdown.villa?.price || 0) + 
+                                     (updatedBreakdown.vehicle?.price || 0) + 
+                                     (updatedBreakdown.golf?.price || 0) + 
+                                     (updatedBreakdown.guide?.price || 0) + 
+                                     (updatedBreakdown.fastTrack?.price || 0) + 
+                                     (updatedBreakdown.ecoGirl?.price || 0);
+                    updatedBreakdown.total = newTotal;
+                    
+                    onLoad({ ...quote, breakdown: updatedBreakdown, totalPrice: newTotal });
                   }}
                   data-testid={`button-load-quote-${quote.id}`}
                   title={language === "ko" ? "불러오기" : "Load"}
