@@ -59,7 +59,7 @@ import {
   Download,
   Smartphone
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { LogIn, LogOut } from "lucide-react";
 
@@ -83,6 +83,7 @@ export default function Home() {
   const [breakdown, setBreakdown] = useState<QuoteBreakdown | null>(null);
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
+  const [loadedQuoteId, setLoadedQuoteId] = useState<number | null>(null);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [checkOutCalendarMonth, setCheckOutCalendarMonth] = useState<Date | undefined>(undefined);
@@ -412,10 +413,27 @@ export default function Home() {
     return () => subscription.unsubscribe();
   }, [form.watch, calculateMutation]);
 
-  const handleSaveQuote = () => {
+  const handleSaveQuote = async () => {
     if (!breakdown) return;
-    // 이미 고객명이 있으면 (불러온 견적서) 바로 저장
-    if (customerName.trim()) {
+    
+    // 불러온 견적서가 있으면 업데이트
+    if (loadedQuoteId && customerName.trim()) {
+      try {
+        await apiRequest("PATCH", `/api/quotes/${loadedQuoteId}/total`, {
+          totalPrice: breakdown.total,
+          breakdown: breakdown
+        });
+        toast({ 
+          title: language === "ko" ? "견적서 수정 완료" : "Quote Updated", 
+          description: language === "ko" ? `"${customerName}" 견적서가 수정되었습니다.` : `Quote for "${customerName}" has been updated.`
+        });
+        // 캐시 무효화
+        queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      } catch (err) {
+        toast({ title: "Error", description: "Failed to update quote.", variant: "destructive" });
+      }
+    } else if (customerName.trim()) {
+      // 고객명만 있고 불러온 견적서가 없으면 새로 저장
       createQuoteMutation.mutate({ customerName, totalPrice: breakdown.total, breakdown: breakdown }, {
         onSuccess: () => {
           toast({ title: language === "ko" ? "견적서 저장 완료" : "Quote Saved", description: `${customerName}` });
@@ -423,6 +441,7 @@ export default function Home() {
         onError: () => toast({ title: "Error", description: "Failed to save quote.", variant: "destructive" })
       });
     } else {
+      // 고객명 없으면 다이얼로그 열기
       setIsCustomerDialogOpen(true);
     }
   };
@@ -552,12 +571,13 @@ export default function Home() {
 
     setBreakdown(bd);
     setCustomerName(quote.customerName); // 고객명 설정
+    setLoadedQuoteId(quote.id); // 불러온 견적서 ID 저장
     
     toast({
       title: language === "ko" ? "견적서 불러옴" : "Quote Loaded",
       description: language === "ko" 
-        ? `"${quote.customerName}" 견적서를 불러왔습니다. 수정 후 저장하면 같은 이름으로 저장됩니다.`
-        : `Loaded quote for "${quote.customerName}". Changes will be saved with the same name.`
+        ? `"${quote.customerName}" 견적서를 불러왔습니다. 수정 후 저장하면 기존 견적서가 업데이트됩니다.`
+        : `Loaded quote for "${quote.customerName}". Changes will update the existing quote.`
     });
 
     // 페이지 상단으로 스크롤
