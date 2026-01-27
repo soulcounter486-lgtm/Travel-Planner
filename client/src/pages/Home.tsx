@@ -414,7 +414,17 @@ export default function Home() {
 
   const handleSaveQuote = () => {
     if (!breakdown) return;
-    setIsCustomerDialogOpen(true);
+    // 이미 고객명이 있으면 (불러온 견적서) 바로 저장
+    if (customerName.trim()) {
+      createQuoteMutation.mutate({ customerName, totalPrice: breakdown.total, breakdown: breakdown }, {
+        onSuccess: () => {
+          toast({ title: language === "ko" ? "견적서 저장 완료" : "Quote Saved", description: `${customerName}` });
+        },
+        onError: () => toast({ title: "Error", description: "Failed to save quote.", variant: "destructive" })
+      });
+    } else {
+      setIsCustomerDialogOpen(true);
+    }
   };
 
   // 저장된 견적서 불러오기
@@ -541,12 +551,13 @@ export default function Home() {
     }
 
     setBreakdown(bd);
+    setCustomerName(quote.customerName); // 고객명 설정
     
     toast({
       title: language === "ko" ? "견적서 불러옴" : "Quote Loaded",
       description: language === "ko" 
-        ? `"${quote.customerName}" 견적서를 불러왔습니다. 수정 후 새로 저장할 수 있습니다.`
-        : `Loaded quote for "${quote.customerName}". You can modify and save as new.`
+        ? `"${quote.customerName}" 견적서를 불러왔습니다. 수정 후 저장하면 같은 이름으로 저장됩니다.`
+        : `Loaded quote for "${quote.customerName}". Changes will be saved with the same name.`
     });
 
     // 페이지 상단으로 스크롤
