@@ -822,7 +822,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   onChange={(e) => setMemo(e.target.value)}
                   placeholder={language === "ko" ? "메모를 입력하세요..." : "Enter memo..."}
                   className="w-full p-2 text-sm border rounded-md resize-none bg-white dark:bg-slate-900 dark:text-white"
-                  rows={8}
+                  rows={15}
                   data-testid={`textarea-memo-${quote.id}`}
                 />
                 <div className="flex flex-wrap gap-2 mt-2">
