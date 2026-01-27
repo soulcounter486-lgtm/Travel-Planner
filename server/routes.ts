@@ -367,15 +367,24 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
             while (current < end) {
               const dayOfWeek = getDay(current);
               let dailyPrice = 350;
+              let dayType = "평일";
               const dateStr = format(current, "M/d");
               const dayName = dayNames[dayOfWeek];
               if (dayOfWeek === 5) {
+                // 금요일
                 dailyPrice = 380;
+                dayType = "금";
               } else if (dayOfWeek === 6) {
+                // 토요일
                 dailyPrice = 500;
+                dayType = "주말";
+              } else if (dayOfWeek === 0) {
+                // 일요일
+                dailyPrice = 500;
+                dayType = "주말";
               }
               breakdown.villa.price += dailyPrice;
-              breakdown.villa.details.push(`${dateStr}(${dayName}): $${dailyPrice}`);
+              breakdown.villa.details.push(`${dateStr}(${dayName},${dayType}): $${dailyPrice}`);
               current = addDays(current, 1);
             }
           }
