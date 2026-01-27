@@ -953,6 +953,92 @@ export default function Home() {
                       <Button type="button" variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 hover:border-primary hover:text-primary transition-all bg-white" onClick={handleAddVehicleDay}><Plus className="mr-2 h-4 w-4" /> {t("vehicle.addDay")}</Button>
                     </div>
                   </div>
+                  {/* 차량 예상 금액 요약 */}
+                  {(loadedQuoteId && breakdown?.vehicle?.price) || (values.vehicle?.selections && values.vehicle.selections.length > 0) ? (
+                    <div className="mt-4 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white p-4 rounded-xl shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">{t("vehicle.estimatedPrice")}</span>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold">
+                            ${loadedQuoteId && breakdown?.vehicle?.price 
+                              ? breakdown.vehicle.price 
+                              : (() => {
+                                  const prices: Record<string, any> = {
+                                    "7_seater": { city: 100, oneway: 80, hocham_oneway: 80, phanthiet_oneway: 110, roundtrip: 150, city_pickup_drop: 120 },
+                                    "16_seater": { city: 130, oneway: 130, hocham_oneway: 130, phanthiet_oneway: 177, roundtrip: 250, city_pickup_drop: 190 },
+                                    "9_limo": { city: 160, oneway: 160, hocham_oneway: 160, phanthiet_oneway: 217, roundtrip: 300, city_pickup_drop: 230 },
+                                    "9_lux_limo": { city: 210, oneway: 210, hocham_oneway: 210, phanthiet_oneway: 285, roundtrip: 400, city_pickup_drop: 300 },
+                                    "12_lux_limo": { city: 250, oneway: 250, hocham_oneway: 250, phanthiet_oneway: 340, roundtrip: 480, city_pickup_drop: 350 },
+                                    "16_lux_limo": { city: 280, oneway: 280, hocham_oneway: 280, phanthiet_oneway: 380, roundtrip: 530, city_pickup_drop: 400 },
+                                    "29_seater": { city: 230, oneway: 230, hocham_oneway: 230, phanthiet_oneway: 312, roundtrip: 430, city_pickup_drop: 330 },
+                                    "45_seater": { city: 280, oneway: 290, hocham_oneway: 290, phanthiet_oneway: 394, roundtrip: 550, city_pickup_drop: 410 },
+                                  };
+                                  return values.vehicle?.selections?.reduce((sum, sel) => {
+                                    if (!sel?.type || !sel?.route) return sum;
+                                    return sum + (prices[sel.type]?.[sel.route] || 0);
+                                  }, 0) || 0;
+                                })()
+                            }
+                          </span>
+                          {currencyInfo.code !== "USD" && (
+                            <div className="text-sm text-indigo-200">
+                              ≈ {formatLocalCurrency(loadedQuoteId && breakdown?.vehicle?.price 
+                                ? breakdown.vehicle.price 
+                                : values.vehicle?.selections?.reduce((sum, sel) => {
+                                    const prices: Record<string, any> = {
+                                      "7_seater": { city: 100, oneway: 80, hocham_oneway: 80, phanthiet_oneway: 110, roundtrip: 150, city_pickup_drop: 120 },
+                                      "16_seater": { city: 130, oneway: 130, hocham_oneway: 130, phanthiet_oneway: 177, roundtrip: 250, city_pickup_drop: 190 },
+                                      "9_limo": { city: 160, oneway: 160, hocham_oneway: 160, phanthiet_oneway: 217, roundtrip: 300, city_pickup_drop: 230 },
+                                      "9_lux_limo": { city: 210, oneway: 210, hocham_oneway: 210, phanthiet_oneway: 285, roundtrip: 400, city_pickup_drop: 300 },
+                                      "12_lux_limo": { city: 250, oneway: 250, hocham_oneway: 250, phanthiet_oneway: 340, roundtrip: 480, city_pickup_drop: 350 },
+                                      "16_lux_limo": { city: 280, oneway: 280, hocham_oneway: 280, phanthiet_oneway: 380, roundtrip: 530, city_pickup_drop: 400 },
+                                      "29_seater": { city: 230, oneway: 230, hocham_oneway: 230, phanthiet_oneway: 312, roundtrip: 430, city_pickup_drop: 330 },
+                                      "45_seater": { city: 280, oneway: 290, hocham_oneway: 290, phanthiet_oneway: 394, roundtrip: 550, city_pickup_drop: 410 },
+                                    };
+                                    if (!sel?.type || !sel?.route) return sum;
+                                    return sum + (prices[sel.type]?.[sel.route] || 0);
+                                  }, 0) || 0
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-xs text-indigo-100 space-y-1">
+                        {loadedQuoteId && breakdown?.vehicle?.description ? (
+                          breakdown.vehicle.description.split(" | ").map((d, i) => {
+                            const parts = d.split(" / ");
+                            return (
+                              <div key={i} className="flex justify-between items-center">
+                                <span>{parts[0]} {parts[1]}</span>
+                                <span>{parts[3]}</span>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          values.vehicle?.selections?.map((sel, i) => {
+                            if (!sel?.type || !sel?.route) return null;
+                            const prices: Record<string, any> = {
+                              "7_seater": { city: 100, oneway: 80, hocham_oneway: 80, phanthiet_oneway: 110, roundtrip: 150, city_pickup_drop: 120 },
+                              "16_seater": { city: 130, oneway: 130, hocham_oneway: 130, phanthiet_oneway: 177, roundtrip: 250, city_pickup_drop: 190 },
+                              "9_limo": { city: 160, oneway: 160, hocham_oneway: 160, phanthiet_oneway: 217, roundtrip: 300, city_pickup_drop: 230 },
+                              "9_lux_limo": { city: 210, oneway: 210, hocham_oneway: 210, phanthiet_oneway: 285, roundtrip: 400, city_pickup_drop: 300 },
+                              "12_lux_limo": { city: 250, oneway: 250, hocham_oneway: 250, phanthiet_oneway: 340, roundtrip: 480, city_pickup_drop: 350 },
+                              "16_lux_limo": { city: 280, oneway: 280, hocham_oneway: 280, phanthiet_oneway: 380, roundtrip: 530, city_pickup_drop: 400 },
+                              "29_seater": { city: 230, oneway: 230, hocham_oneway: 230, phanthiet_oneway: 312, roundtrip: 430, city_pickup_drop: 330 },
+                              "45_seater": { city: 280, oneway: 290, hocham_oneway: 290, phanthiet_oneway: 394, roundtrip: 550, city_pickup_drop: 410 },
+                            };
+                            const price = prices[sel.type]?.[sel.route] || 0;
+                            return (
+                              <div key={i} className="flex justify-between items-center">
+                                <span>{sel.date} {t(`vehicle.${sel.type}`)}</span>
+                                <span>${price}</span>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  ) : null}
                 </SectionCard>
               )}
             />
