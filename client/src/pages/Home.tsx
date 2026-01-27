@@ -417,6 +417,142 @@ export default function Home() {
     setIsCustomerDialogOpen(true);
   };
 
+  // 저장된 견적서 불러오기
+  const handleLoadQuote = (quote: any) => {
+    const bd = quote.breakdown as QuoteBreakdown;
+    
+    // Villa 데이터 복원
+    if (bd.villa && bd.villa.price > 0 && bd.villa.checkIn && bd.villa.checkOut) {
+      form.setValue("villa.enabled", true);
+      form.setValue("villa.checkIn", bd.villa.checkIn);
+      form.setValue("villa.checkOut", bd.villa.checkOut);
+      form.setValue("villa.rooms", bd.villa.rooms || 1);
+    } else {
+      form.setValue("villa.enabled", false);
+    }
+
+    // Vehicle 데이터 복원 (description 파싱)
+    if (bd.vehicle && bd.vehicle.price > 0 && bd.vehicle.description) {
+      const vehicleSelections: { date: string; type: string; route: string }[] = [];
+      const vehicleParts = bd.vehicle.description.split(" | ");
+      vehicleParts.forEach(part => {
+        const dateMatch = part.match(/^(\d{4}-\d{2}-\d{2})/);
+        const date = dateMatch ? dateMatch[1] : format(new Date(), "yyyy-MM-dd");
+        // Parse vehicle type
+        let type = "7_seater";
+        if (part.includes("16인승")) type = "16_seater";
+        else if (part.includes("12인승")) type = "12_lux_limo";
+        else if (part.includes("9인승 럭스")) type = "9_lux_limo";
+        else if (part.includes("9인승")) type = "9_limo";
+        else if (part.includes("16인승 럭스")) type = "16_lux_limo";
+        // Parse route
+        let route = "city";
+        if (part.includes("공항")) route = "airport";
+        else if (part.includes("호치민")) route = "hochiminh";
+        else if (part.includes("시내투어")) route = "city_tour";
+        vehicleSelections.push({ date, type, route });
+      });
+      if (vehicleSelections.length > 0) {
+        form.setValue("vehicle.enabled", true);
+        form.setValue("vehicle.selections", vehicleSelections as any);
+      }
+    } else {
+      form.setValue("vehicle.enabled", false);
+      form.setValue("vehicle.selections", []);
+    }
+
+    // Golf 데이터 복원
+    if (bd.golf && bd.golf.price > 0 && bd.golf.description) {
+      const golfSelections: { date: string; course: string; players: number }[] = [];
+      const golfParts = bd.golf.description.split(" | ");
+      golfParts.forEach(part => {
+        const dateMatch = part.match(/^(\d+\/\d+)/);
+        const playersMatch = part.match(/x\s*(\d+)명/);
+        const players = playersMatch ? parseInt(playersMatch[1]) : 1;
+        let course = "paradise";
+        if (part.toLowerCase().includes("chou") || part.includes("저우덕")) course = "chouduc";
+        else if (part.toLowerCase().includes("ho") || part.includes("호참")) course = "hocham";
+        
+        // Get the date from villa checkIn or use today
+        let golfDate = format(new Date(), "yyyy-MM-dd");
+        if (bd.villa?.checkIn && dateMatch) {
+          const villaStart = parseISO(bd.villa.checkIn);
+          const [month, day] = dateMatch[1].split("/").map(Number);
+          const year = villaStart.getFullYear();
+          golfDate = format(new Date(year, month - 1, day), "yyyy-MM-dd");
+        }
+        golfSelections.push({ date: golfDate, course, players });
+      });
+      if (golfSelections.length > 0) {
+        form.setValue("golf.enabled", true);
+        form.setValue("golf.selections", golfSelections as any);
+      }
+    } else {
+      form.setValue("golf.enabled", false);
+      form.setValue("golf.selections", []);
+    }
+
+    // Guide 데이터 복원
+    if (bd.guide && bd.guide.price > 0 && bd.guide.description) {
+      const daysMatch = bd.guide.description.match(/(\d+)\s*(일|days?)/i);
+      const groupMatch = bd.guide.description.match(/(\d+)\s*(명|人|people)/i);
+      form.setValue("guide.enabled", true);
+      form.setValue("guide.days", daysMatch ? parseInt(daysMatch[1]) : 1);
+      form.setValue("guide.groupSize", groupMatch ? parseInt(groupMatch[1]) : 4);
+    } else {
+      form.setValue("guide.enabled", false);
+    }
+
+    // FastTrack 데이터 복원
+    if (bd.fastTrack && bd.fastTrack.price > 0 && bd.fastTrack.description) {
+      const personsMatch = bd.fastTrack.description.match(/(\d+)\s*(명|人|people)/i);
+      const isRoundtrip = bd.fastTrack.description.includes("왕복") || bd.fastTrack.description.toLowerCase().includes("roundtrip");
+      form.setValue("fastTrack.enabled", true);
+      form.setValue("fastTrack.persons", personsMatch ? parseInt(personsMatch[1]) : 1);
+      form.setValue("fastTrack.type", isRoundtrip ? "roundtrip" : "oneway");
+    } else {
+      form.setValue("fastTrack.enabled", false);
+    }
+
+    // EcoGirl 데이터 복원
+    if (bd.ecoGirl && bd.ecoGirl.price > 0 && bd.ecoGirl.description) {
+      const ecoSelections: { date: string; count: number }[] = [];
+      if (bd.ecoGirl.details && Array.isArray(bd.ecoGirl.details)) {
+        bd.ecoGirl.details.forEach(detail => {
+          const dateMatch = detail.match(/^(\d+\/\d+)/);
+          const countMatch = detail.match(/(\d+)\s*(명|人|people)/i);
+          let ecoDate = format(new Date(), "yyyy-MM-dd");
+          if (bd.villa?.checkIn && dateMatch) {
+            const villaStart = parseISO(bd.villa.checkIn);
+            const [month, day] = dateMatch[1].split("/").map(Number);
+            const year = villaStart.getFullYear();
+            ecoDate = format(new Date(year, month - 1, day), "yyyy-MM-dd");
+          }
+          ecoSelections.push({ date: ecoDate, count: countMatch ? parseInt(countMatch[1]) : 1 });
+        });
+      }
+      if (ecoSelections.length > 0) {
+        form.setValue("ecoGirl.enabled", true);
+        form.setValue("ecoGirl.selections", ecoSelections as any);
+      }
+    } else {
+      form.setValue("ecoGirl.enabled", false);
+      form.setValue("ecoGirl.selections", []);
+    }
+
+    setBreakdown(bd);
+    
+    toast({
+      title: language === "ko" ? "견적서 불러옴" : "Quote Loaded",
+      description: language === "ko" 
+        ? `"${quote.customerName}" 견적서를 불러왔습니다. 수정 후 새로 저장할 수 있습니다.`
+        : `Loaded quote for "${quote.customerName}". You can modify and save as new.`
+    });
+
+    // 페이지 상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const confirmSaveQuote = () => {
     if (!customerName.trim() || !breakdown) return;
     createQuoteMutation.mutate({ customerName, totalPrice: breakdown.total, breakdown: breakdown }, {
@@ -1052,7 +1188,7 @@ export default function Home() {
           <p className="text-xs text-muted-foreground text-center mb-2">
             {language === "ko" ? "로그인 시 견적서 저장 가능" : "Login to save quotes"}
           </p>
-          <SavedQuotesList />
+          <SavedQuotesList onLoad={handleLoadQuote} />
         </div>
         
         <div className="mt-8">

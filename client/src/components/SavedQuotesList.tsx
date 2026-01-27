@@ -22,9 +22,14 @@ interface QuoteItemProps {
   isDeleting: boolean;
   isAdmin: boolean;
   onToggleDeposit: (id: number, depositPaid: boolean) => void;
+  onLoad?: (quote: Quote) => void;
 }
 
-function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit }: QuoteItemProps) {
+interface SavedQuotesListProps {
+  onLoad?: (quote: Quote) => void;
+}
+
+function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit, onLoad }: QuoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [depositPaid, setDepositPaid] = useState(quote.depositPaid || false);
@@ -368,6 +373,21 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                 <span className="font-bold text-primary">
                   ${quote.totalPrice.toLocaleString()}
                 </span>
+              )}
+              {onLoad && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-primary hover:text-primary/80 hover:bg-primary/10 h-8 w-8"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onLoad(quote);
+                  }}
+                  data-testid={`button-load-quote-${quote.id}`}
+                  title={language === "ko" ? "불러오기" : "Load"}
+                >
+                  <Download className="w-4 h-4 rotate-180" />
+                </Button>
               )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -889,7 +909,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   );
 }
 
-export function SavedQuotesList() {
+export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   const { t, language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const { data: quotes, isLoading } = useQuotes();
@@ -978,6 +998,7 @@ export function SavedQuotesList() {
                   isDeleting={deleteQuoteMutation.isPending}
                   isAdmin={isAdmin}
                   onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
+                  onLoad={onLoad}
                 />
               ))
             )}
