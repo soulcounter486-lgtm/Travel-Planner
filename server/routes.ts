@@ -650,7 +650,13 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
 
   app.get(api.quotes.list.path, async (req, res) => {
     const userId = (req as any).user?.claims?.sub;
-    const quotes = await storage.getQuotesByUser(userId);
+    const adminId = process.env.ADMIN_USER_ID || "";
+    const isAdmin = userId && String(userId) === String(adminId);
+    
+    // 관리자는 전체 목록, 일반 사용자는 자신의 것만
+    const quotes = isAdmin 
+      ? await storage.getAllQuotes()
+      : await storage.getQuotesByUser(userId);
     res.json(quotes);
   });
 
@@ -661,7 +667,15 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         return res.status(400).json({ message: "Invalid quote ID" });
       }
       const userId = (req as any).user?.claims?.sub;
-      await storage.deleteQuote(id, userId);
+      const adminId = process.env.ADMIN_USER_ID || "";
+      const isAdmin = userId && String(userId) === String(adminId);
+      
+      // 관리자는 모든 견적서 삭제 가능
+      if (isAdmin) {
+        await storage.deleteQuoteAdmin(id);
+      } else {
+        await storage.deleteQuote(id, userId);
+      }
       res.status(204).send();
     } catch (err) {
       res.status(500).json({ message: "Internal server error" });

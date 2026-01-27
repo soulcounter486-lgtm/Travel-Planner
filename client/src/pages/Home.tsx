@@ -1335,19 +1335,21 @@ export default function Home() {
           </div>
         </div>
         
+        {isAuthenticated && (
+          <div className="mt-8">
+            <p className="text-xs text-muted-foreground text-center mb-2">
+              {language === "ko" 
+                ? (isAdmin ? "저장된 견적서 관리 (관리자)" : "내 저장된 견적서") 
+                : (isAdmin ? "Saved Quotes (Admin)" : "My Saved Quotes")}
+            </p>
+            <SavedQuotesList onLoad={handleLoadQuote} />
+          </div>
+        )}
+        
         {isAdmin && (
-          <>
-            <div className="mt-8">
-              <p className="text-xs text-muted-foreground text-center mb-2">
-                {language === "ko" ? "저장된 견적서 관리 (관리자 전용)" : "Saved Quotes Management (Admin Only)"}
-              </p>
-              <SavedQuotesList onLoad={handleLoadQuote} />
-            </div>
-            
-            <div className="mt-8">
-              <DepositCalendar />
-            </div>
-          </>
+          <div className="mt-8">
+            <DepositCalendar />
+          </div>
         )}
       </div>
 

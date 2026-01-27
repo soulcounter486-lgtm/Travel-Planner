@@ -9,7 +9,9 @@ import {
 export interface IStorage {
   createQuote(quote: InsertQuote & { userId?: string; checkInDate?: string; checkOutDate?: string }): Promise<Quote>;
   getQuotesByUser(userId?: string): Promise<Quote[]>;
+  getAllQuotes(): Promise<Quote[]>;
   deleteQuote(id: number, userId?: string): Promise<void>;
+  deleteQuoteAdmin(id: number): Promise<void>;
   updateQuoteDepositStatus(id: number, depositPaid: boolean): Promise<Quote | null>;
   getDepositPaidQuotes(): Promise<Quote[]>;
 }
@@ -27,10 +29,18 @@ export class DatabaseStorage implements IStorage {
     return [];
   }
 
+  async getAllQuotes(): Promise<Quote[]> {
+    return await db.select().from(quotes).orderBy(desc(quotes.createdAt));
+  }
+
   async deleteQuote(id: number, userId?: string): Promise<void> {
     if (userId) {
       await db.delete(quotes).where(and(eq(quotes.id, id), eq(quotes.userId, userId)));
     }
+  }
+
+  async deleteQuoteAdmin(id: number): Promise<void> {
+    await db.delete(quotes).where(eq(quotes.id, id));
   }
 
   async updateQuoteDepositStatus(id: number, depositPaid: boolean): Promise<Quote | null> {
