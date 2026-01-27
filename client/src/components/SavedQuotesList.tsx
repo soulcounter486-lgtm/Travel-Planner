@@ -301,7 +301,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           const unitPrice = adj ? adj.unitPrice : parseInt(detail.unitPrice);
           const players = adj ? adj.players : parseInt(detail.players);
           const subtotal = unitPrice * players;
-          return `${detail.date} / ${detail.courseName} / $${unitPrice} x ${players}명 = $${subtotal} (캐디팁: ${detail.caddyTip}/인)`;
+          return `${detail.date} / ${detail.courseName} / $${unitPrice} x ${players}명 = $${subtotal} (캐디팁: ${detail.caddyTip})`;
         });
         updatedBreakdown.golf = {
           ...breakdown.golf,
