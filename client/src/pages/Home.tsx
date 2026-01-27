@@ -1335,16 +1335,20 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="mt-8">
-          <p className="text-xs text-muted-foreground text-center mb-2">
-            {language === "ko" ? "로그인 시 견적서 저장 가능" : "Login to save quotes"}
-          </p>
-          <SavedQuotesList onLoad={handleLoadQuote} />
-        </div>
-        
-        <div className="mt-8">
-          <DepositCalendar />
-        </div>
+        {isAdmin && (
+          <>
+            <div className="mt-8">
+              <p className="text-xs text-muted-foreground text-center mb-2">
+                {language === "ko" ? "저장된 견적서 관리 (관리자 전용)" : "Saved Quotes Management (Admin Only)"}
+              </p>
+              <SavedQuotesList onLoad={handleLoadQuote} />
+            </div>
+            
+            <div className="mt-8">
+              <DepositCalendar />
+            </div>
+          </>
+        )}
       </div>
 
       <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
