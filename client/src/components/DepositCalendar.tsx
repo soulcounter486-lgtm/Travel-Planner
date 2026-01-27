@@ -12,17 +12,18 @@ export function DepositCalendar() {
   const { language } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+  const { data: adminCheck, isLoading: isAdminLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
   });
-  const isAdmin = adminCheck?.isAdmin || false;
+  const isAdmin = adminCheck?.isAdmin === true;
 
   const { data: depositPaidQuotes } = useQuery<Quote[]>({
     queryKey: ["/api/quotes/deposit-paid"],
     enabled: isAdmin,
   });
 
-  if (!isAdmin) return null;
+  // 로딩 중이거나 관리자가 아니면 렌더링하지 않음
+  if (isAdminLoading || !isAdmin) return null;
 
   const getQuotesForDate = (date: Date) => {
     if (!depositPaidQuotes) return [];
