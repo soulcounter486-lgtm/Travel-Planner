@@ -754,7 +754,7 @@ export default function Home() {
                     <p><strong>{t("villa.weekday")}:</strong> $350 | <strong>{t("villa.friday")}:</strong> $380 | <strong>{t("villa.saturday")}:</strong> $500</p>
                     <p className="mt-1 text-xs text-blue-600/80">{t("villa.priceNote")}</p>
                   </div>
-                  {villaEstimate.price > 0 && (
+                  {(villaEstimate.price > 0 || (loadedQuoteId && breakdown?.villa?.price)) && (
                     <div className="mt-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -787,19 +787,31 @@ export default function Home() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <span className="text-2xl font-bold">${villaEstimate.price}</span>
+                          <span className="text-2xl font-bold">${loadedQuoteId && breakdown?.villa?.price ? breakdown.villa.price : villaEstimate.price}</span>
                           {currencyInfo.code !== "USD" && (
-                            <div className="text-sm text-blue-200">≈ {formatLocalCurrency(villaEstimate.price)}</div>
+                            <div className="text-sm text-blue-200">≈ {formatLocalCurrency(loadedQuoteId && breakdown?.villa?.price ? breakdown.villa.price : villaEstimate.price)}</div>
                           )}
                         </div>
                       </div>
                       <div className="text-xs text-blue-100 space-y-0.5">
-                        {villaEstimate.details.map((d, i) => (
-                          <div key={i} className="flex justify-between">
-                            <span>{d.day}</span>
-                            <span>${d.price}</span>
-                          </div>
-                        ))}
+                        {loadedQuoteId && breakdown?.villa?.details && breakdown.villa.details.length > 0 ? (
+                          breakdown.villa.details.map((d: string, i: number) => {
+                            const parts = d.split(": $");
+                            return (
+                              <div key={i} className="flex justify-between">
+                                <span>{parts[0]}</span>
+                                <span>${parts[1]}</span>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          villaEstimate.details.map((d, i) => (
+                            <div key={i} className="flex justify-between">
+                              <span>{d.day}</span>
+                              <span>${d.price}</span>
+                            </div>
+                          ))
+                        )}
                       </div>
                       <div className="mt-2 pt-2 border-t border-blue-400/30 text-xs text-blue-100 flex justify-between">
                         <span>{villaEstimate.nights}{t("villa.nightsTotal")}{(values.villa?.rooms && values.villa.rooms > 1) ? ` (${values.villa.rooms}룸)` : ""}</span>
