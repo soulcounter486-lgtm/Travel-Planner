@@ -84,6 +84,7 @@ export default function Home() {
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [loadedQuoteId, setLoadedQuoteId] = useState<number | null>(null);
+  const [isLoadingQuote, setIsLoadingQuote] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [checkOutCalendarMonth, setCheckOutCalendarMonth] = useState<Date | undefined>(undefined);
@@ -366,6 +367,9 @@ export default function Home() {
 
   useEffect(() => {
     const subscription = form.watch((value) => {
+      // 견적서 불러오기 중이면 자동 계산 스킵
+      if (isLoadingQuote) return;
+      
       const timer = setTimeout(() => {
         // Manually build a valid payload for calculation
         // This avoids Zod validation errors blocking the update
@@ -411,7 +415,7 @@ export default function Home() {
       return () => clearTimeout(timer);
     });
     return () => subscription.unsubscribe();
-  }, [form.watch, calculateMutation]);
+  }, [form.watch, calculateMutation, isLoadingQuote]);
 
   const handleSaveQuote = async () => {
     if (!breakdown) return;
@@ -448,6 +452,7 @@ export default function Home() {
 
   // 저장된 견적서 불러오기
   const handleLoadQuote = (quote: any) => {
+    setIsLoadingQuote(true); // 자동 재계산 방지
     const bd = quote.breakdown as QuoteBreakdown;
     
     // Villa 데이터 복원
@@ -572,6 +577,9 @@ export default function Home() {
     setBreakdown(bd);
     setCustomerName(quote.customerName); // 고객명 설정
     setLoadedQuoteId(quote.id); // 불러온 견적서 ID 저장
+    
+    // 폼 값 설정 완료 후 자동 계산 다시 활성화 (다음 틱에서)
+    setTimeout(() => setIsLoadingQuote(false), 500);
     
     toast({
       title: language === "ko" ? "견적서 불러옴" : "Quote Loaded",
