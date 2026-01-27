@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { format, addDays, parseISO, getDay } from "date-fns";
 import { ko, enUS, zhCN, vi, ru, ja } from "date-fns/locale";
 import { useForm, Controller } from "react-hook-form";
@@ -85,6 +85,7 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [loadedQuoteId, setLoadedQuoteId] = useState<number | null>(null);
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
+  const isLoadingQuoteRef = useRef(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [checkOutCalendarMonth, setCheckOutCalendarMonth] = useState<Date | undefined>(undefined);
@@ -368,7 +369,7 @@ export default function Home() {
   useEffect(() => {
     const subscription = form.watch((value) => {
       // 견적서 불러오기 중이면 자동 계산 스킵
-      if (isLoadingQuote) return;
+      if (isLoadingQuoteRef.current) return;
       
       const timer = setTimeout(() => {
         // Manually build a valid payload for calculation
@@ -452,7 +453,8 @@ export default function Home() {
 
   // 저장된 견적서 불러오기
   const handleLoadQuote = (quote: any) => {
-    setIsLoadingQuote(true); // 자동 재계산 방지
+    isLoadingQuoteRef.current = true; // 자동 재계산 방지 (ref 사용)
+    setIsLoadingQuote(true);
     const bd = quote.breakdown as QuoteBreakdown;
     
     // Villa 데이터 복원
@@ -579,7 +581,10 @@ export default function Home() {
     setLoadedQuoteId(quote.id); // 불러온 견적서 ID 저장
     
     // 폼 값 설정 완료 후 자동 계산 다시 활성화 (다음 틱에서)
-    setTimeout(() => setIsLoadingQuote(false), 500);
+    setTimeout(() => {
+      isLoadingQuoteRef.current = false;
+      setIsLoadingQuote(false);
+    }, 500);
     
     toast({
       title: language === "ko" ? "견적서 불러옴" : "Quote Loaded",
