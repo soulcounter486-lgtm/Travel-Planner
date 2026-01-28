@@ -965,10 +965,11 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   const { data: quotes, isLoading } = useQuotes();
   const queryClient = useQueryClient();
 
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean; userId?: string }>({
     queryKey: ["/api/admin/check"],
   });
   const isAdmin = adminCheck?.isAdmin || false;
+  const currentUserId = adminCheck?.userId;
 
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
@@ -1007,6 +1008,10 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   });
 
   const quoteCount = quotes?.length || 0;
+  
+  // 관리자일 때 견적서를 관리자/일반 사용자로 분리
+  const adminQuotes = isAdmin && quotes ? quotes.filter(q => q.userId === currentUserId) : [];
+  const userQuotes = isAdmin && quotes ? quotes.filter(q => q.userId !== currentUserId) : [];
 
   return (
     <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-lg bg-background relative z-0">
@@ -1036,6 +1041,60 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                 <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
                 {language === "ko" ? "저장된 견적서가 없습니다.\n견적서를 저장하면 여기에 표시됩니다." : "No saved quotes.\nSaved quotes will appear here."}
               </div>
+            ) : isAdmin ? (
+              <>
+                {/* 관리자 견적서 섹션 */}
+                {adminQuotes.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2 px-1">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                        {language === "ko" ? `관리자 견적서 (${adminQuotes.length})` : `Admin Quotes (${adminQuotes.length})`}
+                      </span>
+                    </div>
+                    {adminQuotes.map((quote) => (
+                      <QuoteItem
+                        key={quote.id}
+                        quote={quote}
+                        language={language}
+                        currencyInfo={currencyInfo}
+                        exchangeRate={exchangeRate}
+                        onDelete={(id) => deleteQuoteMutation.mutate(id)}
+                        isDeleting={deleteQuoteMutation.isPending}
+                        isAdmin={isAdmin}
+                        onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
+                        onLoad={onLoad}
+                      />
+                    ))}
+                  </div>
+                )}
+                
+                {/* 일반 사용자 견적서 섹션 */}
+                {userQuotes.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2 px-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+                        {language === "ko" ? `일반 사용자 견적서 (${userQuotes.length})` : `User Quotes (${userQuotes.length})`}
+                      </span>
+                    </div>
+                    {userQuotes.map((quote) => (
+                      <QuoteItem
+                        key={quote.id}
+                        quote={quote}
+                        language={language}
+                        currencyInfo={currencyInfo}
+                        exchangeRate={exchangeRate}
+                        onDelete={(id) => deleteQuoteMutation.mutate(id)}
+                        isDeleting={deleteQuoteMutation.isPending}
+                        isAdmin={isAdmin}
+                        onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
+                        onLoad={onLoad}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             ) : (
               quotes?.map((quote) => (
                 <QuoteItem
