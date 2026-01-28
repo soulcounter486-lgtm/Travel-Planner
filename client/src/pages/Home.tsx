@@ -1385,25 +1385,6 @@ export default function Home() {
                     </a>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-4 group">
-                  <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
-                    <Phone className="w-6 h-6 text-indigo-400" />
-                  </div>
-                  <div className="flex-1 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t("contact.korea")}</p>
-                      <span className="text-xl font-mono font-bold text-slate-200">010.9077.4860</span>
-                    </div>
-                    <a 
-                      href="tel:01090774860" 
-                      className="bg-indigo-500 hover:bg-indigo-400 text-white p-2 rounded-lg transition-colors shadow-lg shadow-indigo-500/20"
-                      data-testid="button-call-korea"
-                    >
-                      <Phone className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
               </div>
 
               <div className="space-y-6">
