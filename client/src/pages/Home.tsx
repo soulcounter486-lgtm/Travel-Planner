@@ -293,20 +293,20 @@ export default function Home() {
 
   const ecoGirlEstimate = useMemo(() => {
     if (!values.ecoGirl?.enabled || !values.ecoGirl?.selections || values.ecoGirl.selections.length === 0) {
-      return { price: 0, details: [] as { date: string; count: number; price: number }[], pricePerNight: 220 };
+      return { price: 0, details: [] as { date: string; count: number; price: number }[], pricePerDay: 380 };
     }
-    const pricePerNight = 220;
+    const pricePerDay = 380; // 22시간 기준
     const details: { date: string; count: number; price: number }[] = [];
     let totalPrice = 0;
     
     for (const selection of values.ecoGirl.selections) {
       const count = Number(selection.count) || 0;
-      const price = count * pricePerNight;
+      const price = count * pricePerDay;
       details.push({ date: selection.date, count, price });
       totalPrice += price;
     }
     
-    return { price: totalPrice, details, pricePerNight };
+    return { price: totalPrice, details, pricePerDay };
   }, [values.ecoGirl?.enabled, JSON.stringify(values.ecoGirl?.selections)]);
 
   const handleAddVehicleDay = () => {
