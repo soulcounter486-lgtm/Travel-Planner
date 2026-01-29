@@ -854,10 +854,15 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   </div>
                 </div>
 
-                <div className="pt-2 text-center">
-                  <span className="text-[9px] text-muted-foreground">
-                    붕따우 도깨비 | vungtau.blog
+                <div className="pt-3 mt-2 border-t border-slate-100 text-center space-y-1">
+                  <span className="text-[10px] font-semibold text-slate-600">
+                    붕따우 도깨비
                   </span>
+                  <div className="text-[9px] text-muted-foreground space-y-0.5">
+                    <div>📞 089.932.6273</div>
+                    <div>💬 카카오톡 ID: vungtau</div>
+                    <div>🌐 vungtau.blog</div>
+                  </div>
                 </div>
               </div>
             </div>
