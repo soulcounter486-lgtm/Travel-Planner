@@ -489,20 +489,22 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
 
       // 4. Eco Calculation
       if (input.ecoGirl?.enabled && input.ecoGirl.selections && input.ecoGirl.selections.length > 0) {
-        const rate = 220;
+        const priceMap: Record<string, number> = { "12": 220, "22": 380 };
         let totalEcoPrice = 0;
         const ecoDetails: string[] = [];
         
         for (const selection of input.ecoGirl.selections) {
           const count = Number(selection.count) || 1;
+          const hours = (selection as any).hours || "12";
+          const rate = priceMap[hours] || 220;
           const price = count * rate;
           totalEcoPrice += price;
-          ecoDetails.push(`${selection.date}: ${count}명 x $${rate} = $${price}`);
+          ecoDetails.push(`${selection.date}: ${hours}시간 x ${count}명 x $${rate} = $${price}`);
         }
         
         breakdown.ecoGirl.price = totalEcoPrice;
         breakdown.ecoGirl.details = ecoDetails;
-        breakdown.ecoGirl.description = `${input.ecoGirl.selections.length}일 @ $${rate}/인`;
+        breakdown.ecoGirl.description = `${input.ecoGirl.selections.length}일`;
       }
 
       // 5. Guide Calculation
