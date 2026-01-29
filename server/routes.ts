@@ -1570,9 +1570,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       }
 
       // 해당 사용자의 모든 게시글 authorName 업데이트
-      await db.update(posts)
-        .set({ authorName: newName })
-        .where(eq(posts.authorId, userId));
+      await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${userId}`);
 
       res.json({ success: true, newName });
     } catch (err) {
