@@ -102,6 +102,7 @@ export const calculateQuoteSchema = z.object({
     selections: z.array(z.object({
       date: z.string(), // YYYY-MM-DD
       count: z.number().min(1).default(1),
+      hours: z.enum(["12", "22"]).default("12"), // 12시간 or 22시간
     })).optional(),
   }).optional(),
 

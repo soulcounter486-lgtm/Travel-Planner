@@ -293,20 +293,22 @@ export default function Home() {
 
   const ecoGirlEstimate = useMemo(() => {
     if (!values.ecoGirl?.enabled || !values.ecoGirl?.selections || values.ecoGirl.selections.length === 0) {
-      return { price: 0, details: [] as { date: string; count: number; price: number }[], pricePerDay: 380 };
+      return { price: 0, details: [] as { date: string; count: number; hours: string; price: number }[] };
     }
-    const pricePerDay = 380; // 22시간 기준
-    const details: { date: string; count: number; price: number }[] = [];
+    const priceMap = { "12": 220, "22": 380 }; // 12시간: $220, 22시간: $380
+    const details: { date: string; count: number; hours: string; price: number }[] = [];
     let totalPrice = 0;
     
     for (const selection of values.ecoGirl.selections) {
       const count = Number(selection.count) || 0;
-      const price = count * pricePerDay;
-      details.push({ date: selection.date, count, price });
+      const hours = selection.hours || "12";
+      const pricePerPerson = priceMap[hours as "12" | "22"] || 220;
+      const price = count * pricePerPerson;
+      details.push({ date: selection.date, count, hours, price });
       totalPrice += price;
     }
     
-    return { price: totalPrice, details, pricePerDay };
+    return { price: totalPrice, details };
   }, [values.ecoGirl?.enabled, JSON.stringify(values.ecoGirl?.selections)]);
 
   const handleAddVehicleDay = () => {
@@ -356,7 +358,7 @@ export default function Home() {
     const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
     const newSelections = [
       ...currentSelections,
-      { date: format(nextDate, "yyyy-MM-dd"), count: 1 }
+      { date: format(nextDate, "yyyy-MM-dd"), count: 1, hours: "12" as const }
     ];
     form.setValue("ecoGirl.selections", [...newSelections], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
@@ -1240,12 +1242,13 @@ export default function Home() {
                   onToggle={field.onChange} 
                   gradient="from-pink-500/10"
                 >
-                  <div className="mb-4 text-sm text-pink-600 dark:text-pink-400 font-medium">
-                    {language === "ko" ? "$220/인/박" : language === "en" ? "$220/person/night" : language === "zh" ? "$220/人/晚" : language === "vi" ? "$220/người/đêm" : language === "ru" ? "$220/чел/ночь" : language === "ja" ? "$220/名/泊" : "$220/인/박"}
+                  <div className="mb-4 text-sm text-pink-600 dark:text-pink-400 font-medium space-y-1">
+                    <div>{language === "ko" ? "12시간: $220/인" : "12h: $220/person"}</div>
+                    <div>{language === "ko" ? "22시간: $380/인" : "22h: $380/person"}</div>
                   </div>
                   <div className="space-y-4">
                     {values.ecoGirl?.selections?.map((selection, index) => (
-                      <div key={`eco-day-${index}`} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 relative group shadow-sm items-end">
+                      <div key={`eco-day-${index}`} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 relative group shadow-sm items-end">
                         <div className="space-y-1.5">
                           <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "날짜" : "Date"}</Label>
                           <Controller 
@@ -1253,6 +1256,24 @@ export default function Home() {
                             name={`ecoGirl.selections.${index}.date`} 
                             render={({ field }) => (
                               <Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />
+                            )} 
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "시간" : "Hours"}</Label>
+                          <Controller 
+                            control={form.control} 
+                            name={`ecoGirl.selections.${index}.hours`} 
+                            render={({ field }) => (
+                              <Select value={field.value || "12"} onValueChange={field.onChange}>
+                                <SelectTrigger className="h-10 rounded-lg text-sm border-slate-200" data-testid={`select-eco-hours-${index}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="12">{language === "ko" ? "12시간 ($220)" : "12h ($220)"}</SelectItem>
+                                  <SelectItem value="22">{language === "ko" ? "22시간 ($380)" : "22h ($380)"}</SelectItem>
+                                </SelectContent>
+                              </Select>
                             )} 
                           />
                         </div>
@@ -1314,7 +1335,7 @@ export default function Home() {
                       <div className="text-xs text-pink-100 space-y-1">
                         {ecoGirlEstimate.details.map((detail, idx) => (
                           <div key={idx} className="flex justify-between">
-                            <span>{detail.date} ({detail.count}{language === "ko" ? "명" : ""})</span>
+                            <span>{detail.date} ({detail.hours}{language === "ko" ? "시간" : "h"} x {detail.count}{language === "ko" ? "명" : ""})</span>
                             <span>${detail.price}</span>
                           </div>
                         ))}
