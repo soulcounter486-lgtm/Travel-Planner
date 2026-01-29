@@ -659,6 +659,26 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                 <p>• {language === "ko" ? "취소 시 현지 사정상 예약금은 환불 불가 합니다." : "Deposit is non-refundable upon cancellation."}</p>
               </div>
             </div>
+
+            <div 
+              className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700 text-center space-y-1"
+              style={isCapturing ? { paddingTop: '16px', marginTop: '16px', borderTop: '1px solid #e2e8f0', textAlign: 'center' } : {}}
+            >
+              <span 
+                className="text-sm font-bold text-slate-700 dark:text-slate-200 block"
+                style={isCapturing ? { fontSize: '14px', fontWeight: 'bold', color: '#334155', display: 'block' } : {}}
+              >
+                붕따우 도깨비
+              </span>
+              <div 
+                className="text-[11px] text-muted-foreground space-y-0.5"
+                style={isCapturing ? { fontSize: '11px', color: '#64748b' } : {}}
+              >
+                <div style={isCapturing ? { marginBottom: '2px' } : {}}>📞 089.932.6273</div>
+                <div style={isCapturing ? { marginBottom: '2px' } : {}}>💬 카카오톡 ID: vungtau</div>
+                <div>🌐 vungtau.blog</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
