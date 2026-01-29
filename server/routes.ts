@@ -1558,6 +1558,29 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 프로필 이름 변경 시 게시글/댓글 작성자 이름 동기화
+  app.post("/api/sync-author-name", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub;
+      const newName = user?.claims?.first_name || user?.claims?.email || "사용자";
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // 해당 사용자의 모든 게시글 authorName 업데이트
+      await db.update(posts)
+        .set({ authorName: newName })
+        .where(eq(posts.authorId, userId));
+
+      res.json({ success: true, newName });
+    } catch (err) {
+      console.error("Sync author name error:", err);
+      res.status(500).json({ message: "Failed to sync author name" });
+    }
+  });
+
   // 게시판 - 게시글 수정 (관리자만)
   app.patch("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import type { User } from "@shared/models/auth";
 
 async function fetchUser(): Promise<User | null> {
@@ -17,6 +18,17 @@ async function fetchUser(): Promise<User | null> {
   return response.json();
 }
 
+async function syncAuthorName(): Promise<void> {
+  try {
+    await fetch("/api/sync-author-name", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (err) {
+    console.error("Failed to sync author name:", err);
+  }
+}
+
 async function logout(): Promise<void> {
   window.location.href = "/api/logout";
 }
@@ -29,6 +41,13 @@ export function useAuth() {
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  // 로그인 시 게시글 작성자 이름 동기화
+  useEffect(() => {
+    if (user) {
+      syncAuthorName();
+    }
+  }, [user?.id]);
 
   const logoutMutation = useMutation({
     mutationFn: logout,
