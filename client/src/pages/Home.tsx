@@ -1231,20 +1231,21 @@ export default function Home() {
             {isAdmin && (
               <Controller control={form.control} name="ecoGirl.enabled" render={({ field }) => (
                 <SectionCard 
-                  title={
-                    <span className="flex items-center gap-2">
-                      {language === "ko" ? "에코" : language === "en" ? "Eco" : language === "zh" ? "生态" : language === "vi" ? "Eco" : language === "ru" ? "Эко" : language === "ja" ? "エコ" : "에코"}
-                      <span className="text-[10px] font-normal text-muted-foreground">(18시~06시, 12시간 기준)</span>
-                    </span>
-                  } 
+                  title={language === "ko" ? "에코" : language === "en" ? "Eco" : language === "zh" ? "生态" : language === "vi" ? "Eco" : language === "ru" ? "Эко" : language === "ja" ? "エコ" : "에코"} 
                   icon={Users} 
                   isEnabled={field.value ?? false} 
                   onToggle={field.onChange} 
                   gradient="from-pink-500/10"
                 >
                   <div className="mb-4 text-sm text-pink-600 dark:text-pink-400 font-medium space-y-1">
-                    <div>{language === "ko" ? "12시간: $220/인" : "12h: $220/person"}</div>
-                    <div>{language === "ko" ? "22시간: $380/인" : "22h: $380/person"}</div>
+                    <div className="flex items-baseline gap-2">
+                      <span>$220/인</span>
+                      <span className="text-xs text-pink-400 dark:text-pink-500">{language === "ko" ? "12시간 기준, 18~06시" : "12h, 18:00-06:00"}</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span>$380/인</span>
+                      <span className="text-xs text-pink-400 dark:text-pink-500">{language === "ko" ? "22시간 기준, 12~10시" : "22h, 12:00-10:00"}</span>
+                    </div>
                   </div>
                   <div className="space-y-4">
                     {values.ecoGirl?.selections?.map((selection, index) => (
