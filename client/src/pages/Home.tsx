@@ -754,7 +754,7 @@ export default function Home() {
                   </div>
                   <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm">
                     <p><strong>{t("villa.weekday")}:</strong> $350 | <strong>{t("villa.friday")}:</strong> $380 | <strong>{t("villa.saturday")}:</strong> $500</p>
-                    <p className="mt-1 text-xs text-blue-600/80">{t("villa.priceNote")}</p>
+                    <p className="mt-1 text-xs text-blue-600/80 whitespace-pre-line">{t("villa.priceNote")}</p>
                   </div>
                   {(villaEstimate.price > 0 || (loadedQuoteId && breakdown?.villa?.price)) && (
                     <div className="mt-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg">
