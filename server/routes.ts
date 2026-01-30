@@ -5,15 +5,16 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
-import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+import { setupAuth, registerAuthRoutes, isAuthenticated, getSession } from "./replit_integrations/auth";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import webpush from "web-push";
+import crypto from "crypto";
 
 // Web Push 설정
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || "";
@@ -142,6 +143,128 @@ export async function registerRoutes(
   // Setup authentication (MUST be before other routes)
   await setupAuth(app);
   registerAuthRoutes(app);
+
+  // === 카카오 로그인 OAuth ===
+  const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY || "";
+
+  // 카카오 로그인 시작
+  app.get("/api/auth/kakao", (req, res) => {
+    const state = crypto.randomBytes(16).toString("hex");
+    (req.session as any).kakaoState = state;
+    req.session.save(() => {
+      const redirectUri = `${req.protocol}://${req.hostname}/api/auth/kakao/callback`;
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
+      res.redirect(kakaoAuthUrl);
+    });
+  });
+
+  // 카카오 콜백 처리
+  app.get("/api/auth/kakao/callback", async (req, res) => {
+    try {
+      const { code, state } = req.query;
+      const sessionState = (req.session as any).kakaoState;
+      
+      // state 검증 강화: 둘 다 존재하고 일치해야 함
+      if (!state || !sessionState || state !== sessionState) {
+        return res.status(400).send("Invalid or missing state parameter");
+      }
+      
+      // 사용된 state 즉시 삭제 (재사용 방지)
+      delete (req.session as any).kakaoState;
+      
+      const redirectUri = `${req.protocol}://${req.hostname}/api/auth/kakao/callback`;
+
+      // 액세스 토큰 요청
+      const tokenResponse = await fetch("https://kauth.kakao.com/oauth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          client_id: KAKAO_REST_API_KEY,
+          redirect_uri: redirectUri,
+          code: code as string,
+        }),
+      });
+
+      if (!tokenResponse.ok) {
+        const error = await tokenResponse.text();
+        console.error("Kakao token error:", error);
+        return res.status(400).send("Failed to get access token");
+      }
+
+      const tokenData = await tokenResponse.json() as { access_token: string };
+
+      // 사용자 정보 요청
+      const userResponse = await fetch("https://kapi.kakao.com/v2/user/me", {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+        },
+      });
+
+      if (!userResponse.ok) {
+        return res.status(400).send("Failed to get user info");
+      }
+
+      const kakaoUser = await userResponse.json() as {
+        id: number;
+        kakao_account?: {
+          email?: string;
+          profile?: {
+            nickname?: string;
+            profile_image_url?: string;
+          };
+        };
+      };
+
+      // 사용자 ID 생성 (kakao_ prefix)
+      const kakaoUserId = `kakao_${kakaoUser.id}`;
+      const email = kakaoUser.kakao_account?.email || null;
+      const nickname = kakaoUser.kakao_account?.profile?.nickname || "카카오 사용자";
+      const profileImage = kakaoUser.kakao_account?.profile?.profile_image_url || null;
+
+      // DB에 사용자 저장/업데이트
+      await db.insert(users).values({
+        id: kakaoUserId,
+        email: email,
+        firstName: nickname,
+        lastName: "",
+        profileImageUrl: profileImage,
+      }).onConflictDoUpdate({
+        target: users.id,
+        set: {
+          email: email,
+          firstName: nickname,
+          profileImageUrl: profileImage,
+          updatedAt: new Date(),
+        },
+      });
+
+      // 세션에 사용자 정보 저장 (Replit Auth와 호환되는 형식)
+      const user = {
+        claims: {
+          sub: kakaoUserId,
+          email: email,
+          first_name: nickname,
+          last_name: "",
+          profile_image_url: profileImage,
+        },
+        expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 1주일
+      };
+
+      (req as any).login(user, (err: any) => {
+        if (err) {
+          console.error("Kakao login session error:", err);
+          return res.status(500).send("Login failed");
+        }
+        res.redirect("/");
+      });
+    } catch (error) {
+      console.error("Kakao OAuth error:", error);
+      res.status(500).send("Authentication failed");
+    }
+  });
 
   // SEO: robots.txt
   app.get("/robots.txt", (req, res) => {
