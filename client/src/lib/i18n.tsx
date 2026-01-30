@@ -65,7 +65,7 @@ export const translations: Record<Language, Record<string, string>> = {
     "villa.weekday": "평일(일-목)",
     "villa.friday": "금요일",
     "villa.saturday": "토요일",
-    "villa.priceNote": "* 빌라 방갯수와 컨디션에 따라 가격은 변경될 수 있습니다.",
+    "villa.priceNote": "※가격은 방 오픈 갯수와 성수기(6,7,8,9월) 공휴일에 따라 상이 할 수 있습니다. ※최저가 보장※ 어플가격이 더 싸다면 링크 보내주시면 더 저렴하게 부킹 해 드립니다.",
     "villa.estimatedPrice": "예상 금액",
     "villa.nightsTotal": "박 기준 예상 금액입니다",
     "villa.viewMore": "실제 빌라 사진 더보기",
