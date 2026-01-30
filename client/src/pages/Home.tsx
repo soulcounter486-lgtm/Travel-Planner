@@ -648,16 +648,29 @@ export default function Home() {
                     {language === "ko" ? "로그아웃" : "Logout"}
                   </Button>
                 ) : (
-                  <a href="/api/login" data-testid="button-login">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="shrink-0 rounded-full h-6 px-2 text-[10px]"
-                    >
-                      <LogIn className="w-3 h-3 mr-1" />
-                      {language === "ko" ? "로그인" : "Login"}
-                    </Button>
-                  </a>
+                  <div className="flex items-center gap-1">
+                    <a href="/api/auth/kakao" data-testid="button-login-kakao">
+                      <Button
+                        size="sm"
+                        className="shrink-0 rounded-full h-6 px-2 text-[10px] bg-[#FEE500] hover:bg-[#FDD800] text-[#3C1E1E] border-0"
+                      >
+                        <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.683 1.74 5.028 4.348 6.385-.19.71-.69 2.576-.788 2.976-.12.49.18.483.379.352.156-.103 2.484-1.69 3.502-2.378.85.126 1.723.192 2.559.192 5.523 0 10-3.463 10-7.714C22 6.463 17.523 3 12 3z"/>
+                        </svg>
+                        카카오
+                      </Button>
+                    </a>
+                    <a href="/api/login" data-testid="button-login">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="shrink-0 rounded-full h-6 px-2 text-[10px]"
+                      >
+                        <LogIn className="w-3 h-3 mr-1" />
+                        Replit
+                      </Button>
+                    </a>
+                  </div>
                 )}
               </div>
               <p className="text-sm md:text-base text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
