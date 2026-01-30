@@ -754,7 +754,16 @@ export default function Home() {
                   </div>
                   <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm">
                     <p><strong>{t("villa.weekday")}:</strong> $350 | <strong>{t("villa.friday")}:</strong> $380 | <strong>{t("villa.saturday")}:</strong> $500</p>
-                    <p className="mt-1 text-xs text-blue-600/80 whitespace-pre-line">{t("villa.priceNote")}</p>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                        <span className="text-amber-500 mt-0.5">📌</span>
+                        <span>가격은 방 오픈 갯수와 성수기(6,7,8,9월) 공휴일에 따라 상이 할 수 있습니다.</span>
+                      </div>
+                      <div className="flex items-start gap-2 text-xs text-green-700 bg-green-50 p-2 rounded-lg border border-green-200">
+                        <span className="text-green-500 mt-0.5">💰</span>
+                        <span><strong>최저가 보장!</strong> 어플가격이 더 싸다면 링크 보내주시면 더 저렴하게 부킹 해 드립니다.</span>
+                      </div>
+                    </div>
                   </div>
                   {(villaEstimate.price > 0 || (loadedQuoteId && breakdown?.villa?.price)) && (
                     <div className="mt-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-xl shadow-lg">
