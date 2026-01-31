@@ -2341,8 +2341,15 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
 
       const uploadedUrls: string[] = [];
       
-      for (const imageUrl of imageUrls) {
+      for (let imageUrl of imageUrls) {
         try {
+          // mblogthumb-phinf를 postfiles로 변환 (원본 이미지 URL)
+          if (imageUrl.includes("mblogthumb-phinf.pstatic.net")) {
+            imageUrl = imageUrl.replace("mblogthumb-phinf.pstatic.net", "postfiles.pstatic.net");
+          }
+          
+          console.log("Downloading:", imageUrl);
+          
           // Referer 헤더를 설정해서 네이버 이미지 다운로드
           const imgResponse = await fetch(imageUrl, {
             headers: {
