@@ -2382,7 +2382,8 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
             },
           });
 
-          const publicUrl = `https://storage.googleapis.com/${bucketId}/public/${fileName}`;
+          // 앱 내부 경로로 URL 생성 (GCS 직접 접근은 403 에러 발생)
+          const publicUrl = `/api/public-images/${fileName}`;
           uploadedUrls.push(publicUrl);
           console.log("Uploaded:", publicUrl);
         } catch (imgError: any) {
@@ -2398,6 +2399,35 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     } catch (error) {
       console.error("Download blog images error:", error);
       res.status(500).json({ error: "Failed to download images" });
+    }
+  });
+
+  // Public 이미지 서빙 (Object Storage에서)
+  app.get("/api/public-images/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+      
+      if (!bucketId) {
+        return res.status(500).json({ error: "Object storage not configured" });
+      }
+
+      const bucket = objectStorageClient.bucket(bucketId);
+      const file = bucket.file(`public/${filename}`);
+      
+      const [exists] = await file.exists();
+      if (!exists) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+
+      const [metadata] = await file.getMetadata();
+      res.setHeader("Content-Type", metadata.contentType || "image/jpeg");
+      res.setHeader("Cache-Control", "public, max-age=31536000");
+      
+      file.createReadStream().pipe(res);
+    } catch (error) {
+      console.error("Serve public image error:", error);
+      res.status(500).json({ error: "Failed to serve image" });
     }
   });
 
