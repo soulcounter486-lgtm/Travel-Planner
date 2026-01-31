@@ -101,7 +101,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { LogIn, LogOut, ChevronRight, Settings } from "lucide-react";
+import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X } from "lucide-react";
 import type { Villa } from "@shared/schema";
 
 export default function Home() {
@@ -115,6 +115,8 @@ export default function Home() {
   });
   const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
   const selectedVilla = villas.find(v => v.id === selectedVillaId) || null;
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
   
   // 언어별 달력 locale 매핑
   const calendarLocale = useMemo(() => {
@@ -801,7 +803,16 @@ export default function Home() {
                       {/* 선택된 빌라 큰 사진 및 세부사항 */}
                       {selectedVilla && (
                         <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 shadow-md">
-                          <div className="aspect-[16/9] relative">
+                          <div 
+                            className="aspect-[16/9] relative cursor-pointer group"
+                            onClick={() => {
+                              if (selectedVilla.images && selectedVilla.images.length > 0) {
+                                setGalleryIndex(0);
+                                setGalleryOpen(true);
+                              }
+                            }}
+                            data-testid="villa-main-image"
+                          >
                             {selectedVilla.mainImage ? (
                               <img 
                                 src={selectedVilla.mainImage} 
@@ -813,6 +824,13 @@ export default function Home() {
                                 <Camera className="h-12 w-12 text-muted-foreground" />
                               </div>
                             )}
+                            {/* 이미지 개수 표시 및 클릭 안내 */}
+                            {selectedVilla.images && selectedVilla.images.length > 1 && (
+                              <div className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                <Camera className="w-3 h-3" />
+                                {selectedVilla.images.length}장
+                              </div>
+                            )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
                               <h3 className="text-white text-lg font-bold">{selectedVilla.name}</h3>
                               {selectedVilla.maxGuests && selectedVilla.bedrooms && (
@@ -821,6 +839,14 @@ export default function Home() {
                                 </p>
                               )}
                             </div>
+                            {/* 호버 시 "사진 더보기" 표시 */}
+                            {selectedVilla.images && selectedVilla.images.length > 0 && (
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+                                  📷 사진 보기
+                                </span>
+                              </div>
+                            )}
                           </div>
                           <div className="p-4 bg-card">
                             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -1773,6 +1799,86 @@ export default function Home() {
           </span>
         </div>
       </div>
+
+      {/* 빌라 이미지 갤러리 모달 */}
+      <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-black/95 border-none">
+          <div className="relative w-full h-full flex flex-col">
+            {/* 닫기 버튼 */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-50 text-white hover:bg-white/20"
+              onClick={() => setGalleryOpen(false)}
+              data-testid="button-close-gallery"
+            >
+              <X className="w-6 h-6" />
+            </Button>
+            
+            {/* 이미지 카운터 */}
+            {selectedVilla?.images && selectedVilla.images.length > 0 && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
+                {galleryIndex + 1} / {selectedVilla.images.length}
+              </div>
+            )}
+            
+            {/* 메인 이미지 영역 */}
+            <div className="flex-1 flex items-center justify-center p-4 min-h-[60vh]">
+              {selectedVilla?.images && selectedVilla.images[galleryIndex] && (
+                <img
+                  src={selectedVilla.images[galleryIndex]}
+                  alt={`${selectedVilla.name} - ${galleryIndex + 1}`}
+                  className="max-w-full max-h-[70vh] object-contain"
+                  data-testid={`gallery-image-${galleryIndex}`}
+                />
+              )}
+            </div>
+            
+            {/* 네비게이션 버튼 */}
+            {selectedVilla?.images && selectedVilla.images.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                  onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1)}
+                  data-testid="button-gallery-prev"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                  onClick={() => setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0)}
+                  data-testid="button-gallery-next"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </Button>
+              </>
+            )}
+            
+            {/* 썸네일 리스트 */}
+            {selectedVilla?.images && selectedVilla.images.length > 1 && (
+              <div className="flex gap-2 p-4 overflow-x-auto justify-center bg-black/80">
+                {selectedVilla.images.map((img, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => setGalleryIndex(idx)}
+                    className={cn(
+                      "flex-shrink-0 w-16 h-16 rounded-md overflow-hidden cursor-pointer border-2 transition-all",
+                      idx === galleryIndex ? "border-primary ring-2 ring-primary/50" : "border-transparent opacity-60 hover:opacity-100"
+                    )}
+                    data-testid={`gallery-thumb-${idx}`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
