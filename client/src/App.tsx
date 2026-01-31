@@ -13,6 +13,7 @@ import ChatRoom from "@/pages/ChatRoom";
 import Board from "@/pages/Board";
 import DietProducts from "@/pages/DietProducts";
 import LocationShare from "@/pages/LocationShare";
+import Privacy from "@/pages/Privacy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/board" component={Board} />
       <Route path="/diet" component={DietProducts} />
       <Route path="/locations" component={LocationShare} />
+      <Route path="/privacy" component={Privacy} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -1515,7 +1515,7 @@ export default function Home() {
             <div>© 2026 Vung Tau Travel Saver. All rights reserved.</div>
             <div className="flex gap-6">
               <span className="hover:text-slate-300 cursor-pointer transition-colors">이용약관</span>
-              <span className="hover:text-slate-300 cursor-pointer transition-colors">개인정보처리방침</span>
+              <Link href="/privacy" className="hover:text-slate-300 cursor-pointer transition-colors" data-testid="link-privacy">개인정보처리방침</Link>
             </div>
           </div>
         </div>
