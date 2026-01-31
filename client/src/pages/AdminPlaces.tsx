@@ -281,19 +281,6 @@ export default function AdminPlaces() {
           </Link>
           <h1 className="text-2xl font-bold">관광/맛집 관리</h1>
           
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-32" data-testid="select-category-filter">
-              <SelectValue placeholder="전체" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체</SelectItem>
-              <SelectItem value="attraction">관광명소</SelectItem>
-              <SelectItem value="restaurant">맛집</SelectItem>
-              <SelectItem value="cafe">카페</SelectItem>
-              <SelectItem value="other">기타</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
               <Button className="ml-auto" data-testid="button-add-place">
@@ -312,6 +299,38 @@ export default function AdminPlaces() {
               />
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* 카테고리 탭 */}
+        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+          {[
+            { value: "all", label: "전체" },
+            { value: "attraction", label: "관광명소" },
+            { value: "local_food", label: "현지맛집" },
+            { value: "nightlife", label: "나이트라이프" },
+            { value: "spa", label: "스파/마사지" },
+            { value: "cafe", label: "카페" },
+            { value: "other", label: "기타" },
+          ].map(tab => (
+            <Button
+              key={tab.value}
+              variant={filterCategory === tab.value ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterCategory(tab.value)}
+              data-testid={`tab-${tab.value}`}
+            >
+              {tab.label}
+              {tab.value !== "all" && (
+                <span className="ml-1 text-xs opacity-70">
+                  ({tab.value === filterCategory 
+                    ? filteredDbPlaces.length + filteredHardcodedPlaces.filter(p => !dbPlaceNames.has(p.name)).length
+                    : (dbPlaces.filter(p => p.category === tab.value).length + 
+                       hardcodedPlacesList.filter(p => p.category === tab.value && !dbPlaceNames.has(p.name)).length)
+                  })
+                </span>
+              )}
+            </Button>
+          ))}
         </div>
 
         {isLoading ? (
