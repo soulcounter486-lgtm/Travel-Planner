@@ -186,6 +186,7 @@ export default function AdminVillas() {
                         src={villa.mainImage || villa.images[0]}
                         alt={villa.name}
                         className="w-24 h-24 object-cover rounded-md"
+                        referrerPolicy="no-referrer"
                       />
                     ) : (
                       <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center">
@@ -459,7 +460,13 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                         src={img}
                         alt={`추출 ${idx + 1}`}
                         className="h-16 w-full object-cover"
-                        onError={(e) => (e.currentTarget.style.display = "none")}
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.opacity = "0.3";
+                          target.alt = "로드 실패";
+                        }}
                       />
                       {isSelected && (
                         <div className="absolute top-0 right-0 bg-primary text-white text-[10px] px-1">
@@ -496,6 +503,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                     src={img}
                     alt={`사진 ${idx + 1}`}
                     className={`h-20 w-full object-cover rounded-md ${idx === 0 ? "ring-2 ring-primary" : ""}`}
+                    referrerPolicy="no-referrer"
                     onError={(e) => (e.currentTarget.src = "/placeholder.png")}
                   />
                   {idx === 0 && (
