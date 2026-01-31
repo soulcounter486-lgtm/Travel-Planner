@@ -594,7 +594,38 @@ export default function Home() {
       return () => clearTimeout(timer);
     });
     return () => subscription.unsubscribe();
-  }, [form.watch, calculateMutation, isLoadingQuote]);
+  }, [form.watch, calculateMutation, isLoadingQuote, selectedVillaId]);
+
+  // 빌라 선택 변경 시 즉시 재계산 트리거
+  useEffect(() => {
+    if (isLoadingQuoteRef.current) return;
+    const value = form.getValues();
+    
+    if (value.villa?.enabled && value.villa.checkIn && value.villa.checkOut) {
+      const payload: any = {
+        villa: { enabled: true, checkIn: value.villa.checkIn, checkOut: value.villa.checkOut, rooms: value.villa.rooms || 1, villaId: selectedVillaId || undefined },
+        vehicle: value.vehicle?.enabled && value.vehicle.selections && value.vehicle.selections.length > 0
+          ? { enabled: true, selections: value.vehicle.selections.filter(s => s && s.date && s.type && s.route) }
+          : { enabled: false },
+        golf: value.golf?.enabled && value.golf.selections && value.golf.selections.length > 0
+          ? { enabled: true, selections: value.golf.selections.filter((s): s is NonNullable<typeof s> => !!(s && s.date && s.course)).map(s => ({ ...s, players: Number(s.players) || 1 })) }
+          : { enabled: false },
+        ecoGirl: value.ecoGirl?.enabled && value.ecoGirl.selections && value.ecoGirl.selections.length > 0
+          ? { enabled: true, selections: value.ecoGirl.selections.filter((s): s is NonNullable<typeof s> => !!(s && s.date)).map(s => ({ ...s, count: Number(s.count) || 1 })) }
+          : { enabled: false },
+        guide: value.guide?.enabled
+          ? { enabled: true, days: value.guide.days || 0, groupSize: value.guide.groupSize || 1 }
+          : { enabled: false },
+        fastTrack: value.fastTrack?.enabled
+          ? { enabled: true, type: value.fastTrack.type || "oneway", persons: value.fastTrack.persons || 0 }
+          : { enabled: false }
+      };
+      calculateMutation.mutate(payload, {
+        onSuccess: (data) => setBreakdown(data),
+        onError: (error) => console.error("Calculation error", error)
+      });
+    }
+  }, [selectedVillaId]);
 
   const handleSaveQuote = async () => {
     if (!breakdown) return;
