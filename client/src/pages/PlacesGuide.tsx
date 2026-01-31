@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
@@ -1013,6 +1014,7 @@ function convertDBPlace(dbPlace: DBPlace): Place | null {
 
 export default function PlacesGuide() {
   const { language, t } = useLanguage();
+  const { user, isAdmin } = useAuth();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["attractions", "localFood"]));
   const [visitorCount, setVisitorCount] = useState<number>(0);
 
@@ -1111,7 +1113,23 @@ export default function PlacesGuide() {
                         {category.places.length}
                       </Badge>
                     </div>
-                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    <div className="flex items-center gap-2">
+                      {isAdmin && (
+                        <Link href="/admin/places">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-white hover:bg-white/20"
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid="button-admin-places"
+                          >
+                            <Settings className="w-4 h-4 mr-1" />
+                            {language === "ko" ? "관리" : "Manage"}
+                          </Button>
+                        </Link>
+                      )}
+                      {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </div>
                   </CardTitle>
                 </CardHeader>
 
