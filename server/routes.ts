@@ -2244,8 +2244,10 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   // 모든 빌라 조회 (관리자용 - 비활성화 포함)
   app.get("/api/admin/villas", async (req, res) => {
     try {
-      const user = await getSession(req);
-      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const allVillas = await db.select()
@@ -2276,8 +2278,10 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   // 빌라 추가 (관리자만)
   app.post("/api/admin/villas", async (req, res) => {
     try {
-      const user = await getSession(req);
-      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const data = insertVillaSchema.parse(req.body);
@@ -2292,8 +2296,10 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   // 빌라 수정 (관리자만)
   app.patch("/api/admin/villas/:id", async (req, res) => {
     try {
-      const user = await getSession(req);
-      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const id = parseInt(req.params.id);
@@ -2315,8 +2321,10 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   // 빌라 삭제 (관리자만)
   app.delete("/api/admin/villas/:id", async (req, res) => {
     try {
-      const user = await getSession(req);
-      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const id = parseInt(req.params.id);

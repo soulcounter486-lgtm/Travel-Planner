@@ -402,10 +402,10 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             <Label htmlFor="weekdayPrice">평일 가격 (USD)</Label>
             <Input
               id="weekdayPrice"
-              type="number"
-              value={formData.weekdayPrice}
-              onChange={(e) => setFormData({ ...formData, weekdayPrice: Number(e.target.value) })}
-              min={0}
+              type="text"
+              inputMode="numeric"
+              value={formData.weekdayPrice === 0 ? "" : formData.weekdayPrice}
+              onChange={(e) => setFormData({ ...formData, weekdayPrice: e.target.value === "" ? 0 : Number(e.target.value) || 0 })}
               data-testid="input-price-weekday"
             />
           </div>
@@ -413,10 +413,10 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             <Label htmlFor="fridayPrice">금요일 가격 (USD)</Label>
             <Input
               id="fridayPrice"
-              type="number"
-              value={formData.fridayPrice}
-              onChange={(e) => setFormData({ ...formData, fridayPrice: Number(e.target.value) })}
-              min={0}
+              type="text"
+              inputMode="numeric"
+              value={formData.fridayPrice === 0 ? "" : formData.fridayPrice}
+              onChange={(e) => setFormData({ ...formData, fridayPrice: e.target.value === "" ? 0 : Number(e.target.value) || 0 })}
               data-testid="input-price-friday"
             />
           </div>
@@ -424,10 +424,10 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             <Label htmlFor="weekendPrice">주말 가격 (USD)</Label>
             <Input
               id="weekendPrice"
-              type="number"
-              value={formData.weekendPrice}
-              onChange={(e) => setFormData({ ...formData, weekendPrice: Number(e.target.value) })}
-              min={0}
+              type="text"
+              inputMode="numeric"
+              value={formData.weekendPrice === 0 ? "" : formData.weekendPrice}
+              onChange={(e) => setFormData({ ...formData, weekendPrice: e.target.value === "" ? 0 : Number(e.target.value) || 0 })}
               data-testid="input-price-weekend"
             />
           </div>
@@ -435,10 +435,10 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             <Label htmlFor="holidayPrice">공휴일 가격 (USD)</Label>
             <Input
               id="holidayPrice"
-              type="number"
-              value={formData.holidayPrice}
-              onChange={(e) => setFormData({ ...formData, holidayPrice: Number(e.target.value) })}
-              min={0}
+              type="text"
+              inputMode="numeric"
+              value={formData.holidayPrice === 0 ? "" : formData.holidayPrice}
+              onChange={(e) => setFormData({ ...formData, holidayPrice: e.target.value === "" ? 0 : Number(e.target.value) || 0 })}
               data-testid="input-price-holiday"
             />
           </div>
@@ -449,10 +449,10 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             <Label htmlFor="maxGuests">최대 인원</Label>
             <Input
               id="maxGuests"
-              type="number"
-              value={formData.maxGuests}
-              onChange={(e) => setFormData({ ...formData, maxGuests: Number(e.target.value) })}
-              min={1}
+              type="text"
+              inputMode="numeric"
+              value={formData.maxGuests === 0 ? "" : formData.maxGuests}
+              onChange={(e) => setFormData({ ...formData, maxGuests: e.target.value === "" ? 0 : Number(e.target.value) || 0 })}
               data-testid="input-max-guests"
             />
           </div>
@@ -460,10 +460,10 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             <Label htmlFor="bedrooms">침실 수</Label>
             <Input
               id="bedrooms"
-              type="number"
-              value={formData.bedrooms}
-              onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) })}
-              min={1}
+              type="text"
+              inputMode="numeric"
+              value={formData.bedrooms === 0 ? "" : formData.bedrooms}
+              onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value === "" ? 0 : Number(e.target.value) || 0 })}
               data-testid="input-bedrooms"
             />
           </div>
