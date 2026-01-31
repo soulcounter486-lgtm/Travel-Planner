@@ -226,6 +226,7 @@ export default function AdminVillas() {
                     villa={villa}
                     onEdit={() => setEditingVilla(villa)}
                     onDelete={() => deleteMutation.mutate(villa.id)}
+                    onToggleActive={() => updateMutation.mutate({ id: villa.id, data: { isActive: !villa.isActive } })}
                     isEditOpen={editingVilla?.id === villa.id}
                     onEditClose={() => setEditingVilla(null)}
                     onSubmit={(data) => updateMutation.mutate({ id: villa.id, data })}
@@ -246,13 +247,14 @@ interface SortableVillaCardProps {
   villa: Villa;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleActive: () => void;
   isEditOpen: boolean;
   onEditClose: () => void;
   onSubmit: (data: Partial<Villa>) => void;
   isLoading: boolean;
 }
 
-function SortableVillaCard({ villa, onEdit, onDelete, isEditOpen, onEditClose, onSubmit, isLoading }: SortableVillaCardProps) {
+function SortableVillaCard({ villa, onEdit, onDelete, onToggleActive, isEditOpen, onEditClose, onSubmit, isLoading }: SortableVillaCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: villa.id });
   
   const style = {
@@ -297,7 +299,13 @@ function SortableVillaCard({ villa, onEdit, onDelete, isEditOpen, onEditClose, o
           </div>
           
           {/* 버튼 */}
-          <div className="flex gap-2 flex-shrink-0">
+          <div className="flex gap-2 flex-shrink-0 items-center">
+            {/* 활성화/비활성화 토글 */}
+            <Switch
+              checked={villa.isActive ?? true}
+              onCheckedChange={onToggleActive}
+              data-testid={`switch-villa-active-${villa.id}`}
+            />
             <Dialog open={isEditOpen} onOpenChange={(open) => !open && onEditClose()}>
               <DialogTrigger asChild>
                 <Button
