@@ -767,8 +767,17 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                   <img
                     src={img}
                     alt={`사진 ${idx + 1}`}
-                    className={`h-20 w-full object-cover rounded-md ${idx === 0 ? "ring-2 ring-primary" : ""}`}
+                    className={`h-20 w-full object-cover rounded-md cursor-pointer hover:opacity-80 transition-opacity ${idx === 0 ? "ring-2 ring-primary" : ""}`}
                     onError={(e) => (e.currentTarget.src = "/placeholder.png")}
+                    onClick={() => {
+                      if (idx !== 0) {
+                        const newImages = [...formData.images];
+                        const [selected] = newImages.splice(idx, 1);
+                        newImages.unshift(selected);
+                        setFormData({ ...formData, images: newImages });
+                      }
+                    }}
+                    title={idx === 0 ? "현재 대표 이미지" : "클릭하여 대표 이미지로 설정"}
                   />
                   {idx === 0 && (
                     <span className="absolute top-0 left-0 bg-primary text-white text-[10px] px-1 rounded-br">대표</span>
@@ -786,7 +795,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
               ))}
             </div>
           )}
-          <p className="text-xs text-muted-foreground mt-2">첫 번째 사진이 대표 이미지로 사용됩니다</p>
+          <p className="text-xs text-muted-foreground mt-2">사진을 클릭하면 대표 이미지로 설정됩니다</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
