@@ -1496,11 +1496,29 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       // 단축 URL (maps.app.goo.gl, goo.gl/maps) 처리 - 리다이렉트 따라가기
       if (url.includes("goo.gl") || url.includes("maps.app.goo.gl")) {
         try {
+          // manual redirect 설정으로 Location 헤더 추출
           const response = await fetch(url, { 
-            redirect: "follow",
-            headers: { "User-Agent": "Mozilla/5.0" }
+            redirect: "manual",
+            headers: { 
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              "Accept": "text/html,application/xhtml+xml"
+            }
           });
-          finalUrl = response.url;
+          
+          // 302 리다이렉트의 Location 헤더 확인
+          const location = response.headers.get("location");
+          if (location) {
+            finalUrl = location;
+            console.log("Redirected to:", finalUrl);
+          } else {
+            // Location 없으면 body에서 URL 추출 시도
+            const body = await response.text();
+            const urlMatch = body.match(/https:\/\/www\.google\.[a-z]+\/maps[^"'\s]*/);
+            if (urlMatch) {
+              finalUrl = urlMatch[0];
+              console.log("Extracted from body:", finalUrl);
+            }
+          }
         } catch (e) {
           console.error("Redirect follow error:", e);
         }
@@ -1544,9 +1562,11 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         name = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
       }
       
-      if (!latitude || !longitude) {
+      // 좌표가 없어도 이름이 있으면 성공 처리
+      // 사용자가 직접 좌표를 입력할 수 있음
+      if (!latitude && !longitude && !name) {
         return res.status(400).json({ 
-          error: "URL에서 좌표를 추출할 수 없습니다. 구글 맵에서 장소를 선택 후 공유 링크를 복사해주세요." 
+          error: "URL에서 정보를 추출할 수 없습니다. 구글 맵에서 장소 상세 페이지의 URL을 복사해주세요." 
         });
       }
       
@@ -1557,6 +1577,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         longitude,
         originalUrl: url,
         resolvedUrl: finalUrl,
+        message: (!latitude && !longitude) ? "좌표를 추출할 수 없어 직접 입력이 필요합니다" : undefined,
       });
     } catch (err) {
       console.error("Parse Google Maps URL error:", err);
