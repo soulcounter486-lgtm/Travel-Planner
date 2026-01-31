@@ -305,7 +305,12 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // 첫 번째 이미지를 대표 이미지로 자동 설정
+    const dataToSubmit = {
+      ...formData,
+      mainImage: formData.images.length > 0 ? formData.images[0] : "",
+    };
+    onSubmit(dataToSubmit);
   };
 
   const addGalleryImage = () => {
@@ -341,26 +346,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="mainImage">대표 사진 URL</Label>
-          <Input
-            id="mainImage"
-            value={formData.mainImage}
-            onChange={(e) => setFormData({ ...formData, mainImage: e.target.value })}
-            placeholder="https://example.com/image.jpg"
-            data-testid="input-villa-main-image"
-          />
-          {formData.mainImage && (
-            <img
-              src={formData.mainImage}
-              alt="미리보기"
-              className="mt-2 h-32 object-cover rounded-md"
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
-          )}
-        </div>
-
-        <div>
-          <Label>갤러리 이미지</Label>
+          <Label>사진 URL (첫 번째가 대표 사진)</Label>
           <div className="flex gap-2 mt-1">
             <Input
               value={newImageUrl}
@@ -378,10 +364,13 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                 <div key={idx} className="relative">
                   <img
                     src={img}
-                    alt={`갤러리 ${idx + 1}`}
-                    className="h-20 w-full object-cover rounded-md"
+                    alt={`사진 ${idx + 1}`}
+                    className={`h-20 w-full object-cover rounded-md ${idx === 0 ? "ring-2 ring-primary" : ""}`}
                     onError={(e) => (e.currentTarget.src = "/placeholder.png")}
                   />
+                  {idx === 0 && (
+                    <span className="absolute top-0 left-0 bg-primary text-white text-[10px] px-1 rounded-br">대표</span>
+                  )}
                   <Button
                     type="button"
                     size="icon"
@@ -395,6 +384,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
               ))}
             </div>
           )}
+          <p className="text-xs text-muted-foreground mt-2">첫 번째 사진이 대표 이미지로 사용됩니다</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
