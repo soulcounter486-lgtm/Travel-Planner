@@ -4,6 +4,12 @@
 
 A travel quote calculator application for generating custom trip estimates. The system allows users to configure various travel options (villa stays, vehicle rentals, eco-guides, and tour guides) and calculates pricing based on complex rules including day-of-week pricing, vehicle types, and group sizes. Users can save quotes to a database for future reference.
 
+### Villa Management System (2025-01-31 추가)
+- **관리자 빌라 관리**: `/admin/villas` 페이지에서 관리자가 직접 풀빌라 추가/수정/삭제
+- **빌라 가격 체계**: weekdayPrice(평일), fridayPrice(금요일), weekendPrice(주말), holidayPrice(공휴일/베트남 공휴일)
+- **빌라 선택 갤러리**: Home 페이지에서 사용자가 빌라 선택 시 해당 빌라의 가격으로 자동 견적 계산
+- **견적 저장**: 저장된 견적에 villaId, villaName 포함
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
