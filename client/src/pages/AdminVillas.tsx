@@ -284,6 +284,41 @@ interface VillaFormProps {
   onCancel: () => void;
 }
 
+// 구글맵 URL에서 좌표 추출
+function extractCoordsFromGoogleMapsUrl(url: string): { lat: string; lng: string } | null {
+  if (!url) return null;
+  
+  // 패턴 1: @10.3543,107.0842 형식
+  const atPattern = /@(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const atMatch = url.match(atPattern);
+  if (atMatch) {
+    return { lat: atMatch[1], lng: atMatch[2] };
+  }
+  
+  // 패턴 2: ?q=10.3543,107.0842 형식
+  const qPattern = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const qMatch = url.match(qPattern);
+  if (qMatch) {
+    return { lat: qMatch[1], lng: qMatch[2] };
+  }
+  
+  // 패턴 3: /place/10.3543,107.0842 형식
+  const placePattern = /\/place\/(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const placeMatch = url.match(placePattern);
+  if (placeMatch) {
+    return { lat: placeMatch[1], lng: placeMatch[2] };
+  }
+  
+  // 패턴 4: ll=10.3543,107.0842 형식
+  const llPattern = /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+  const llMatch = url.match(llPattern);
+  if (llMatch) {
+    return { lat: llMatch[1], lng: llMatch[2] };
+  }
+  
+  return null;
+}
+
 function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   const [formData, setFormData] = useState({
     name: villa?.name || "",
@@ -295,12 +330,28 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     holidayPrice: villa?.holidayPrice || 550,
     address: villa?.address || "",
     mapUrl: villa?.mapUrl || "",
+    latitude: villa?.latitude || "",
+    longitude: villa?.longitude || "",
     notes: villa?.notes || "",
     maxGuests: villa?.maxGuests || 10,
     bedrooms: villa?.bedrooms || 3,
     isActive: villa?.isActive ?? true,
     sortOrder: villa?.sortOrder || 0,
   });
+  
+  // 구글맵 URL 변경 시 좌표 자동 추출
+  const handleMapUrlChange = (url: string) => {
+    setFormData(prev => ({ ...prev, mapUrl: url }));
+    const coords = extractCoordsFromGoogleMapsUrl(url);
+    if (coords) {
+      setFormData(prev => ({
+        ...prev,
+        mapUrl: url,
+        latitude: coords.lat,
+        longitude: coords.lng,
+      }));
+    }
+  };
 
   const [newImageUrl, setNewImageUrl] = useState("");
   const [blogUrl, setBlogUrl] = useState("");
@@ -699,14 +750,45 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="mapUrl">지도 URL (Google Maps 등)</Label>
+          <Label htmlFor="mapUrl">지도 URL (Google Maps)</Label>
           <Input
             id="mapUrl"
             value={formData.mapUrl}
-            onChange={(e) => setFormData({ ...formData, mapUrl: e.target.value })}
-            placeholder="https://maps.google.com/..."
+            onChange={(e) => handleMapUrlChange(e.target.value)}
+            placeholder="https://maps.google.com/... 또는 https://maps.app.goo.gl/..."
             data-testid="input-map-url"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            구글맵 URL을 붙여넣으면 좌표가 자동 추출됩니다
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="latitude">위도 (Latitude)</Label>
+            <Input
+              id="latitude"
+              value={formData.latitude}
+              onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+              placeholder="10.3543"
+              data-testid="input-latitude"
+            />
+          </div>
+          <div>
+            <Label htmlFor="longitude">경도 (Longitude)</Label>
+            <Input
+              id="longitude"
+              value={formData.longitude}
+              onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+              placeholder="107.0842"
+              data-testid="input-longitude"
+            />
+          </div>
+          {formData.latitude && formData.longitude && (
+            <p className="col-span-2 text-xs text-green-600">
+              ✓ 좌표 설정됨: {formData.latitude}, {formData.longitude}
+            </p>
+          )}
         </div>
 
         <div>
