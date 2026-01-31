@@ -264,6 +264,7 @@ export async function registerRoutes(
         id: number;
         kakao_account?: {
           email?: string;
+          gender?: string; // male, female
           profile?: {
             nickname?: string;
             profile_image_url?: string;
@@ -276,6 +277,9 @@ export async function registerRoutes(
       const email = kakaoUser.kakao_account?.email || null;
       const nickname = kakaoUser.kakao_account?.profile?.nickname || "카카오 사용자";
       const profileImage = kakaoUser.kakao_account?.profile?.profile_image_url || null;
+      const gender = kakaoUser.kakao_account?.gender || null; // male, female
+
+      console.log("Kakao user info - gender:", gender);
 
       // DB에 사용자 저장/업데이트
       await db.insert(users).values({
@@ -284,12 +288,14 @@ export async function registerRoutes(
         firstName: nickname,
         lastName: "",
         profileImageUrl: profileImage,
+        gender: gender,
       }).onConflictDoUpdate({
         target: users.id,
         set: {
           email: email,
           firstName: nickname,
           profileImageUrl: profileImage,
+          gender: gender,
           updatedAt: new Date(),
         },
       });
@@ -302,6 +308,7 @@ export async function registerRoutes(
           first_name: nickname,
           last_name: "",
           profile_image_url: profileImage,
+          gender: gender,
         },
         expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 1주일
       };

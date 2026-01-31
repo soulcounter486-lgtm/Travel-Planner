@@ -1296,7 +1296,7 @@ export default function Home() {
               </SectionCard>
             )} />
 
-            {isAdmin && (
+            {(isAdmin || (isAuthenticated && user?.gender === 'male')) && (
               <Controller control={form.control} name="ecoGirl.enabled" render={({ field }) => (
                 <SectionCard 
                   title={language === "ko" ? "에코" : language === "en" ? "Eco" : language === "zh" ? "生态" : language === "vi" ? "Eco" : language === "ru" ? "Эко" : language === "ja" ? "エコ" : "에코"} 
