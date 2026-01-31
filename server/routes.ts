@@ -1902,8 +1902,12 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     const userId = user?.claims?.sub;
     const userEmail = user?.claims?.email || user?.email;
     const isAdmin = isUserAdmin(userId, userEmail);
+    
+    // 관리자 ID 목록 (Replit ID와 카카오 ID 등)
+    const adminUserIds = [ADMIN_USER_ID].filter(id => id);
+    
     console.log("Admin check - userId:", userId, "userEmail:", userEmail, "ADMIN_USER_ID:", ADMIN_USER_ID, "ADMIN_EMAIL:", ADMIN_EMAIL, "isAdmin:", isAdmin);
-    res.json({ isAdmin, isLoggedIn: !!user, userId });
+    res.json({ isAdmin, isLoggedIn: !!user, userId, adminUserIds });
   });
 
   // === 인스타그램 동기화 ===

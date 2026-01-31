@@ -970,11 +970,12 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   const { data: quotes, isLoading } = useQuotes();
   const queryClient = useQueryClient();
 
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean; userId?: string }>({
+  const { data: adminCheck } = useQuery<{ isAdmin: boolean; userId?: string; adminUserIds?: string[] }>({
     queryKey: ["/api/admin/check"],
   });
   const isAdmin = adminCheck?.isAdmin || false;
   const currentUserId = adminCheck?.userId;
+  const adminUserIds = adminCheck?.adminUserIds || [];
 
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
@@ -1015,8 +1016,13 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   const quoteCount = quotes?.length || 0;
   
   // 관리자일 때 견적서를 관리자/일반 사용자로 분리
-  const adminQuotes = isAdmin && quotes ? quotes.filter(q => q.userId === currentUserId) : [];
-  const userQuotes = isAdmin && quotes ? quotes.filter(q => q.userId !== currentUserId) : [];
+  // 관리자 계정 목록에 현재 사용자 ID도 포함하고, 모든 관리자 ID를 고려
+  const allAdminIds = [...adminUserIds];
+  if (currentUserId && !allAdminIds.includes(currentUserId)) {
+    allAdminIds.push(currentUserId);
+  }
+  const adminQuotes = isAdmin && quotes ? quotes.filter(q => allAdminIds.includes(q.userId || "")) : [];
+  const userQuotes = isAdmin && quotes ? quotes.filter(q => !allAdminIds.includes(q.userId || "")) : [];
 
   return (
     <Card className="rounded-2xl border-slate-200 dark:border-slate-700 shadow-lg bg-background relative z-0">
