@@ -932,45 +932,47 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* 작은 썸네일 리스트 */}
+                      {/* 작은 썸네일 그리드 (3열, 최대 2행 보이고 스크롤) */}
                       {villaViewMode === "list" && (
-                      <div className="flex gap-2 overflow-x-auto pb-2">
-                        {villas.map((villa) => (
-                          <div
-                            key={villa.id}
-                            onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
-                            className={cn(
-                              "relative flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all w-32 h-32",
-                              selectedVillaId === villa.id 
-                                ? "border-primary ring-2 ring-primary/30" 
-                                : "border-slate-200 hover:border-slate-300"
-                            )}
-                            data-testid={`villa-thumb-${villa.id}`}
-                          >
-                            {villa.mainImage ? (
-                              <img 
-                                src={villa.mainImage} 
-                                alt={villa.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-muted flex items-center justify-center">
-                                <Camera className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                            )}
-                            {selectedVillaId === villa.id && (
-                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                                <Check className="h-4 w-4 text-primary" />
-                              </div>
-                            )}
-                            {/* 룸 수 표시 */}
-                            {villa.bedrooms && (
-                              <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] text-center py-0.5">
-                                {villa.bedrooms}룸
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                      <div className="max-h-[220px] overflow-y-auto pb-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          {villas.map((villa) => (
+                            <div
+                              key={villa.id}
+                              onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
+                              className={cn(
+                                "relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all aspect-square",
+                                selectedVillaId === villa.id 
+                                  ? "border-primary ring-2 ring-primary/30" 
+                                  : "border-slate-200 hover:border-slate-300"
+                              )}
+                              data-testid={`villa-thumb-${villa.id}`}
+                            >
+                              {villa.mainImage ? (
+                                <img 
+                                  src={villa.mainImage} 
+                                  alt={villa.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <Camera className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              )}
+                              {selectedVillaId === villa.id && (
+                                <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                  <Check className="h-4 w-4 text-primary" />
+                                </div>
+                              )}
+                              {/* 룸 수 표시 */}
+                              {villa.bedrooms && (
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] text-center py-0.5">
+                                  {villa.bedrooms}룸
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       )}
                       
