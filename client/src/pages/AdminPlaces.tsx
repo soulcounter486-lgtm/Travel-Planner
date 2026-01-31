@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, ChevronUp, ChevronDown } from "lucide-react";
-import { Link } from "wouter";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, ChevronUp, ChevronDown, Lock } from "lucide-react";
+import { Link, useLocation } from "wouter";
 import type { Place } from "@shared/schema";
 import { useUpload } from "@/hooks/use-upload";
+import { placesData, type HardcodedPlace } from "./PlacesGuide";
 import {
   Dialog,
   DialogContent,
@@ -40,9 +41,31 @@ import {
 
 const CATEGORY_LABELS: Record<string, string> = {
   attraction: "관광명소",
-  restaurant: "맛집",
+  local_food: "현지맛집",
+  nightlife: "나이트라이프",
+  spa: "스파/마사지",
   cafe: "카페",
   other: "기타",
+};
+
+// placesData 카테고리 -> DB 카테고리 매핑
+const HARDCODED_TO_DB_CATEGORY: Record<string, string> = {
+  attractions: "attraction",
+  localFood: "local_food",
+  nightlife: "nightlife",
+  spa: "spa",
+  coffee: "cafe",
+  exchange: "other",
+};
+
+// DB 카테고리 -> placesData 카테고리 매핑
+const DB_TO_HARDCODED_CATEGORY: Record<string, string> = {
+  attraction: "attractions",
+  local_food: "localFood",
+  nightlife: "nightlife",
+  spa: "spa",
+  cafe: "coffee",
+  other: "exchange",
 };
 
 export default function AdminPlaces() {
@@ -53,14 +76,92 @@ export default function AdminPlaces() {
   const [editingPlace, setEditingPlace] = useState<Place | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
 
-  const { data: places = [], isLoading } = useQuery<Place[]>({
+  const { data: dbPlaces = [], isLoading } = useQuery<Place[]>({
     queryKey: ["/api/admin/places"],
     enabled: isAdmin,
   });
+  const [, setLocation] = useLocation();
 
-  const filteredPlaces = filterCategory === "all"
-    ? places
-    : places.filter(p => p.category === filterCategory);
+  // 하드코딩된 장소를 관리용 형태로 변환
+  const hardcodedPlacesList = useMemo(() => {
+    const list: Array<{
+      isHardcoded: true;
+      name: string;
+      category: string;
+      categoryKey: string;
+      address?: string;
+      phone?: string;
+      description?: string;
+      imageUrl?: string;
+      mapUrl: string;
+    }> = [];
+    
+    Object.entries(placesData).forEach(([categoryKey, category]) => {
+      const dbCategory = HARDCODED_TO_DB_CATEGORY[categoryKey] || "other";
+      category.places.forEach(place => {
+        list.push({
+          isHardcoded: true,
+          name: place.name,
+          category: dbCategory,
+          categoryKey,
+          address: place.address,
+          phone: place.phone,
+          description: place.description?.ko,
+          imageUrl: place.imageUrl,
+          mapUrl: place.mapUrl,
+        });
+      });
+    });
+    
+    return list;
+  }, []);
+
+  // 필터링된 DB 장소
+  const filteredDbPlaces = filterCategory === "all"
+    ? dbPlaces
+    : dbPlaces.filter(p => p.category === filterCategory);
+
+  // 필터링된 하드코딩 장소
+  const filteredHardcodedPlaces = filterCategory === "all"
+    ? hardcodedPlacesList
+    : hardcodedPlacesList.filter(p => p.category === filterCategory);
+
+  // DB에 이미 있는 장소 이름 (중복 체크용)
+  const dbPlaceNames = new Set(dbPlaces.map(p => p.name));
+
+  // 하드코딩된 장소를 DB로 복사
+  const copyToDb = async (place: typeof hardcodedPlacesList[0]) => {
+    try {
+      const res = await fetch("/api/admin/places", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: place.name,
+          category: place.category,
+          address: place.address || "",
+          phone: place.phone || "",
+          website: place.mapUrl,
+          description: place.description || "",
+          isActive: true,
+        }),
+      });
+      
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: err.error || "복사 실패", variant: "destructive" });
+        return;
+      }
+      
+      const newPlace = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/places"] });
+      setEditingPlace(newPlace);
+      toast({ title: "DB에 복사되었습니다. 수정하세요." });
+    } catch (error) {
+      toast({ title: "오류가 발생했습니다", variant: "destructive" });
+    }
+  };
 
   const createMutation = useMutation({
     mutationFn: async (data: Partial<Place>) => {
@@ -217,19 +318,14 @@ export default function AdminPlaces() {
           <div className="flex justify-center py-12">
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
           </div>
-        ) : filteredPlaces.length === 0 ? (
-          <Card className="p-12 text-center">
-            <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">추가된 장소가 없습니다</p>
-            <p className="text-xs text-muted-foreground mb-4">
-              기존 관광명소/맛집은 그대로 표시됩니다.<br/>
-              여기서는 새로운 장소만 추가하세요.
-            </p>
-            <Button onClick={() => setIsAddOpen(true)}>새 장소 추가하기</Button>
-          </Card>
         ) : (
-          <div className="grid gap-4">
-            {filteredPlaces.map((place) => (
+          <div className="space-y-6">
+            {/* DB에 추가된 장소 */}
+            {filteredDbPlaces.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">DB에 추가된 장소 ({filteredDbPlaces.length}개)</h3>
+                <div className="grid gap-4">
+                  {filteredDbPlaces.map((place: Place) => (
               <Card key={place.id} className={`${!place.isActive ? "opacity-60" : ""}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
@@ -371,7 +467,72 @@ export default function AdminPlaces() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 기존 하드코딩된 장소 */}
+            {filteredHardcodedPlaces.length > 0 && (
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                  기존 장소 ({filteredHardcodedPlaces.filter(p => !dbPlaceNames.has(p.name)).length}개)
+                  <span className="text-xs ml-2">(수정하려면 DB에 복사됩니다)</span>
+                </h3>
+                <div className="grid gap-3">
+                  {filteredHardcodedPlaces
+                    .filter(p => !dbPlaceNames.has(p.name))
+                    .map((place, idx) => (
+                    <Card key={`hardcoded-${idx}`} className="border-dashed">
+                      <CardContent className="p-3">
+                        <div className="flex items-center gap-3">
+                          {place.imageUrl ? (
+                            <img
+                              src={place.imageUrl}
+                              alt={place.name}
+                              className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+                              <Image className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <Lock className="h-3 w-3 text-muted-foreground" />
+                              <h4 className="font-medium text-sm">{place.name}</h4>
+                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                                {CATEGORY_LABELS[place.category] || place.category}
+                              </span>
+                            </div>
+                            {place.address && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">{place.address}</p>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToDb(place)}
+                            data-testid={`button-copy-to-db-${idx}`}
+                          >
+                            <Pencil className="h-3 w-3 mr-1" />
+                            수정
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {filteredDbPlaces.length === 0 && filteredHardcodedPlaces.filter(p => !dbPlaceNames.has(p.name)).length === 0 && (
+              <Card className="p-12 text-center">
+                <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">해당 카테고리에 장소가 없습니다</p>
+                <Button onClick={() => setIsAddOpen(true)}>새 장소 추가하기</Button>
+              </Card>
+            )}
           </div>
         )}
       </div>

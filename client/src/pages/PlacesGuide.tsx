@@ -60,7 +60,7 @@ import seaSunImg from "@assets/Screenshot_20260122_002507_Maps_1769016389702.jpg
 import miAmorImg from "@assets/Screenshot_20260122_002546_Maps_1769016389710.jpg";
 import tenCoffeeImg from "@assets/Screenshot_20260122_000040_Maps_1769016584832.jpg";
 
-interface Place {
+export interface HardcodedPlace {
   name: string;
   nameVi?: string;
   address?: string;
@@ -74,14 +74,16 @@ interface Place {
   sortOrder?: number; // 정렬 순서
 }
 
-interface Category {
+export interface Category {
   id: string;
   icon: React.ElementType;
   gradient: string;
-  places: Place[];
+  places: HardcodedPlace[];
 }
 
-const placesData: Record<string, Category> = {
+type Place = HardcodedPlace;
+
+export const placesData: Record<string, Category> = {
   attractions: {
     id: "attractions",
     icon: Camera,
