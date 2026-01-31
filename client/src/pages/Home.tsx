@@ -940,7 +940,7 @@ export default function Home() {
                             key={villa.id}
                             onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
                             className={cn(
-                              "relative flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all w-16 h-16",
+                              "relative flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all w-32 h-32",
                               selectedVillaId === villa.id 
                                 ? "border-primary ring-2 ring-primary/30" 
                                 : "border-slate-200 hover:border-slate-300"
