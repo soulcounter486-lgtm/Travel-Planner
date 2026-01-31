@@ -8,11 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, ChevronUp, ChevronDown, Lock } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Place } from "@shared/schema";
 import { useUpload } from "@/hooks/use-upload";
 import { placesData, type HardcodedPlace } from "./PlacesGuide";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Dialog,
   DialogContent,
@@ -82,55 +85,155 @@ export default function AdminPlaces() {
   });
   const [, setLocation] = useLocation();
 
-  // 하드코딩된 장소를 관리용 형태로 변환
-  const hardcodedPlacesList = useMemo(() => {
-    const list: Array<{
-      isHardcoded: true;
-      name: string;
-      category: string;
-      categoryKey: string;
-      address?: string;
-      phone?: string;
-      description?: string;
-      imageUrl?: string;
-      mapUrl: string;
-    }> = [];
+  // 통합 장소 타입
+  type UnifiedPlace = {
+    id: string;
+    name: string;
+    category: string;
+    address?: string;
+    phone?: string;
+    description?: string;
+    imageUrl?: string;
+    mapUrl?: string;
+    sortOrder: number;
+    isHardcoded: boolean;
+    dbPlace?: Place; // DB 장소인 경우
+    hardcodedPlace?: HardcodedPlace; // 하드코딩 장소인 경우
+  };
+
+  // 하드코딩된 장소와 DB 장소를 통합
+  const unifiedPlaces = useMemo(() => {
+    const dbPlaceNames = new Set(dbPlaces.map(p => p.name));
+    const list: UnifiedPlace[] = [];
+    let orderIndex = 0;
     
     Object.entries(placesData).forEach(([categoryKey, category]) => {
       const dbCategory = HARDCODED_TO_DB_CATEGORY[categoryKey] || "other";
-      category.places.forEach(place => {
-        list.push({
-          isHardcoded: true,
-          name: place.name,
-          category: dbCategory,
-          categoryKey,
-          address: place.address,
-          phone: place.phone,
-          description: place.description?.ko,
-          imageUrl: place.imageUrl,
-          mapUrl: place.mapUrl,
-        });
+      category.places.forEach((place, idx) => {
+        // DB에 같은 이름의 장소가 있는지 확인
+        const dbPlace = dbPlaces.find(p => p.name === place.name);
+        
+        if (dbPlace) {
+          // DB 버전 사용 (수정된 버전)
+          list.push({
+            id: `db-${dbPlace.id}`,
+            name: dbPlace.name,
+            category: dbPlace.category,
+            address: dbPlace.address || undefined,
+            phone: dbPlace.phone || undefined,
+            description: dbPlace.description || undefined,
+            imageUrl: dbPlace.mainImage || place.imageUrl,
+            mapUrl: dbPlace.website || place.mapUrl,
+            sortOrder: dbPlace.sortOrder ?? orderIndex,
+            isHardcoded: false,
+            dbPlace,
+          });
+        } else {
+          // 하드코딩 버전 사용
+          list.push({
+            id: `hardcoded-${categoryKey}-${idx}`,
+            name: place.name,
+            category: dbCategory,
+            address: place.address,
+            phone: place.phone,
+            description: place.description?.ko,
+            imageUrl: place.imageUrl,
+            mapUrl: place.mapUrl,
+            sortOrder: orderIndex,
+            isHardcoded: true,
+            hardcodedPlace: place,
+          });
+        }
+        orderIndex++;
       });
     });
     
+    // DB에만 있는 장소 추가 (하드코딩에 없는 새로 추가된 장소)
+    dbPlaces.forEach(dbPlace => {
+      const exists = list.some(p => p.name === dbPlace.name);
+      if (!exists) {
+        list.push({
+          id: `db-${dbPlace.id}`,
+          name: dbPlace.name,
+          category: dbPlace.category,
+          address: dbPlace.address || undefined,
+          phone: dbPlace.phone || undefined,
+          description: dbPlace.description || undefined,
+          imageUrl: dbPlace.mainImage || undefined,
+          mapUrl: dbPlace.website || undefined,
+          sortOrder: dbPlace.sortOrder ?? 999,
+          isHardcoded: false,
+          dbPlace,
+        });
+      }
+    });
+    
+    // sortOrder로 정렬
+    list.sort((a, b) => a.sortOrder - b.sortOrder);
+    
     return list;
-  }, []);
+  }, [dbPlaces]);
 
-  // 필터링된 DB 장소
-  const filteredDbPlaces = filterCategory === "all"
-    ? dbPlaces
-    : dbPlaces.filter(p => p.category === filterCategory);
+  // 필터링된 통합 장소
+  const filteredPlaces = filterCategory === "all"
+    ? unifiedPlaces
+    : unifiedPlaces.filter(p => p.category === filterCategory);
 
-  // 필터링된 하드코딩 장소
-  const filteredHardcodedPlaces = filterCategory === "all"
-    ? hardcodedPlacesList
-    : hardcodedPlacesList.filter(p => p.category === filterCategory);
+  // 드래그 앤 드롭 센서
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 200, // 200ms 길게 누르기
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
-  // DB에 이미 있는 장소 이름 (중복 체크용)
-  const dbPlaceNames = new Set(dbPlaces.map(p => p.name));
+  // 드래그 종료 시 순서 업데이트
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id) return;
+    
+    const oldIndex = filteredPlaces.findIndex(p => p.id === active.id);
+    const newIndex = filteredPlaces.findIndex(p => p.id === over.id);
+    
+    if (oldIndex === -1 || newIndex === -1) return;
+    
+    const movedPlace = filteredPlaces[oldIndex];
+    
+    // 하드코딩된 장소를 이동하려면 먼저 DB에 복사해야 함
+    if (movedPlace.isHardcoded) {
+      toast({ title: "수정 버튼을 눌러 DB에 저장 후 순서를 변경하세요", variant: "destructive" });
+      return;
+    }
+    
+    // DB 장소의 sortOrder 업데이트
+    const targetPlace = filteredPlaces[newIndex];
+    const newSortOrder = targetPlace.sortOrder + (newIndex > oldIndex ? 1 : -1);
+    
+    try {
+      const res = await fetch(`/api/admin/places/${movedPlace.dbPlace!.id}/order`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ sortOrder: newSortOrder }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/places"] });
+    } catch (error) {
+      toast({ title: "순서 변경 실패", variant: "destructive" });
+    }
+  };
 
   // 하드코딩된 장소를 DB로 복사
-  const copyToDb = async (place: typeof hardcodedPlacesList[0]) => {
+  const copyToDb = async (place: UnifiedPlace) => {
+    if (!place.hardcodedPlace) return;
+    
     try {
       const res = await fetch("/api/admin/places", {
         method: "POST",
@@ -141,8 +244,10 @@ export default function AdminPlaces() {
           category: place.category,
           address: place.address || "",
           phone: place.phone || "",
-          website: place.mapUrl,
+          website: place.mapUrl || "",
           description: place.description || "",
+          mainImage: place.imageUrl || "",
+          sortOrder: place.sortOrder,
           isActive: true,
         }),
       });
@@ -157,7 +262,7 @@ export default function AdminPlaces() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });
       queryClient.invalidateQueries({ queryKey: ["/api/places"] });
       setEditingPlace(newPlace);
-      toast({ title: "DB에 복사되었습니다. 수정하세요." });
+      toast({ title: "DB에 저장되었습니다. 수정하세요." });
     } catch (error) {
       toast({ title: "오류가 발생했습니다", variant: "destructive" });
     }
@@ -322,240 +427,227 @@ export default function AdminPlaces() {
               {tab.label}
               {tab.value !== "all" && (
                 <span className="ml-1 text-xs opacity-70">
-                  ({tab.value === filterCategory 
-                    ? filteredDbPlaces.length + filteredHardcodedPlaces.filter(p => !dbPlaceNames.has(p.name)).length
-                    : (dbPlaces.filter(p => p.category === tab.value).length + 
-                       hardcodedPlacesList.filter(p => p.category === tab.value && !dbPlaceNames.has(p.name)).length)
-                  })
+                  ({unifiedPlaces.filter(p => p.category === tab.value).length})
                 </span>
               )}
             </Button>
           ))}
         </div>
+        
+        <p className="text-xs text-muted-foreground mb-4">
+          드래그 핸들을 길게 눌러 순서 변경 (DB 저장된 항목만 가능)
+        </p>
 
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
           </div>
+        ) : filteredPlaces.length === 0 ? (
+          <Card className="p-12 text-center">
+            <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground mb-4">해당 카테고리에 장소가 없습니다</p>
+            <Button onClick={() => setIsAddOpen(true)}>새 장소 추가하기</Button>
+          </Card>
         ) : (
-          <div className="space-y-6">
-            {/* DB에 추가된 장소 */}
-            {filteredDbPlaces.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">DB에 추가된 장소 ({filteredDbPlaces.length}개)</h3>
-                <div className="grid gap-4">
-                  {filteredDbPlaces.map((place: Place) => (
-              <Card key={place.id} className={`${!place.isActive ? "opacity-60" : ""}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    {place.mainImage ? (
-                      <img
-                        src={place.mainImage}
-                        alt={place.name}
-                        className="w-24 h-24 object-cover rounded-md flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                        <Image className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <h3 className="font-semibold text-lg">{place.name}</h3>
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                          {CATEGORY_LABELS[place.category] || place.category}
-                        </span>
-                        {!place.isActive && (
-                          <span className="text-xs bg-muted px-2 py-0.5 rounded">비활성</span>
-                        )}
-                      </div>
-                      {place.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-1">{place.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                        {place.address && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {place.address}
-                          </span>
-                        )}
-                        {place.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {place.phone}
-                          </span>
-                        )}
-                        {place.priceRange && (
-                          <span className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3" />
-                            {place.priceRange}
-                          </span>
-                        )}
-                      </div>
-                      {place.tags && place.tags.length > 0 && (
-                        <div className="flex gap-1 mt-2 flex-wrap">
-                          {place.tags.map((tag, idx) => (
-                            <span key={idx} className="text-xs bg-muted px-2 py-0.5 rounded">
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="text-xs text-muted-foreground mt-1">
-                        순서: {place.sortOrder ?? 0}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1 flex-shrink-0">
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleMoveOrder(place, -1)}
-                          title="위로"
-                          data-testid={`button-move-up-${place.id}`}
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleMoveOrder(place, 1)}
-                          title="아래로"
-                          data-testid={`button-move-down-${place.id}`}
-                        >
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <div className="flex gap-1">
-                      <Dialog open={editingPlace?.id === place.id} onOpenChange={(open) => !open && setEditingPlace(null)}>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => setEditingPlace(place)}
-                            data-testid={`button-edit-place-${place.id}`}
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>장소 수정</DialogTitle>
-                          </DialogHeader>
-                          <PlaceForm
-                            place={editingPlace}
-                            onSubmit={(data) => updateMutation.mutate({ id: place.id, data })}
-                            isLoading={updateMutation.isPending}
-                            onCancel={() => setEditingPlace(null)}
-                          />
-                        </DialogContent>
-                      </Dialog>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            data-testid={`button-delete-place-${place.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>장소 삭제</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              "{place.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>취소</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(place.id)}
-                              className="bg-destructive text-destructive-foreground hover-elevate"
-                            >
-                              삭제
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-                  ))}
-                </div>
+          <DndContext 
+            sensors={sensors} 
+            collisionDetection={closestCenter} 
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={filteredPlaces.map(p => p.id)} strategy={verticalListSortingStrategy}>
+              <div className="grid gap-3">
+                {filteredPlaces.map((place) => (
+                  <SortablePlaceCard
+                    key={place.id}
+                    place={place}
+                    onEdit={(p) => {
+                      if (p.isHardcoded) {
+                        copyToDb(p);
+                      } else if (p.dbPlace) {
+                        setEditingPlace(p.dbPlace);
+                      }
+                    }}
+                    onDelete={deleteMutation.mutate}
+                    editingPlace={editingPlace}
+                    setEditingPlace={setEditingPlace}
+                    updateMutation={updateMutation}
+                  />
+                ))}
               </div>
-            )}
-
-            {/* 기존 하드코딩된 장소 */}
-            {filteredHardcodedPlaces.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                  기존 장소 ({filteredHardcodedPlaces.filter(p => !dbPlaceNames.has(p.name)).length}개)
-                  <span className="text-xs ml-2">(수정하려면 DB에 복사됩니다)</span>
-                </h3>
-                <div className="grid gap-3">
-                  {filteredHardcodedPlaces
-                    .filter(p => !dbPlaceNames.has(p.name))
-                    .map((place, idx) => (
-                    <Card key={`hardcoded-${idx}`} className="border-dashed">
-                      <CardContent className="p-3">
-                        <div className="flex items-center gap-3">
-                          {place.imageUrl ? (
-                            <img
-                              src={place.imageUrl}
-                              alt={place.name}
-                              className="w-16 h-16 object-cover rounded-md flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                              <Image className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <Lock className="h-3 w-3 text-muted-foreground" />
-                              <h4 className="font-medium text-sm">{place.name}</h4>
-                              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">
-                                {CATEGORY_LABELS[place.category] || place.category}
-                              </span>
-                            </div>
-                            {place.address && (
-                              <p className="text-xs text-muted-foreground line-clamp-1">{place.address}</p>
-                            )}
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => copyToDb(place)}
-                            data-testid={`button-copy-to-db-${idx}`}
-                          >
-                            <Pencil className="h-3 w-3 mr-1" />
-                            수정
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {filteredDbPlaces.length === 0 && filteredHardcodedPlaces.filter(p => !dbPlaceNames.has(p.name)).length === 0 && (
-              <Card className="p-12 text-center">
-                <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">해당 카테고리에 장소가 없습니다</p>
-                <Button onClick={() => setIsAddOpen(true)}>새 장소 추가하기</Button>
-              </Card>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </div>
+  );
+}
+
+// 드래그 가능한 카드 컴포넌트
+interface SortablePlaceCardProps {
+  place: {
+    id: string;
+    name: string;
+    category: string;
+    address?: string;
+    phone?: string;
+    description?: string;
+    imageUrl?: string;
+    sortOrder: number;
+    isHardcoded: boolean;
+    dbPlace?: Place;
+  };
+  onEdit: (place: SortablePlaceCardProps["place"]) => void;
+  onDelete: (id: number) => void;
+  editingPlace: Place | null;
+  setEditingPlace: (place: Place | null) => void;
+  updateMutation: any;
+}
+
+function SortablePlaceCard({ place, onEdit, onDelete, editingPlace, setEditingPlace, updateMutation }: SortablePlaceCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: place.id });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style}
+      className={`${place.isHardcoded ? "border-dashed" : ""} ${isDragging ? "z-50" : ""}`}
+    >
+      <CardContent className="p-3">
+        <div className="flex items-center gap-3">
+          {/* 드래그 핸들 */}
+          <div
+            {...attributes}
+            {...listeners}
+            className={`touch-none cursor-grab active:cursor-grabbing p-2 rounded hover-elevate ${place.isHardcoded ? "opacity-30" : ""}`}
+            data-testid={`drag-handle-${place.id}`}
+          >
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+          </div>
+          
+          {/* 이미지 */}
+          {place.imageUrl ? (
+            <img
+              src={place.imageUrl}
+              alt={place.name}
+              className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+              <Image className="h-6 w-6 text-muted-foreground" />
+            </div>
+          )}
+          
+          {/* 정보 */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <h4 className="font-medium text-sm">{place.name}</h4>
+              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                {CATEGORY_LABELS[place.category] || place.category}
+              </span>
+              {place.isHardcoded && (
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">기본</span>
+              )}
+              {place.dbPlace && !place.dbPlace.isActive && (
+                <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded">비활성</span>
+              )}
+            </div>
+            {place.description && (
+              <p className="text-xs text-muted-foreground line-clamp-1">{place.description}</p>
+            )}
+            {place.address && (
+              <p className="text-xs text-muted-foreground line-clamp-1 flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {place.address}
+              </p>
+            )}
+          </div>
+          
+          {/* 액션 버튼 */}
+          <div className="flex gap-1 flex-shrink-0">
+            {place.dbPlace ? (
+              <>
+                <Dialog open={editingPlace?.id === place.dbPlace.id} onOpenChange={(open) => !open && setEditingPlace(null)}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEdit(place)}
+                      data-testid={`button-edit-${place.id}`}
+                    >
+                      <Pencil className="h-3 w-3 mr-1" />
+                      수정
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>장소 수정</DialogTitle>
+                    </DialogHeader>
+                    <PlaceForm
+                      place={editingPlace}
+                      onSubmit={(data) => updateMutation.mutate({ id: place.dbPlace!.id, data })}
+                      isLoading={updateMutation.isPending}
+                      onCancel={() => setEditingPlace(null)}
+                    />
+                  </DialogContent>
+                </Dialog>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8"
+                      data-testid={`button-delete-${place.id}`}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>장소 삭제</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        "{place.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>취소</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDelete(place.dbPlace!.id)}
+                        className="bg-destructive text-destructive-foreground hover-elevate"
+                      >
+                        삭제
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(place)}
+                data-testid={`button-copy-${place.id}`}
+              >
+                <Pencil className="h-3 w-3 mr-1" />
+                수정
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
