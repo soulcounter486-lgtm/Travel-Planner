@@ -25,6 +25,39 @@ if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 }
 
+// 베트남 공휴일 목록 (2025-2027)
+const VIETNAM_HOLIDAYS: string[] = [
+  // 2025년
+  "2025-01-01", // 새해
+  "2025-01-28", "2025-01-29", "2025-01-30", "2025-01-31", "2025-02-01", "2025-02-02", "2025-02-03", // 뗏 (설날)
+  "2025-04-07", // 훙왕 기념일
+  "2025-04-30", // 통일의 날
+  "2025-05-01", // 노동절
+  "2025-08-30", "2025-08-31", "2025-09-01", "2025-09-02", // 국경일
+  // 2026년
+  "2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04", // 새해
+  "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-01-31", "2026-02-01", "2026-02-02", "2026-02-03", // 뗏
+  "2026-04-26", "2026-04-27", // 훙왕 기념일
+  "2026-04-30", // 통일의 날
+  "2026-05-01", // 노동절
+  "2026-09-02", "2026-09-03", // 국경일
+  "2026-11-24", // 베트남 문화의 날 (신설)
+  // 2027년
+  "2027-01-01", // 새해
+  "2027-02-13", "2027-02-14", "2027-02-15", "2027-02-16", "2027-02-17", "2027-02-18", "2027-02-19", // 뗏
+  "2027-04-16", // 훙왕 기념일
+  "2027-04-30", // 통일의 날
+  "2027-05-01", // 노동절
+  "2027-09-02", "2027-09-03", // 국경일
+  "2027-11-24", // 베트남 문화의 날
+];
+
+// 베트남 공휴일 체크 함수
+function isVietnamHoliday(date: Date): boolean {
+  const dateStr = format(date, "yyyy-MM-dd");
+  return VIETNAM_HOLIDAYS.includes(dateStr);
+}
+
 // 푸시 알림 발송 함수
 async function sendPushNotifications(title: string, body: string, url: string = "/board") {
   try {
@@ -504,11 +537,17 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
             const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
             while (current < end) {
               const dayOfWeek = getDay(current);
+              const isHoliday = isVietnamHoliday(current);
               let dailyPrice = 350;
               let dayType = "평일";
               const dateStr = format(current, "M/d");
               const dayName = dayNames[dayOfWeek];
-              if (dayOfWeek === 5) {
+              
+              if (isHoliday) {
+                // 베트남 공휴일 - 주말 요금 적용
+                dailyPrice = 500;
+                dayType = "공휴일";
+              } else if (dayOfWeek === 5) {
                 // 금요일
                 dailyPrice = 380;
                 dayType = "금";
@@ -592,24 +631,26 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
             const date = parseISO(selection.date);
             if (isNaN(date.getTime())) continue;
             const dayOfWeek = getDay(date);
-            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isHoliday = isVietnamHoliday(date);
+            // 주말 또는 공휴일이면 주말 요금 적용
+            const isWeekendOrHoliday = dayOfWeek === 0 || dayOfWeek === 6 || isHoliday;
             const players = Number(selection.players) || 1;
             let price = 0;
             let tip = "";
             let courseName = "";
             switch (selection.course) {
               case "paradise":
-                price = isWeekend ? 110 : 90;
+                price = isWeekendOrHoliday ? 110 : 90;
                 tip = "40만동";
                 courseName = "파라다이스";
                 break;
               case "chouduc":
-                price = isWeekend ? 120 : 80;
+                price = isWeekendOrHoliday ? 120 : 80;
                 tip = "50만동";
                 courseName = "쩌우득";
                 break;
               case "hocham":
-                price = isWeekend ? 200 : 150;
+                price = isWeekendOrHoliday ? 200 : 150;
                 tip = "50만동";
                 courseName = "호짬";
                 break;
