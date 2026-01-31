@@ -1391,6 +1391,52 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // 텍스트로 장소 검색 (Google Places Text Search API)
+  app.get("/api/search-places", async (req, res) => {
+    try {
+      const { query, lang = "ko" } = req.query;
+      
+      if (!query) {
+        return res.status(400).json({ message: "query is required" });
+      }
+      
+      const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ message: "Google Maps API key not configured" });
+      }
+      
+      const langMap: Record<string, string> = { ko: "ko", en: "en", zh: "zh-CN", vi: "vi", ru: "ru", ja: "ja" };
+      const googleLang = langMap[lang as string] || "ko";
+      
+      // 붕따우 지역으로 검색 범위 제한
+      const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query as string)}+Vung+Tau&key=${apiKey}&language=${googleLang}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+        console.error("Google Places Text Search API error:", data.status, data.error_message);
+        return res.status(500).json({ message: "Failed to search places" });
+      }
+      
+      const places = (data.results || []).slice(0, 10).map((place: any) => ({
+        placeId: place.place_id,
+        name: place.name,
+        address: place.formatted_address,
+        rating: place.rating,
+        userRatingsTotal: place.user_ratings_total,
+        types: place.types,
+        location: place.geometry?.location,
+        photoReference: place.photos?.[0]?.photo_reference,
+      }));
+      
+      res.json({ places, status: data.status });
+    } catch (err) {
+      console.error("Search places error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // 장소 상세 정보 (Google Places API)
   app.get("/api/place-details/:placeId", async (req, res) => {
     try {

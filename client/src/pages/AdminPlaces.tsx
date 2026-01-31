@@ -336,6 +336,17 @@ interface PlaceFormProps {
   onCancel: () => void;
 }
 
+interface GooglePlace {
+  placeId: string;
+  name: string;
+  address: string;
+  rating?: number;
+  userRatingsTotal?: number;
+  types?: string[];
+  location?: { lat: number; lng: number };
+  photoReference?: string;
+}
+
 function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   const [formData, setFormData] = useState({
     name: place?.name || "",
@@ -361,6 +372,12 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
   const [selectedExtracted, setSelectedExtracted] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  
+  // 구글 장소 검색
+  const [googleSearchQuery, setGoogleSearchQuery] = useState("");
+  const [isSearchingGoogle, setIsSearchingGoogle] = useState(false);
+  const [googleResults, setGoogleResults] = useState<GooglePlace[]>([]);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
@@ -421,6 +438,77 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
       setSelectedExtracted(selectedExtracted.filter(i => i !== imgUrl));
     } else {
       setSelectedExtracted([...selectedExtracted, imgUrl]);
+    }
+  };
+
+  // 구글에서 장소 검색
+  const searchGooglePlaces = async () => {
+    if (!googleSearchQuery.trim()) return;
+    
+    setIsSearchingGoogle(true);
+    try {
+      const res = await fetch(`/api/search-places?query=${encodeURIComponent(googleSearchQuery)}`);
+      if (!res.ok) {
+        alert("검색 실패");
+        return;
+      }
+      const data = await res.json();
+      setGoogleResults(data.places || []);
+      if (data.places.length === 0) {
+        alert("검색 결과가 없습니다");
+      }
+    } catch (error) {
+      alert("검색 중 오류가 발생했습니다");
+    } finally {
+      setIsSearchingGoogle(false);
+    }
+  };
+
+  // 구글 장소 상세 정보 가져와서 폼에 채우기
+  const selectGooglePlace = async (googlePlace: GooglePlace) => {
+    setIsFetchingDetails(true);
+    try {
+      const res = await fetch(`/api/place-details/${googlePlace.placeId}`);
+      if (!res.ok) {
+        // 상세 정보 없으면 기본 정보만 사용
+        setFormData(prev => ({
+          ...prev,
+          name: googlePlace.name,
+          address: googlePlace.address || "",
+          latitude: googlePlace.location?.lat?.toString() || "",
+          longitude: googlePlace.location?.lng?.toString() || "",
+        }));
+        setGoogleResults([]);
+        setGoogleSearchQuery("");
+        return;
+      }
+      
+      const data = await res.json();
+      setFormData(prev => ({
+        ...prev,
+        name: data.name || googlePlace.name,
+        address: data.address || googlePlace.address || "",
+        phone: data.phone || "",
+        website: data.website || "",
+        openingHours: data.openingHours?.join(", ") || "",
+        latitude: googlePlace.location?.lat?.toString() || "",
+        longitude: googlePlace.location?.lng?.toString() || "",
+      }));
+      setGoogleResults([]);
+      setGoogleSearchQuery("");
+    } catch (error) {
+      // 오류 시 기본 정보만 사용
+      setFormData(prev => ({
+        ...prev,
+        name: googlePlace.name,
+        address: googlePlace.address || "",
+        latitude: googlePlace.location?.lat?.toString() || "",
+        longitude: googlePlace.location?.lng?.toString() || "",
+      }));
+      setGoogleResults([]);
+      setGoogleSearchQuery("");
+    } finally {
+      setIsFetchingDetails(false);
     }
   };
 
@@ -498,6 +586,56 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* 구글 맵 장소 검색 */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
+        <Label className="text-blue-700 dark:text-blue-300 font-medium">
+          🔍 구글 맵에서 장소 검색
+        </Label>
+        <div className="flex gap-2">
+          <Input
+            value={googleSearchQuery}
+            onChange={(e) => setGoogleSearchQuery(e.target.value)}
+            placeholder="장소 이름 검색 (예: 예수상, Christ Statue)"
+            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchGooglePlaces())}
+            data-testid="input-google-search"
+          />
+          <Button
+            type="button"
+            onClick={searchGooglePlaces}
+            disabled={isSearchingGoogle || !googleSearchQuery.trim()}
+            data-testid="button-search-google"
+          >
+            {isSearchingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : "검색"}
+          </Button>
+        </div>
+        
+        {googleResults.length > 0 && (
+          <div className="bg-white dark:bg-slate-800 rounded-lg border max-h-60 overflow-y-auto">
+            {googleResults.map((gPlace) => (
+              <div
+                key={gPlace.placeId}
+                className="p-3 border-b last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
+                onClick={() => selectGooglePlace(gPlace)}
+                data-testid={`google-result-${gPlace.placeId}`}
+              >
+                <div className="font-medium text-sm">{gPlace.name}</div>
+                <div className="text-xs text-muted-foreground">{gPlace.address}</div>
+                {gPlace.rating && (
+                  <div className="text-xs text-amber-600">⭐ {gPlace.rating} ({gPlace.userRatingsTotal}개 리뷰)</div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {isFetchingDetails && (
+          <div className="flex items-center gap-2 text-sm text-blue-600">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            상세 정보 가져오는 중...
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="name">장소 이름 *</Label>
