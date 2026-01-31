@@ -829,6 +829,19 @@ export default function Home() {
                         {language === "ko" ? "블로그에서 더 많은 사진 보기" : "View more photos on blog"}
                         <ExternalLink className="w-3 h-3" />
                       </a>
+                      {isAdmin && (
+                        <Link href="/admin/villas">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="mt-3 w-full border-primary/30 text-primary hover:bg-primary/10"
+                            data-testid="button-admin-villa-manage"
+                          >
+                            <Settings className="h-4 w-4 mr-2" />
+                            {language === "ko" ? "빌라 관리하기 (관리자)" : "Manage Villas (Admin)"}
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   ) : (
                     <a 
