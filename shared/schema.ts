@@ -270,3 +270,30 @@ export const insertVillaSchema = createInsertSchema(villas).omit({ id: true, cre
 
 export type Villa = typeof villas.$inferSelect;
 export type InsertVilla = z.infer<typeof insertVillaSchema>;
+
+// 관광 명소/맛집 테이블
+export const places = pgTable("places", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // 장소 이름
+  category: text("category").notNull().default("attraction"), // 카테고리: attraction(관광명소), restaurant(맛집), cafe(카페), other(기타)
+  description: text("description"), // 설명
+  mainImage: text("main_image"), // 대표 이미지 URL
+  images: jsonb("images").$type<string[]>().default([]), // 추가 이미지들
+  latitude: text("latitude"), // 위도
+  longitude: text("longitude"), // 경도
+  address: text("address"), // 주소
+  phone: text("phone"), // 전화번호
+  website: text("website"), // 웹사이트/SNS URL
+  openingHours: text("opening_hours"), // 영업시간
+  priceRange: text("price_range"), // 가격대 (예: $, $$, $$$)
+  tags: jsonb("tags").$type<string[]>().default([]), // 태그 (예: ["해산물", "현지인맛집"])
+  isActive: boolean("is_active").default(true), // 활성화 여부
+  sortOrder: integer("sort_order").default(0), // 정렬 순서
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPlaceSchema = createInsertSchema(places).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type Place = typeof places.$inferSelect;
+export type InsertPlace = z.infer<typeof insertPlaceSchema>;
