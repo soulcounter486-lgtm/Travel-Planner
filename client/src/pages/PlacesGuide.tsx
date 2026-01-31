@@ -71,6 +71,7 @@ interface Place {
   imageUrl?: string;
   description?: Record<string, string>;
   dbId?: number; // DB에서 가져온 장소의 ID (수정 가능)
+  sortOrder?: number; // 정렬 순서
 }
 
 interface Category {
@@ -1039,6 +1040,7 @@ function convertDBPlace(dbPlace: DBPlace): Place | null {
     imageUrl: dbPlace.mainImage || undefined,
     description: Object.keys(description).length > 0 ? description : undefined,
     dbId: dbPlace.id, // DB 장소 ID 추가 (수정 가능)
+    sortOrder: dbPlace.sortOrder ?? 0, // 정렬 순서
   };
 }
 
@@ -1120,6 +1122,15 @@ export default function PlacesGuide() {
           };
         }
       }
+    });
+    
+    // 각 카테고리별로 sortOrder로 정렬 (DB 장소만 sortOrder 가짐)
+    Object.keys(merged).forEach(key => {
+      merged[key].places.sort((a, b) => {
+        const orderA = a.sortOrder ?? 999;
+        const orderB = b.sortOrder ?? 999;
+        return orderA - orderB;
+      });
     });
     
     return merged;

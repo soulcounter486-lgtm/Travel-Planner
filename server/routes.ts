@@ -2969,6 +2969,37 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
   
+  // 장소 순서 변경 (관리자만)
+  app.put("/api/admin/places/:id/order", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      const { sortOrder } = req.body;
+      
+      if (typeof sortOrder !== "number") {
+        return res.status(400).json({ error: "sortOrder is required" });
+      }
+      
+      const updatedPlace = await db.update(places)
+        .set({ sortOrder, updatedAt: new Date() })
+        .where(eq(places.id, id))
+        .returning();
+        
+      if (updatedPlace.length === 0) {
+        return res.status(404).json({ error: "Place not found" });
+      }
+      res.json(updatedPlace[0]);
+    } catch (error) {
+      console.error("Update place order error:", error);
+      res.status(500).json({ error: "Failed to update place order" });
+    }
+  });
+  
   // 장소 삭제 (관리자만)
   app.delete("/api/admin/places/:id", async (req, res) => {
     try {

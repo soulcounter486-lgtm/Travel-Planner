@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, ChevronUp, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
 import type { Place } from "@shared/schema";
 import { useUpload } from "@/hooks/use-upload";
@@ -124,6 +124,24 @@ export default function AdminPlaces() {
       toast({ title: "삭제 실패", variant: "destructive" });
     },
   });
+
+  // 순서 변경 핸들러
+  const handleMoveOrder = async (place: Place, direction: number) => {
+    const newOrder = (place.sortOrder ?? 0) + direction;
+    try {
+      const res = await fetch(`/api/admin/places/${place.id}/order`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ sortOrder: newOrder }),
+      });
+      if (!res.ok) throw new Error("Failed to update order");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/places"] });
+    } catch (error) {
+      toast({ title: "순서 변경 실패", variant: "destructive" });
+    }
+  };
 
   if (!user) {
     return (
@@ -268,17 +286,44 @@ export default function AdminPlaces() {
                           ))}
                         </div>
                       )}
+                      <div className="text-xs text-muted-foreground mt-1">
+                        순서: {place.sortOrder ?? 0}
+                      </div>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex flex-col gap-1 flex-shrink-0">
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleMoveOrder(place, -1)}
+                          title="위로"
+                          data-testid={`button-move-up-${place.id}`}
+                        >
+                          <ChevronUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => handleMoveOrder(place, 1)}
+                          title="아래로"
+                          data-testid={`button-move-down-${place.id}`}
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="flex gap-1">
                       <Dialog open={editingPlace?.id === place.id} onOpenChange={(open) => !open && setEditingPlace(null)}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
                             size="icon"
+                            className="h-7 w-7"
                             onClick={() => setEditingPlace(place)}
                             data-testid={`button-edit-place-${place.id}`}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className="h-3 w-3" />
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -321,6 +366,7 @@ export default function AdminPlaces() {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
