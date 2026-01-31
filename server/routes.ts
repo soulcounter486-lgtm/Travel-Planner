@@ -2828,6 +2828,34 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 빌라 순서 변경 (관리자만)
+  app.put("/api/admin/villas/:id/order", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      const { sortOrder } = req.body;
+      
+      if (typeof sortOrder !== "number") {
+        return res.status(400).json({ error: "sortOrder is required" });
+      }
+      
+      const updatedVilla = await db.update(villas)
+        .set({ sortOrder, updatedAt: new Date() })
+        .where(eq(villas.id, id))
+        .returning();
+      
+      res.json(updatedVilla[0]);
+    } catch (error) {
+      console.error("Update villa order error:", error);
+      res.status(500).json({ error: "Failed to update villa order" });
+    }
+  });
+
   // === 위치 공유 API ===
   
   // 모든 활성 위치 조회

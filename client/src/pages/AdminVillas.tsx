@@ -15,6 +15,9 @@ import type { Villa } from "@shared/schema";
 import { useUpload } from "@/hooks/use-upload";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Dialog,
   DialogContent,
@@ -109,6 +112,40 @@ export default function AdminVillas() {
     },
   });
 
+  // 드래그 센서
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  // 드래그 종료 시 순서 업데이트
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const oldIndex = villas.findIndex(v => v.id === active.id);
+    const newIndex = villas.findIndex(v => v.id === over.id);
+    
+    if (oldIndex === -1 || newIndex === -1) return;
+    
+    const targetVilla = villas[newIndex];
+    const newSortOrder = (targetVilla.sortOrder ?? 0) + (newIndex > oldIndex ? 1 : -1);
+    
+    try {
+      const res = await fetch(`/api/admin/villas/${active.id}/order`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ sortOrder: newSortOrder }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/villas"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/villas"] });
+    } catch (error) {
+      toast({ title: "순서 변경 실패", variant: "destructive" });
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -165,6 +202,10 @@ export default function AdminVillas() {
           </Dialog>
         </div>
 
+        <p className="text-xs text-muted-foreground mb-4">
+          드래그 핸들을 길게 눌러 순서 변경
+        </p>
+
         {isLoading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -176,106 +217,142 @@ export default function AdminVillas() {
             <Button onClick={() => setIsAddOpen(true)}>첫 풀빌라 추가하기</Button>
           </Card>
         ) : (
-          <div className="grid gap-4">
-            {villas.map((villa) => (
-              <Card key={villa.id} className={`${!villa.isActive ? "opacity-60" : ""}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
-                    </div>
-                    {(villa.mainImage || (villa.images && villa.images.length > 0)) ? (
-                      <img
-                        src={villa.mainImage || villa.images![0]}
-                        alt={villa.name}
-                        className="w-24 h-24 object-cover rounded-md"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center">
-                        <Image className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-lg">{villa.name}</h3>
-                        {!villa.isActive && (
-                          <span className="text-xs bg-muted px-2 py-0.5 rounded">비활성</span>
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground mb-2">
-                        <span className="mr-4">평일: ${villa.weekdayPrice}</span>
-                        <span className="mr-4">금요일: ${villa.fridayPrice}</span>
-                        <span className="mr-4">주말: ${villa.weekendPrice}</span>
-                        <span>공휴일: ${villa.holidayPrice}</span>
-                      </div>
-                      {villa.address && (
-                        <p className="text-sm text-muted-foreground truncate">{villa.address}</p>
-                      )}
-                      {villa.notes && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{villa.notes}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Dialog open={editingVilla?.id === villa.id} onOpenChange={(open) => !open && setEditingVilla(null)}>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setEditingVilla(villa)}
-                            data-testid={`button-edit-villa-${villa.id}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>풀빌라 수정</DialogTitle>
-                          </DialogHeader>
-                          <VillaForm
-                            villa={editingVilla}
-                            onSubmit={(data) => updateMutation.mutate({ id: villa.id, data })}
-                            isLoading={updateMutation.isPending}
-                            onCancel={() => setEditingVilla(null)}
-                          />
-                        </DialogContent>
-                      </Dialog>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            data-testid={`button-delete-villa-${villa.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>풀빌라 삭제</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              "{villa.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>취소</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteMutation.mutate(villa.id)}
-                              className="bg-destructive text-destructive-foreground hover-elevate"
-                            >
-                              삭제
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={villas.map(v => v.id)} strategy={verticalListSortingStrategy}>
+              <div className="grid gap-2">
+                {villas.map((villa) => (
+                  <SortableVillaCard
+                    key={villa.id}
+                    villa={villa}
+                    onEdit={() => setEditingVilla(villa)}
+                    onDelete={() => deleteMutation.mutate(villa.id)}
+                    isEditOpen={editingVilla?.id === villa.id}
+                    onEditClose={() => setEditingVilla(null)}
+                    onSubmit={(data) => updateMutation.mutate({ id: villa.id, data })}
+                    isLoading={updateMutation.isPending}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </div>
+  );
+}
+
+// 드래그 가능한 빌라 카드 컴포넌트
+interface SortableVillaCardProps {
+  villa: Villa;
+  onEdit: () => void;
+  onDelete: () => void;
+  isEditOpen: boolean;
+  onEditClose: () => void;
+  onSubmit: (data: Partial<Villa>) => void;
+  isLoading: boolean;
+}
+
+function SortableVillaCard({ villa, onEdit, onDelete, isEditOpen, onEditClose, onSubmit, isLoading }: SortableVillaCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: villa.id });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className={`${!villa.isActive ? "opacity-60" : ""}`}>
+      <CardContent className="p-3">
+        <div className="flex items-center gap-3">
+          {/* 드래그 핸들 */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="touch-none cursor-grab active:cursor-grabbing p-1 rounded hover-elevate"
+            data-testid={`drag-handle-villa-${villa.id}`}
+          >
+            <GripVertical className="h-5 w-5 text-muted-foreground" />
+          </div>
+          
+          {/* 이미지 */}
+          {(villa.mainImage || (villa.images && villa.images.length > 0)) ? (
+            <img
+              src={villa.mainImage || villa.images![0]}
+              alt={villa.name}
+              className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+              <Image className="h-6 w-6 text-muted-foreground" />
+            </div>
+          )}
+          
+          {/* 이름 + 룸수 */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold truncate">{villa.name}</h3>
+            {!villa.isActive && (
+              <span className="text-xs bg-muted px-2 py-0.5 rounded">비활성</span>
+            )}
+          </div>
+          
+          {/* 버튼 */}
+          <div className="flex gap-2 flex-shrink-0">
+            <Dialog open={isEditOpen} onOpenChange={(open) => !open && onEditClose()}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={onEdit}
+                  data-testid={`button-edit-villa-${villa.id}`}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>풀빌라 수정</DialogTitle>
+                </DialogHeader>
+                <VillaForm
+                  villa={villa}
+                  onSubmit={onSubmit}
+                  isLoading={isLoading}
+                  onCancel={onEditClose}
+                />
+              </DialogContent>
+            </Dialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  data-testid={`button-delete-villa-${villa.id}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>풀빌라 삭제</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    "{villa.name}"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={onDelete}
+                    className="bg-destructive text-destructive-foreground hover-elevate"
+                  >
+                    삭제
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
