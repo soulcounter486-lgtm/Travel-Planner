@@ -239,3 +239,27 @@ export const insertUserLocationSchema = createInsertSchema(userLocations).omit({
 
 export type UserLocation = typeof userLocations.$inferSelect;
 export type InsertUserLocation = z.infer<typeof insertUserLocationSchema>;
+
+// 풀빌라 테이블
+export const villas = pgTable("villas", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // 빌라 이름
+  mainImage: text("main_image"), // 대표 사진 URL
+  images: jsonb("images").$type<string[]>().default([]), // 상세 사진들
+  weekdayPrice: integer("weekday_price").notNull().default(350), // 평일 가격 (USD)
+  fridayPrice: integer("friday_price").notNull().default(380), // 금요일 가격 (USD)
+  weekendPrice: integer("weekend_price").notNull().default(500), // 주말/공휴일 가격 (USD)
+  latitude: text("latitude"), // 위도
+  longitude: text("longitude"), // 경도
+  address: text("address"), // 주소
+  notes: text("notes"), // 참고사항
+  isActive: boolean("is_active").default(true), // 활성화 여부
+  sortOrder: integer("sort_order").default(0), // 정렬 순서
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVillaSchema = createInsertSchema(villas).omit({ id: true, createdAt: true, updatedAt: true });
+
+export type Villa = typeof villas.$inferSelect;
+export type InsertVilla = z.infer<typeof insertVillaSchema>;
