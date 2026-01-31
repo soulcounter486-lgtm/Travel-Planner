@@ -101,12 +101,20 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, ChevronRight, Settings } from "lucide-react";
+import type { Villa } from "@shared/schema";
 
 export default function Home() {
   const { toast } = useToast();
   const { t, language } = useLanguage();
-  const { user, isAuthenticated, logout, isLoading: isAuthLoading } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout, isLoading: isAuthLoading } = useAuth();
+  
+  // 빌라 목록 조회
+  const { data: villas = [] } = useQuery<Villa[]>({
+    queryKey: ["/api/villas"],
+  });
+  const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
+  const selectedVilla = villas.find(v => v.id === selectedVillaId) || null;
   
   // 언어별 달력 locale 매핑
   const calendarLocale = useMemo(() => {
@@ -222,42 +230,49 @@ export default function Home() {
 
   const villaEstimate = useMemo(() => {
     if (!values.villa?.enabled || !values.villa?.checkIn || !values.villa?.checkOut) {
-      return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1 };
+      return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1, villaName: "" };
     }
     try {
       let current = parseISO(values.villa.checkIn);
       const end = parseISO(values.villa.checkOut);
       if (isNaN(current.getTime()) || isNaN(end.getTime()) || current >= end) {
-        return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1 };
+        return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1, villaName: "" };
       }
       let totalPrice = 0;
       const details: { day: string; price: number }[] = [];
       const rooms = values.villa.rooms || 1;
+      
+      // 선택된 빌라의 가격 사용 (없으면 기본값)
+      const weekdayPrice = selectedVilla?.weekdayPrice ?? 350;
+      const fridayPrice = selectedVilla?.fridayPrice ?? 380;
+      const weekendPrice = selectedVilla?.weekendPrice ?? 500;
+      const holidayPrice = selectedVilla?.holidayPrice ?? 550;
+      
       while (current < end) {
         const dayOfWeek = getDay(current);
         const isHoliday = isVietnamHoliday(current);
-        let dailyPrice = 350;
+        let dailyPrice = weekdayPrice;
         let dayName = format(current, "M/d");
         
         if (isHoliday) {
-          dailyPrice = 500;
+          dailyPrice = holidayPrice;
           dayName += ` (${t("villa.holiday") || "공휴일"})`;
         } else if (dayOfWeek === 5) {
-          dailyPrice = 380;
+          dailyPrice = fridayPrice;
           dayName += ` (${t("villa.friday")})`;
         } else if (dayOfWeek === 6 || dayOfWeek === 0) {
-          dailyPrice = 500;
+          dailyPrice = weekendPrice;
           dayName += ` (${t("villa.saturday")})`;
         }
         totalPrice += dailyPrice;
         details.push({ day: dayName, price: dailyPrice });
         current = addDays(current, 1);
       }
-      return { price: totalPrice, nights: details.length, details, rooms };
+      return { price: totalPrice, nights: details.length, details, rooms, villaName: selectedVilla?.name || "" };
     } catch {
-      return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1 };
+      return { price: 0, nights: 0, details: [] as { day: string; price: number }[], rooms: 1, villaName: "" };
     }
-  }, [values.villa?.enabled, values.villa?.checkIn, values.villa?.checkOut, values.villa?.rooms, t]);
+  }, [values.villa?.enabled, values.villa?.checkIn, values.villa?.checkOut, values.villa?.rooms, t, selectedVilla]);
 
   const golfEstimate = useMemo(() => {
     if (!values.golf?.enabled || !values.golf?.selections || values.golf.selections.length === 0) {
@@ -738,33 +753,117 @@ export default function Home() {
               name="villa.enabled"
               render={({ field }) => (
                 <SectionCard title={t("villa.title")} icon={Plane} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-blue-500/10">
-                  <a 
-                    href="https://m.blog.naver.com/vungtausaver?categoryNo=16&tab=1" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="block relative group overflow-hidden rounded-xl border border-slate-200 shadow-md mb-4 cursor-pointer"
-                    data-testid="link-villa-gallery"
-                  >
-                    <div className="aspect-[16/9] md:aspect-[21/9]">
-                      <img 
-                        src={villaImg} 
-                        alt="럭셔리 풀빌라" 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col items-center justify-end pb-4">
-                      <div className="bg-white/95 hover:bg-white text-primary px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
-                        <Camera className="w-3.5 h-3.5" />
-                        {language === "ko" ? "사진 더보기 (클릭)" : 
-                         language === "en" ? "View More Photos" :
-                         language === "zh" ? "查看更多照片" :
-                         language === "vi" ? "Xem thêm ảnh" :
-                         language === "ru" ? "Больше фото" :
-                         language === "ja" ? "写真をもっと見る" : "사진 더보기"}
-                        <ExternalLink className="w-3 h-3" />
+                  {/* 빌라 선택 갤러리 */}
+                  {villas.length > 0 ? (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm font-medium">
+                          {language === "ko" ? "풀빌라 선택" : "Select Villa"}
+                        </Label>
+                        {isAdmin && (
+                          <Link href="/admin/villas">
+                            <Button variant="ghost" size="sm" className="text-xs">
+                              <Settings className="h-3 w-3 mr-1" />
+                              관리
+                            </Button>
+                          </Link>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {villas.map((villa) => (
+                          <div
+                            key={villa.id}
+                            onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
+                            className={cn(
+                              "relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all",
+                              selectedVillaId === villa.id 
+                                ? "border-primary ring-2 ring-primary/30" 
+                                : "border-slate-200 hover:border-slate-300"
+                            )}
+                            data-testid={`villa-card-${villa.id}`}
+                          >
+                            <div className="aspect-[4/3]">
+                              {villa.mainImage ? (
+                                <img 
+                                  src={villa.mainImage} 
+                                  alt={villa.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-muted flex items-center justify-center">
+                                  <Camera className="h-8 w-8 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-2">
+                              <p className="text-white text-xs font-medium line-clamp-1">{villa.name}</p>
+                              <p className="text-white/80 text-[10px]">
+                                ${villa.weekdayPrice}~${villa.weekendPrice}
+                              </p>
+                            </div>
+                            {selectedVillaId === villa.id && (
+                              <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      {selectedVilla && (
+                        <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                          <p className="text-sm font-medium text-primary">{selectedVilla.name}</p>
+                          <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-2">
+                            <span>평일: ${selectedVilla.weekdayPrice}</span>
+                            <span>금요일: ${selectedVilla.fridayPrice}</span>
+                            <span>주말: ${selectedVilla.weekendPrice}</span>
+                            <span>공휴일: ${selectedVilla.holidayPrice}</span>
+                          </div>
+                          {selectedVilla.notes && (
+                            <p className="text-xs text-muted-foreground mt-2">{selectedVilla.notes}</p>
+                          )}
+                        </div>
+                      )}
+                      <a 
+                        href="https://m.blog.naver.com/vungtausaver?categoryNo=16&tab=1" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="mt-3 flex items-center justify-center gap-1 text-xs text-primary hover:underline"
+                        data-testid="link-villa-blog"
+                      >
+                        <Camera className="w-3 h-3" />
+                        {language === "ko" ? "블로그에서 더 많은 사진 보기" : "View more photos on blog"}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
-                  </a>
+                  ) : (
+                    <a 
+                      href="https://m.blog.naver.com/vungtausaver?categoryNo=16&tab=1" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block relative group overflow-hidden rounded-xl border border-slate-200 shadow-md mb-4 cursor-pointer"
+                      data-testid="link-villa-gallery"
+                    >
+                      <div className="aspect-[16/9] md:aspect-[21/9]">
+                        <img 
+                          src={villaImg} 
+                          alt="럭셔리 풀빌라" 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col items-center justify-end pb-4">
+                        <div className="bg-white/95 hover:bg-white text-primary px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg">
+                          <Camera className="w-3.5 h-3.5" />
+                          {language === "ko" ? "사진 더보기 (클릭)" : 
+                           language === "en" ? "View More Photos" :
+                           language === "zh" ? "查看更多照片" :
+                           language === "vi" ? "Xem thêm ảnh" :
+                           language === "ru" ? "Больше фото" :
+                           language === "ja" ? "写真をもっと見る" : "사진 더보기"}
+                          <ExternalLink className="w-3 h-3" />
+                        </div>
+                      </div>
+                    </a>
+                  )}
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div className="space-y-3">
                       <div className="space-y-1.5">
@@ -812,7 +911,12 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="bg-blue-50/80 p-4 rounded-xl text-sm text-slate-700 border border-blue-100 shadow-sm">
-                    <p><strong>{t("villa.weekday")}:</strong> $350 | <strong>{t("villa.friday")}:</strong> $380 | <strong>{t("villa.saturday")}:</strong> $500</p>
+                    <p>
+                      <strong>{t("villa.weekday")}:</strong> ${selectedVilla?.weekdayPrice ?? 350} | 
+                      <strong> {t("villa.friday")}:</strong> ${selectedVilla?.fridayPrice ?? 380} | 
+                      <strong> {t("villa.saturday")}:</strong> ${selectedVilla?.weekendPrice ?? 500} | 
+                      <strong> {t("villa.holiday") || "공휴일"}:</strong> ${selectedVilla?.holidayPrice ?? 550}
+                    </p>
                     <div className="mt-3 space-y-2">
                       <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200">
                         <span className="text-amber-500 mt-0.5">📌</span>
