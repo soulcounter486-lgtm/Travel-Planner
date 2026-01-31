@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, Save, X, GripVertical } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, Save, X, GripVertical, Upload, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import type { Villa } from "@shared/schema";
+import { useUpload } from "@/hooks/use-upload";
 import {
   Dialog,
   DialogContent,
@@ -306,6 +307,29 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   const [isExtractingImages, setIsExtractingImages] = useState(false);
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
 
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      const imageUrl = `https://storage.googleapis.com/${response.objectPath}`;
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, imageUrl],
+      }));
+    },
+    onError: (error) => {
+      alert("이미지 업로드 실패: " + error.message);
+    },
+  });
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    for (let i = 0; i < files.length; i++) {
+      await uploadFile(files[i]);
+    }
+    e.target.value = "";
+  };
+
   const extractImagesFromBlog = async () => {
     if (!blogUrl.trim()) return;
     
@@ -464,6 +488,35 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
               <p className="text-xs text-amber-500 mt-1">* 네이버 블로그 이미지는 외부에서 미리보기가 제한될 수 있습니다</p>
             </div>
           )}
+        </div>
+
+        <div>
+          <Label>이미지 직접 업로드 (권장)</Label>
+          <div className="mt-1">
+            <label className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md cursor-pointer hover:bg-primary/90 transition-colors w-fit">
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  업로드 중...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  사진 파일 선택
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+                data-testid="input-file-upload"
+              />
+            </label>
+            <p className="text-xs text-muted-foreground mt-1">JPG, PNG 이미지를 직접 업로드 하세요</p>
+          </div>
         </div>
 
         <div>
