@@ -2316,34 +2316,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
 
-      // 이미지 URL들을 base64로 변환하여 반환
-      const imagesWithData: { url: string; data: string }[] = [];
-      
-      for (const imageUrl of images) {
-        try {
-          const imgResponse = await fetch(imageUrl, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-              "Referer": "https://m.blog.naver.com/",
-              "Accept": "image/webp,image/apng,image/*,*/*;q=0.8",
-            },
-          });
-          
-          if (imgResponse.ok) {
-            const buffer = await imgResponse.arrayBuffer();
-            const base64 = Buffer.from(buffer).toString("base64");
-            const contentType = imgResponse.headers.get("content-type") || "image/jpeg";
-            imagesWithData.push({
-              url: imageUrl,
-              data: `data:${contentType};base64,${base64}`,
-            });
-          }
-        } catch (imgError) {
-          console.log("Failed to download image:", imageUrl);
-        }
-      }
-      
-      res.json({ images: imagesWithData });
+      // 이미지 URL 목록 반환 (다운로드 실패 시에도 URL 반환)
+      console.log("Found", images.length, "images");
+      res.json({ images });
     } catch (error) {
       console.error("Extract blog images error:", error);
       res.status(500).json({ error: "Failed to extract images" });

@@ -304,7 +304,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [blogUrl, setBlogUrl] = useState("");
   const [isExtractingImages, setIsExtractingImages] = useState(false);
-  const [extractedImages, setExtractedImages] = useState<{url: string; data: string}[]>([]);
+  const [extractedImages, setExtractedImages] = useState<string[]>([]);
 
   const extractImagesFromBlog = async () => {
     if (!blogUrl.trim()) return;
@@ -326,6 +326,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
       const data = await res.json();
       if (data.images && data.images.length > 0) {
         setExtractedImages(data.images);
+        alert(`${data.images.length}개의 이미지 URL을 추출했습니다. 클릭해서 선택하세요.`);
       } else {
         alert("이미지를 찾을 수 없습니다. 블로그 URL을 확인해주세요.");
       }
@@ -336,23 +337,22 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     }
   };
 
-  const toggleExtractedImage = (imgData: string) => {
-    if (formData.images.includes(imgData)) {
+  const toggleExtractedImage = (imgUrl: string) => {
+    if (formData.images.includes(imgUrl)) {
       setFormData({
         ...formData,
-        images: formData.images.filter((i: string) => i !== imgData),
+        images: formData.images.filter((i: string) => i !== imgUrl),
       });
     } else {
       setFormData({
         ...formData,
-        images: [...formData.images, imgData],
+        images: [...formData.images, imgUrl],
       });
     }
   };
 
   const selectAllExtracted = () => {
-    const allData = extractedImages.map(img => img.data);
-    const newImages = allData.filter(data => !formData.images.includes(data));
+    const newImages = extractedImages.filter(img => !formData.images.includes(img));
     setFormData({
       ...formData,
       images: [...formData.images, ...newImages],
@@ -360,10 +360,9 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   };
 
   const deselectAllExtracted = () => {
-    const allData = extractedImages.map(img => img.data);
     setFormData({
       ...formData,
-      images: formData.images.filter((img: string) => !allData.includes(img)),
+      images: formData.images.filter((img: string) => !extractedImages.includes(img)),
     });
   };
 
@@ -442,35 +441,27 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {extractedImages.map((img, idx) => {
-                  const isSelected = formData.images.includes(img.data);
+                  const isSelected = formData.images.includes(img);
                   return (
                     <div 
                       key={idx} 
-                      className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all ${isSelected ? "border-primary ring-2 ring-primary/30" : "border-transparent opacity-60 hover:opacity-100"}`}
-                      onClick={() => toggleExtractedImage(img.data)}
+                      className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all p-2 ${isSelected ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`}
+                      onClick={() => toggleExtractedImage(img)}
                     >
-                      <img
-                        src={img.data}
-                        alt={`추출 ${idx + 1}`}
-                        className="h-16 w-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          target.style.opacity = "0.3";
-                          target.alt = "로드 실패";
-                        }}
-                      />
+                      <p className="text-xs truncate">{idx + 1}. {img.split("/").pop()}</p>
                       {isSelected && (
-                        <div className="absolute top-0 right-0 bg-primary text-white text-[10px] px-1">
-                          {formData.images.indexOf(img.data) + 1}
-                        </div>
+                        <span className="absolute top-1 right-1 bg-primary text-white text-[10px] px-1 rounded">
+                          선택됨
+                        </span>
                       )}
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">선택된 이미지: {formData.images.filter((img: string) => extractedImages.some(e => e.data === img)).length}개</p>
+              <p className="text-xs text-muted-foreground mt-2">선택된 이미지: {formData.images.filter((img: string) => extractedImages.includes(img)).length}개</p>
+              <p className="text-xs text-amber-500 mt-1">* 네이버 블로그 이미지는 외부에서 미리보기가 제한될 수 있습니다</p>
             </div>
           )}
         </div>
