@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Place as DBPlace } from "@shared/schema";
@@ -806,7 +806,13 @@ const discountLabel: Record<string, Record<string, string>> = {
   }
 };
 
-function PlaceCard({ place, language, isAdmin }: { place: Place; language: string; isAdmin: boolean }) {
+function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: { 
+  place: Place; 
+  language: string; 
+  isAdmin: boolean;
+  categoryId: string;
+  onEdit: (place: Place, categoryId: string) => void;
+}) {
   const [showMap, setShowMap] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const noteText = place.note ? (noteLabels[place.note]?.[language] || place.note) : null;
@@ -943,6 +949,16 @@ function PlaceCard({ place, language, isAdmin }: { place: Place; language: strin
               <ExternalLink className="w-3 h-3" />
               Google Maps
             </a>
+            {isAdmin && (
+              <button
+                onClick={() => onEdit(place, categoryId)}
+                className="flex items-center gap-1 text-[11px] text-orange-600 hover:underline"
+                data-testid={`button-edit-place-${place.name.replace(/\s/g, "-")}`}
+              >
+                <Pencil className="w-3 h-3" />
+                수정
+              </button>
+            )}
           </div>
 
           <Button
@@ -1029,6 +1045,7 @@ function convertDBPlace(dbPlace: DBPlace): Place | null {
 export default function PlacesGuide() {
   const { language, t } = useLanguage();
   const { user, isAdmin } = useAuth();
+  const [, setLocation] = useLocation();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["attractions", "localFood"]));
   const [visitorCount, setVisitorCount] = useState<number>(0);
 
@@ -1036,6 +1053,52 @@ export default function PlacesGuide() {
   const { data: dbPlaces = [] } = useQuery<DBPlace[]>({
     queryKey: ["/api/places"],
   });
+
+  // 장소 수정 핸들러
+  const handleEditPlace = async (place: Place, categoryId: string) => {
+    if (place.dbId) {
+      // DB에 있는 장소는 바로 편집 페이지로
+      setLocation(`/admin/places?edit=${place.dbId}`);
+    } else {
+      // 하드코딩된 장소는 DB에 복사 후 편집
+      try {
+        const categoryMap: Record<string, string> = {
+          attractions: "attraction",
+          localFood: "local_food",
+          nightlife: "nightlife",
+          spa: "spa",
+          coffee: "cafe",
+          exchange: "other",
+        };
+        
+        const res = await fetch("/api/admin/places", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            name: place.name,
+            category: categoryMap[categoryId] || "attraction",
+            address: place.address || "",
+            phone: place.phone || "",
+            website: place.mapUrl,
+            description: place.description?.ko || "",
+            isActive: true,
+          }),
+        });
+        
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || "DB에 복사 실패");
+          return;
+        }
+        
+        const newPlace = await res.json();
+        setLocation(`/admin/places?edit=${newPlace.id}`);
+      } catch (error) {
+        alert("오류가 발생했습니다");
+      }
+    }
+  };
 
   // DB 장소를 카테고리별로 분류하고 기존 데이터와 합치기
   const mergedPlacesData = useMemo(() => {
@@ -1158,7 +1221,14 @@ export default function PlacesGuide() {
                       <CardContent className="p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {category.places.map((place, idx) => (
-                            <PlaceCard key={idx} place={place} language={language} isAdmin={isAdmin} />
+                            <PlaceCard 
+                              key={idx} 
+                              place={place} 
+                              language={language} 
+                              isAdmin={isAdmin}
+                              categoryId={key}
+                              onEdit={handleEditPlace}
+                            />
                           ))}
                         </div>
                       </CardContent>
