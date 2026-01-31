@@ -764,58 +764,103 @@ export default function Home() {
                           </Link>
                         )}
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {/* 작은 썸네일 리스트 */}
+                      <div className="flex gap-2 overflow-x-auto pb-2">
                         {villas.map((villa) => (
                           <div
                             key={villa.id}
-                            onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
+                            onClick={() => setSelectedVillaId(villa.id)}
                             className={cn(
-                              "relative cursor-pointer rounded-xl overflow-hidden border-2 transition-all",
+                              "relative flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all w-16 h-16",
                               selectedVillaId === villa.id 
                                 ? "border-primary ring-2 ring-primary/30" 
                                 : "border-slate-200 hover:border-slate-300"
                             )}
-                            data-testid={`villa-card-${villa.id}`}
+                            data-testid={`villa-thumb-${villa.id}`}
                           >
-                            <div className="aspect-[4/3]">
-                              {villa.mainImage ? (
-                                <img 
-                                  src={villa.mainImage} 
-                                  alt={villa.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-muted flex items-center justify-center">
-                                  <Camera className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-2">
-                              <p className="text-white text-xs font-medium line-clamp-1">{villa.name}</p>
-                              <p className="text-white/80 text-[10px]">
-                                ${villa.weekdayPrice}~${villa.weekendPrice}
-                              </p>
-                            </div>
+                            {villa.mainImage ? (
+                              <img 
+                                src={villa.mainImage} 
+                                alt={villa.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                <Camera className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            )}
                             {selectedVillaId === villa.id && (
-                              <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1">
-                                <Check className="h-3 w-3" />
+                              <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                                <Check className="h-4 w-4 text-primary" />
                               </div>
                             )}
                           </div>
                         ))}
                       </div>
+                      
+                      {/* 선택된 빌라 큰 사진 및 세부사항 */}
                       {selectedVilla && (
-                        <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                          <p className="text-sm font-medium text-primary">{selectedVilla.name}</p>
-                          <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-2">
-                            <span>평일: ${selectedVilla.weekdayPrice}</span>
-                            <span>금요일: ${selectedVilla.fridayPrice}</span>
-                            <span>주말: ${selectedVilla.weekendPrice}</span>
-                            <span>공휴일: ${selectedVilla.holidayPrice}</span>
+                        <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 shadow-md">
+                          <div className="aspect-[16/9] relative">
+                            {selectedVilla.mainImage ? (
+                              <img 
+                                src={selectedVilla.mainImage} 
+                                alt={selectedVilla.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                <Camera className="h-12 w-12 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
+                              <h3 className="text-white text-lg font-bold">{selectedVilla.name}</h3>
+                              {selectedVilla.maxGuests && selectedVilla.bedrooms && (
+                                <p className="text-white/80 text-sm">
+                                  최대 {selectedVilla.maxGuests}명 | {selectedVilla.bedrooms}개 침실
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          {selectedVilla.notes && (
-                            <p className="text-xs text-muted-foreground mt-2">{selectedVilla.notes}</p>
-                          )}
+                          <div className="p-4 bg-card">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">{t("villa.weekday")}</span>
+                                <span className="font-medium">${selectedVilla.weekdayPrice}</span>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">{t("villa.friday")}</span>
+                                <span className="font-medium">${selectedVilla.fridayPrice}</span>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">{t("villa.saturday")}</span>
+                                <span className="font-medium">${selectedVilla.weekendPrice}</span>
+                              </div>
+                              <div className="flex justify-between p-2 bg-muted/50 rounded">
+                                <span className="text-muted-foreground">{t("villa.holiday")}</span>
+                                <span className="font-medium">${selectedVilla.holidayPrice}</span>
+                              </div>
+                            </div>
+                            {selectedVilla.notes && (
+                              <p className="text-xs text-muted-foreground mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
+                                📝 {selectedVilla.notes}
+                              </p>
+                            )}
+                            {selectedVilla.address && (
+                              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                                📍 {selectedVilla.address}
+                              </p>
+                            )}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="mt-2 text-xs text-muted-foreground"
+                              onClick={() => setSelectedVillaId(null)}
+                              data-testid="button-deselect-villa"
+                            >
+                              ✕ 선택 해제
+                            </Button>
+                          </div>
                         </div>
                       )}
                       <a 
