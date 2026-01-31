@@ -304,6 +304,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [blogUrl, setBlogUrl] = useState("");
   const [isExtractingImages, setIsExtractingImages] = useState(false);
+  const [extractedImages, setExtractedImages] = useState<string[]>([]);
 
   const extractImagesFromBlog = async () => {
     if (!blogUrl.trim()) return;
@@ -324,12 +325,13 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
       
       const data = await res.json();
       if (data.images && data.images.length > 0) {
-        setFormData({
-          ...formData,
-          images: [...formData.images, ...data.images],
-        });
-        setBlogUrl("");
-        alert(`${data.images.length}개의 이미지를 추출했습니다!`);
+        // 프로필 이미지, 지도, 카카오톡 이미지 등 필터링
+        const filteredImages = data.images.filter((img: string) => 
+          !img.includes("profileImage") && 
+          !img.includes("dthumb-phinf") &&
+          !img.includes("kakaocdn")
+        );
+        setExtractedImages(filteredImages);
       } else {
         alert("이미지를 찾을 수 없습니다. 블로그 URL을 확인해주세요.");
       }
@@ -338,6 +340,35 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     } finally {
       setIsExtractingImages(false);
     }
+  };
+
+  const toggleExtractedImage = (img: string) => {
+    if (formData.images.includes(img)) {
+      setFormData({
+        ...formData,
+        images: formData.images.filter((i: string) => i !== img),
+      });
+    } else {
+      setFormData({
+        ...formData,
+        images: [...formData.images, img],
+      });
+    }
+  };
+
+  const selectAllExtracted = () => {
+    const newImages = extractedImages.filter(img => !formData.images.includes(img));
+    setFormData({
+      ...formData,
+      images: [...formData.images, ...newImages],
+    });
+  };
+
+  const deselectAllExtracted = () => {
+    setFormData({
+      ...formData,
+      images: formData.images.filter((img: string) => !extractedImages.includes(img)),
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -401,6 +432,47 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">예: https://m.blog.naver.com/vungtausaver/123456789</p>
+          
+          {extractedImages.length > 0 && (
+            <div className="mt-3 p-3 bg-muted/50 rounded-lg border">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm">추출된 이미지 (클릭해서 선택)</Label>
+                <div className="flex gap-2">
+                  <Button type="button" size="sm" variant="outline" onClick={selectAllExtracted}>
+                    전체 선택
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={deselectAllExtracted}>
+                    전체 해제
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {extractedImages.map((img, idx) => {
+                  const isSelected = formData.images.includes(img);
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all ${isSelected ? "border-primary ring-2 ring-primary/30" : "border-transparent opacity-60 hover:opacity-100"}`}
+                      onClick={() => toggleExtractedImage(img)}
+                    >
+                      <img
+                        src={img}
+                        alt={`추출 ${idx + 1}`}
+                        className="h-16 w-full object-cover"
+                        onError={(e) => (e.currentTarget.style.display = "none")}
+                      />
+                      {isSelected && (
+                        <div className="absolute top-0 right-0 bg-primary text-white text-[10px] px-1">
+                          {formData.images.indexOf(img) + 1}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">선택된 이미지: {formData.images.filter((img: string) => extractedImages.includes(img)).length}개</p>
+            </div>
+          )}
         </div>
 
         <div>
