@@ -1482,6 +1482,88 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // 구글 맵 URL 파싱 API
+  app.post("/api/parse-google-maps-url", async (req, res) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url) {
+        return res.status(400).json({ error: "URL이 필요합니다" });
+      }
+      
+      let finalUrl = url;
+      
+      // 단축 URL (maps.app.goo.gl, goo.gl/maps) 처리 - 리다이렉트 따라가기
+      if (url.includes("goo.gl") || url.includes("maps.app.goo.gl")) {
+        try {
+          const response = await fetch(url, { 
+            redirect: "follow",
+            headers: { "User-Agent": "Mozilla/5.0" }
+          });
+          finalUrl = response.url;
+        } catch (e) {
+          console.error("Redirect follow error:", e);
+        }
+      }
+      
+      let latitude: number | null = null;
+      let longitude: number | null = null;
+      let name: string | null = null;
+      let address: string | null = null;
+      
+      // URL에서 좌표 추출 시도
+      // 패턴 1: @lat,lng,zoom
+      const atPattern = /@(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+      const atMatch = finalUrl.match(atPattern);
+      if (atMatch) {
+        latitude = parseFloat(atMatch[1]);
+        longitude = parseFloat(atMatch[2]);
+      }
+      
+      // 패턴 2: !3d{lat}!4d{lng}
+      const bangPattern = /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/;
+      const bangMatch = finalUrl.match(bangPattern);
+      if (bangMatch && !latitude) {
+        latitude = parseFloat(bangMatch[1]);
+        longitude = parseFloat(bangMatch[2]);
+      }
+      
+      // 패턴 3: q=lat,lng
+      const qPattern = /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/;
+      const qMatch = finalUrl.match(qPattern);
+      if (qMatch && !latitude) {
+        latitude = parseFloat(qMatch[1]);
+        longitude = parseFloat(qMatch[2]);
+      }
+      
+      // 장소 이름 추출 시도 (URL 경로에서)
+      // /place/장소이름/ 패턴
+      const placePattern = /\/place\/([^/@]+)/;
+      const placeMatch = finalUrl.match(placePattern);
+      if (placeMatch) {
+        name = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+      }
+      
+      if (!latitude || !longitude) {
+        return res.status(400).json({ 
+          error: "URL에서 좌표를 추출할 수 없습니다. 구글 맵에서 장소를 선택 후 공유 링크를 복사해주세요." 
+        });
+      }
+      
+      res.json({
+        name,
+        address,
+        latitude,
+        longitude,
+        originalUrl: url,
+        resolvedUrl: finalUrl,
+      });
+    } catch (err) {
+      console.error("Parse Google Maps URL error:", err);
+      res.status(500).json({ error: "URL 파싱 중 오류가 발생했습니다" });
+    }
+  });
+
   // AI 여행 플랜 생성 API (Gemini 사용 - 무료)
   const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 

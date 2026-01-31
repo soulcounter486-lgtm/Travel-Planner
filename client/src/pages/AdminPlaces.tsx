@@ -340,16 +340,6 @@ interface PlaceFormProps {
   onCancel: () => void;
 }
 
-interface GooglePlace {
-  placeId: string;
-  name: string;
-  address: string;
-  rating?: number;
-  userRatingsTotal?: number;
-  types?: string[];
-  location?: { lat: number; lng: number };
-  photoReference?: string;
-}
 
 function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   const [formData, setFormData] = useState({
@@ -377,10 +367,9 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   const [selectedExtracted, setSelectedExtracted] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
   
-  // 구글 장소 검색
+  // 구글 맵 URL 파싱
   const [googleSearchQuery, setGoogleSearchQuery] = useState("");
   const [isSearchingGoogle, setIsSearchingGoogle] = useState(false);
-  const [googleResults, setGoogleResults] = useState<GooglePlace[]>([]);
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
 
   const { uploadFile, isUploading } = useUpload({
@@ -445,73 +434,45 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
     }
   };
 
-  // 구글에서 장소 검색
-  const searchGooglePlaces = async () => {
-    if (!googleSearchQuery.trim()) return;
+  // 구글 맵 URL에서 좌표 추출
+  const parseGoogleMapsUrl = async () => {
+    const url = googleSearchQuery.trim();
+    if (!url) return;
     
     setIsSearchingGoogle(true);
-    try {
-      const res = await fetch(`/api/search-places?query=${encodeURIComponent(googleSearchQuery)}`);
-      if (!res.ok) {
-        alert("검색 실패");
-        return;
-      }
-      const data = await res.json();
-      setGoogleResults(data.places || []);
-      if (data.places.length === 0) {
-        alert("검색 결과가 없습니다");
-      }
-    } catch (error) {
-      alert("검색 중 오류가 발생했습니다");
-    } finally {
-      setIsSearchingGoogle(false);
-    }
-  };
-
-  // 구글 장소 상세 정보 가져와서 폼에 채우기
-  const selectGooglePlace = async (googlePlace: GooglePlace) => {
     setIsFetchingDetails(true);
+    
     try {
-      const res = await fetch(`/api/place-details/${googlePlace.placeId}`);
+      // 서버에서 URL 파싱
+      const res = await fetch("/api/parse-google-maps-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      
       if (!res.ok) {
-        // 상세 정보 없으면 기본 정보만 사용
-        setFormData(prev => ({
-          ...prev,
-          name: googlePlace.name,
-          address: googlePlace.address || "",
-          latitude: googlePlace.location?.lat?.toString() || "",
-          longitude: googlePlace.location?.lng?.toString() || "",
-        }));
-        setGoogleResults([]);
-        setGoogleSearchQuery("");
+        const err = await res.json();
+        alert(err.error || "URL 파싱 실패");
         return;
       }
       
       const data = await res.json();
+      
       setFormData(prev => ({
         ...prev,
-        name: data.name || googlePlace.name,
-        address: data.address || googlePlace.address || "",
-        phone: data.phone || "",
-        website: data.website || "",
-        openingHours: data.openingHours?.join(", ") || "",
-        latitude: googlePlace.location?.lat?.toString() || "",
-        longitude: googlePlace.location?.lng?.toString() || "",
+        name: data.name || prev.name,
+        address: data.address || prev.address,
+        latitude: data.latitude?.toString() || prev.latitude,
+        longitude: data.longitude?.toString() || prev.longitude,
+        website: url, // 원본 구글맵 URL 저장
       }));
-      setGoogleResults([]);
+      
       setGoogleSearchQuery("");
+      alert("정보를 가져왔습니다! 필요하면 수정해주세요.");
     } catch (error) {
-      // 오류 시 기본 정보만 사용
-      setFormData(prev => ({
-        ...prev,
-        name: googlePlace.name,
-        address: googlePlace.address || "",
-        latitude: googlePlace.location?.lat?.toString() || "",
-        longitude: googlePlace.location?.lng?.toString() || "",
-      }));
-      setGoogleResults([]);
-      setGoogleSearchQuery("");
+      alert("URL 파싱 중 오류가 발생했습니다");
     } finally {
+      setIsSearchingGoogle(false);
       setIsFetchingDetails(false);
     }
   };
@@ -590,52 +551,35 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* 구글 맵 장소 검색 */}
+      {/* 구글 맵 URL로 장소 정보 가져오기 */}
       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg space-y-3">
         <Label className="text-blue-700 dark:text-blue-300 font-medium">
-          🔍 구글 맵에서 장소 검색
+          📍 구글 맵 URL로 정보 가져오기
         </Label>
+        <p className="text-xs text-muted-foreground">
+          구글 맵에서 장소를 찾고 "공유" → "링크 복사"한 URL을 붙여넣으세요
+        </p>
         <div className="flex gap-2">
           <Input
             value={googleSearchQuery}
             onChange={(e) => setGoogleSearchQuery(e.target.value)}
-            placeholder="장소 이름 검색 (예: 예수상, Christ Statue)"
-            onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), searchGooglePlaces())}
-            data-testid="input-google-search"
+            placeholder="https://maps.app.goo.gl/... 또는 https://www.google.com/maps/..."
+            data-testid="input-google-url"
           />
           <Button
             type="button"
-            onClick={searchGooglePlaces}
+            onClick={parseGoogleMapsUrl}
             disabled={isSearchingGoogle || !googleSearchQuery.trim()}
-            data-testid="button-search-google"
+            data-testid="button-parse-url"
           >
-            {isSearchingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : "검색"}
+            {isSearchingGoogle ? <Loader2 className="h-4 w-4 animate-spin" /> : "가져오기"}
           </Button>
         </div>
-        
-        {googleResults.length > 0 && (
-          <div className="bg-white dark:bg-slate-800 rounded-lg border max-h-60 overflow-y-auto">
-            {googleResults.map((gPlace) => (
-              <div
-                key={gPlace.placeId}
-                className="p-3 border-b last:border-b-0 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer"
-                onClick={() => selectGooglePlace(gPlace)}
-                data-testid={`google-result-${gPlace.placeId}`}
-              >
-                <div className="font-medium text-sm">{gPlace.name}</div>
-                <div className="text-xs text-muted-foreground">{gPlace.address}</div>
-                {gPlace.rating && (
-                  <div className="text-xs text-amber-600">⭐ {gPlace.rating} ({gPlace.userRatingsTotal}개 리뷰)</div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
         
         {isFetchingDetails && (
           <div className="flex items-center gap-2 text-sm text-blue-600">
             <Loader2 className="h-4 w-4 animate-spin" />
-            상세 정보 가져오는 중...
+            정보 가져오는 중...
           </div>
         )}
       </div>
