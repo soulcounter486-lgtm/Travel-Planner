@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -2667,6 +2667,128 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     } catch (error) {
       console.error("Cleanup locations error:", error);
       res.status(500).json({ error: "Failed to cleanup locations" });
+    }
+  });
+
+  // === 관광 명소/맛집 API ===
+  
+  // 모든 장소 조회 (활성화된 것만)
+  app.get("/api/places", async (req, res) => {
+    try {
+      const category = req.query.category as string | undefined;
+      let query = db.select().from(places).where(eq(places.isActive, true));
+      
+      if (category && category !== "all") {
+        const allPlaces = await db.select()
+          .from(places)
+          .where(and(eq(places.isActive, true), eq(places.category, category)))
+          .orderBy(places.sortOrder);
+        return res.json(allPlaces);
+      }
+      
+      const allPlaces = await db.select()
+        .from(places)
+        .where(eq(places.isActive, true))
+        .orderBy(places.sortOrder);
+      res.json(allPlaces);
+    } catch (error) {
+      console.error("Get places error:", error);
+      res.status(500).json({ error: "Failed to get places" });
+    }
+  });
+  
+  // 모든 장소 조회 (관리자용 - 비활성화 포함)
+  app.get("/api/admin/places", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const allPlaces = await db.select()
+        .from(places)
+        .orderBy(places.sortOrder);
+      res.json(allPlaces);
+    } catch (error) {
+      console.error("Get admin places error:", error);
+      res.status(500).json({ error: "Failed to get places" });
+    }
+  });
+  
+  // 장소 상세 조회
+  app.get("/api/places/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const place = await db.select().from(places).where(eq(places.id, id));
+      if (place.length === 0) {
+        return res.status(404).json({ error: "Place not found" });
+      }
+      res.json(place[0]);
+    } catch (error) {
+      console.error("Get place error:", error);
+      res.status(500).json({ error: "Failed to get place" });
+    }
+  });
+  
+  // 장소 추가 (관리자만)
+  app.post("/api/admin/places", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const data = insertPlaceSchema.parse(req.body);
+      const newPlace = await db.insert(places).values(data).returning();
+      res.json(newPlace[0]);
+    } catch (error) {
+      console.error("Create place error:", error);
+      res.status(500).json({ error: "Failed to create place" });
+    }
+  });
+  
+  // 장소 수정 (관리자만)
+  app.put("/api/admin/places/:id", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      const data = insertPlaceSchema.partial().parse(req.body);
+      const updatedPlace = await db.update(places)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(places.id, id))
+        .returning();
+      if (updatedPlace.length === 0) {
+        return res.status(404).json({ error: "Place not found" });
+      }
+      res.json(updatedPlace[0]);
+    } catch (error) {
+      console.error("Update place error:", error);
+      res.status(500).json({ error: "Failed to update place" });
+    }
+  });
+  
+  // 장소 삭제 (관리자만)
+  app.delete("/api/admin/places/:id", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      await db.delete(places).where(eq(places.id, id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete place error:", error);
+      res.status(500).json({ error: "Failed to delete place" });
     }
   });
 
