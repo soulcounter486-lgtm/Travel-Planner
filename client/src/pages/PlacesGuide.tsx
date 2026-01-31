@@ -1106,33 +1106,48 @@ export default function PlacesGuide() {
 
   // DB 장소를 카테고리별로 분류하고 기존 데이터와 합치기
   const mergedPlacesData = useMemo(() => {
-    const merged = { ...placesData };
+    // DB 장소 이름 집합 생성
+    const dbPlaceNames = new Set(dbPlaces.filter(p => p.isActive).map(p => p.name));
     
-    dbPlaces.forEach(dbPlace => {
-      const categoryKey = dbCategoryMap[dbPlace.category] || "exchange";
-      if (merged[categoryKey]) {
-        // DB 장소를 Place 형식으로 변환 (비활성 장소는 null 반환)
+    // 각 카테고리 처리
+    const merged: Record<string, Category> = {};
+    
+    Object.entries(placesData).forEach(([categoryKey, category]) => {
+      const places: Place[] = [];
+      
+      // 1. 해당 카테고리의 DB 장소 먼저 추가 (sortOrder 순)
+      const categoryDbPlaces = dbPlaces
+        .filter(p => {
+          const key = dbCategoryMap[p.category];
+          return key === categoryKey && p.isActive;
+        })
+        .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+      
+      categoryDbPlaces.forEach(dbPlace => {
         const converted = convertDBPlace(dbPlace);
-        if (!converted) return; // 비활성 장소는 스킵
-        
-        // 중복 체크 (이름으로)
-        const exists = merged[categoryKey].places.some(p => p.name === converted.name);
-        if (!exists) {
-          merged[categoryKey] = {
-            ...merged[categoryKey],
-            places: [converted, ...merged[categoryKey].places],
-          };
+        if (converted) {
+          // 하드코딩에서 이미지 가져오기 (DB에 이미지 없는 경우)
+          if (!converted.imageUrl) {
+            const hardcoded = category.places.find(p => p.name === dbPlace.name);
+            if (hardcoded?.imageUrl) {
+              converted.imageUrl = hardcoded.imageUrl;
+            }
+          }
+          places.push(converted);
         }
-      }
-    });
-    
-    // 각 카테고리별로 sortOrder로 정렬 (DB 장소만 sortOrder 가짐)
-    Object.keys(merged).forEach(key => {
-      merged[key].places.sort((a, b) => {
-        const orderA = a.sortOrder ?? 999;
-        const orderB = b.sortOrder ?? 999;
-        return orderA - orderB;
       });
+      
+      // 2. DB에 없는 하드코딩 장소 추가 (원래 순서 유지)
+      category.places.forEach(place => {
+        if (!dbPlaceNames.has(place.name)) {
+          places.push({ ...place, sortOrder: 1000 });
+        }
+      });
+      
+      merged[categoryKey] = {
+        ...category,
+        places,
+      };
     });
     
     return merged;
