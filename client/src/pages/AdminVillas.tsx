@@ -181,9 +181,9 @@ export default function AdminVillas() {
                     <div className="flex-shrink-0">
                       <GripVertical className="h-5 w-5 text-muted-foreground cursor-grab" />
                     </div>
-                    {villa.mainImage ? (
+                    {(villa.mainImage || (villa.images && villa.images.length > 0)) ? (
                       <img
-                        src={villa.mainImage}
+                        src={villa.mainImage || villa.images[0]}
                         alt={villa.name}
                         className="w-24 h-24 object-cover rounded-md"
                       />
