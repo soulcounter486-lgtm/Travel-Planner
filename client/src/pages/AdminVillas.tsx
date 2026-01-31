@@ -306,6 +306,8 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   const [blogUrl, setBlogUrl] = useState("");
   const [isExtractingImages, setIsExtractingImages] = useState(false);
   const [extractedImages, setExtractedImages] = useState<string[]>([]);
+  const [selectedExtracted, setSelectedExtracted] = useState<string[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
@@ -362,32 +364,58 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   };
 
   const toggleExtractedImage = (imgUrl: string) => {
-    if (formData.images.includes(imgUrl)) {
-      setFormData({
-        ...formData,
-        images: formData.images.filter((i: string) => i !== imgUrl),
-      });
+    if (selectedExtracted.includes(imgUrl)) {
+      setSelectedExtracted(selectedExtracted.filter(i => i !== imgUrl));
     } else {
-      setFormData({
-        ...formData,
-        images: [...formData.images, imgUrl],
-      });
+      setSelectedExtracted([...selectedExtracted, imgUrl]);
     }
   };
 
   const selectAllExtracted = () => {
-    const newImages = extractedImages.filter(img => !formData.images.includes(img));
-    setFormData({
-      ...formData,
-      images: [...formData.images, ...newImages],
-    });
+    setSelectedExtracted([...extractedImages]);
   };
 
   const deselectAllExtracted = () => {
-    setFormData({
-      ...formData,
-      images: formData.images.filter((img: string) => !extractedImages.includes(img)),
-    });
+    setSelectedExtracted([]);
+  };
+
+  const downloadAndSaveImages = async () => {
+    if (selectedExtracted.length === 0) {
+      alert("다운로드할 이미지를 선택해주세요");
+      return;
+    }
+    
+    setIsDownloading(true);
+    try {
+      const res = await fetch("/api/download-blog-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrls: selectedExtracted }),
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || "다운로드 실패");
+        return;
+      }
+      
+      const data = await res.json();
+      if (data.uploadedUrls && data.uploadedUrls.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, ...data.uploadedUrls],
+        }));
+        setSelectedExtracted([]);
+        setExtractedImages([]);
+        alert(`${data.success}개 이미지 저장 완료!`);
+      } else {
+        alert("이미지 다운로드에 실패했습니다. 다른 이미지를 시도해주세요.");
+      }
+    } catch (error) {
+      alert("이미지 다운로드 중 오류가 발생했습니다.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -454,9 +482,9 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
           
           {extractedImages.length > 0 && (
             <div className="mt-3 p-3 bg-muted/50 rounded-lg border">
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                 <Label className="text-sm">추출된 이미지 (클릭해서 선택)</Label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button type="button" size="sm" variant="outline" onClick={selectAllExtracted}>
                     전체 선택
                   </Button>
@@ -467,7 +495,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {extractedImages.map((img, idx) => {
-                  const isSelected = formData.images.includes(img);
+                  const isSelected = selectedExtracted.includes(img);
                   return (
                     <div 
                       key={idx} 
@@ -484,8 +512,28 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">선택된 이미지: {formData.images.filter((img: string) => extractedImages.includes(img)).length}개</p>
-              <p className="text-xs text-amber-500 mt-1">* 네이버 블로그 이미지는 외부에서 미리보기가 제한될 수 있습니다</p>
+              <p className="text-xs text-muted-foreground mt-2">선택된 이미지: {selectedExtracted.length}개</p>
+              
+              {selectedExtracted.length > 0 && (
+                <Button 
+                  type="button" 
+                  className="w-full mt-3" 
+                  onClick={downloadAndSaveImages}
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      다운로드 및 저장 중...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      선택한 {selectedExtracted.length}개 이미지 다운로드 및 저장
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </div>

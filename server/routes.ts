@@ -12,7 +12,7 @@ import { eq, sql, desc, and } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes, isAuthenticated, getSession } from "./replit_integrations/auth";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
-import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { registerObjectStorageRoutes, objectStorageClient } from "./replit_integrations/object_storage";
 import webpush from "web-push";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
@@ -2316,12 +2316,81 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
 
-      // 이미지 URL 목록 반환 (다운로드 실패 시에도 URL 반환)
+      // 이미지 URL 목록 반환
       console.log("Found", images.length, "images");
       res.json({ images });
     } catch (error) {
       console.error("Extract blog images error:", error);
       res.status(500).json({ error: "Failed to extract images" });
+    }
+  });
+
+  // 네이버 블로그 이미지를 다운로드해서 Object Storage에 저장
+  app.post("/api/download-blog-images", async (req, res) => {
+    try {
+      const { imageUrls } = req.body;
+      
+      if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
+        return res.status(400).json({ error: "Image URLs required" });
+      }
+
+      const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+      if (!bucketId) {
+        return res.status(500).json({ error: "Object storage not configured" });
+      }
+
+      const uploadedUrls: string[] = [];
+      
+      for (const imageUrl of imageUrls) {
+        try {
+          // Referer 헤더를 설정해서 네이버 이미지 다운로드
+          const imgResponse = await fetch(imageUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Referer": "https://blog.naver.com/",
+              "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+            },
+          });
+
+          if (!imgResponse.ok) {
+            console.log("Failed to download:", imageUrl, imgResponse.status);
+            continue;
+          }
+
+          const buffer = Buffer.from(await imgResponse.arrayBuffer());
+          const contentType = imgResponse.headers.get("content-type") || "image/jpeg";
+          
+          // 파일명 생성
+          const ext = contentType.includes("png") ? "png" : contentType.includes("gif") ? "gif" : "jpg";
+          const fileName = `villa_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+          
+          // Object Storage에 업로드
+          const bucket = objectStorageClient.bucket(bucketId);
+          const file = bucket.file(`public/${fileName}`);
+          
+          await file.save(buffer, {
+            contentType,
+            metadata: {
+              cacheControl: "public, max-age=31536000",
+            },
+          });
+
+          const publicUrl = `https://storage.googleapis.com/${bucketId}/public/${fileName}`;
+          uploadedUrls.push(publicUrl);
+          console.log("Uploaded:", publicUrl);
+        } catch (imgError: any) {
+          console.log("Failed to process image:", imageUrl.substring(0, 50), imgError.message);
+        }
+      }
+
+      res.json({ 
+        uploadedUrls, 
+        success: uploadedUrls.length,
+        failed: imageUrls.length - uploadedUrls.length 
+      });
+    } catch (error) {
+      console.error("Download blog images error:", error);
+      res.status(500).json({ error: "Failed to download images" });
     }
   });
 
