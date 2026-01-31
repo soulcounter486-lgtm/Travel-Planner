@@ -103,33 +103,41 @@ export default function AdminPlaces() {
 
   // 하드코딩된 장소와 DB 장소를 통합
   const unifiedPlaces = useMemo(() => {
-    const dbPlaceNames = new Set(dbPlaces.map(p => p.name));
     const list: UnifiedPlace[] = [];
-    let orderIndex = 0;
+    
+    // 1. DB 장소를 먼저 추가 (sortOrder 기준 정렬됨)
+    const sortedDbPlaces = [...dbPlaces].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+    sortedDbPlaces.forEach(dbPlace => {
+      // 하드코딩 장소에서 이미지 정보 가져오기
+      let hardcodedImage: string | undefined;
+      Object.entries(placesData).forEach(([_, category]) => {
+        const found = category.places.find(p => p.name === dbPlace.name);
+        if (found?.imageUrl) hardcodedImage = found.imageUrl;
+      });
+      
+      list.push({
+        id: `db-${dbPlace.id}`,
+        name: dbPlace.name,
+        category: dbPlace.category,
+        address: dbPlace.address || undefined,
+        phone: dbPlace.phone || undefined,
+        description: dbPlace.description || undefined,
+        imageUrl: dbPlace.mainImage || hardcodedImage,
+        mapUrl: dbPlace.website || undefined,
+        sortOrder: dbPlace.sortOrder ?? 999,
+        isHardcoded: false,
+        dbPlace,
+      });
+    });
+    
+    // 2. DB에 없는 하드코딩 장소 추가 (맨 뒤에)
+    const dbPlaceNames = new Set(dbPlaces.map(p => p.name));
+    let hardcodedIndex = 1000; // 하드코딩 장소는 큰 순서값
     
     Object.entries(placesData).forEach(([categoryKey, category]) => {
       const dbCategory = HARDCODED_TO_DB_CATEGORY[categoryKey] || "other";
       category.places.forEach((place, idx) => {
-        // DB에 같은 이름의 장소가 있는지 확인
-        const dbPlace = dbPlaces.find(p => p.name === place.name);
-        
-        if (dbPlace) {
-          // DB 버전 사용 (수정된 버전)
-          list.push({
-            id: `db-${dbPlace.id}`,
-            name: dbPlace.name,
-            category: dbPlace.category,
-            address: dbPlace.address || undefined,
-            phone: dbPlace.phone || undefined,
-            description: dbPlace.description || undefined,
-            imageUrl: dbPlace.mainImage || place.imageUrl,
-            mapUrl: dbPlace.website || place.mapUrl,
-            sortOrder: dbPlace.sortOrder ?? orderIndex,
-            isHardcoded: false,
-            dbPlace,
-          });
-        } else {
-          // 하드코딩 버전 사용
+        if (!dbPlaceNames.has(place.name)) {
           list.push({
             id: `hardcoded-${categoryKey}-${idx}`,
             name: place.name,
@@ -139,36 +147,15 @@ export default function AdminPlaces() {
             description: place.description?.ko,
             imageUrl: place.imageUrl,
             mapUrl: place.mapUrl,
-            sortOrder: orderIndex,
+            sortOrder: hardcodedIndex++,
             isHardcoded: true,
             hardcodedPlace: place,
           });
         }
-        orderIndex++;
       });
     });
     
-    // DB에만 있는 장소 추가 (하드코딩에 없는 새로 추가된 장소)
-    dbPlaces.forEach(dbPlace => {
-      const exists = list.some(p => p.name === dbPlace.name);
-      if (!exists) {
-        list.push({
-          id: `db-${dbPlace.id}`,
-          name: dbPlace.name,
-          category: dbPlace.category,
-          address: dbPlace.address || undefined,
-          phone: dbPlace.phone || undefined,
-          description: dbPlace.description || undefined,
-          imageUrl: dbPlace.mainImage || undefined,
-          mapUrl: dbPlace.website || undefined,
-          sortOrder: dbPlace.sortOrder ?? 999,
-          isHardcoded: false,
-          dbPlace,
-        });
-      }
-    });
-    
-    // sortOrder로 정렬
+    // sortOrder로 최종 정렬
     list.sort((a, b) => a.sortOrder - b.sortOrder);
     
     return list;
