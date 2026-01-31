@@ -1800,47 +1800,48 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 빌라 이미지 갤러리 모달 */}
-      <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className="max-w-[100vw] w-screen h-screen max-h-screen p-0 bg-black border-none rounded-none">
-          <div className="relative w-full h-full flex flex-col">
-            {/* 닫기 버튼 */}
+      {/* 빌라 이미지 갤러리 - 전체 화면 오버레이 */}
+      {galleryOpen && selectedVilla?.images && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black flex flex-col"
+          style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed' }}
+        >
+          {/* 상단 바 */}
+          <div className="flex items-center justify-between p-3 bg-black/90">
+            <div className="text-white text-sm font-medium">
+              {galleryIndex + 1} / {selectedVilla.images.length}
+            </div>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-2 right-2 z-50 text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20"
               onClick={() => setGalleryOpen(false)}
               data-testid="button-close-gallery"
             >
               <X className="w-6 h-6" />
             </Button>
-            
-            {/* 이미지 카운터 */}
-            {selectedVilla?.images && selectedVilla.images.length > 0 && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
-                {galleryIndex + 1} / {selectedVilla.images.length}
-              </div>
-            )}
-            
-            {/* 메인 이미지 영역 - 전체 화면 */}
-            <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
-              {selectedVilla?.images && selectedVilla.images[galleryIndex] && (
-                <img
-                  src={selectedVilla.images[galleryIndex]}
-                  alt={`${selectedVilla.name} - ${galleryIndex + 1}`}
-                  className="w-full h-full object-contain"
-                  data-testid={`gallery-image-${galleryIndex}`}
-                />
-              )}
-            </div>
+          </div>
+          
+          {/* 메인 이미지 영역 */}
+          <div 
+            className="flex-1 relative flex items-center justify-center overflow-hidden"
+            style={{ minHeight: 0 }}
+          >
+            <img
+              src={selectedVilla.images[galleryIndex]}
+              alt={`${selectedVilla.name} - ${galleryIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
+              style={{ maxHeight: '100%', maxWidth: '100%' }}
+              data-testid={`gallery-image-${galleryIndex}`}
+            />
             
             {/* 네비게이션 버튼 */}
-            {selectedVilla?.images && selectedVilla.images.length > 1 && (
+            {selectedVilla.images.length > 1 && (
               <>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
                   onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1)}
                   data-testid="button-gallery-prev"
                 >
@@ -1849,7 +1850,7 @@ export default function Home() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white hover:bg-white/20 h-12 w-12"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
                   onClick={() => setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0)}
                   data-testid="button-gallery-next"
                 >
@@ -1857,28 +1858,28 @@ export default function Home() {
                 </Button>
               </>
             )}
-            
-            {/* 썸네일 리스트 */}
-            {selectedVilla?.images && selectedVilla.images.length > 1 && (
-              <div className="flex gap-2 p-4 overflow-x-auto justify-center bg-black/80">
-                {selectedVilla.images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    onClick={() => setGalleryIndex(idx)}
-                    className={cn(
-                      "flex-shrink-0 w-16 h-16 rounded-md overflow-hidden cursor-pointer border-2 transition-all",
-                      idx === galleryIndex ? "border-primary ring-2 ring-primary/50" : "border-transparent opacity-60 hover:opacity-100"
-                    )}
-                    data-testid={`gallery-thumb-${idx}`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-        </DialogContent>
-      </Dialog>
+          
+          {/* 썸네일 리스트 */}
+          {selectedVilla.images.length > 1 && (
+            <div className="flex gap-2 p-3 overflow-x-auto justify-center bg-black/90 flex-shrink-0">
+              {selectedVilla.images.map((img, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setGalleryIndex(idx)}
+                  className={cn(
+                    "flex-shrink-0 w-14 h-14 rounded-md overflow-hidden cursor-pointer border-2 transition-all",
+                    idx === galleryIndex ? "border-primary ring-2 ring-primary/50" : "border-transparent opacity-60 hover:opacity-100"
+                  )}
+                  data-testid={`gallery-thumb-${idx}`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
