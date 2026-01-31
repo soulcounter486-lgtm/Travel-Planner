@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -2198,6 +2198,109 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         image: null,
         siteName: new URL(url).hostname,
       });
+    }
+  });
+
+  // === 풀빌라 관리 API ===
+  
+  // 모든 빌라 조회 (활성화된 것만)
+  app.get("/api/villas", async (req, res) => {
+    try {
+      const allVillas = await db.select()
+        .from(villas)
+        .where(eq(villas.isActive, true))
+        .orderBy(villas.sortOrder);
+      res.json(allVillas);
+    } catch (error) {
+      console.error("Get villas error:", error);
+      res.status(500).json({ error: "Failed to get villas" });
+    }
+  });
+
+  // 모든 빌라 조회 (관리자용 - 비활성화 포함)
+  app.get("/api/admin/villas", async (req, res) => {
+    try {
+      const user = await getSession(req);
+      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const allVillas = await db.select()
+        .from(villas)
+        .orderBy(villas.sortOrder);
+      res.json(allVillas);
+    } catch (error) {
+      console.error("Get admin villas error:", error);
+      res.status(500).json({ error: "Failed to get villas" });
+    }
+  });
+
+  // 빌라 상세 조회
+  app.get("/api/villas/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const villa = await db.select().from(villas).where(eq(villas.id, id));
+      if (villa.length === 0) {
+        return res.status(404).json({ error: "Villa not found" });
+      }
+      res.json(villa[0]);
+    } catch (error) {
+      console.error("Get villa error:", error);
+      res.status(500).json({ error: "Failed to get villa" });
+    }
+  });
+
+  // 빌라 추가 (관리자만)
+  app.post("/api/admin/villas", async (req, res) => {
+    try {
+      const user = await getSession(req);
+      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const data = insertVillaSchema.parse(req.body);
+      const newVilla = await db.insert(villas).values(data).returning();
+      res.json(newVilla[0]);
+    } catch (error) {
+      console.error("Create villa error:", error);
+      res.status(500).json({ error: "Failed to create villa" });
+    }
+  });
+
+  // 빌라 수정 (관리자만)
+  app.patch("/api/admin/villas/:id", async (req, res) => {
+    try {
+      const user = await getSession(req);
+      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      const data = insertVillaSchema.partial().parse(req.body);
+      const updated = await db.update(villas)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(villas.id, id))
+        .returning();
+      if (updated.length === 0) {
+        return res.status(404).json({ error: "Villa not found" });
+      }
+      res.json(updated[0]);
+    } catch (error) {
+      console.error("Update villa error:", error);
+      res.status(500).json({ error: "Failed to update villa" });
+    }
+  });
+
+  // 빌라 삭제 (관리자만)
+  app.delete("/api/admin/villas/:id", async (req, res) => {
+    try {
+      const user = await getSession(req);
+      if (!user || !isUserAdmin(user.claims?.sub, user.claims?.email)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      await db.delete(villas).where(eq(villas.id, id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete villa error:", error);
+      res.status(500).json({ error: "Failed to delete villa" });
     }
   });
 
