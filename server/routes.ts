@@ -2421,57 +2421,32 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
 
-      // Place ID로 좌표 조회 시도
-      const placeIdMatch = finalUrl.match(/!1s(0x[a-f0-9]+:0x[a-f0-9]+)/i) || 
-                           finalUrl.match(/place_id[=:]([A-Za-z0-9_-]+)/);
-      if (placeIdMatch) {
-        const placeId = placeIdMatch[1];
-        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-        if (apiKey) {
-          try {
-            const placeResponse = await fetch(
-              `https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeId}&key=${apiKey}`
-            );
-            const placeData = await placeResponse.json();
-            if (placeData.results && placeData.results.length > 0) {
-              const location = placeData.results[0].geometry.location;
-              return res.json({
-                success: true,
-                latitude: location.lat.toString(),
-                longitude: location.lng.toString(),
-                resolvedUrl: finalUrl,
-              });
-            }
-          } catch (e) {
-            console.error("Failed to get coordinates from Place ID:", e);
-          }
-        }
-      }
-
-      // 장소 이름으로 Geocoding 시도
+      // 장소 이름으로 Nominatim (OpenStreetMap) Geocoding 시도
       const placeNameMatch = finalUrl.match(/\/place\/([^\/]+)/);
       if (placeNameMatch) {
         const placeName = decodeURIComponent(placeNameMatch[1]).replace(/\+/g, ' ');
-        const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-        if (apiKey) {
-          try {
-            const geocodeResponse = await fetch(
-              `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(placeName)}&key=${apiKey}`
-            );
-            const geocodeData = await geocodeResponse.json();
-            console.log("Geocode response for", placeName, ":", geocodeData.status);
-            if (geocodeData.results && geocodeData.results.length > 0) {
-              const location = geocodeData.results[0].geometry.location;
-              return res.json({
-                success: true,
-                latitude: location.lat.toString(),
-                longitude: location.lng.toString(),
-                resolvedUrl: finalUrl,
-              });
+        console.log("Geocoding place name:", placeName);
+        try {
+          const geocodeResponse = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(placeName)}`,
+            {
+              headers: {
+                'User-Agent': 'VungtauDokkaebi/1.0'
+              }
             }
-          } catch (e) {
-            console.error("Failed to geocode place name:", e);
+          );
+          const geocodeData = await geocodeResponse.json();
+          console.log("Nominatim response:", geocodeData.length, "results");
+          if (geocodeData && geocodeData.length > 0) {
+            return res.json({
+              success: true,
+              latitude: geocodeData[0].lat,
+              longitude: geocodeData[0].lon,
+              resolvedUrl: finalUrl,
+            });
           }
+        } catch (e) {
+          console.error("Failed to geocode place name:", e);
         }
       }
 
