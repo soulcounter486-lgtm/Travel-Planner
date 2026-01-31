@@ -2795,6 +2795,52 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
   
+  // 기존 하드코딩된 장소 데이터 가져오기 (관리자만)
+  app.post("/api/admin/places/import-default", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      // 이미 데이터가 있는지 확인
+      const existing = await db.select().from(places).limit(1);
+      if (existing.length > 0) {
+        return res.status(400).json({ error: "이미 장소 데이터가 있습니다. 개별적으로 추가해주세요." });
+      }
+      
+      // 기본 장소 데이터 (PlacesGuide.tsx의 하드코딩 데이터)
+      const defaultPlaces = [
+        // 관광명소
+        { name: "예수상 (Christ of Vung Tau)", category: "attraction", description: "붕따우 랜드마크, 32m 높이 예수상", address: "Vũng Tàu, Vietnam", latitude: "10.3279", longitude: "107.0872", isActive: true, sortOrder: 1 },
+        { name: "등대 (Lighthouse)", category: "attraction", description: "붕따우 전경을 감상할 수 있는 등대", address: "Vũng Tàu Lighthouse", latitude: "10.3358", longitude: "107.0775", isActive: true, sortOrder: 2 },
+        { name: "호찌민 박물관", category: "attraction", description: "백악관 스타일 역사 박물관", address: "White Palace, Vũng Tàu", latitude: "10.3491", longitude: "107.0697", isActive: true, sortOrder: 3 },
+        { name: "호메이파크", category: "attraction", description: "가족 놀이공원", address: "Ho May Park, Vũng Tàu", latitude: "10.3650", longitude: "107.0850", isActive: true, sortOrder: 4 },
+        { name: "바이다우 (Back Beach)", category: "attraction", description: "붕따우 메인 해변", address: "Bãi Sau, Vũng Tàu", latitude: "10.3305", longitude: "107.0821", isActive: true, sortOrder: 5 },
+        { name: "바이쯔억 (Front Beach)", category: "attraction", description: "붕따우 프론트 비치", address: "Bãi Trước, Vũng Tàu", latitude: "10.3419", longitude: "107.0737", isActive: true, sortOrder: 6 },
+        { name: "돼지언덕 (Doi Con Heo)", category: "attraction", description: "일출/일몰 명소", address: "Pig Hill, Vũng Tàu", latitude: "10.3380", longitude: "107.0650", isActive: true, sortOrder: 7 },
+        // 맛집
+        { name: "가인하오 (Ganh Hao)", category: "restaurant", description: "로컬 해산물 맛집", address: "Ganh Hao, Vũng Tàu", isActive: true, sortOrder: 1 },
+        { name: "코바 (Coba)", category: "restaurant", description: "한국인 맛집", address: "Coba Restaurant, Vũng Tàu", isActive: true, sortOrder: 2 },
+        { name: "꼬티 (Co Thy)", category: "restaurant", description: "현지인 추천 맛집", address: "Co Thy, Vũng Tàu", isActive: true, sortOrder: 3 },
+        { name: "Texas BBQ", category: "restaurant", description: "고기 전문점", address: "Texas BBQ, Vũng Tàu", isActive: true, sortOrder: 4 },
+        { name: "판다 BBQ", category: "restaurant", description: "BBQ 레스토랑", address: "Panda BBQ, Vũng Tàu", isActive: true, sortOrder: 5 },
+        // 카페
+        { name: "미아모어 (Mi Amore)", category: "cafe", description: "분위기 좋은 카페", address: "Mi Amore Cafe, Vũng Tàu", isActive: true, sortOrder: 1 },
+        { name: "씨앤선 (Sea & Sun)", category: "cafe", description: "바다뷰 카페", address: "Sea Sun Coffee, Vũng Tàu", isActive: true, sortOrder: 2 },
+        { name: "텐 커피", category: "cafe", description: "로컬 인기 카페", address: "Ten Coffee, Vũng Tàu", isActive: true, sortOrder: 3 },
+      ];
+      
+      const inserted = await db.insert(places).values(defaultPlaces).returning();
+      res.json({ success: true, count: inserted.length, places: inserted });
+    } catch (error) {
+      console.error("Import default places error:", error);
+      res.status(500).json({ error: "Failed to import places" });
+    }
+  });
+  
   // 장소 수정 (관리자만)
   app.put("/api/admin/places/:id", async (req, res) => {
     try {

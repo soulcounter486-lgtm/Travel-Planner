@@ -203,7 +203,35 @@ export default function AdminPlaces() {
           <Card className="p-12 text-center">
             <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <p className="text-muted-foreground mb-4">등록된 장소가 없습니다</p>
-            <Button onClick={() => setIsAddOpen(true)}>첫 장소 추가하기</Button>
+            <div className="flex flex-col gap-3 items-center">
+              <Button onClick={() => setIsAddOpen(true)}>첫 장소 추가하기</Button>
+              <Button 
+                variant="outline" 
+                onClick={async () => {
+                  if (!confirm("기존 관광/맛집 데이터를 DB로 가져오시겠습니까?\n(예수상, 등대, 맛집 등 기본 데이터)")) return;
+                  try {
+                    const res = await fetch("/api/admin/places/import-default", {
+                      method: "POST",
+                      credentials: "include",
+                    });
+                    if (!res.ok) {
+                      const err = await res.json();
+                      alert(err.error || "가져오기 실패");
+                      return;
+                    }
+                    const data = await res.json();
+                    alert(`${data.count}개의 장소를 가져왔습니다!`);
+                    queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/places"] });
+                  } catch (error) {
+                    alert("오류가 발생했습니다");
+                  }
+                }}
+                data-testid="button-import-default"
+              >
+                📥 기존 데이터 가져오기
+              </Button>
+            </div>
           </Card>
         ) : (
           <div className="grid gap-4">
