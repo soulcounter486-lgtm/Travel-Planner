@@ -913,58 +913,56 @@ export default function Home() {
                   {/* 빌라 선택 갤러리 */}
                   {villas.length > 0 ? (
                     <div className="mb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Label className="text-sm font-medium">
-                            {language === "ko" ? "풀빌라 선택" : "Select Villa"}
-                          </Label>
-                          {/* 리스트/지도 토글 */}
-                          <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-                            <button
-                              onClick={() => setVillaViewMode("list")}
-                              className={cn(
-                                "px-2 py-1 text-xs flex items-center gap-1 transition-colors",
-                                villaViewMode === "list" 
-                                  ? "bg-primary text-white" 
-                                  : "bg-muted hover:bg-muted/80"
-                              )}
-                              data-testid="villa-view-list"
-                            >
-                              <List className="h-3 w-3" />
-                              {language === "ko" ? "목록" : "List"}
-                            </button>
-                            <button
-                              onClick={() => setVillaViewMode("map")}
-                              className={cn(
-                                "px-2 py-1 text-xs flex items-center gap-1 transition-colors",
-                                villaViewMode === "map" 
-                                  ? "bg-primary text-white" 
-                                  : "bg-muted hover:bg-muted/80"
-                              )}
-                              data-testid="villa-view-map"
-                            >
-                              <MapPin className="h-3 w-3" />
-                              {language === "ko" ? "지도" : "Map"}
-                            </button>
-                          </div>
-                          {/* 필터 버튼 */}
+                      <div className="flex items-center gap-1.5 mb-3 flex-nowrap overflow-x-auto">
+                        <Label className="text-xs font-medium whitespace-nowrap">
+                          {language === "ko" ? "풀빌라" : "Villa"}
+                        </Label>
+                        {/* 리스트/지도 토글 */}
+                        <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 flex-shrink-0">
                           <button
-                            onClick={() => setShowAmenityFilters(!showAmenityFilters)}
+                            onClick={() => setVillaViewMode("list")}
                             className={cn(
-                              "px-2 py-1 text-xs rounded-lg border transition-colors",
-                              amenityFilters.length > 0 
-                                ? "bg-primary text-white border-primary" 
-                                : "bg-muted border-slate-200 hover:bg-muted/80"
+                              "px-1.5 py-1 text-[10px] flex items-center gap-0.5 transition-colors",
+                              villaViewMode === "list" 
+                                ? "bg-primary text-white" 
+                                : "bg-muted hover:bg-muted/80"
                             )}
-                            data-testid="button-villa-filter"
+                            data-testid="villa-view-list"
                           >
-                            {language === "ko" ? "필터" : "Filter"} {amenityFilters.length > 0 && `(${amenityFilters.length})`}
+                            <List className="h-3 w-3" />
+                            {language === "ko" ? "목록" : "List"}
+                          </button>
+                          <button
+                            onClick={() => setVillaViewMode("map")}
+                            className={cn(
+                              "px-1.5 py-1 text-[10px] flex items-center gap-0.5 transition-colors",
+                              villaViewMode === "map" 
+                                ? "bg-primary text-white" 
+                                : "bg-muted hover:bg-muted/80"
+                            )}
+                            data-testid="villa-view-map"
+                          >
+                            <MapPin className="h-3 w-3" />
+                            {language === "ko" ? "지도" : "Map"}
                           </button>
                         </div>
+                        {/* 필터 버튼 */}
+                        <button
+                          onClick={() => setShowAmenityFilters(!showAmenityFilters)}
+                          className={cn(
+                            "px-1.5 py-1 text-[10px] rounded-lg border transition-colors flex-shrink-0",
+                            amenityFilters.length > 0 
+                              ? "bg-primary text-white border-primary" 
+                              : "bg-muted border-slate-200 hover:bg-muted/80"
+                          )}
+                          data-testid="button-villa-filter"
+                        >
+                          {language === "ko" ? "필터" : "Filter"}{amenityFilters.length > 0 && `(${amenityFilters.length})`}
+                        </button>
                         {isAdmin && (
-                          <Link href="/admin/villas">
-                            <Button variant="ghost" size="sm" className="text-xs">
-                              <Settings className="h-3 w-3 mr-1" />
+                          <Link href="/admin/villas" className="flex-shrink-0">
+                            <Button variant="ghost" size="sm" className="text-[10px] h-6 px-1.5">
+                              <Settings className="h-3 w-3 mr-0.5" />
                               관리
                             </Button>
                           </Link>
