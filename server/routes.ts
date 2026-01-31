@@ -847,9 +847,11 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   app.get(api.quotes.list.path, async (req, res) => {
-    const userId = (req as any).user?.claims?.sub;
-    const adminId = process.env.ADMIN_USER_ID || "";
-    const isAdmin = userId && String(userId) === String(adminId);
+    const user = (req as any).user;
+    const userId = user?.claims?.sub;
+    const userEmail = user?.claims?.email || user?.email;
+    // isUserAdmin 함수를 사용하여 ID 또는 이메일로 관리자 확인
+    const isAdmin = isUserAdmin(userId, userEmail);
     
     // 관리자는 전체 목록, 일반 사용자는 자신의 것만
     const quotes = isAdmin 
@@ -864,9 +866,11 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid quote ID" });
       }
-      const userId = (req as any).user?.claims?.sub;
-      const adminId = process.env.ADMIN_USER_ID || "";
-      const isAdmin = userId && String(userId) === String(adminId);
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      // isUserAdmin 함수를 사용하여 ID 또는 이메일로 관리자 확인
+      const isAdmin = isUserAdmin(userId, userEmail);
       
       // 관리자는 모든 견적서 삭제 가능
       if (isAdmin) {
@@ -1944,10 +1948,16 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     const userEmail = user?.claims?.email || user?.email;
     const isAdmin = isUserAdmin(userId, userEmail);
     
-    // 관리자 ID 목록 (Replit ID와 카카오 ID 등)
-    const adminUserIds = [ADMIN_USER_ID].filter(id => id);
+    // 관리자 ID 목록 (Replit ID와 카카오 ID 등 - 모든 관리자 계정의 ID 포함)
+    // ADMIN_USER_ID는 Replit 관리자 ID, 현재 로그인한 관리자의 ID도 추가
+    const adminUserIds: string[] = [];
+    if (ADMIN_USER_ID) adminUserIds.push(ADMIN_USER_ID);
+    // 현재 로그인한 사용자가 관리자인 경우, 그 사용자의 ID도 관리자 목록에 추가
+    if (isAdmin && userId && !adminUserIds.includes(userId)) {
+      adminUserIds.push(userId);
+    }
     
-    console.log("Admin check - userId:", userId, "userEmail:", userEmail, "ADMIN_USER_ID:", ADMIN_USER_ID, "ADMIN_EMAIL:", ADMIN_EMAIL, "isAdmin:", isAdmin);
+    console.log("Admin check - userId:", userId, "userEmail:", userEmail, "ADMIN_USER_ID:", ADMIN_USER_ID, "ADMIN_EMAIL:", ADMIN_EMAIL, "isAdmin:", isAdmin, "adminUserIds:", adminUserIds);
     res.json({ isAdmin, isLoggedIn: !!user, userId, adminUserIds });
   });
 
