@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import type { Place as DBPlace } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -969,10 +970,81 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
   );
 }
 
+// DB 카테고리를 기존 카테고리에 매핑
+const dbCategoryMap: Record<string, string> = {
+  attraction: "attractions",
+  restaurant: "localFood",
+  cafe: "coffee",
+  other: "exchange",
+};
+
+// DB 장소를 Place 형식으로 변환
+function convertDBPlace(dbPlace: DBPlace): Place | null {
+  // 비활성 장소는 표시하지 않음
+  if (!dbPlace.isActive) return null;
+  
+  const description: Record<string, string> = {};
+  if (dbPlace.description) {
+    description.ko = dbPlace.description;
+    description.en = dbPlace.description;
+  }
+  
+  // mapUrl 결정: 좌표 > 웹사이트 > 기본 구글맵 검색
+  let mapUrl = "#";
+  if (dbPlace.latitude && dbPlace.longitude) {
+    mapUrl = `https://www.google.com/maps?q=${dbPlace.latitude},${dbPlace.longitude}`;
+  } else if (dbPlace.website) {
+    mapUrl = dbPlace.website;
+  } else if (dbPlace.address) {
+    mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(dbPlace.address)}`;
+  } else if (dbPlace.name) {
+    mapUrl = `https://www.google.com/maps/search/${encodeURIComponent(dbPlace.name + ", Vung Tau")}`;
+  }
+  
+  return {
+    name: dbPlace.name,
+    address: dbPlace.address || undefined,
+    phone: dbPlace.phone || undefined,
+    mapUrl,
+    imageUrl: dbPlace.mainImage || undefined,
+    description: Object.keys(description).length > 0 ? description : undefined,
+  };
+}
+
 export default function PlacesGuide() {
   const { language, t } = useLanguage();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["attractions", "localFood"]));
   const [visitorCount, setVisitorCount] = useState<number>(0);
+
+  // DB에서 장소 데이터 가져오기
+  const { data: dbPlaces = [] } = useQuery<DBPlace[]>({
+    queryKey: ["/api/places"],
+  });
+
+  // DB 장소를 카테고리별로 분류하고 기존 데이터와 합치기
+  const mergedPlacesData = useMemo(() => {
+    const merged = { ...placesData };
+    
+    dbPlaces.forEach(dbPlace => {
+      const categoryKey = dbCategoryMap[dbPlace.category] || "exchange";
+      if (merged[categoryKey]) {
+        // DB 장소를 Place 형식으로 변환 (비활성 장소는 null 반환)
+        const converted = convertDBPlace(dbPlace);
+        if (!converted) return; // 비활성 장소는 스킵
+        
+        // 중복 체크 (이름으로)
+        const exists = merged[categoryKey].places.some(p => p.name === converted.name);
+        if (!exists) {
+          merged[categoryKey] = {
+            ...merged[categoryKey],
+            places: [converted, ...merged[categoryKey].places],
+          };
+        }
+      }
+    });
+    
+    return merged;
+  }, [dbPlaces]);
 
   useEffect(() => {
     apiRequest("POST", "/api/visitor-count/increment")
@@ -1018,7 +1090,7 @@ export default function PlacesGuide() {
 
         <div className="space-y-4">
           {categoryOrder.map((key) => {
-            const category = placesData[key];
+            const category = mergedPlacesData[key];
             if (!category) return null;
             const Icon = category.icon;
             const isExpanded = expandedCategories.has(key);
