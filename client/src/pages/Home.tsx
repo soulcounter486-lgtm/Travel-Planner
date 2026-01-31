@@ -104,7 +104,9 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List } from "lucide-react";
-import type { Villa } from "@shared/schema";
+import type { Villa, VillaAmenity } from "@shared/schema";
+import { villaAmenities, villaAmenityLabels } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function Home() {
   const { toast } = useToast();
@@ -116,6 +118,15 @@ export default function Home() {
     queryKey: ["/api/villas"],
   });
   const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
+  const [amenityFilters, setAmenityFilters] = useState<VillaAmenity[]>([]);
+  const [showAmenityFilters, setShowAmenityFilters] = useState(false);
+  
+  // 편의사항 필터가 적용된 빌라 목록
+  const filteredVillas = villas.filter(villa => {
+    if (amenityFilters.length === 0) return true;
+    return amenityFilters.every(filter => villa.amenities?.includes(filter));
+  });
+  
   const selectedVilla = villas.find(v => v.id === selectedVillaId) || null;
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
@@ -936,6 +947,19 @@ export default function Home() {
                               {language === "ko" ? "지도" : "Map"}
                             </button>
                           </div>
+                          {/* 필터 버튼 */}
+                          <button
+                            onClick={() => setShowAmenityFilters(!showAmenityFilters)}
+                            className={cn(
+                              "px-2 py-1 text-xs rounded-lg border transition-colors",
+                              amenityFilters.length > 0 
+                                ? "bg-primary text-white border-primary" 
+                                : "bg-muted border-slate-200 hover:bg-muted/80"
+                            )}
+                            data-testid="button-villa-filter"
+                          >
+                            {language === "ko" ? "필터" : "Filter"} {amenityFilters.length > 0 && `(${amenityFilters.length})`}
+                          </button>
                         </div>
                         {isAdmin && (
                           <Link href="/admin/villas">
@@ -946,6 +970,48 @@ export default function Home() {
                           </Link>
                         )}
                       </div>
+                      
+                      {/* 편의사항 필터 */}
+                      {showAmenityFilters && (
+                        <div className="mb-3 p-3 bg-muted/50 rounded-lg">
+                          <div className="flex flex-wrap gap-2">
+                            {villaAmenities.map((amenity) => (
+                              <label 
+                                key={amenity}
+                                className={cn(
+                                  "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs cursor-pointer transition-colors border",
+                                  amenityFilters.includes(amenity)
+                                    ? "bg-primary text-white border-primary"
+                                    : "bg-background border-slate-200 hover:bg-muted"
+                                )}
+                              >
+                                <Checkbox
+                                  checked={amenityFilters.includes(amenity)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setAmenityFilters([...amenityFilters, amenity]);
+                                    } else {
+                                      setAmenityFilters(amenityFilters.filter(a => a !== amenity));
+                                    }
+                                  }}
+                                  className="h-3 w-3"
+                                  data-testid={`checkbox-filter-${amenity}`}
+                                />
+                                {villaAmenityLabels[amenity]}
+                              </label>
+                            ))}
+                          </div>
+                          {amenityFilters.length > 0 && (
+                            <button
+                              onClick={() => setAmenityFilters([])}
+                              className="mt-2 text-xs text-muted-foreground hover:text-foreground"
+                              data-testid="button-clear-filters"
+                            >
+                              {language === "ko" ? "필터 초기화" : "Clear filters"}
+                            </button>
+                          )}
+                        </div>
+                      )}
                       
                       {/* 지도 뷰 */}
                       {villaViewMode === "map" && (
@@ -967,7 +1033,7 @@ export default function Home() {
                       {villaViewMode === "list" && (
                       <div className="max-h-[220px] overflow-y-auto pb-2">
                         <div className="grid grid-cols-3 gap-2">
-                          {villas.map((villa) => (
+                          {filteredVillas.map((villa) => (
                             <div
                               key={villa.id}
                               onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}

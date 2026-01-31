@@ -244,11 +244,39 @@ export type UserLocation = typeof userLocations.$inferSelect;
 export type InsertUserLocation = z.infer<typeof insertUserLocationSchema>;
 
 // 풀빌라 테이블
+// 빌라 편의사항 타입
+export const villaAmenities = [
+  "pool",        // 수영장
+  "karaoke",     // 노래방
+  "portableSpeaker", // 이동식 노래방스피커
+  "bbq",         // 바베큐
+  "livingAC",    // 거실에어컨
+  "elevator",    // 엘레베이터
+  "downtown",    // 시내
+  "beach",       // 바닷가
+  "outskirts",   // 외곽
+] as const;
+
+export type VillaAmenity = typeof villaAmenities[number];
+
+export const villaAmenityLabels: Record<VillaAmenity, string> = {
+  pool: "수영장",
+  karaoke: "노래방",
+  portableSpeaker: "이동식 노래방스피커",
+  bbq: "바베큐",
+  livingAC: "거실에어컨",
+  elevator: "엘레베이터",
+  downtown: "시내",
+  beach: "바닷가",
+  outskirts: "외곽",
+};
+
 export const villas = pgTable("villas", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(), // 빌라 이름
   mainImage: text("main_image"), // 대표 사진 URL
   images: jsonb("images").$type<string[]>().default([]), // 상세 사진들
+  amenities: jsonb("amenities").$type<VillaAmenity[]>().default([]), // 편의사항
   weekdayPrice: integer("weekday_price").notNull().default(350), // 평일 가격 (USD)
   fridayPrice: integer("friday_price").notNull().default(380), // 금요일 가격 (USD)
   weekendPrice: integer("weekend_price").notNull().default(500), // 주말 가격 (USD)

@@ -11,7 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Plus, Pencil, Trash2, Image, Save, X, GripVertical, Upload, Loader2, MapPin } from "lucide-react";
 import { Link } from "wouter";
-import type { Villa } from "@shared/schema";
+import type { Villa, VillaAmenity } from "@shared/schema";
+import { villaAmenities, villaAmenityLabels } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useUpload } from "@/hooks/use-upload";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -411,6 +413,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     name: villa?.name || "",
     mainImage: villa?.mainImage || "",
     images: villa?.images || [],
+    amenities: villa?.amenities || [],
     weekdayPrice: villa?.weekdayPrice || 350,
     fridayPrice: villa?.fridayPrice || 380,
     weekendPrice: villa?.weekendPrice || 500,
@@ -804,6 +807,35 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             </div>
           )}
           <p className="text-xs text-muted-foreground mt-2">사진을 클릭하면 대표 이미지로 설정됩니다</p>
+        </div>
+
+        {/* 편의사항 체크박스 */}
+        <div>
+          <Label className="mb-2 block">편의사항</Label>
+          <div className="grid grid-cols-3 gap-2">
+            {villaAmenities.map((amenity) => (
+              <div key={amenity} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`amenity-${amenity}`}
+                  checked={formData.amenities.includes(amenity)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setFormData({ ...formData, amenities: [...formData.amenities, amenity] });
+                    } else {
+                      setFormData({ ...formData, amenities: formData.amenities.filter((a: VillaAmenity) => a !== amenity) });
+                    }
+                  }}
+                  data-testid={`checkbox-amenity-${amenity}`}
+                />
+                <label
+                  htmlFor={`amenity-${amenity}`}
+                  className="text-sm cursor-pointer"
+                >
+                  {villaAmenityLabels[amenity]}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
