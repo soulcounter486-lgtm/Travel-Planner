@@ -119,6 +119,8 @@ export default function Home() {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right' | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   // 언어별 달력 locale 매핑
   const calendarLocale = useMemo(() => {
@@ -1836,16 +1838,28 @@ export default function Home() {
               setTouchEnd(e.targetTouches[0].clientX);
             }}
             onTouchEnd={() => {
-              if (!touchStart || !touchEnd) return;
+              if (!touchStart || !touchEnd || isAnimating) return;
               const distance = touchStart - touchEnd;
               const minSwipeDistance = 50;
               if (Math.abs(distance) > minSwipeDistance) {
                 if (distance > 0) {
                   // 왼쪽으로 스와이프 → 다음 이미지
-                  setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0);
+                  setSlideDirection('left');
+                  setIsAnimating(true);
+                  setTimeout(() => {
+                    setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0);
+                    setSlideDirection(null);
+                    setIsAnimating(false);
+                  }, 200);
                 } else {
                   // 오른쪽으로 스와이프 → 이전 이미지
-                  setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1);
+                  setSlideDirection('right');
+                  setIsAnimating(true);
+                  setTimeout(() => {
+                    setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1);
+                    setSlideDirection(null);
+                    setIsAnimating(false);
+                  }, 200);
                 }
               }
               setTouchStart(null);
@@ -1855,7 +1869,12 @@ export default function Home() {
             <img
               src={selectedVilla.images[galleryIndex]}
               alt={`${selectedVilla.name} - ${galleryIndex + 1}`}
-              className="max-w-full max-h-full object-contain select-none"
+              className={cn(
+                "max-w-full max-h-full object-contain select-none transition-all duration-200 ease-out",
+                slideDirection === 'left' && "opacity-0 -translate-x-10",
+                slideDirection === 'right' && "opacity-0 translate-x-10",
+                !slideDirection && "opacity-100 translate-x-0"
+              )}
               style={{ maxHeight: '100%', maxWidth: '100%' }}
               draggable={false}
               data-testid={`gallery-image-${galleryIndex}`}
@@ -1868,7 +1887,16 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   className="absolute left-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
-                  onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1)}
+                  onClick={() => {
+                    if (isAnimating) return;
+                    setSlideDirection('right');
+                    setIsAnimating(true);
+                    setTimeout(() => {
+                      setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1);
+                      setSlideDirection(null);
+                      setIsAnimating(false);
+                    }, 200);
+                  }}
                   data-testid="button-gallery-prev"
                 >
                   <ChevronLeft className="w-8 h-8" />
@@ -1877,7 +1905,16 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
-                  onClick={() => setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0)}
+                  onClick={() => {
+                    if (isAnimating) return;
+                    setSlideDirection('left');
+                    setIsAnimating(true);
+                    setTimeout(() => {
+                      setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0);
+                      setSlideDirection(null);
+                      setIsAnimating(false);
+                    }, 200);
+                  }}
                   data-testid="button-gallery-next"
                 >
                   <ChevronRight className="w-8 h-8" />
