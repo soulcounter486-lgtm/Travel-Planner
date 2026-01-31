@@ -119,7 +119,6 @@ export default function Home() {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [slideOffset, setSlideOffset] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   
   // 언어별 달력 locale 매핑
@@ -1842,49 +1841,35 @@ export default function Home() {
               const distance = touchStart - touchEnd;
               const minSwipeDistance = 50;
               if (Math.abs(distance) > minSwipeDistance) {
-                setIsAnimating(true);
                 if (distance > 0) {
                   // 왼쪽으로 스와이프 → 다음 이미지
-                  setSlideOffset(-100);
-                  setTimeout(() => {
-                    setSlideOffset(100);
-                    setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0);
-                    requestAnimationFrame(() => {
-                      setSlideOffset(0);
-                      setTimeout(() => setIsAnimating(false), 300);
-                    });
-                  }, 150);
+                  setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0);
                 } else {
                   // 오른쪽으로 스와이프 → 이전 이미지
-                  setSlideOffset(100);
-                  setTimeout(() => {
-                    setSlideOffset(-100);
-                    setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1);
-                    requestAnimationFrame(() => {
-                      setSlideOffset(0);
-                      setTimeout(() => setIsAnimating(false), 300);
-                    });
-                  }, 150);
+                  setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1);
                 }
               }
               setTouchStart(null);
               setTouchEnd(null);
             }}
           >
-            <img
-              src={selectedVilla.images[galleryIndex]}
-              alt={`${selectedVilla.name} - ${galleryIndex + 1}`}
-              className="max-w-full max-h-full object-contain select-none"
-              style={{ 
-                maxHeight: '100%', 
-                maxWidth: '100%',
-                transform: `translateX(${slideOffset}%)`,
-                opacity: slideOffset === 0 ? 1 : 0,
-                transition: slideOffset === 0 ? 'transform 0.3s ease-out, opacity 0.3s ease-out' : 'none'
-              }}
-              draggable={false}
-              data-testid={`gallery-image-${galleryIndex}`}
-            />
+            {/* 모든 이미지를 미리 렌더링하고 현재 이미지만 보이게 */}
+            {selectedVilla.images.map((img, idx) => (
+              <img
+                key={idx}
+                src={img}
+                alt={`${selectedVilla.name} - ${idx + 1}`}
+                className="absolute max-w-full max-h-full object-contain select-none transition-opacity duration-300 ease-in-out"
+                style={{ 
+                  maxHeight: '100%', 
+                  maxWidth: '100%',
+                  opacity: idx === galleryIndex ? 1 : 0,
+                  pointerEvents: idx === galleryIndex ? 'auto' : 'none'
+                }}
+                draggable={false}
+                data-testid={idx === galleryIndex ? `gallery-image-${idx}` : undefined}
+              />
+            ))}
             
             {/* 네비게이션 버튼 */}
             {selectedVilla.images.length > 1 && (
@@ -1893,19 +1878,7 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   className="absolute left-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
-                  onClick={() => {
-                    if (isAnimating) return;
-                    setIsAnimating(true);
-                    setSlideOffset(100);
-                    setTimeout(() => {
-                      setSlideOffset(-100);
-                      setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1);
-                      requestAnimationFrame(() => {
-                        setSlideOffset(0);
-                        setTimeout(() => setIsAnimating(false), 300);
-                      });
-                    }, 150);
-                  }}
+                  onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1)}
                   data-testid="button-gallery-prev"
                 >
                   <ChevronLeft className="w-8 h-8" />
@@ -1914,19 +1887,7 @@ export default function Home() {
                   variant="ghost"
                   size="icon"
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
-                  onClick={() => {
-                    if (isAnimating) return;
-                    setIsAnimating(true);
-                    setSlideOffset(-100);
-                    setTimeout(() => {
-                      setSlideOffset(100);
-                      setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0);
-                      requestAnimationFrame(() => {
-                        setSlideOffset(0);
-                        setTimeout(() => setIsAnimating(false), 300);
-                      });
-                    }, 150);
-                  }}
+                  onClick={() => setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0)}
                   data-testid="button-gallery-next"
                 >
                   <ChevronRight className="w-8 h-8" />
