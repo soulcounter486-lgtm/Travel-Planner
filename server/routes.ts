@@ -2337,6 +2337,37 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 이미지 프록시 API (네이버 핫링킹 우회)
+  app.get("/api/image-proxy", async (req, res) => {
+    try {
+      const imageUrl = req.query.url as string;
+      if (!imageUrl) {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      const response = await fetch(imageUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Referer": "https://blog.naver.com/",
+        },
+      });
+
+      if (!response.ok) {
+        return res.status(response.status).json({ error: "Failed to fetch image" });
+      }
+
+      const contentType = response.headers.get("content-type") || "image/jpeg";
+      const buffer = await response.arrayBuffer();
+
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      res.send(Buffer.from(buffer));
+    } catch (error) {
+      console.error("Image proxy error:", error);
+      res.status(500).json({ error: "Failed to proxy image" });
+    }
+  });
+
   // 모든 빌라 조회 (활성화된 것만)
   app.get("/api/villas", async (req, res) => {
     try {

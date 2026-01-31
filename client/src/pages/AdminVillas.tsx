@@ -183,10 +183,9 @@ export default function AdminVillas() {
                     </div>
                     {(villa.mainImage || (villa.images && villa.images.length > 0)) ? (
                       <img
-                        src={villa.mainImage || villa.images[0]}
+                        src={getProxyImageUrl(villa.mainImage || villa.images![0])}
                         alt={villa.name}
                         className="w-24 h-24 object-cover rounded-md"
-                        referrerPolicy="no-referrer"
                       />
                     ) : (
                       <div className="w-24 h-24 bg-muted rounded-md flex items-center justify-center">
@@ -343,6 +342,14 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     }
   };
 
+  // 네이버 이미지를 프록시 URL로 변환
+  const getProxyImageUrl = (url: string) => {
+    if (url.includes("pstatic.net") || url.includes("naver.com")) {
+      return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
   const toggleExtractedImage = (img: string) => {
     if (formData.images.includes(img)) {
       setFormData({
@@ -457,11 +464,9 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                       onClick={() => toggleExtractedImage(img)}
                     >
                       <img
-                        src={img}
+                        src={getProxyImageUrl(img)}
                         alt={`추출 ${idx + 1}`}
                         className="h-16 w-full object-cover"
-                        referrerPolicy="no-referrer"
-                        crossOrigin="anonymous"
                         onError={(e) => {
                           const target = e.currentTarget;
                           target.style.opacity = "0.3";
@@ -500,10 +505,9 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
               {formData.images.map((img: string, idx: number) => (
                 <div key={idx} className="relative">
                   <img
-                    src={img}
+                    src={getProxyImageUrl(img)}
                     alt={`사진 ${idx + 1}`}
                     className={`h-20 w-full object-cover rounded-md ${idx === 0 ? "ring-2 ring-primary" : ""}`}
-                    referrerPolicy="no-referrer"
                     onError={(e) => (e.currentTarget.src = "/placeholder.png")}
                   />
                   {idx === 0 && (
