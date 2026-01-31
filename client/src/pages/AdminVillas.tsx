@@ -339,9 +339,13 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     sortOrder: villa?.sortOrder || 0,
   });
   
+  const [isResolvingUrl, setIsResolvingUrl] = useState(false);
+  
   // 구글맵 URL 변경 시 좌표 자동 추출
-  const handleMapUrlChange = (url: string) => {
+  const handleMapUrlChange = async (url: string) => {
     setFormData(prev => ({ ...prev, mapUrl: url }));
+    
+    // 먼저 클라이언트에서 시도
     const coords = extractCoordsFromGoogleMapsUrl(url);
     if (coords) {
       setFormData(prev => ({
@@ -350,6 +354,31 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
         latitude: coords.lat,
         longitude: coords.lng,
       }));
+      return;
+    }
+    
+    // 단축 URL인 경우 서버에서 해결
+    if (url.includes("maps.app.goo.gl") || url.includes("goo.gl/maps")) {
+      setIsResolvingUrl(true);
+      try {
+        const response = await fetch("/api/resolve-google-maps-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await response.json();
+        if (data.success) {
+          setFormData(prev => ({
+            ...prev,
+            latitude: data.latitude,
+            longitude: data.longitude,
+          }));
+        }
+      } catch (e) {
+        console.error("Failed to resolve URL:", e);
+      } finally {
+        setIsResolvingUrl(false);
+      }
     }
   };
 
@@ -759,7 +788,9 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
             data-testid="input-map-url"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            구글맵 URL을 붙여넣으면 좌표가 자동 추출됩니다
+            {isResolvingUrl 
+              ? "⏳ 좌표 추출 중..." 
+              : "구글맵 URL을 붙여넣으면 좌표가 자동 추출됩니다"}
           </p>
         </div>
         

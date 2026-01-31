@@ -2377,6 +2377,61 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
 
   // === 풀빌라 관리 API ===
   
+  // 구글맵 단축 URL에서 좌표 추출
+  app.post("/api/resolve-google-maps-url", async (req, res) => {
+    try {
+      const { url } = req.body;
+      if (!url || typeof url !== "string") {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // 단축 URL인 경우 리다이렉트 따라가기
+      let finalUrl = url;
+      if (url.includes("maps.app.goo.gl") || url.includes("goo.gl/maps")) {
+        try {
+          const response = await fetch(url, {
+            method: "HEAD",
+            redirect: "follow",
+          });
+          finalUrl = response.url;
+          console.log("Resolved URL:", finalUrl);
+        } catch (e) {
+          console.error("Failed to resolve short URL:", e);
+        }
+      }
+
+      // URL에서 좌표 추출
+      const patterns = [
+        /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,           // @10.3543,107.0842
+        /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,      // ?q=10.3543,107.0842
+        /\/place\/(-?\d+\.?\d*),(-?\d+\.?\d*)/,   // /place/10.3543,107.0842
+        /[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,     // ?ll=10.3543,107.0842
+        /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,       // !3d10.3543!4d107.0842
+      ];
+
+      for (const pattern of patterns) {
+        const match = finalUrl.match(pattern);
+        if (match) {
+          return res.json({
+            success: true,
+            latitude: match[1],
+            longitude: match[2],
+            resolvedUrl: finalUrl,
+          });
+        }
+      }
+
+      return res.json({
+        success: false,
+        error: "Could not extract coordinates from URL",
+        resolvedUrl: finalUrl,
+      });
+    } catch (error) {
+      console.error("Error resolving Google Maps URL:", error);
+      return res.status(500).json({ error: "Failed to resolve URL" });
+    }
+  });
+  
   // 네이버 블로그에서 이미지 추출
   app.post("/api/extract-blog-images", async (req, res) => {
     try {
