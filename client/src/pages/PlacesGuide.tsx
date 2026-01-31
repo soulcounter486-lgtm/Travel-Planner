@@ -70,6 +70,7 @@ interface Place {
   recommended?: boolean;
   imageUrl?: string;
   description?: Record<string, string>;
+  dbId?: number; // DB에서 가져온 장소의 ID (수정 가능)
 }
 
 interface Category {
