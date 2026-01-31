@@ -799,6 +799,12 @@ export default function Home() {
                                 <Check className="h-4 w-4 text-primary" />
                               </div>
                             )}
+                            {/* 룸 수 표시 */}
+                            {villa.bedrooms && (
+                              <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] text-center py-0.5">
+                                {villa.bedrooms}R
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
