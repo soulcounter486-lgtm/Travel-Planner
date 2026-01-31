@@ -1802,7 +1802,7 @@ export default function Home() {
 
       {/* 빌라 이미지 갤러리 모달 */}
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-black/95 border-none">
+        <DialogContent className="max-w-[100vw] w-screen h-screen max-h-screen p-0 bg-black border-none rounded-none">
           <div className="relative w-full h-full flex flex-col">
             {/* 닫기 버튼 */}
             <Button
@@ -1822,13 +1822,13 @@ export default function Home() {
               </div>
             )}
             
-            {/* 메인 이미지 영역 */}
-            <div className="flex-1 flex items-center justify-center p-4 min-h-[60vh]">
+            {/* 메인 이미지 영역 - 전체 화면 */}
+            <div className="flex-1 flex items-center justify-center p-2 overflow-hidden">
               {selectedVilla?.images && selectedVilla.images[galleryIndex] && (
                 <img
                   src={selectedVilla.images[galleryIndex]}
                   alt={`${selectedVilla.name} - ${galleryIndex + 1}`}
-                  className="max-w-full max-h-[70vh] object-contain"
+                  className="w-full h-full object-contain"
                   data-testid={`gallery-image-${galleryIndex}`}
                 />
               )}
