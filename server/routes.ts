@@ -264,7 +264,10 @@ export async function registerRoutes(
           console.error("Kakao login session error:", err);
           return res.status(500).send("Login failed");
         }
-        res.redirect("/");
+        console.log("Kakao login successful - userId:", kakaoUserId, "email:", email, "nickname:", nickname);
+        req.session.save(() => {
+          res.redirect("/");
+        });
       });
     } catch (error) {
       console.error("Kakao OAuth error:", error);
