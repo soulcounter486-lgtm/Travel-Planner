@@ -152,11 +152,8 @@ export async function registerRoutes(
     const state = crypto.randomBytes(16).toString("hex");
     (req.session as any).kakaoState = state;
     req.session.save(() => {
-      // Production에서는 항상 https와 vungtau.blog 도메인 사용
-      const isProduction = process.env.NODE_ENV === "production" || req.hostname === "vungtau.blog";
-      const protocol = isProduction ? "https" : req.protocol;
-      const hostname = isProduction ? "vungtau.blog" : req.hostname;
-      const redirectUri = `${protocol}://${hostname}/api/auth/kakao/callback`;
+      // 항상 vungtau.blog 도메인 사용 (카카오 개발자 콘솔에 등록된 URI)
+      const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
       console.log("Kakao auth start - redirectUri:", redirectUri);
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
       res.redirect(kakaoAuthUrl);
@@ -177,11 +174,8 @@ export async function registerRoutes(
       // 사용된 state 즉시 삭제 (재사용 방지)
       delete (req.session as any).kakaoState;
       
-      // Production에서는 항상 https와 vungtau.blog 도메인 사용
-      const isProduction = process.env.NODE_ENV === "production" || req.hostname === "vungtau.blog";
-      const protocol = isProduction ? "https" : req.protocol;
-      const hostname = isProduction ? "vungtau.blog" : req.hostname;
-      const redirectUri = `${protocol}://${hostname}/api/auth/kakao/callback`;
+      // 항상 vungtau.blog 도메인 사용 (카카오 개발자 콘솔에 등록된 URI)
+      const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
       
       console.log("Kakao callback - redirectUri:", redirectUri, "code:", code?.toString().substring(0, 10) + "...");
 
