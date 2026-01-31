@@ -15,6 +15,7 @@ import DietProducts from "@/pages/DietProducts";
 import LocationShare from "@/pages/LocationShare";
 import Privacy from "@/pages/Privacy";
 import AdminVillas from "@/pages/AdminVillas";
+import AdminPlaces from "@/pages/AdminPlaces";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/locations" component={LocationShare} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/admin/villas" component={AdminVillas} />
+      <Route path="/admin/places" component={AdminPlaces} />
       <Route component={NotFound} />
     </Switch>
   );
