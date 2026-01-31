@@ -2271,7 +2271,8 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
           }
           
           // 썸네일 도메인을 원본 이미지 도메인으로 변환 (고화질)
-          fullSrc = fullSrc.replace("mblogthumb-phinf.pstatic.net", "postfiles.pstatic.net");
+          fullSrc = fullSrc.replace("mblogthumb-phinf.pstatic.net", "blogfiles.pstatic.net");
+          fullSrc = fullSrc.replace("postfiles.pstatic.net", "blogfiles.pstatic.net");
           
           // 프로필 이미지, 외부 썸네일 제외
           if (fullSrc.includes("blogpfthumb-phinf") || fullSrc.includes("profileImage") || fullSrc.includes("dthumb-phinf")) {
@@ -2346,8 +2347,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       }
 
       // 원본 고화질 이미지 URL로 변환
-      // 썸네일 도메인을 원본 도메인으로 변환
-      imageUrl = imageUrl.replace("mblogthumb-phinf.pstatic.net", "postfiles.pstatic.net");
+      // 썸네일 도메인을 원본 도메인으로 변환 (blogfiles = 고화질 원본)
+      imageUrl = imageUrl.replace("mblogthumb-phinf.pstatic.net", "blogfiles.pstatic.net");
+      imageUrl = imageUrl.replace("postfiles.pstatic.net", "blogfiles.pstatic.net");
       
       // 모든 크기 제한 파라미터 제거
       imageUrl = imageUrl.split("?")[0];
@@ -2394,10 +2396,12 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       
       for (let imageUrl of imageUrls) {
         try {
-          // mblogthumb-phinf를 postfiles로 변환 (원본 이미지 URL)
-          if (imageUrl.includes("mblogthumb-phinf.pstatic.net")) {
-            imageUrl = imageUrl.replace("mblogthumb-phinf.pstatic.net", "postfiles.pstatic.net");
-          }
+          // 모든 도메인을 blogfiles로 변환 (고화질 원본 이미지)
+          imageUrl = imageUrl.replace("mblogthumb-phinf.pstatic.net", "blogfiles.pstatic.net");
+          imageUrl = imageUrl.replace("postfiles.pstatic.net", "blogfiles.pstatic.net");
+          
+          // 쿼리 파라미터 제거 (크기 제한 해제)
+          imageUrl = imageUrl.split("?")[0];
           
           console.log("Downloading:", imageUrl);
           
