@@ -493,20 +493,26 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {extractedImages.map((img, idx) => {
                   const isSelected = selectedExtracted.includes(img);
+                  const proxyUrl = `/api/naver-image-proxy?url=${encodeURIComponent(img)}`;
                   return (
                     <div 
                       key={idx} 
-                      className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all p-2 ${isSelected ? "border-primary bg-primary/10" : "border-muted hover:border-primary/50"}`}
+                      className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all ${isSelected ? "border-primary ring-2 ring-primary/30" : "border-muted hover:border-primary/50"}`}
                       onClick={() => toggleExtractedImage(img)}
                     >
-                      <p className="text-xs truncate">{idx + 1}. {img.split("/").pop()}</p>
+                      <img
+                        src={proxyUrl}
+                        alt={`이미지 ${idx + 1}`}
+                        className="w-full h-20 object-cover"
+                        loading="lazy"
+                      />
                       {isSelected && (
-                        <span className="absolute top-1 right-1 bg-primary text-white text-[10px] px-1 rounded">
-                          선택됨
-                        </span>
+                        <div className="absolute top-0 right-0 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-bl">
+                          {selectedExtracted.indexOf(img) + 1}
+                        </div>
                       )}
                     </div>
                   );
