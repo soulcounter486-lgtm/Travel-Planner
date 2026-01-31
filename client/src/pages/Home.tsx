@@ -1144,6 +1144,21 @@ export default function Home() {
                                 <span className="font-medium">${selectedVilla.holidayPrice}</span>
                               </div>
                             </div>
+                            {/* 편의사항 표시 */}
+                            {selectedVilla.amenities && (selectedVilla.amenities as string[]).length > 0 && (
+                              <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(selectedVilla.amenities as string[]).map((amenity) => (
+                                    <span 
+                                      key={amenity}
+                                      className="px-2 py-0.5 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 text-[10px] rounded-full"
+                                    >
+                                      ✓ {villaAmenityLabels[amenity] || amenity}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             {selectedVilla.notes && (
                               <p className="text-xs text-muted-foreground mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
                                 📝 {selectedVilla.notes}
