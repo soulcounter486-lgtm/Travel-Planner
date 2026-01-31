@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { format, addDays, parseISO, getDay } from "date-fns";
 import { ko, enUS, zhCN, vi, ru, ja } from "date-fns/locale";
 
@@ -101,7 +103,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X } from "lucide-react";
+import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List } from "lucide-react";
 import type { Villa } from "@shared/schema";
 
 export default function Home() {
@@ -120,6 +122,12 @@ export default function Home() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  
+  // 빌라 뷰 모드 (list/map)
+  const [villaViewMode, setVillaViewMode] = useState<"list" | "map">("list");
+  const villaMapContainerRef = useRef<HTMLDivElement>(null);
+  const villaMapRef = useRef<L.Map | null>(null);
+  const villaMarkersRef = useRef<L.Marker[]>([]);
   
   // 언어별 달력 locale 매핑
   const calendarLocale = useMemo(() => {
@@ -188,6 +196,113 @@ export default function Home() {
       .then(data => setVisitorCount(data.count))
       .catch(() => {});
   }, []);
+
+  // 빌라 지도 초기화
+  useEffect(() => {
+    if (villaViewMode !== "map" || !villaMapContainerRef.current) return;
+    
+    // 이미 초기화된 경우 스킵
+    if (villaMapRef.current) {
+      villaMapRef.current.invalidateSize();
+      return;
+    }
+    
+    // 붕따우 중심 좌표
+    const center: [number, number] = [10.3456, 107.0844];
+    
+    const map = L.map(villaMapContainerRef.current).setView(center, 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+    
+    villaMapRef.current = map;
+    
+    return () => {
+      if (villaMapRef.current) {
+        villaMapRef.current.remove();
+        villaMapRef.current = null;
+      }
+    };
+  }, [villaViewMode]);
+  
+  // 빌라 마커 업데이트
+  useEffect(() => {
+    if (!villaMapRef.current || villaViewMode !== "map") return;
+    
+    // 기존 마커 제거
+    villaMarkersRef.current.forEach(marker => marker.remove());
+    villaMarkersRef.current = [];
+    
+    // 위치 정보가 있는 빌라만 마커 추가
+    const villasWithLocation = villas.filter(v => v.latitude && v.longitude && v.isActive);
+    
+    villasWithLocation.forEach(villa => {
+      const lat = parseFloat(villa.latitude!);
+      const lng = parseFloat(villa.longitude!);
+      
+      if (isNaN(lat) || isNaN(lng)) return;
+      
+      // 썸네일 이미지가 있는 커스텀 마커
+      const iconHtml = villa.mainImage 
+        ? `<div class="villa-marker ${selectedVillaId === villa.id ? 'selected' : ''}" style="
+            width: 50px; height: 50px; border-radius: 8px; overflow: hidden; 
+            border: 3px solid ${selectedVillaId === villa.id ? '#3b82f6' : '#fff'}; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
+            background: white;
+          ">
+            <img src="${villa.mainImage}" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>`
+        : `<div style="
+            width: 50px; height: 50px; border-radius: 8px; 
+            background: ${selectedVillaId === villa.id ? '#3b82f6' : '#64748b'}; 
+            display: flex; align-items: center; justify-content: center;
+            border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
+          ">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+              <path d="M12 3L2 12h3v9h6v-6h2v6h6v-9h3L12 3z"/>
+            </svg>
+          </div>`;
+      
+      const customIcon = L.divIcon({
+        className: 'custom-villa-marker',
+        html: iconHtml,
+        iconSize: [50, 50],
+        iconAnchor: [25, 50],
+      });
+      
+      const marker = L.marker([lat, lng], { icon: customIcon })
+        .addTo(villaMapRef.current!);
+      
+      // 팝업에 빌라 이름 표시
+      marker.bindPopup(`
+        <div style="text-align: center; min-width: 120px;">
+          <strong>${villa.name}</strong>
+          ${villa.bedrooms ? `<br/><small>${villa.bedrooms}개 침실</small>` : ''}
+          ${villa.weekdayPrice ? `<br/><small>$${villa.weekdayPrice}~/박</small>` : ''}
+        </div>
+      `);
+      
+      // 클릭 시 빌라 선택
+      marker.on('click', () => {
+        setSelectedVillaId(villa.id);
+        setVillaViewMode("list"); // 선택 후 리스트 뷰로 전환하여 세부사항 표시
+      });
+      
+      villaMarkersRef.current.push(marker);
+    });
+    
+    // 마커가 있으면 지도 범위 조정
+    if (villasWithLocation.length > 0) {
+      const bounds = L.latLngBounds(
+        villasWithLocation
+          .map(v => [parseFloat(v.latitude!), parseFloat(v.longitude!)] as [number, number])
+          .filter(coords => !isNaN(coords[0]) && !isNaN(coords[1]))
+      );
+      if (bounds.isValid()) {
+        villaMapRef.current.fitBounds(bounds, { padding: [30, 30] });
+      }
+    }
+  }, [villas, villaViewMode, selectedVillaId]);
 
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
@@ -757,9 +872,40 @@ export default function Home() {
                   {villas.length > 0 ? (
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-3">
-                        <Label className="text-sm font-medium">
-                          {language === "ko" ? "풀빌라 선택" : "Select Villa"}
-                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm font-medium">
+                            {language === "ko" ? "풀빌라 선택" : "Select Villa"}
+                          </Label>
+                          {/* 리스트/지도 토글 */}
+                          <div className="flex rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+                            <button
+                              onClick={() => setVillaViewMode("list")}
+                              className={cn(
+                                "px-2 py-1 text-xs flex items-center gap-1 transition-colors",
+                                villaViewMode === "list" 
+                                  ? "bg-primary text-white" 
+                                  : "bg-muted hover:bg-muted/80"
+                              )}
+                              data-testid="villa-view-list"
+                            >
+                              <List className="h-3 w-3" />
+                              {language === "ko" ? "목록" : "List"}
+                            </button>
+                            <button
+                              onClick={() => setVillaViewMode("map")}
+                              className={cn(
+                                "px-2 py-1 text-xs flex items-center gap-1 transition-colors",
+                                villaViewMode === "map" 
+                                  ? "bg-primary text-white" 
+                                  : "bg-muted hover:bg-muted/80"
+                              )}
+                              data-testid="villa-view-map"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              {language === "ko" ? "지도" : "Map"}
+                            </button>
+                          </div>
+                        </div>
                         {isAdmin && (
                           <Link href="/admin/villas">
                             <Button variant="ghost" size="sm" className="text-xs">
@@ -769,7 +915,25 @@ export default function Home() {
                           </Link>
                         )}
                       </div>
+                      
+                      {/* 지도 뷰 */}
+                      {villaViewMode === "map" && (
+                        <div className="mb-4">
+                          <div 
+                            ref={villaMapContainerRef} 
+                            className="h-[300px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
+                            data-testid="villa-map-container"
+                          />
+                          <p className="text-xs text-muted-foreground text-center mt-2">
+                            {language === "ko" 
+                              ? "빌라를 클릭하면 상세 정보를 확인할 수 있습니다" 
+                              : "Click on a villa to see details"}
+                          </p>
+                        </div>
+                      )}
+                      
                       {/* 작은 썸네일 리스트 */}
+                      {villaViewMode === "list" && (
                       <div className="flex gap-2 overflow-x-auto pb-2">
                         {villas.map((villa) => (
                           <div
@@ -808,6 +972,7 @@ export default function Home() {
                           </div>
                         ))}
                       </div>
+                      )}
                       
                       {/* 선택된 빌라 큰 사진 및 세부사항 */}
                       {selectedVilla && (
