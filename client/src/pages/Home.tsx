@@ -769,7 +769,7 @@ export default function Home() {
                         {villas.map((villa) => (
                           <div
                             key={villa.id}
-                            onClick={() => setSelectedVillaId(villa.id)}
+                            onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
                             className={cn(
                               "relative flex-shrink-0 cursor-pointer rounded-lg overflow-hidden border-2 transition-all w-16 h-16",
                               selectedVillaId === villa.id 
