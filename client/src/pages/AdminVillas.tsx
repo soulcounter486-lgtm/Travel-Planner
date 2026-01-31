@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, Save, X, GripVertical, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, Save, X, GripVertical, Upload, Loader2, MapPin } from "lucide-react";
 import { Link } from "wouter";
 import type { Villa } from "@shared/schema";
 import { useUpload } from "@/hooks/use-upload";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import {
   Dialog,
   DialogContent,
@@ -339,48 +341,63 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     sortOrder: villa?.sortOrder || 0,
   });
   
-  const [isResolvingUrl, setIsResolvingUrl] = useState(false);
+  const [showLocationMap, setShowLocationMap] = useState(false);
+  const locationMapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
   
-  // 구글맵 URL 변경 시 좌표 자동 추출
-  const handleMapUrlChange = async (url: string) => {
-    setFormData(prev => ({ ...prev, mapUrl: url }));
+  // 지도 초기화
+  useEffect(() => {
+    if (!showLocationMap || !locationMapRef.current) return;
     
-    // 먼저 클라이언트에서 시도
-    const coords = extractCoordsFromGoogleMapsUrl(url);
-    if (coords) {
-      setFormData(prev => ({
-        ...prev,
-        mapUrl: url,
-        latitude: coords.lat,
-        longitude: coords.lng,
-      }));
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.invalidateSize();
       return;
     }
     
-    // 단축 URL인 경우 서버에서 해결
-    if (url.includes("maps.app.goo.gl") || url.includes("goo.gl/maps")) {
-      setIsResolvingUrl(true);
-      try {
-        const response = await fetch("/api/resolve-google-maps-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          setFormData(prev => ({
-            ...prev,
-            latitude: data.latitude,
-            longitude: data.longitude,
-          }));
-        }
-      } catch (e) {
-        console.error("Failed to resolve URL:", e);
-      } finally {
-        setIsResolvingUrl(false);
-      }
+    // 붕따우 중심 좌표 또는 기존 좌표
+    const lat = formData.latitude ? parseFloat(formData.latitude) : 10.3456;
+    const lng = formData.longitude ? parseFloat(formData.longitude) : 107.0844;
+    
+    const map = L.map(locationMapRef.current).setView([lat, lng], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap',
+    }).addTo(map);
+    
+    mapInstanceRef.current = map;
+    
+    // 기존 좌표가 있으면 마커 표시
+    if (formData.latitude && formData.longitude) {
+      markerRef.current = L.marker([lat, lng]).addTo(map);
     }
-  };
+    
+    // 지도 클릭 시 좌표 설정
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      
+      // 기존 마커 제거
+      if (markerRef.current) {
+        markerRef.current.remove();
+      }
+      
+      // 새 마커 추가
+      markerRef.current = L.marker([lat, lng]).addTo(map);
+      
+      // 좌표 설정
+      setFormData(prev => ({
+        ...prev,
+        latitude: lat.toFixed(6),
+        longitude: lng.toFixed(6),
+      }));
+    });
+    
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [showLocationMap]);
 
   const [newImageUrl, setNewImageUrl] = useState("");
   const [blogUrl, setBlogUrl] = useState("");
@@ -779,45 +796,72 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="mapUrl">지도 URL (Google Maps)</Label>
+          <Label htmlFor="mapUrl">지도 URL (선택사항)</Label>
           <Input
             id="mapUrl"
             value={formData.mapUrl}
-            onChange={(e) => handleMapUrlChange(e.target.value)}
-            placeholder="https://maps.google.com/... 또는 https://maps.app.goo.gl/..."
+            onChange={(e) => setFormData({ ...formData, mapUrl: e.target.value })}
+            placeholder="https://maps.google.com/..."
             data-testid="input-map-url"
           />
-          <p className="text-xs text-muted-foreground mt-1">
-            {isResolvingUrl 
-              ? "⏳ 좌표 추출 중..." 
-              : "구글맵 URL을 붙여넣으면 좌표가 자동 추출됩니다"}
-          </p>
         </div>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="latitude">위도 (Latitude)</Label>
-            <Input
-              id="latitude"
-              value={formData.latitude}
-              onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-              placeholder="10.3543"
-              data-testid="input-latitude"
-            />
+        {/* 위치 설정 - 지도에서 클릭 */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              빌라 위치 설정
+            </Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowLocationMap(!showLocationMap)}
+            >
+              {showLocationMap ? "지도 닫기" : "지도에서 위치 선택"}
+            </Button>
           </div>
-          <div>
-            <Label htmlFor="longitude">경도 (Longitude)</Label>
-            <Input
-              id="longitude"
-              value={formData.longitude}
-              onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-              placeholder="107.0842"
-              data-testid="input-longitude"
-            />
+          
+          {showLocationMap && (
+            <div className="space-y-2">
+              <div 
+                ref={locationMapRef}
+                className="h-[300px] rounded-lg border border-slate-300 overflow-hidden"
+                data-testid="location-map"
+              />
+              <p className="text-xs text-muted-foreground text-center">
+                👆 지도를 클릭해서 빌라 위치를 선택하세요
+              </p>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="latitude">위도</Label>
+              <Input
+                id="latitude"
+                value={formData.latitude}
+                onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+                placeholder="10.3543"
+                data-testid="input-latitude"
+              />
+            </div>
+            <div>
+              <Label htmlFor="longitude">경도</Label>
+              <Input
+                id="longitude"
+                value={formData.longitude}
+                onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+                placeholder="107.0842"
+                data-testid="input-longitude"
+              />
+            </div>
           </div>
+          
           {formData.latitude && formData.longitude && (
-            <p className="col-span-2 text-xs text-green-600">
-              ✓ 좌표 설정됨: {formData.latitude}, {formData.longitude}
+            <p className="text-xs text-green-600 flex items-center gap-1">
+              ✓ 위치 설정됨: {formData.latitude}, {formData.longitude}
             </p>
           )}
         </div>
