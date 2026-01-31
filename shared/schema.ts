@@ -65,6 +65,7 @@ export const calculateQuoteSchema = z.object({
     checkIn: z.string(), // YYYY-MM-DD
     checkOut: z.string(), // YYYY-MM-DD
     rooms: z.number().optional(), // Number of rooms (default 1)
+    villaId: z.number().optional(), // Selected villa ID
   }).optional(),
 
   // Vehicle
@@ -129,6 +130,8 @@ export const quoteBreakdownSchema = z.object({
     checkIn: z.string().optional(), // YYYY-MM-DD
     checkOut: z.string().optional(), // YYYY-MM-DD
     rooms: z.number().optional(), // Number of rooms
+    villaId: z.number().optional(), // Selected villa ID
+    villaName: z.string().optional(), // Selected villa name
   }),
   vehicle: z.object({
     price: z.number(),

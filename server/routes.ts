@@ -519,12 +519,12 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     "45_seater": { city: 280, oneway: 290, roundtrip: 550 },
   };
 
-  app.post(api.quotes.calculate.path, (req, res) => {
+  app.post(api.quotes.calculate.path, async (req, res) => {
     try {
       const input = req.body;
       
       const breakdown = {
-        villa: { price: 0, details: [] as string[], checkIn: "", checkOut: "", rooms: 1 },
+        villa: { price: 0, details: [] as string[], checkIn: "", checkOut: "", rooms: 1, villaId: undefined as number | undefined, villaName: "" },
         vehicle: { price: 0, description: "" },
         golf: { price: 0, description: "" },
         ecoGirl: { price: 0, description: "", details: [] as string[] },
@@ -548,31 +548,55 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
           const end = parseISO(input.villa.checkOut);
           const rooms = input.villa.rooms || 1;
           breakdown.villa.rooms = rooms;
+          
+          // 선택된 빌라의 가격 조회 (없으면 기본값 사용)
+          let weekdayPrice = 350;
+          let fridayPrice = 380;
+          let weekendPrice = 500;
+          let holidayPrice = 550;
+          let villaName = "";
+          
+          if (input.villa.villaId) {
+            const selectedVilla = await db.select().from(villas).where(eq(villas.id, input.villa.villaId));
+            if (selectedVilla.length > 0) {
+              weekdayPrice = selectedVilla[0].weekdayPrice;
+              fridayPrice = selectedVilla[0].fridayPrice;
+              weekendPrice = selectedVilla[0].weekendPrice;
+              holidayPrice = selectedVilla[0].holidayPrice;
+              villaName = selectedVilla[0].name;
+              breakdown.villa.villaId = input.villa.villaId;
+              breakdown.villa.villaName = villaName;
+            }
+          }
+          
           if (!isNaN(current.getTime()) && !isNaN(end.getTime())) {
             const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+            if (villaName) {
+              breakdown.villa.details.push(`🏠 ${villaName}`);
+            }
             while (current < end) {
               const dayOfWeek = getDay(current);
               const isHoliday = isVietnamHoliday(current);
-              let dailyPrice = 350;
+              let dailyPrice = weekdayPrice;
               let dayType = "평일";
               const dateStr = format(current, "M/d");
               const dayName = dayNames[dayOfWeek];
               
               if (isHoliday) {
-                // 베트남 공휴일 - 주말 요금 적용
-                dailyPrice = 500;
+                // 베트남 공휴일 - 공휴일 요금 적용
+                dailyPrice = holidayPrice;
                 dayType = "공휴일";
               } else if (dayOfWeek === 5) {
                 // 금요일
-                dailyPrice = 380;
+                dailyPrice = fridayPrice;
                 dayType = "금";
               } else if (dayOfWeek === 6) {
                 // 토요일
-                dailyPrice = 500;
+                dailyPrice = weekendPrice;
                 dayType = "주말";
               } else if (dayOfWeek === 0) {
                 // 일요일
-                dailyPrice = 500;
+                dailyPrice = weekendPrice;
                 dayType = "주말";
               }
               breakdown.villa.price += dailyPrice;

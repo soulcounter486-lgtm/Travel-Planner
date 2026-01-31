@@ -189,11 +189,6 @@ export default function Home() {
     staleTime: 12 * 60 * 60 * 1000,
   });
 
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean }>({
-    queryKey: ["/api/admin/check"],
-  });
-  const isAdmin = adminCheck?.isAdmin || false;
-
   const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
     ko: { code: "KRW", symbol: "₩", locale: "ko-KR" },
     en: { code: "USD", symbol: "$", locale: "en-US" },
@@ -439,7 +434,7 @@ export default function Home() {
         // This avoids Zod validation errors blocking the update
         const payload: any = {
           villa: value.villa?.enabled && value.villa.checkIn && value.villa.checkOut 
-            ? { enabled: true, checkIn: value.villa.checkIn, checkOut: value.villa.checkOut, rooms: value.villa.rooms || 1 } 
+            ? { enabled: true, checkIn: value.villa.checkIn, checkOut: value.villa.checkOut, rooms: value.villa.rooms || 1, villaId: selectedVillaId || undefined } 
             : { enabled: false },
           vehicle: value.vehicle?.enabled && value.vehicle.selections && value.vehicle.selections.length > 0
             ? { 
