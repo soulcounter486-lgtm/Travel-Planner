@@ -851,6 +851,12 @@ export default function Home() {
                               </div>
                             )}
                           </div>
+                          {/* 사진 클릭 안내 */}
+                          {selectedVilla.images && selectedVilla.images.length > 1 && (
+                            <p className="text-center text-xs text-muted-foreground py-1.5 bg-muted/30">
+                              👆 더 많은 사진을 보려면 클릭하세요
+                            </p>
+                          )}
                           <div className="p-4 bg-card">
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex justify-between p-2 bg-muted/50 rounded">
