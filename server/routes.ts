@@ -1589,8 +1589,16 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   // Object Storage 라우트 등록
   registerObjectStorageRoutes(app);
 
-  // 관리자 ID (Replit Auth 사용자 ID)
+  // 관리자 ID (Replit Auth 사용자 ID) 및 관리자 이메일
   const ADMIN_USER_ID = process.env.ADMIN_USER_ID || "";
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "vungtau1004@daum.net";
+  
+  // 관리자 체크 헬퍼 함수
+  const isUserAdmin = (userId: string | undefined, userEmail: string | undefined): boolean => {
+    if (userId && String(userId) === String(ADMIN_USER_ID)) return true;
+    if (userEmail && userEmail === ADMIN_EMAIL) return true;
+    return false;
+  };
 
   // 게시판 - 게시글 목록 조회
   app.get("/api/posts", async (req, res) => {
@@ -1883,8 +1891,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.get("/api/admin/check", (req, res) => {
     const user = req.user as any;
     const userId = user?.claims?.sub;
-    const isAdmin = userId && String(userId) === String(ADMIN_USER_ID);
-    console.log("Admin check - userId:", userId, "ADMIN_USER_ID:", ADMIN_USER_ID, "isAdmin:", isAdmin);
+    const userEmail = user?.claims?.email || user?.email;
+    const isAdmin = isUserAdmin(userId, userEmail);
+    console.log("Admin check - userId:", userId, "userEmail:", userEmail, "ADMIN_USER_ID:", ADMIN_USER_ID, "ADMIN_EMAIL:", ADMIN_EMAIL, "isAdmin:", isAdmin);
     res.json({ isAdmin, isLoggedIn: !!user, userId });
   });
 
