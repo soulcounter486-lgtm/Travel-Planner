@@ -248,10 +248,14 @@ export const villas = pgTable("villas", {
   images: jsonb("images").$type<string[]>().default([]), // 상세 사진들
   weekdayPrice: integer("weekday_price").notNull().default(350), // 평일 가격 (USD)
   fridayPrice: integer("friday_price").notNull().default(380), // 금요일 가격 (USD)
-  weekendPrice: integer("weekend_price").notNull().default(500), // 주말/공휴일 가격 (USD)
+  weekendPrice: integer("weekend_price").notNull().default(500), // 주말 가격 (USD)
+  holidayPrice: integer("holiday_price").notNull().default(550), // 공휴일 가격 (USD)
   latitude: text("latitude"), // 위도
   longitude: text("longitude"), // 경도
   address: text("address"), // 주소
+  mapUrl: text("map_url"), // 지도 URL
+  maxGuests: integer("max_guests").default(10), // 최대 인원
+  bedrooms: integer("bedrooms").default(3), // 침실 수
   notes: text("notes"), // 참고사항
   isActive: boolean("is_active").default(true), // 활성화 여부
   sortOrder: integer("sort_order").default(0), // 정렬 순서

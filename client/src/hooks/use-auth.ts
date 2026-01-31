@@ -56,10 +56,18 @@ export function useAuth() {
     },
   });
 
+  // 관리자 확인 (Replit ID: 42663365, Kakao email: vungtau1004@daum.net)
+  const ADMIN_USER_ID = "42663365";
+  const ADMIN_EMAIL = "vungtau1004@daum.net";
+  const isAdmin = user ? (
+    String(user.id) === ADMIN_USER_ID || user.email === ADMIN_EMAIL
+  ) : false;
+
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
+    isAdmin,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
   };
