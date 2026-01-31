@@ -117,6 +117,8 @@ export default function Home() {
   const selectedVilla = villas.find(v => v.id === selectedVillaId) || null;
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   
   // 언어별 달력 locale 매핑
   const calendarLocale = useMemo(() => {
@@ -1826,12 +1828,36 @@ export default function Home() {
           <div 
             className="flex-1 relative flex items-center justify-center overflow-hidden"
             style={{ minHeight: 0 }}
+            onTouchStart={(e) => {
+              setTouchEnd(null);
+              setTouchStart(e.targetTouches[0].clientX);
+            }}
+            onTouchMove={(e) => {
+              setTouchEnd(e.targetTouches[0].clientX);
+            }}
+            onTouchEnd={() => {
+              if (!touchStart || !touchEnd) return;
+              const distance = touchStart - touchEnd;
+              const minSwipeDistance = 50;
+              if (Math.abs(distance) > minSwipeDistance) {
+                if (distance > 0) {
+                  // 왼쪽으로 스와이프 → 다음 이미지
+                  setGalleryIndex(prev => prev < selectedVilla.images!.length - 1 ? prev + 1 : 0);
+                } else {
+                  // 오른쪽으로 스와이프 → 이전 이미지
+                  setGalleryIndex(prev => prev > 0 ? prev - 1 : selectedVilla.images!.length - 1);
+                }
+              }
+              setTouchStart(null);
+              setTouchEnd(null);
+            }}
           >
             <img
               src={selectedVilla.images[galleryIndex]}
               alt={`${selectedVilla.name} - ${galleryIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full object-contain select-none"
               style={{ maxHeight: '100%', maxWidth: '100%' }}
+              draggable={false}
               data-testid={`gallery-image-${galleryIndex}`}
             />
             
