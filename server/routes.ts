@@ -2340,10 +2340,17 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   // 네이버 이미지 프록시 (미리보기용)
   app.get("/api/naver-image-proxy", async (req, res) => {
     try {
-      const imageUrl = req.query.url as string;
+      let imageUrl = req.query.url as string;
       if (!imageUrl) {
         return res.status(400).json({ error: "URL required" });
       }
+
+      // 원본 고화질 이미지 URL로 변환
+      // 썸네일 도메인을 원본 도메인으로 변환
+      imageUrl = imageUrl.replace("mblogthumb-phinf.pstatic.net", "postfiles.pstatic.net");
+      
+      // 모든 크기 제한 파라미터 제거
+      imageUrl = imageUrl.split("?")[0];
 
       const response = await fetch(imageUrl, {
         headers: {
