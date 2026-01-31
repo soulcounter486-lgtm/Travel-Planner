@@ -302,6 +302,43 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   });
 
   const [newImageUrl, setNewImageUrl] = useState("");
+  const [blogUrl, setBlogUrl] = useState("");
+  const [isExtractingImages, setIsExtractingImages] = useState(false);
+
+  const extractImagesFromBlog = async () => {
+    if (!blogUrl.trim()) return;
+    
+    setIsExtractingImages(true);
+    try {
+      const res = await fetch("/api/extract-blog-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: blogUrl.trim() }),
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        alert(error.error || "이미지 추출 실패");
+        return;
+      }
+      
+      const data = await res.json();
+      if (data.images && data.images.length > 0) {
+        setFormData({
+          ...formData,
+          images: [...formData.images, ...data.images],
+        });
+        setBlogUrl("");
+        alert(`${data.images.length}개의 이미지를 추출했습니다!`);
+      } else {
+        alert("이미지를 찾을 수 없습니다. 블로그 URL을 확인해주세요.");
+      }
+    } catch (error) {
+      alert("이미지 추출 중 오류가 발생했습니다.");
+    } finally {
+      setIsExtractingImages(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -346,12 +383,33 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
         </div>
 
         <div>
-          <Label>사진 URL (첫 번째가 대표 사진)</Label>
+          <Label>블로그에서 이미지 가져오기</Label>
+          <div className="flex gap-2 mt-1">
+            <Input
+              value={blogUrl}
+              onChange={(e) => setBlogUrl(e.target.value)}
+              placeholder="네이버 블로그 URL 입력"
+              data-testid="input-blog-url"
+            />
+            <Button 
+              type="button" 
+              onClick={extractImagesFromBlog} 
+              variant="default"
+              disabled={isExtractingImages || !blogUrl.trim()}
+            >
+              {isExtractingImages ? "추출 중..." : "이미지 추출"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">예: https://m.blog.naver.com/vungtausaver/123456789</p>
+        </div>
+
+        <div>
+          <Label>또는 이미지 URL 직접 입력</Label>
           <div className="flex gap-2 mt-1">
             <Input
               value={newImageUrl}
               onChange={(e) => setNewImageUrl(e.target.value)}
-              placeholder="이미지 URL 입력"
+              placeholder="이미지 URL 직접 입력"
               data-testid="input-gallery-image-url"
             />
             <Button type="button" onClick={addGalleryImage} variant="outline">

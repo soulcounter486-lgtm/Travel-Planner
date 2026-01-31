@@ -15,6 +15,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 import webpush from "web-push";
 import crypto from "crypto";
+import * as cheerio from "cheerio";
 
 // Web Push 설정
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || "";
@@ -2227,6 +2228,86 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
 
   // === 풀빌라 관리 API ===
   
+  // 네이버 블로그에서 이미지 추출
+  app.post("/api/extract-blog-images", async (req, res) => {
+    try {
+      const { url } = req.body;
+      if (!url || typeof url !== "string") {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // 네이버 블로그 URL인지 확인
+      if (!url.includes("blog.naver.com")) {
+        return res.status(400).json({ error: "Only Naver blog URLs are supported" });
+      }
+
+      // 블로그 게시글 가져오기
+      const response = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      });
+
+      if (!response.ok) {
+        return res.status(400).json({ error: "Failed to fetch blog post" });
+      }
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      const images: string[] = [];
+
+      // 네이버 블로그 이미지 추출 (다양한 패턴)
+      $("img").each((_, el) => {
+        const src = $(el).attr("src") || $(el).attr("data-src") || $(el).attr("data-lazy-src");
+        if (src && (src.includes("pstatic.net") || src.includes("blogfiles") || src.includes("postfiles"))) {
+          // 썸네일이 아닌 원본 이미지 URL로 변환
+          let fullSrc = src;
+          if (src.includes("?type=")) {
+            fullSrc = src.split("?type=")[0];
+          }
+          if (!images.includes(fullSrc)) {
+            images.push(fullSrc);
+          }
+        }
+      });
+
+      // iframe 내부 이미지도 확인 (네이버 블로그 구조)
+      const iframeSrc = $("iframe#mainFrame").attr("src");
+      if (iframeSrc && images.length === 0) {
+        // 모바일 버전 URL 시도
+        const mobileUrl = url.replace("blog.naver.com", "m.blog.naver.com");
+        const mobileResponse = await fetch(mobileUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+          },
+        });
+        
+        if (mobileResponse.ok) {
+          const mobileHtml = await mobileResponse.text();
+          const $mobile = cheerio.load(mobileHtml);
+          
+          $mobile("img").each((_, el) => {
+            const src = $mobile(el).attr("src") || $mobile(el).attr("data-src");
+            if (src && (src.includes("pstatic.net") || src.includes("blogfiles") || src.includes("postfiles"))) {
+              let fullSrc = src;
+              if (src.includes("?type=")) {
+                fullSrc = src.split("?type=")[0];
+              }
+              if (!images.includes(fullSrc)) {
+                images.push(fullSrc);
+              }
+            }
+          });
+        }
+      }
+
+      res.json({ images });
+    } catch (error) {
+      console.error("Extract blog images error:", error);
+      res.status(500).json({ error: "Failed to extract images" });
+    }
+  });
+
   // 모든 빌라 조회 (활성화된 것만)
   app.get("/api/villas", async (req, res) => {
     try {
