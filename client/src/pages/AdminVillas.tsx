@@ -183,7 +183,7 @@ export default function AdminVillas() {
                     </div>
                     {(villa.mainImage || (villa.images && villa.images.length > 0)) ? (
                       <img
-                        src={getProxyImageUrl(villa.mainImage || villa.images![0])}
+                        src={villa.mainImage || villa.images![0]}
                         alt={villa.name}
                         className="w-24 h-24 object-cover rounded-md"
                       />
@@ -304,7 +304,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [blogUrl, setBlogUrl] = useState("");
   const [isExtractingImages, setIsExtractingImages] = useState(false);
-  const [extractedImages, setExtractedImages] = useState<string[]>([]);
+  const [extractedImages, setExtractedImages] = useState<{url: string; data: string}[]>([]);
 
   const extractImagesFromBlog = async () => {
     if (!blogUrl.trim()) return;
@@ -325,13 +325,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
       
       const data = await res.json();
       if (data.images && data.images.length > 0) {
-        // 프로필 이미지, 지도, 카카오톡 이미지 등 필터링
-        const filteredImages = data.images.filter((img: string) => 
-          !img.includes("profileImage") && 
-          !img.includes("dthumb-phinf") &&
-          !img.includes("kakaocdn")
-        );
-        setExtractedImages(filteredImages);
+        setExtractedImages(data.images);
       } else {
         alert("이미지를 찾을 수 없습니다. 블로그 URL을 확인해주세요.");
       }
@@ -342,30 +336,23 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
     }
   };
 
-  // 네이버 이미지를 프록시 URL로 변환
-  const getProxyImageUrl = (url: string) => {
-    if (url.includes("pstatic.net") || url.includes("naver.com")) {
-      return `/api/image-proxy?url=${encodeURIComponent(url)}`;
-    }
-    return url;
-  };
-
-  const toggleExtractedImage = (img: string) => {
-    if (formData.images.includes(img)) {
+  const toggleExtractedImage = (imgData: string) => {
+    if (formData.images.includes(imgData)) {
       setFormData({
         ...formData,
-        images: formData.images.filter((i: string) => i !== img),
+        images: formData.images.filter((i: string) => i !== imgData),
       });
     } else {
       setFormData({
         ...formData,
-        images: [...formData.images, img],
+        images: [...formData.images, imgData],
       });
     }
   };
 
   const selectAllExtracted = () => {
-    const newImages = extractedImages.filter(img => !formData.images.includes(img));
+    const allData = extractedImages.map(img => img.data);
+    const newImages = allData.filter(data => !formData.images.includes(data));
     setFormData({
       ...formData,
       images: [...formData.images, ...newImages],
@@ -373,9 +360,10 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
   };
 
   const deselectAllExtracted = () => {
+    const allData = extractedImages.map(img => img.data);
     setFormData({
       ...formData,
-      images: formData.images.filter((img: string) => !extractedImages.includes(img)),
+      images: formData.images.filter((img: string) => !allData.includes(img)),
     });
   };
 
@@ -456,15 +444,15 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {extractedImages.map((img, idx) => {
-                  const isSelected = formData.images.includes(img);
+                  const isSelected = formData.images.includes(img.data);
                   return (
                     <div 
                       key={idx} 
                       className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-all ${isSelected ? "border-primary ring-2 ring-primary/30" : "border-transparent opacity-60 hover:opacity-100"}`}
-                      onClick={() => toggleExtractedImage(img)}
+                      onClick={() => toggleExtractedImage(img.data)}
                     >
                       <img
-                        src={getProxyImageUrl(img)}
+                        src={img.data}
                         alt={`추출 ${idx + 1}`}
                         className="h-16 w-full object-cover"
                         onError={(e) => {
@@ -475,14 +463,14 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
                       />
                       {isSelected && (
                         <div className="absolute top-0 right-0 bg-primary text-white text-[10px] px-1">
-                          {formData.images.indexOf(img) + 1}
+                          {formData.images.indexOf(img.data) + 1}
                         </div>
                       )}
                     </div>
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">선택된 이미지: {formData.images.filter((img: string) => extractedImages.includes(img)).length}개</p>
+              <p className="text-xs text-muted-foreground mt-2">선택된 이미지: {formData.images.filter((img: string) => extractedImages.some(e => e.data === img)).length}개</p>
             </div>
           )}
         </div>
@@ -505,7 +493,7 @@ function VillaForm({ villa, onSubmit, isLoading, onCancel }: VillaFormProps) {
               {formData.images.map((img: string, idx: number) => (
                 <div key={idx} className="relative">
                   <img
-                    src={getProxyImageUrl(img)}
+                    src={img}
                     alt={`사진 ${idx + 1}`}
                     className={`h-20 w-full object-cover rounded-md ${idx === 0 ? "ring-2 ring-primary" : ""}`}
                     onError={(e) => (e.currentTarget.src = "/placeholder.png")}
