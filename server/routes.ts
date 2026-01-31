@@ -2260,7 +2260,6 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       $("img").each((_, el) => {
         const src = $(el).attr("src") || $(el).attr("data-src") || $(el).attr("data-lazy-src");
         if (src && (src.includes("pstatic.net") || src.includes("blogfiles") || src.includes("postfiles"))) {
-          // 썸네일이 아닌 원본 이미지 URL로 변환
           let fullSrc = src;
           
           // 쿼리 파라미터 제거
@@ -2268,17 +2267,8 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
             fullSrc = src.split("?type=")[0];
           }
           
-          // 썸네일 URL을 원본 URL로 변환
-          // mblogthumb-phinf -> postfiles-phinf
-          if (fullSrc.includes("mblogthumb-phinf")) {
-            fullSrc = fullSrc.replace("mblogthumb-phinf", "postfiles-phinf");
-          }
-          // blogpfthumb-phinf (프로필) 제외
-          if (fullSrc.includes("blogpfthumb-phinf") || fullSrc.includes("profileImage")) {
-            return; // skip profile images
-          }
-          // dthumb 제외 (외부 이미지 썸네일)
-          if (fullSrc.includes("dthumb-phinf")) {
+          // 프로필 이미지, 외부 썸네일 제외
+          if (fullSrc.includes("blogpfthumb-phinf") || fullSrc.includes("profileImage") || fullSrc.includes("dthumb-phinf")) {
             return;
           }
           
@@ -2313,10 +2303,6 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
                 fullSrc = src.split("?type=")[0];
               }
               
-              // 썸네일 URL을 원본 URL로 변환
-              if (fullSrc.includes("mblogthumb-phinf")) {
-                fullSrc = fullSrc.replace("mblogthumb-phinf", "postfiles-phinf");
-              }
               // 프로필, 외부 썸네일 제외
               if (fullSrc.includes("blogpfthumb-phinf") || fullSrc.includes("profileImage") || fullSrc.includes("dthumb-phinf")) {
                 return;
