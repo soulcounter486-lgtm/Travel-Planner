@@ -2262,10 +2262,16 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         if (src && (src.includes("pstatic.net") || src.includes("blogfiles") || src.includes("postfiles"))) {
           let fullSrc = src;
           
-          // 쿼리 파라미터 제거
+          // 쿼리 파라미터 제거 (크기 제한 해제로 원본 화질)
           if (src.includes("?type=")) {
             fullSrc = src.split("?type=")[0];
           }
+          if (src.includes("?w=")) {
+            fullSrc = src.split("?w=")[0];
+          }
+          
+          // 썸네일 도메인을 원본 이미지 도메인으로 변환 (고화질)
+          fullSrc = fullSrc.replace("mblogthumb-phinf.pstatic.net", "postfiles.pstatic.net");
           
           // 프로필 이미지, 외부 썸네일 제외
           if (fullSrc.includes("blogpfthumb-phinf") || fullSrc.includes("profileImage") || fullSrc.includes("dthumb-phinf")) {
@@ -2298,10 +2304,16 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
             if (src && (src.includes("pstatic.net") || src.includes("blogfiles") || src.includes("postfiles"))) {
               let fullSrc = src;
               
-              // 쿼리 파라미터 제거
+              // 쿼리 파라미터 제거 (크기 제한 해제로 원본 화질)
               if (src.includes("?type=")) {
                 fullSrc = src.split("?type=")[0];
               }
+              if (src.includes("?w=")) {
+                fullSrc = src.split("?w=")[0];
+              }
+              
+              // 썸네일 도메인을 원본 이미지 도메인으로 변환 (고화질)
+              fullSrc = fullSrc.replace("mblogthumb-phinf.pstatic.net", "postfiles.pstatic.net");
               
               // 프로필, 외부 썸네일 제외
               if (fullSrc.includes("blogpfthumb-phinf") || fullSrc.includes("profileImage") || fullSrc.includes("dthumb-phinf")) {
