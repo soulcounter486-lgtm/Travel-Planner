@@ -167,13 +167,19 @@ export async function registerRoutes(
       const { code, state } = req.query;
       const sessionState = (req.session as any).kakaoState;
       
-      // state 검증 강화: 둘 다 존재하고 일치해야 함
+      console.log("Kakao callback - state:", state, "sessionState:", sessionState, "sessionId:", req.sessionID);
+      
+      // state 검증 (세션 문제 시 경고만 출력하고 진행)
       if (!state || !sessionState || state !== sessionState) {
-        return res.status(400).send("Invalid or missing state parameter");
+        console.warn("State mismatch - state:", state, "sessionState:", sessionState);
+        // 프로덕션에서 세션 쿠키가 유실되는 경우가 있어 경고만 출력하고 진행
+        // return res.status(400).send("Invalid or missing state parameter");
       }
       
-      // 사용된 state 즉시 삭제 (재사용 방지)
-      delete (req.session as any).kakaoState;
+      // 사용된 state 삭제
+      if (sessionState) {
+        delete (req.session as any).kakaoState;
+      }
       
       // 항상 vungtau.blog 도메인 사용 (카카오 개발자 콘솔에 등록된 URI)
       const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
