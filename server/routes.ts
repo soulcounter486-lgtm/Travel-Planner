@@ -146,6 +146,7 @@ export async function registerRoutes(
 
   // === 카카오 로그인 OAuth ===
   const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY || "";
+  console.log("Kakao REST API Key status:", KAKAO_REST_API_KEY ? `set (${KAKAO_REST_API_KEY.substring(0, 8)}...)` : "NOT SET");
 
   // 카카오 로그인 시작
   app.get("/api/auth/kakao", (req, res) => {
