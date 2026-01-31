@@ -152,7 +152,12 @@ export async function registerRoutes(
     const state = crypto.randomBytes(16).toString("hex");
     (req.session as any).kakaoState = state;
     req.session.save(() => {
-      const redirectUri = `${req.protocol}://${req.hostname}/api/auth/kakao/callback`;
+      // Production에서는 항상 https와 vungtau.blog 도메인 사용
+      const isProduction = process.env.NODE_ENV === "production" || req.hostname === "vungtau.blog";
+      const protocol = isProduction ? "https" : req.protocol;
+      const hostname = isProduction ? "vungtau.blog" : req.hostname;
+      const redirectUri = `${protocol}://${hostname}/api/auth/kakao/callback`;
+      console.log("Kakao auth start - redirectUri:", redirectUri);
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
       res.redirect(kakaoAuthUrl);
     });
@@ -172,7 +177,13 @@ export async function registerRoutes(
       // 사용된 state 즉시 삭제 (재사용 방지)
       delete (req.session as any).kakaoState;
       
-      const redirectUri = `${req.protocol}://${req.hostname}/api/auth/kakao/callback`;
+      // Production에서는 항상 https와 vungtau.blog 도메인 사용
+      const isProduction = process.env.NODE_ENV === "production" || req.hostname === "vungtau.blog";
+      const protocol = isProduction ? "https" : req.protocol;
+      const hostname = isProduction ? "vungtau.blog" : req.hostname;
+      const redirectUri = `${protocol}://${hostname}/api/auth/kakao/callback`;
+      
+      console.log("Kakao callback - redirectUri:", redirectUri, "code:", code?.toString().substring(0, 10) + "...");
 
       // 액세스 토큰 요청
       const tokenResponse = await fetch("https://kauth.kakao.com/oauth/token", {
@@ -190,8 +201,8 @@ export async function registerRoutes(
 
       if (!tokenResponse.ok) {
         const error = await tokenResponse.text();
-        console.error("Kakao token error:", error);
-        return res.status(400).send("Failed to get access token");
+        console.error("Kakao token error:", error, "redirectUri:", redirectUri, "client_id:", KAKAO_REST_API_KEY ? "set" : "missing");
+        return res.status(400).send("Failed to get access token: " + error);
       }
 
       const tokenData = await tokenResponse.json() as { access_token: string };
