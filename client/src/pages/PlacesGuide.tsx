@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
@@ -806,7 +806,7 @@ const discountLabel: Record<string, Record<string, string>> = {
   }
 };
 
-function PlaceCard({ place, language }: { place: Place; language: string }) {
+function PlaceCard({ place, language, isAdmin }: { place: Place; language: string; isAdmin: boolean }) {
   const [showMap, setShowMap] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const noteText = place.note ? (noteLabels[place.note]?.[language] || place.note) : null;
@@ -902,6 +902,18 @@ function PlaceCard({ place, language }: { place: Place; language: string }) {
                 <Badge variant="default" className="bg-rose-500 text-[10px] px-1.5">
                   {language === "ko" ? "추천" : "Best"}
                 </Badge>
+              )}
+              {isAdmin && place.dbId && (
+                <Link href="/admin/places">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    data-testid={`button-edit-place-${place.dbId}`}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </Link>
               )}
             </div>
           </div>
@@ -1010,6 +1022,7 @@ function convertDBPlace(dbPlace: DBPlace): Place | null {
     mapUrl,
     imageUrl: dbPlace.mainImage || undefined,
     description: Object.keys(description).length > 0 ? description : undefined,
+    dbId: dbPlace.id, // DB 장소 ID 추가 (수정 가능)
   };
 }
 
@@ -1145,7 +1158,7 @@ export default function PlacesGuide() {
                       <CardContent className="p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {category.places.map((place, idx) => (
-                            <PlaceCard key={idx} place={place} language={language} />
+                            <PlaceCard key={idx} place={place} language={language} isAdmin={isAdmin} />
                           ))}
                         </div>
                       </CardContent>
