@@ -1053,6 +1053,8 @@ export default function PlacesGuide() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["attractions", "localFood"]));
   const [visitorCount, setVisitorCount] = useState<number>(0);
   const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
+  const [realVisitorCount, setRealVisitorCount] = useState<number>(0);
+  const [realTotalVisitorCount, setRealTotalVisitorCount] = useState<number>(0);
 
   // DB에서 장소 데이터 가져오기
   const { data: dbPlaces = [] } = useQuery<DBPlace[]>({
@@ -1160,6 +1162,8 @@ export default function PlacesGuide() {
       .then(data => {
         setVisitorCount(data.count);
         setTotalVisitorCount(data.totalCount || 15000);
+        setRealVisitorCount(data.realCount || 0);
+        setRealTotalVisitorCount(data.realTotalCount || 0);
       })
       .catch(() => {});
   }, []);
@@ -1334,6 +1338,11 @@ export default function PlacesGuide() {
              language === "ru" ? `Сегодня ${visitorCount.toLocaleString()}` :
              language === "ja" ? `今日 ${visitorCount.toLocaleString()}人` : `오늘 ${visitorCount.toLocaleString()}명`}
           </span>
+          {isAdmin && (
+            <span className="text-[10px] text-green-400 flex items-center gap-1">
+              실제: {realVisitorCount.toLocaleString()} / {realTotalVisitorCount.toLocaleString()}
+            </span>
+          )}
           <span className="text-[10px] text-slate-400 flex items-center gap-1">
             {language === "ko" ? `누적 ${totalVisitorCount.toLocaleString()}명` : 
              language === "en" ? `Total ${totalVisitorCount.toLocaleString()}` :
