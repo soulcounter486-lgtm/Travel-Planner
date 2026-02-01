@@ -941,21 +941,24 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       
       if (result.length === 0) {
         const baseCount = getRandomBaseCount();
-        await db.insert(visitorCount).values({ id: 1, count: baseCount, lastResetDate: today });
-        res.json({ count: baseCount });
+        await db.insert(visitorCount).values({ id: 1, count: baseCount, totalCount: 15000, lastResetDate: today });
+        res.json({ count: baseCount, totalCount: 15000 });
       } else {
         // Check if we need to reset for a new day
         if (result[0].lastResetDate !== today) {
+          // 새 날: 어제 방문자 수를 누적에 더하고, 오늘 방문자 초기화
+          const previousDayCount = result[0].count;
+          const newTotalCount = (result[0].totalCount || 15000) + previousDayCount;
           const baseCount = getRandomBaseCount();
-          await db.update(visitorCount).set({ count: baseCount, lastResetDate: today }).where(eq(visitorCount.id, 1));
-          res.json({ count: baseCount });
+          await db.update(visitorCount).set({ count: baseCount, totalCount: newTotalCount, lastResetDate: today }).where(eq(visitorCount.id, 1));
+          res.json({ count: baseCount, totalCount: newTotalCount });
         } else {
-          res.json({ count: result[0].count });
+          res.json({ count: result[0].count, totalCount: result[0].totalCount || 15000 });
         }
       }
     } catch (err) {
       console.error("Visitor count get error:", err);
-      res.json({ count: 0 });
+      res.json({ count: 0, totalCount: 15000 });
     }
   });
 
@@ -966,23 +969,26 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       
       if (result.length === 0) {
         const baseCount = getRandomBaseCount();
-        await db.insert(visitorCount).values({ id: 1, count: baseCount, lastResetDate: today });
-        res.json({ count: baseCount });
+        await db.insert(visitorCount).values({ id: 1, count: baseCount, totalCount: 15000, lastResetDate: today });
+        res.json({ count: baseCount, totalCount: 15000 });
       } else {
         // Check if we need to reset for a new day
         if (result[0].lastResetDate !== today) {
+          // 새 날: 어제 방문자 수를 누적에 더하고, 오늘 방문자 초기화
+          const previousDayCount = result[0].count;
+          const newTotalCount = (result[0].totalCount || 15000) + previousDayCount;
           const baseCount = getRandomBaseCount();
-          await db.update(visitorCount).set({ count: baseCount, lastResetDate: today }).where(eq(visitorCount.id, 1));
-          res.json({ count: baseCount });
+          await db.update(visitorCount).set({ count: baseCount, totalCount: newTotalCount, lastResetDate: today }).where(eq(visitorCount.id, 1));
+          res.json({ count: baseCount, totalCount: newTotalCount });
         } else {
           const newCount = result[0].count + 1;
           await db.update(visitorCount).set({ count: newCount }).where(eq(visitorCount.id, 1));
-          res.json({ count: newCount });
+          res.json({ count: newCount, totalCount: result[0].totalCount || 15000 });
         }
       }
     } catch (err) {
       console.error("Visitor count increment error:", err);
-      res.json({ count: 0 });
+      res.json({ count: 0, totalCount: 15000 });
     }
   });
 

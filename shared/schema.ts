@@ -27,6 +27,7 @@ export const quotes = pgTable("quotes", {
 export const visitorCount = pgTable("visitor_count", {
   id: serial("id").primaryKey(),
   count: integer("count").notNull().default(0),
+  totalCount: integer("total_count").notNull().default(15000), // 누적 방문자 수 (15000부터 시작)
   lastResetDate: text("last_reset_date"), // YYYY-MM-DD format for daily reset
 });
 

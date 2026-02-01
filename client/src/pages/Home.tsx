@@ -162,6 +162,7 @@ export default function Home() {
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [checkOutCalendarMonth, setCheckOutCalendarMonth] = useState<Date | undefined>(undefined);
   const [visitorCount, setVisitorCount] = useState<number>(0);
+  const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
 
@@ -204,7 +205,10 @@ export default function Home() {
   useEffect(() => {
     apiRequest("POST", "/api/visitor-count/increment")
       .then(res => res.json())
-      .then(data => setVisitorCount(data.count))
+      .then(data => {
+        setVisitorCount(data.count);
+        setTotalVisitorCount(data.totalCount || 15000);
+      })
       .catch(() => {});
   }, []);
 
@@ -1153,7 +1157,7 @@ export default function Home() {
                                       key={amenity}
                                       className="px-2 py-0.5 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 text-[10px] rounded-full"
                                     >
-                                      ✓ {villaAmenityLabels[amenity] || amenity}
+                                      ✓ {(villaAmenityLabels as Record<string, string>)[amenity] || amenity}
                                     </span>
                                   ))}
                                 </div>
@@ -2079,15 +2083,23 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="bg-slate-800 text-center py-1">
-          <span className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
+        <div className="bg-slate-800 py-1 px-3 flex items-center justify-between">
+          <span className="text-[10px] text-slate-400 flex items-center gap-1">
             <Eye className="w-3 h-3" />
-            {language === "ko" ? `방문자 ${visitorCount.toLocaleString()}명` : 
-             language === "en" ? `${visitorCount.toLocaleString()} visitors` :
-             language === "zh" ? `访客 ${visitorCount.toLocaleString()}` :
-             language === "vi" ? `${visitorCount.toLocaleString()} lượt xem` :
-             language === "ru" ? `${visitorCount.toLocaleString()} посетителей` :
-             language === "ja" ? `訪問者 ${visitorCount.toLocaleString()}人` : `방문자 ${visitorCount.toLocaleString()}명`}
+            {language === "ko" ? `오늘 ${visitorCount.toLocaleString()}명` : 
+             language === "en" ? `Today ${visitorCount.toLocaleString()}` :
+             language === "zh" ? `今日 ${visitorCount.toLocaleString()}` :
+             language === "vi" ? `Hôm nay ${visitorCount.toLocaleString()}` :
+             language === "ru" ? `Сегодня ${visitorCount.toLocaleString()}` :
+             language === "ja" ? `今日 ${visitorCount.toLocaleString()}人` : `오늘 ${visitorCount.toLocaleString()}명`}
+          </span>
+          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+            {language === "ko" ? `누적 ${totalVisitorCount.toLocaleString()}명` : 
+             language === "en" ? `Total ${totalVisitorCount.toLocaleString()}` :
+             language === "zh" ? `累计 ${totalVisitorCount.toLocaleString()}` :
+             language === "vi" ? `Tổng ${totalVisitorCount.toLocaleString()}` :
+             language === "ru" ? `Всего ${totalVisitorCount.toLocaleString()}` :
+             language === "ja" ? `累計 ${totalVisitorCount.toLocaleString()}人` : `누적 ${totalVisitorCount.toLocaleString()}명`}
           </span>
         </div>
       </div>
