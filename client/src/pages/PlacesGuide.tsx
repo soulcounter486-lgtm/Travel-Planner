@@ -1157,15 +1157,31 @@ export default function PlacesGuide() {
   }, [dbPlaces]);
 
   useEffect(() => {
-    apiRequest("POST", "/api/visitor-count/increment")
-      .then(res => res.json())
-      .then(data => {
-        setVisitorCount(data.count);
-        setTotalVisitorCount(data.totalCount || 15000);
-        setRealVisitorCount(data.realCount || 0);
-        setRealTotalVisitorCount(data.realTotalCount || 0);
-      })
-      .catch(() => {});
+    const hasVisited = sessionStorage.getItem('visitor_counted');
+    if (hasVisited) {
+      // 이미 카운트된 경우 GET으로 현재 값만 가져옴
+      fetch("/api/visitor-count")
+        .then(res => res.json())
+        .then(data => {
+          setVisitorCount(data.count);
+          setTotalVisitorCount(data.totalCount || 15000);
+          setRealVisitorCount(data.realCount || 0);
+          setRealTotalVisitorCount(data.realTotalCount || 0);
+        })
+        .catch(() => {});
+    } else {
+      // 처음 방문 시에만 카운트 증가
+      apiRequest("POST", "/api/visitor-count/increment")
+        .then(res => res.json())
+        .then(data => {
+          setVisitorCount(data.count);
+          setTotalVisitorCount(data.totalCount || 15000);
+          setRealVisitorCount(data.realCount || 0);
+          setRealTotalVisitorCount(data.realTotalCount || 0);
+          sessionStorage.setItem('visitor_counted', 'true');
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const toggleCategory = (categoryId: string) => {

@@ -941,24 +941,37 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       
       if (result.length === 0) {
         const baseCount = getRandomBaseCount();
-        await db.insert(visitorCount).values({ id: 1, count: baseCount, totalCount: 15000, lastResetDate: today });
-        res.json({ count: baseCount, totalCount: 15000 });
+        await db.insert(visitorCount).values({ id: 1, count: baseCount, totalCount: 15000, realCount: 0, realTotalCount: 0, lastResetDate: today });
+        res.json({ count: baseCount, totalCount: 15000, realCount: 0, realTotalCount: 0 });
       } else {
         // Check if we need to reset for a new day
         if (result[0].lastResetDate !== today) {
           // 새 날: 어제 방문자 수를 누적에 더하고, 오늘 방문자 초기화
           const previousDayCount = result[0].count;
+          const previousRealCount = result[0].realCount || 0;
           const newTotalCount = (result[0].totalCount || 15000) + previousDayCount;
+          const newRealTotalCount = (result[0].realTotalCount || 0) + previousRealCount;
           const baseCount = getRandomBaseCount();
-          await db.update(visitorCount).set({ count: baseCount, totalCount: newTotalCount, lastResetDate: today }).where(eq(visitorCount.id, 1));
-          res.json({ count: baseCount, totalCount: newTotalCount });
+          await db.update(visitorCount).set({ 
+            count: baseCount, 
+            totalCount: newTotalCount, 
+            realCount: 0,
+            realTotalCount: newRealTotalCount,
+            lastResetDate: today 
+          }).where(eq(visitorCount.id, 1));
+          res.json({ count: baseCount, totalCount: newTotalCount, realCount: 0, realTotalCount: newRealTotalCount });
         } else {
-          res.json({ count: result[0].count, totalCount: result[0].totalCount || 15000 });
+          res.json({ 
+            count: result[0].count, 
+            totalCount: result[0].totalCount || 15000,
+            realCount: result[0].realCount || 0,
+            realTotalCount: result[0].realTotalCount || 0
+          });
         }
       }
     } catch (err) {
       console.error("Visitor count get error:", err);
-      res.json({ count: 0, totalCount: 15000 });
+      res.json({ count: 0, totalCount: 15000, realCount: 0, realTotalCount: 0 });
     }
   });
 
