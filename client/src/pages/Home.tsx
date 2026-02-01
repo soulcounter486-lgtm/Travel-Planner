@@ -2035,22 +2035,6 @@ export default function Home() {
         </div>
       </footer>
       
-      {!isAppInstalled && deferredPrompt && (
-        <Button
-          onClick={handleInstallClick}
-          className="fixed top-4 right-20 z-50 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg gap-2"
-          size="sm"
-          data-testid="button-install-app"
-        >
-          <Smartphone className="w-4 h-4" />
-          {language === "ko" ? "앱 설치" :
-           language === "en" ? "Install App" :
-           language === "zh" ? "安装应用" :
-           language === "vi" ? "Cài đặt" :
-           language === "ru" ? "Установить" :
-           language === "ja" ? "アプリ" : "앱 설치"}
-        </Button>
-      )}
       
       <LanguageSelector />
 
