@@ -1010,16 +1010,18 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
           res.json({ count: baseCount, totalCount: newTotalCount, realCount: 1, realTotalCount: newRealTotalCount + 1 });
         } else {
           const newCount = result[0].count + 1;
+          const newTotalCount = (result[0].totalCount || 15000) + 1;
           const newRealCount = (result[0].realCount || 0) + 1;
           const newRealTotalCount = (result[0].realTotalCount || 0) + 1;
           await db.update(visitorCount).set({ 
             count: newCount, 
+            totalCount: newTotalCount,
             realCount: newRealCount,
             realTotalCount: newRealTotalCount
           }).where(eq(visitorCount.id, 1));
           res.json({ 
             count: newCount, 
-            totalCount: result[0].totalCount || 15000,
+            totalCount: newTotalCount,
             realCount: newRealCount,
             realTotalCount: newRealTotalCount
           });
