@@ -42,33 +42,57 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// 카테고리 순서 (사이트 표시 순서대로)
+const CATEGORY_ORDER = [
+  "attraction",      // 관광명소
+  "services",        // 마사지/이발소
+  "local_food",      // 현지 음식점
+  "korean_food",     // 한식
+  "buffet",          // 뷔페
+  "chinese_food",    // 중식
+  "cafe",            // 커피숍
+  "exchange",        // 환전소
+  "nightlife",       // 밤문화
+];
+
 const CATEGORY_LABELS: Record<string, string> = {
   attraction: "관광명소",
-  local_food: "현지맛집",
-  nightlife: "나이트라이프",
-  spa: "스파/마사지",
-  cafe: "카페",
-  other: "기타",
+  services: "마사지/이발소",
+  local_food: "현지 음식점",
+  korean_food: "한식",
+  buffet: "뷔페",
+  chinese_food: "중식",
+  cafe: "커피숍",
+  exchange: "환전소",
+  nightlife: "밤문화",
 };
 
 // placesData 카테고리 -> DB 카테고리 매핑
 const HARDCODED_TO_DB_CATEGORY: Record<string, string> = {
   attractions: "attraction",
+  services: "services",
   localFood: "local_food",
-  nightlife: "nightlife",
-  spa: "spa",
+  koreanFood: "korean_food",
+  buffet: "buffet",
+  chineseFood: "chinese_food",
   coffee: "cafe",
-  exchange: "other",
+  exchange: "exchange",
+  nightlife: "nightlife",
+  partnerRestaurant: "local_food",
+  partnerBarber: "services",
 };
 
 // DB 카테고리 -> placesData 카테고리 매핑
 const DB_TO_HARDCODED_CATEGORY: Record<string, string> = {
   attraction: "attractions",
+  services: "services",
   local_food: "localFood",
-  nightlife: "nightlife",
-  spa: "spa",
+  korean_food: "koreanFood",
+  buffet: "buffet",
+  chinese_food: "chineseFood",
   cafe: "coffee",
-  other: "exchange",
+  exchange: "exchange",
+  nightlife: "nightlife",
 };
 
 export default function AdminPlaces() {
@@ -393,16 +417,14 @@ export default function AdminPlaces() {
           </Dialog>
         </div>
 
-        {/* 카테고리 탭 */}
+        {/* 카테고리 탭 - CATEGORY_ORDER 순서대로 */}
         <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
           {[
             { value: "all", label: "전체" },
-            { value: "attraction", label: "관광명소" },
-            { value: "local_food", label: "현지맛집" },
-            { value: "nightlife", label: "나이트라이프" },
-            { value: "spa", label: "스파/마사지" },
-            { value: "cafe", label: "카페" },
-            { value: "other", label: "기타" },
+            ...CATEGORY_ORDER.map(cat => ({
+              value: cat,
+              label: CATEGORY_LABELS[cat] || cat,
+            }))
           ].map(tab => (
             <Button
               key={tab.value}
@@ -912,10 +934,11 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="attraction">관광명소</SelectItem>
-              <SelectItem value="restaurant">맛집</SelectItem>
-              <SelectItem value="cafe">카페</SelectItem>
-              <SelectItem value="other">기타</SelectItem>
+              {CATEGORY_ORDER.map(cat => (
+                <SelectItem key={cat} value={cat}>
+                  {CATEGORY_LABELS[cat] || cat}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
