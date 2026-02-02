@@ -1386,7 +1386,15 @@ export default function PlacesGuide() {
       // DB에 있는 장소는 바로 편집 페이지로
       setLocation(`/admin/places?edit=${place.dbId}`);
     } else {
-      // 하드코딩된 장소는 DB에 복사 후 편집
+      // 하드코딩된 장소: 먼저 DB에서 같은 mapUrl의 장소가 있는지 확인
+      const existingDbPlace = dbPlaces.find(p => p.website === place.mapUrl);
+      if (existingDbPlace) {
+        // 이미 DB에 있으면 그 장소 수정 페이지로 이동
+        setLocation(`/admin/places?edit=${existingDbPlace.id}`);
+        return;
+      }
+      
+      // DB에 없으면 새로 생성
       try {
         const categoryMap: Record<string, string> = {
           attractions: "attraction",
