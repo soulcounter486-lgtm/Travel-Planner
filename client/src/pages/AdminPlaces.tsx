@@ -241,9 +241,18 @@ export default function AdminPlaces() {
     }
   };
 
-  // 하드코딩된 장소를 DB로 복사
+  // 하드코딩된 장소를 DB로 복사 (이미 존재하면 업데이트)
   const copyToDb = async (place: UnifiedPlace) => {
     if (!place.hardcodedPlace) return;
+    
+    // 같은 이름의 DB 장소가 이미 있는지 확인
+    const existingDbPlace = dbPlaces.find(p => p.name === place.name);
+    if (existingDbPlace) {
+      // 이미 DB에 있으면 해당 장소를 편집 모드로
+      setEditingPlace(existingDbPlace);
+      toast({ title: "이미 DB에 저장된 장소입니다. 수정하세요." });
+      return;
+    }
     
     try {
       const res = await fetch("/api/admin/places", {
