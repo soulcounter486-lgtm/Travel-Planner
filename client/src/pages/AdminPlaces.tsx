@@ -12,7 +12,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Place } from "@shared/schema";
-import { useUpload } from "@/hooks/use-upload";
 import { placesData, type HardcodedPlace } from "./PlacesGuide";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -759,27 +758,53 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
     };
   }, [showLocationMap]);
 
-  const { uploadFile, isUploading } = useUpload({
-    onSuccess: (response) => {
-      const imageUrl = `https://storage.googleapis.com/${response.objectPath}`;
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, imageUrl],
-      }));
-    },
-    onError: (error) => {
-      alert("이미지 업로드 실패: " + error.message);
-    },
-  });
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    for (let i = 0; i < files.length; i++) {
-      await uploadFile(files[i]);
+    setIsUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // 파일을 base64로 변환
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        
+        // 서버에 업로드
+        const res = await fetch("/api/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            base64Data,
+            fileName: file.name,
+            contentType: file.type,
+          }),
+        });
+        
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || "업로드 실패");
+        }
+        
+        const data = await res.json();
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, data.url],
+        }));
+      }
+    } catch (error: any) {
+      alert("이미지 업로드 실패: " + error.message);
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
     }
-    e.target.value = "";
   };
 
   const extractImagesFromBlog = async () => {

@@ -2737,6 +2737,49 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 직접 파일 업로드 (base64)
+  app.post("/api/upload-image", async (req, res) => {
+    try {
+      const { base64Data, fileName, contentType } = req.body;
+      
+      if (!base64Data || !fileName) {
+        return res.status(400).json({ error: "base64Data and fileName are required" });
+      }
+
+      const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+      if (!bucketId) {
+        return res.status(500).json({ error: "Object storage not configured" });
+      }
+
+      // base64 데이터에서 prefix 제거 (data:image/jpeg;base64, 등)
+      const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Content, "base64");
+      
+      // 파일명 생성
+      const ext = contentType?.includes("png") ? "png" : contentType?.includes("gif") ? "gif" : "jpg";
+      const uniqueFileName = `place_${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      
+      // Object Storage에 업로드
+      const bucket = objectStorageClient.bucket(bucketId);
+      const file = bucket.file(`public/${uniqueFileName}`);
+      
+      await file.save(buffer, {
+        contentType: contentType || "image/jpeg",
+        metadata: {
+          cacheControl: "public, max-age=31536000",
+        },
+      });
+
+      const publicUrl = `/api/public-images/${uniqueFileName}`;
+      console.log("Direct upload success:", publicUrl);
+      
+      res.json({ url: publicUrl, success: true });
+    } catch (error) {
+      console.error("Direct upload error:", error);
+      res.status(500).json({ error: "Failed to upload image" });
+    }
+  });
+
   // Public 이미지 서빙 (Object Storage에서)
   app.get("/api/public-images/:filename", async (req, res) => {
     try {
