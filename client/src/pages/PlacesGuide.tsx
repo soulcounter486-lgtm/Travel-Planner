@@ -830,6 +830,8 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const cardMapRef = useRef<HTMLDivElement>(null);
+  const cardMapInstanceRef = useRef<L.Map | null>(null);
 
   const minSwipeDistance = 50;
 
@@ -880,9 +882,68 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   const hasMultipleImages = allImages.length > 1;
   const hasMenuImages = place.menuImages && place.menuImages.length > 0;
 
-  const embedUrl = place.mapUrl.includes("goo.gl") 
-    ? `https://www.google.com/maps?q=${encodeURIComponent(place.nameVi || place.name)},Vung Tau&output=embed`
-    : place.mapUrl.replace("/maps/", "/maps/embed?");
+  // 좌표 추출
+  const getPlaceCoords = (): [number, number] | null => {
+    // 1. 직접 저장된 좌표
+    if (place.latitude && place.longitude) {
+      const lat = parseFloat(place.latitude);
+      const lng = parseFloat(place.longitude);
+      if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
+    }
+    // 2. mapUrl에서 좌표 추출
+    if (place.mapUrl?.includes("q=")) {
+      const match = place.mapUrl.match(/q=([-\d.]+),([-\d.]+)/);
+      if (match) {
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
+        if (!isNaN(lat) && !isNaN(lng)) return [lat, lng];
+      }
+    }
+    // 3. 기본 좌표 (붕따우 중심)
+    return [10.3456, 107.0844];
+  };
+
+  // Leaflet 지도 초기화
+  useEffect(() => {
+    if (!showMap || !cardMapRef.current) return;
+    
+    // 이미 초기화된 경우
+    if (cardMapInstanceRef.current) {
+      cardMapInstanceRef.current.invalidateSize();
+      return;
+    }
+    
+    const coords = getPlaceCoords();
+    if (!coords) return;
+    
+    const map = L.map(cardMapRef.current, {
+      center: coords,
+      zoom: 15,
+      zoomControl: true,
+      scrollWheelZoom: false,
+    });
+    
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
+    
+    // 마커 추가
+    const marker = L.marker(coords).addTo(map);
+    marker.bindPopup(`<b>${place.name}</b>${place.address ? `<br/>${place.address}` : ""}`).openPopup();
+    
+    cardMapInstanceRef.current = map;
+    
+    // 크기 재조정
+    setTimeout(() => map.invalidateSize(), 100);
+    
+    return () => {
+      if (cardMapInstanceRef.current) {
+        cardMapInstanceRef.current.remove();
+        cardMapInstanceRef.current = null;
+      }
+    };
+  }, [showMap, place.latitude, place.longitude, place.mapUrl]);
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1101,15 +1162,11 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
                 transition={{ duration: 0.3 }}
                 className="overflow-hidden rounded-lg"
               >
-                <iframe
-                  src={embedUrl}
-                  width="100%"
-                  height="200"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
+                <div 
+                  ref={cardMapRef}
+                  style={{ width: "100%", height: "200px" }}
                   className="rounded-lg"
+                  data-testid={`map-${place.name.replace(/\s/g, "-")}`}
                 />
               </motion.div>
             )}
