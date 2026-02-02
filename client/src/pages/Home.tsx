@@ -232,6 +232,19 @@ export default function Home() {
     }
   }, []);
 
+  // 빌라 선택 이벤트 리스너 (팝업에서 선택하기 버튼 클릭 시)
+  useEffect(() => {
+    const handleSelectVilla = (e: CustomEvent<number>) => {
+      setSelectedVillaId(e.detail);
+      setVillaViewMode("list"); // 선택 후 리스트 뷰로 전환
+    };
+    
+    window.addEventListener('selectVilla', handleSelectVilla as EventListener);
+    return () => {
+      window.removeEventListener('selectVilla', handleSelectVilla as EventListener);
+    };
+  }, []);
+  
   // 빌라 지도 초기화
   useEffect(() => {
     if (villaViewMode !== "map" || !villaMapContainerRef.current) return;
@@ -305,23 +318,70 @@ export default function Home() {
         iconAnchor: [25, 50],
       });
       
-      const marker = L.marker([lat, lng], { icon: customIcon })
-        .addTo(villaMapRef.current!);
+      // 빌라 상세 팝업 HTML 생성
+      const amenityLabels: Record<string, Record<string, string>> = {
+        privatePool: { ko: "개인 수영장", en: "Private Pool" },
+        oceanView: { ko: "오션뷰", en: "Ocean View" },
+        bbqArea: { ko: "BBQ 시설", en: "BBQ Area" },
+        karaoke: { ko: "노래방", en: "Karaoke" },
+        outskirts: { ko: "외곽지역", en: "Outskirts" },
+        livingAC: { ko: "거실 에어컨", en: "Living AC" },
+        wifi: { ko: "WiFi", en: "WiFi" },
+        parking: { ko: "주차장", en: "Parking" },
+      };
       
-      // 팝업에 빌라 이름 표시
-      marker.bindPopup(`
-        <div style="text-align: center; min-width: 120px;">
-          <strong>${villa.name}</strong>
-          ${villa.bedrooms ? `<br/><small>${villa.bedrooms}개 침실</small>` : ''}
-          ${villa.weekdayPrice ? `<br/><small>$${villa.weekdayPrice}~/박</small>` : ''}
+      const amenitiesText = (villa.amenities || [])
+        .slice(0, 4)
+        .map(a => amenityLabels[a]?.[language] || amenityLabels[a]?.ko || a)
+        .join(", ");
+      
+      const villaPopupHtml = `
+        <div style="min-width: 220px; max-width: 300px;">
+          ${villa.mainImage ? `
+            <img src="${villa.mainImage}" 
+              style="width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;" 
+              onerror="this.style.display='none'" />
+          ` : ""}
+          <h3 style="font-weight: 600; font-size: 16px; margin: 0 0 8px 0; color: #1f2937;">${villa.name}</h3>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+            ${villa.bedrooms ? `<span style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px; font-size: 11px;">🛏 ${villa.bedrooms} ${language === "ko" ? "침실" : "Bedrooms"}</span>` : ""}
+            ${villa.maxGuests ? `<span style="background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 4px; font-size: 11px;">👥 ${language === "ko" ? "최대" : "Max"} ${villa.maxGuests}${language === "ko" ? "명" : ""}</span>` : ""}
+          </div>
+          ${amenitiesText ? `<p style="font-size: 11px; color: #6b7280; margin: 0 0 8px 0;">✨ ${amenitiesText}</p>` : ""}
+          <div style="background: #f1f5f9; padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 11px;">
+              <span style="color: #64748b;">${language === "ko" ? "평일" : "Weekday"}:</span>
+              <span style="font-weight: 600; color: #1e40af;">$${villa.weekdayPrice || 0}</span>
+              <span style="color: #64748b;">${language === "ko" ? "금요일" : "Friday"}:</span>
+              <span style="font-weight: 600; color: #1e40af;">$${villa.fridayPrice || 0}</span>
+              <span style="color: #64748b;">${language === "ko" ? "주말" : "Weekend"}:</span>
+              <span style="font-weight: 600; color: #1e40af;">$${villa.weekendPrice || 0}</span>
+              <span style="color: #64748b;">${language === "ko" ? "공휴일" : "Holiday"}:</span>
+              <span style="font-weight: 600; color: #dc2626;">$${villa.holidayPrice || 0}</span>
+            </div>
+          </div>
+          ${villa.notes ? `<p style="font-size: 11px; color: #374151; margin: 0 0 10px 0; line-height: 1.4;">${villa.notes.slice(0, 80)}${villa.notes.length > 80 ? "..." : ""}</p>` : ""}
+          <div style="display: flex; gap: 6px;">
+            ${villa.mapUrl ? `
+              <a href="${villa.mapUrl}" target="_blank" rel="noopener noreferrer" 
+                style="flex: 1; text-align: center; background: #3b82f6; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; text-decoration: none; font-weight: 500;">
+                📍 ${language === "ko" ? "길찾기" : "Directions"}
+              </a>
+            ` : ""}
+            <button onclick="window.dispatchEvent(new CustomEvent('selectVilla', {detail: ${villa.id}}))" 
+              style="flex: 1; text-align: center; background: #22c55e; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; border: none; cursor: pointer; font-weight: 500;">
+              ✓ ${language === "ko" ? "선택하기" : "Select"}
+            </button>
+          </div>
         </div>
-      `);
+      `;
       
-      // 클릭 시 빌라 선택
-      marker.on('click', () => {
-        setSelectedVillaId(villa.id);
-        setVillaViewMode("list"); // 선택 후 리스트 뷰로 전환하여 세부사항 표시
-      });
+      const marker = L.marker([lat, lng], { icon: customIcon })
+        .addTo(villaMapRef.current!)
+        .bindPopup(villaPopupHtml, {
+          maxWidth: 320,
+          className: 'villa-popup'
+        });
       
       villaMarkersRef.current.push(marker);
     });
