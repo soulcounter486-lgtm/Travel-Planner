@@ -209,12 +209,10 @@ export default function AdminPlaces() {
     
     if (!over || active.id === over.id) return;
     
-    const oldIndex = filteredPlaces.findIndex(p => p.id === active.id);
-    const newIndex = filteredPlaces.findIndex(p => p.id === over.id);
+    const movedPlace = filteredPlaces.find(p => p.id === active.id);
+    const targetPlace = filteredPlaces.find(p => p.id === over.id);
     
-    if (oldIndex === -1 || newIndex === -1) return;
-    
-    const movedPlace = filteredPlaces[oldIndex];
+    if (!movedPlace || !targetPlace) return;
     
     // 하드코딩된 장소를 이동하려면 먼저 DB에 복사해야 함
     if (movedPlace.isHardcoded) {
@@ -222,25 +220,19 @@ export default function AdminPlaces() {
       return;
     }
     
-    // 새 위치의 앞/뒤 아이템 sortOrder 계산
-    let newSortOrder: number;
+    // 같은 카테고리만 이동 가능
+    if (movedPlace.category !== targetPlace.category) {
+      toast({ title: "같은 카테고리 내에서만 이동할 수 있습니다", variant: "destructive" });
+      return;
+    }
     
-    if (newIndex === 0) {
-      // 맨 앞으로 이동 - 첫 번째 아이템의 sortOrder - 1
-      newSortOrder = filteredPlaces[0].sortOrder - 1;
-    } else if (newIndex >= filteredPlaces.length - 1) {
-      // 맨 뒤로 이동 - 마지막 아이템의 sortOrder + 1
-      newSortOrder = filteredPlaces[filteredPlaces.length - 1].sortOrder + 1;
-    } else {
-      // 중간으로 이동 - 앞뒤 아이템의 중간값
-      const prevItem = filteredPlaces[newIndex > oldIndex ? newIndex : newIndex - 1];
-      const nextItem = filteredPlaces[newIndex > oldIndex ? newIndex + 1 : newIndex];
-      newSortOrder = Math.floor((prevItem.sortOrder + nextItem.sortOrder) / 2);
-      
-      // 중간값이 같으면 전체 순서 재정렬 필요
-      if (newSortOrder === prevItem.sortOrder || newSortOrder === nextItem.sortOrder) {
-        newSortOrder = newIndex > oldIndex ? nextItem.sortOrder + 1 : prevItem.sortOrder - 1;
-      }
+    // 같은 카테고리의 DB 장소 목록에서 새 인덱스 계산
+    const sameCategoryDbPlaces = filteredPlaces.filter(p => p.category === movedPlace.category && !p.isHardcoded);
+    const targetIndex = sameCategoryDbPlaces.findIndex(p => p.id === over.id);
+    
+    if (targetIndex === -1) {
+      toast({ title: "순서 변경 실패", variant: "destructive" });
+      return;
     }
     
     try {
@@ -248,7 +240,7 @@ export default function AdminPlaces() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ sortOrder: newSortOrder }),
+        body: JSON.stringify({ newIndex: targetIndex }),
       });
       if (!res.ok) throw new Error("Failed");
       queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });

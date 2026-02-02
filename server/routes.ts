@@ -3209,7 +3209,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
   
-  // 장소 순서 변경 (관리자만)
+  // 장소 순서 변경 (관리자만) - 같은 카테고리 내 순서 재계산
   app.put("/api/admin/places/:id/order", async (req, res) => {
     try {
       const user = (req as any).user;
@@ -3219,21 +3219,44 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(403).json({ error: "Admin access required" });
       }
       const id = parseInt(req.params.id);
-      const { sortOrder } = req.body;
+      const { newIndex } = req.body;
       
-      if (typeof sortOrder !== "number") {
-        return res.status(400).json({ error: "sortOrder is required" });
+      if (typeof newIndex !== "number") {
+        return res.status(400).json({ error: "newIndex is required" });
       }
       
-      const updatedPlace = await db.update(places)
-        .set({ sortOrder, updatedAt: new Date() })
-        .where(eq(places.id, id))
-        .returning();
-        
-      if (updatedPlace.length === 0) {
+      // 해당 장소 조회
+      const [targetPlace] = await db.select().from(places).where(eq(places.id, id));
+      if (!targetPlace) {
         return res.status(404).json({ error: "Place not found" });
       }
-      res.json(updatedPlace[0]);
+      
+      // 같은 카테고리의 모든 장소를 현재 순서로 정렬
+      const categoryPlaces = await db.select().from(places)
+        .where(eq(places.category, targetPlace.category))
+        .orderBy(places.sortOrder, places.id);
+      
+      // 현재 위치 찾기
+      const oldIndex = categoryPlaces.findIndex(p => p.id === id);
+      if (oldIndex === -1) {
+        return res.status(404).json({ error: "Place not found in category" });
+      }
+      
+      // 배열에서 항목 제거 후 새 위치에 삽입
+      const [movedPlace] = categoryPlaces.splice(oldIndex, 1);
+      const insertIndex = Math.max(0, Math.min(newIndex, categoryPlaces.length));
+      categoryPlaces.splice(insertIndex, 0, movedPlace);
+      
+      // 모든 항목의 순서를 10 간격으로 재설정
+      for (let i = 0; i < categoryPlaces.length; i++) {
+        await db.update(places)
+          .set({ sortOrder: (i + 1) * 10, updatedAt: new Date() })
+          .where(eq(places.id, categoryPlaces[i].id));
+      }
+      
+      // 업데이트된 장소 반환
+      const [updatedPlace] = await db.select().from(places).where(eq(places.id, id));
+      res.json(updatedPlace);
     } catch (error) {
       console.error("Update place order error:", error);
       res.status(500).json({ error: "Failed to update place order" });
