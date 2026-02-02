@@ -825,6 +825,7 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [menuImageIndex, setMenuImageIndex] = useState(0);
+  const [showEnlargedImage, setShowEnlargedImage] = useState(false);
   
   const noteText = place.note ? (noteLabels[place.note]?.[language] || place.note) : null;
   const descriptionText = place.description?.[language] || place.description?.ko;
@@ -859,7 +860,7 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
           {allImages.length > 0 && (
             <div 
               className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group"
-              onClick={() => descriptionText && setShowDescription(!showDescription)}
+              onClick={() => setShowEnlargedImage(true)}
               data-testid={`image-${place.name.replace(/\s/g, "-")}`}
             >
               <img 
@@ -1146,6 +1147,98 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
               <div className="text-center text-white mt-2 text-sm">
                 {menuImageIndex + 1} / {place.menuImages!.length}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* 이미지 확대 모달 */}
+      <AnimatePresence>
+        {showEnlargedImage && allImages.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setShowEnlargedImage(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="relative max-w-4xl max-h-[90vh] w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 닫기 버튼 */}
+              <button
+                onClick={() => setShowEnlargedImage(false)}
+                className="absolute -top-10 right-0 text-white hover:text-gray-300 z-10"
+                data-testid="button-close-enlarged-image"
+              >
+                <X className="w-8 h-8" />
+              </button>
+              
+              {/* 확대 이미지 */}
+              <div className="relative">
+                <img
+                  src={allImages[currentImageIndex]}
+                  alt={place.name}
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                />
+                
+                {/* 이미지 슬라이드 화살표 */}
+                {hasMultipleImages && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
+                      data-testid="button-prev-enlarged"
+                    >
+                      <ChevronLeft className="w-8 h-8" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-colors"
+                      data-testid="button-next-enlarged"
+                    >
+                      <ChevronRight className="w-8 h-8" />
+                    </button>
+                    {/* 인디케이터 */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {allImages.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentImageIndex(idx);
+                          }}
+                          className={`w-3 h-3 rounded-full transition-colors ${
+                            idx === currentImageIndex ? "bg-white" : "bg-white/50 hover:bg-white/70"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {/* 이미지 카운터 */}
+              <div className="text-center text-white mt-2 text-sm">
+                {currentImageIndex + 1} / {allImages.length}
+              </div>
+              
+              {/* 설명 텍스트 */}
+              {descriptionText && (
+                <div className="text-center text-white/80 mt-3 text-sm max-w-2xl mx-auto px-4">
+                  {descriptionText}
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}
