@@ -378,13 +378,16 @@ export default function Home() {
       
       const marker = L.marker([lat, lng], { icon: customIcon })
         .addTo(villaMapRef.current!)
-        .bindPopup(villaPopupHtml, {
-          maxWidth: 280,
-          autoPan: true,
-          autoPanPadding: L.point(50, 50),
-          keepInView: true,
-          className: 'villa-popup'
+        .on('click', () => {
+          setSelectedVillaId(villa.id);
         });
+      
+      // 툴팁으로 빌라 이름만 표시
+      marker.bindTooltip(villa.name, { 
+        permanent: false, 
+        direction: 'top',
+        offset: [0, -50]
+      });
       
       villaMarkersRef.current.push(marker);
     });
@@ -1103,14 +1106,120 @@ export default function Home() {
                         <div className="mb-4">
                           <div 
                             ref={villaMapContainerRef} 
-                            className="h-[300px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
+                            className="h-[250px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
                             data-testid="villa-map-container"
                           />
-                          <p className="text-xs text-muted-foreground text-center mt-2">
-                            {language === "ko" 
-                              ? "빌라를 클릭하면 상세 정보를 확인할 수 있습니다" 
-                              : "Click on a villa to see details"}
-                          </p>
+                          
+                          {/* 선택된 빌라 상세 패널 */}
+                          {selectedVillaId && (() => {
+                            const villa = villas.find(v => v.id === selectedVillaId);
+                            if (!villa) return null;
+                            
+                            const amenityLabels: Record<string, Record<string, string>> = {
+                              privatePool: { ko: "개인 수영장", en: "Private Pool" },
+                              oceanView: { ko: "오션뷰", en: "Ocean View" },
+                              bbqArea: { ko: "BBQ 시설", en: "BBQ Area" },
+                              karaoke: { ko: "노래방", en: "Karaoke" },
+                              outskirts: { ko: "외곽지역", en: "Outskirts" },
+                              livingAC: { ko: "거실 에어컨", en: "Living AC" },
+                              wifi: { ko: "WiFi", en: "WiFi" },
+                              parking: { ko: "주차장", en: "Parking" },
+                              pool: { ko: "수영장", en: "Pool" },
+                              downtown: { ko: "시내", en: "Downtown" },
+                              portableSpeaker: { ko: "포터블 스피커", en: "Speaker" },
+                            };
+                            
+                            return (
+                              <div className="mt-3 p-3 bg-card rounded-xl border shadow-sm">
+                                <div className="flex gap-3">
+                                  {villa.mainImage && (
+                                    <img 
+                                      src={villa.mainImage} 
+                                      alt={villa.name}
+                                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
+                                    />
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <h4 className="font-semibold text-sm truncate">{villa.name}</h4>
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-6 w-6 flex-shrink-0"
+                                        onClick={() => setSelectedVillaId(null)}
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {villa.bedrooms && (
+                                        <span className="text-[10px] bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 rounded">
+                                          🛏 {villa.bedrooms} {language === "ko" ? "침실" : "BR"}
+                                        </span>
+                                      )}
+                                      {villa.maxGuests && (
+                                        <span className="text-[10px] bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded">
+                                          👥 {language === "ko" ? "최대" : "Max"} {villa.maxGuests}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {(villa.amenities || []).length > 0 && (
+                                      <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                                        ✨ {(villa.amenities || []).slice(0, 3).map(a => 
+                                          amenityLabels[a]?.[language] || amenityLabels[a]?.ko || a
+                                        ).join(", ")}
+                                      </p>
+                                    )}
+                                    <div className="grid grid-cols-4 gap-1 mt-2 text-[10px]">
+                                      <div className="text-center">
+                                        <div className="text-muted-foreground">{language === "ko" ? "평일" : "Wkday"}</div>
+                                        <div className="font-semibold text-blue-600">${villa.weekdayPrice || 0}</div>
+                                      </div>
+                                      <div className="text-center">
+                                        <div className="text-muted-foreground">{language === "ko" ? "금" : "Fri"}</div>
+                                        <div className="font-semibold text-blue-600">${villa.fridayPrice || 0}</div>
+                                      </div>
+                                      <div className="text-center">
+                                        <div className="text-muted-foreground">{language === "ko" ? "주말" : "Wkend"}</div>
+                                        <div className="font-semibold text-blue-600">${villa.weekendPrice || 0}</div>
+                                      </div>
+                                      <div className="text-center">
+                                        <div className="text-muted-foreground">{language === "ko" ? "공휴일" : "Hol"}</div>
+                                        <div className="font-semibold text-red-600">${villa.holidayPrice || 0}</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 mt-3">
+                                  {villa.mapUrl && (
+                                    <a 
+                                      href={villa.mapUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="flex-1 text-center bg-blue-500 text-white py-2 rounded-lg text-xs font-medium"
+                                    >
+                                      📍 {language === "ko" ? "길찾기" : "Directions"}
+                                    </a>
+                                  )}
+                                  <Button
+                                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                                    size="sm"
+                                    onClick={() => setVillaViewMode("list")}
+                                  >
+                                    ✓ {language === "ko" ? "선택하기" : "Select"}
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          
+                          {!selectedVillaId && (
+                            <p className="text-xs text-muted-foreground text-center mt-2">
+                              {language === "ko" 
+                                ? "빌라를 클릭하면 상세 정보를 확인할 수 있습니다" 
+                                : "Click on a villa to see details"}
+                            </p>
+                          )}
                         </div>
                       )}
                       
