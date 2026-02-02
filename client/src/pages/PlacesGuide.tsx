@@ -574,9 +574,7 @@ export const placesData: Record<string, Category> = {
     id: "exchange",
     icon: Building2,
     gradient: "from-emerald-500 to-teal-600",
-    places: [
-      { name: "환전소 (금은방)", nameVi: "Thong Phuong", mapUrl: "https://maps.app.goo.gl/NnvFeTaRFJ4mLMRC6" },
-    ]
+    places: []
   },
   coffee: {
     id: "coffee",
