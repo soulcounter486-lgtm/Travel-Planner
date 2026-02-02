@@ -134,11 +134,11 @@ input[type="number"]::-webkit-outer-spin-button {
   max-width: 300px;
 }
 
-/* Ensure popup is visible */
-.leaflet-container {
-  overflow: visible !important;
-}
-
+/* Leaflet z-index */
 .leaflet-pane {
   z-index: 400;
+}
+
+.leaflet-popup-pane {
+  z-index: 700;
 }

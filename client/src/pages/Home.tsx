@@ -1103,8 +1103,7 @@ export default function Home() {
                         <div className="mb-4">
                           <div 
                             ref={villaMapContainerRef} 
-                            className="h-[400px] rounded-xl border border-slate-200 dark:border-slate-700"
-                            style={{ overflow: 'visible' }}
+                            className="h-[300px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
                             data-testid="villa-map-container"
                           />
                           <p className="text-xs text-muted-foreground text-center mt-2">
