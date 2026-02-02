@@ -928,9 +928,60 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
       maxZoom: 19,
     }).addTo(map);
     
+    // 커스텀 마커 아이콘 (이미지가 있으면 사용)
+    const customIcon = place.imageUrl 
+      ? L.divIcon({
+          className: 'custom-place-marker',
+          html: `<div style="
+            width: 40px; height: 40px; border-radius: 8px; overflow: hidden; 
+            border: 3px solid #3b82f6; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            background: white;
+          ">
+            <img src="${place.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'" />
+          </div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 40],
+        })
+      : L.divIcon({
+          className: 'custom-place-marker',
+          html: `<div style="
+            width: 36px; height: 36px; border-radius: 50%; 
+            background: #3b82f6; display: flex; align-items: center; justify-content: center;
+            border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          ">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 36],
+        });
+    
     // 마커 추가
-    const marker = L.marker(coords).addTo(map);
-    marker.bindPopup(`<b>${place.name}</b>${place.address ? `<br/>${place.address}` : ""}`).openPopup();
+    const marker = L.marker(coords, { icon: customIcon }).addTo(map);
+    
+    // 팝업에 Google Maps 길찾기 버튼 추가
+    const googleMapsUrl = place.mapUrl || `https://www.google.com/maps/dir/?api=1&destination=${coords[0]},${coords[1]}`;
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${coords[0]},${coords[1]}`;
+    
+    marker.bindPopup(`
+      <div style="min-width: 150px; text-align: center;">
+        <b style="font-size: 14px;">${place.name}</b>
+        ${place.address ? `<p style="font-size: 11px; color: #666; margin: 4px 0;">${place.address}</p>` : ""}
+        <div style="margin-top: 8px; display: flex; gap: 4px; justify-content: center;">
+          <a href="${directionsUrl}" target="_blank" rel="noopener noreferrer" 
+            style="background: #4285f4; color: white; padding: 6px 10px; border-radius: 6px; 
+            font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+            🧭 길찾기
+          </a>
+          <a href="${place.mapUrl || googleMapsUrl}" target="_blank" rel="noopener noreferrer"
+            style="background: #34a853; color: white; padding: 6px 10px; border-radius: 6px;
+            font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+            📍 상세
+          </a>
+        </div>
+      </div>
+    `).openPopup();
     
     cardMapInstanceRef.current = map;
     
