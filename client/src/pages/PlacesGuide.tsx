@@ -871,11 +871,11 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   const noteText = place.note ? (noteLabels[place.note]?.[language] || place.note) : null;
   const descriptionText = place.description?.[language] || place.description?.ko;
 
-  // 모든 이미지 배열 (대표 이미지 + 추가 이미지들)
-  const allImages = [
+  // 모든 이미지 배열 (대표 이미지 + 추가 이미지들) - 중복 제거
+  const allImages = Array.from(new Set([
     ...(place.imageUrl ? [place.imageUrl] : []),
     ...(place.images || [])
-  ].filter(Boolean);
+  ].filter(Boolean)));
   
   const hasMultipleImages = allImages.length > 1;
   const hasMenuImages = place.menuImages && place.menuImages.length > 0;
