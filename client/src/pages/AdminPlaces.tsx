@@ -679,12 +679,25 @@ interface PlaceFormProps {
 
 function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   const { toast } = useToast();
+  
+  // 초기 images 배열 생성 - mainImage가 있으면 포함시킴
+  const getInitialImages = () => {
+    const existingImages = place?.images || [];
+    const mainImg = place?.mainImage || "";
+    
+    // mainImage가 있고 images 배열에 없으면 맨 앞에 추가
+    if (mainImg && !existingImages.includes(mainImg)) {
+      return [mainImg, ...existingImages];
+    }
+    return existingImages;
+  };
+  
   const [formData, setFormData] = useState({
     name: place?.name || "",
     category: place?.category || "attraction",
     description: place?.description || "",
     mainImage: place?.mainImage || "",
-    images: place?.images || [],
+    images: getInitialImages(),
     latitude: place?.latitude || "",
     longitude: place?.longitude || "",
     address: place?.address || "",
