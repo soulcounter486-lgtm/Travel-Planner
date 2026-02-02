@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
@@ -69,6 +69,8 @@ export interface HardcodedPlace {
   note?: string;
   recommended?: boolean;
   imageUrl?: string;
+  images?: string[]; // 추가 이미지들
+  menuImages?: string[]; // 메뉴판 이미지들
   description?: Record<string, string>;
   dbId?: number; // DB에서 가져온 장소의 ID (수정 가능)
   sortOrder?: number; // 정렬 순서
@@ -820,59 +822,105 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
 }) {
   const [showMap, setShowMap] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showMenuModal, setShowMenuModal] = useState(false);
+  const [menuImageIndex, setMenuImageIndex] = useState(0);
+  
   const noteText = place.note ? (noteLabels[place.note]?.[language] || place.note) : null;
   const descriptionText = place.description?.[language] || place.description?.ko;
+
+  // 모든 이미지 배열 (대표 이미지 + 추가 이미지들)
+  const allImages = [
+    ...(place.imageUrl ? [place.imageUrl] : []),
+    ...(place.images || [])
+  ].filter(Boolean);
+  
+  const hasMultipleImages = allImages.length > 1;
+  const hasMenuImages = place.menuImages && place.menuImages.length > 0;
 
   const embedUrl = place.mapUrl.includes("goo.gl") 
     ? `https://www.google.com/maps?q=${encodeURIComponent(place.nameVi || place.name)},Vung Tau&output=embed`
     : place.mapUrl.replace("/maps/", "/maps/embed?");
 
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">
-          {place.imageUrl && (
-            descriptionText ? (
-              <div 
-                className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group"
-                onClick={() => setShowDescription(!showDescription)}
-                data-testid={`image-${place.name.replace(/\s/g, "-")}`}
-              >
-                <img 
-                  src={place.imageUrl} 
-                  alt={place.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-2">
-                  <span className="text-[10px] text-white flex items-center gap-1 drop-shadow-md">
-                    <Eye className="w-3 h-3" />
-                    {language === "ko" ? "클릭하여 설명 보기" : "Click for details"}
-                  </span>
-                </div>
+          {allImages.length > 0 && (
+            <div 
+              className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group"
+              onClick={() => descriptionText && setShowDescription(!showDescription)}
+              data-testid={`image-${place.name.replace(/\s/g, "-")}`}
+            >
+              <img 
+                src={allImages[currentImageIndex]} 
+                alt={place.name}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+              
+              {/* 이미지 슬라이드 화살표 */}
+              {hasMultipleImages && (
+                <>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-1 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full transition-colors"
+                    data-testid="button-prev-image"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full transition-colors"
+                    data-testid="button-next-image"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  {/* 이미지 인디케이터 */}
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-1">
+                    {allImages.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                          idx === currentImageIndex ? "bg-white" : "bg-white/50"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-2">
+                <span className="text-[10px] text-white flex items-center gap-1 drop-shadow-md">
+                  {descriptionText ? (
+                    <>
+                      <Eye className="w-3 h-3" />
+                      {language === "ko" ? "클릭하여 설명 보기" : "Click for details"}
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="w-3 h-3" />
+                      {language === "ko" ? "사진 보기" : "View photo"}
+                    </>
+                  )}
+                  {hasMultipleImages && (
+                    <span className="ml-1 bg-white/20 px-1 rounded">
+                      {currentImageIndex + 1}/{allImages.length}
+                    </span>
+                  )}
+                </span>
               </div>
-            ) : (
-              <a 
-                href={place.mapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative w-full aspect-[16/9] rounded-lg overflow-hidden cursor-pointer group block"
-                data-testid={`image-link-${place.name.replace(/\s/g, "-")}`}
-              >
-                <img 
-                  src={place.imageUrl} 
-                  alt={place.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-2">
-                  <span className="text-[10px] text-white flex items-center gap-1 drop-shadow-md">
-                    <MapPin className="w-3 h-3" />
-                    {language === "ko" ? "클릭시 위치보기" : language === "en" ? "Click for location" : language === "zh" ? "点击查看位置" : language === "vi" ? "Nhấn để xem vị trí" : language === "ru" ? "Нажмите для просмотра" : "クリックで位置表示"}
-                  </span>
-                </div>
-              </a>
-            )
+            </div>
           )}
 
           <AnimatePresence>
@@ -976,16 +1024,31 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
             )}
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full mt-1 text-xs h-8"
-            onClick={() => setShowMap(!showMap)}
-            data-testid={`button-toggle-map-${place.name.replace(/\s/g, "-")}`}
-          >
-            {showMap ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-            {showMap ? (language === "ko" ? "지도 닫기" : "Hide Map") : (language === "ko" ? "지도 보기" : "View Map")}
-          </Button>
+          <div className="flex gap-2 mt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 text-xs h-8"
+              onClick={() => setShowMap(!showMap)}
+              data-testid={`button-toggle-map-${place.name.replace(/\s/g, "-")}`}
+            >
+              {showMap ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+              {showMap ? (language === "ko" ? "지도 닫기" : "Hide Map") : (language === "ko" ? "지도 보기" : "View Map")}
+            </Button>
+            
+            {hasMenuImages && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1 text-xs h-8 border-amber-400 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                onClick={() => setShowMenuModal(true)}
+                data-testid={`button-menu-${place.name.replace(/\s/g, "-")}`}
+              >
+                <BookOpen className="w-3 h-3 mr-1" />
+                {language === "ko" ? "메뉴판 보기" : "View Menu"}
+              </Button>
+            )}
+          </div>
 
           <AnimatePresence>
             {showMap && (
@@ -1011,6 +1074,82 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
           </AnimatePresence>
         </div>
       </CardContent>
+      
+      {/* 메뉴판 모달 */}
+      <AnimatePresence>
+        {showMenuModal && hasMenuImages && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setShowMenuModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="relative max-w-4xl max-h-[90vh] w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 닫기 버튼 */}
+              <button
+                onClick={() => setShowMenuModal(false)}
+                className="absolute -top-10 right-0 text-white hover:text-gray-300"
+                data-testid="button-close-menu-modal"
+              >
+                <X className="w-8 h-8" />
+              </button>
+              
+              {/* 메뉴판 이미지 */}
+              <div className="relative">
+                <img
+                  src={place.menuImages![menuImageIndex]}
+                  alt={`메뉴판 ${menuImageIndex + 1}`}
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                />
+                
+                {/* 이미지 슬라이드 화살표 */}
+                {place.menuImages!.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setMenuImageIndex((prev) => (prev - 1 + place.menuImages!.length) % place.menuImages!.length)}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                      data-testid="button-prev-menu"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={() => setMenuImageIndex((prev) => (prev + 1) % place.menuImages!.length)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors"
+                      data-testid="button-next-menu"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                    {/* 인디케이터 */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {place.menuImages!.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setMenuImageIndex(idx)}
+                          className={`w-3 h-3 rounded-full transition-colors ${
+                            idx === menuImageIndex ? "bg-white" : "bg-white/50 hover:bg-white/70"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {/* 이미지 카운터 */}
+              <div className="text-center text-white mt-2 text-sm">
+                {menuImageIndex + 1} / {place.menuImages!.length}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Card>
   );
 }
@@ -1059,6 +1198,8 @@ function convertDBPlace(dbPlace: DBPlace): Place | null {
     phone: dbPlace.phone || undefined,
     mapUrl,
     imageUrl: dbPlace.mainImage || undefined,
+    images: dbPlace.images || [], // 추가 이미지들
+    menuImages: dbPlace.menuImages || [], // 메뉴판 이미지들
     description: Object.keys(description).length > 0 ? description : undefined,
     dbId: dbPlace.id, // DB 장소 ID 추가 (수정 가능)
     sortOrder: dbPlace.sortOrder ?? 0, // 정렬 순서
