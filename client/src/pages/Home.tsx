@@ -379,7 +379,10 @@ export default function Home() {
       const marker = L.marker([lat, lng], { icon: customIcon })
         .addTo(villaMapRef.current!)
         .bindPopup(villaPopupHtml, {
-          maxWidth: 320,
+          maxWidth: 280,
+          autoPan: true,
+          autoPanPadding: L.point(50, 50),
+          keepInView: true,
           className: 'villa-popup'
         });
       
@@ -1100,7 +1103,8 @@ export default function Home() {
                         <div className="mb-4">
                           <div 
                             ref={villaMapContainerRef} 
-                            className="h-[300px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700"
+                            className="h-[400px] rounded-xl border border-slate-200 dark:border-slate-700"
+                            style={{ overflow: 'visible' }}
                             data-testid="villa-map-container"
                           />
                           <p className="text-xs text-muted-foreground text-center mt-2">

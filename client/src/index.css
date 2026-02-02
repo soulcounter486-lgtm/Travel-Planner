@@ -110,3 +110,35 @@ input[type="number"]::-webkit-outer-spin-button {
   color: hsl(var(--muted-foreground));
   pointer-events: none;
 }
+
+/* Leaflet Popup Styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 12px !important;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.villa-popup .leaflet-popup-content-wrapper,
+.custom-popup .leaflet-popup-content-wrapper {
+  max-width: 300px;
+}
+
+/* Ensure popup is visible */
+.leaflet-container {
+  overflow: visible !important;
+}
+
+.leaflet-pane {
+  z-index: 400;
+}
