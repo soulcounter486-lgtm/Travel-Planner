@@ -129,8 +129,9 @@ export default function AdminPlaces() {
   const unifiedPlaces = useMemo(() => {
     const list: UnifiedPlace[] = [];
     
-    // 1. DB 장소를 먼저 추가 (sortOrder 기준 정렬됨)
-    const sortedDbPlaces = [...dbPlaces].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+    // 1. 활성 DB 장소를 먼저 추가 (sortOrder 기준 정렬됨, 비활성 제외)
+    const activeDbPlaces = dbPlaces.filter(p => p.isActive !== false);
+    const sortedDbPlaces = [...activeDbPlaces].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
     sortedDbPlaces.forEach(dbPlace => {
       // 하드코딩 장소에서 이미지 정보 가져오기
       let hardcodedImage: string | undefined;
