@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical, EyeOff } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Place } from "@shared/schema";
 import { placesData, type HardcodedPlace } from "./PlacesGuide";
@@ -317,6 +317,51 @@ export default function AdminPlaces() {
     }
   };
 
+  // 하드코딩된 장소 숨기기 (DB에 isActive=false로 저장)
+  const hideHardcodedPlace = async (place: UnifiedPlace) => {
+    if (!place.hardcodedPlace) return;
+    
+    try {
+      const res = await fetch("/api/admin/places", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: place.name,
+          category: place.category,
+          address: place.address || "",
+          phone: place.phone || "",
+          website: place.mapUrl || "",
+          description: place.description || "",
+          mainImage: place.imageUrl || "",
+          sortOrder: place.sortOrder,
+          isActive: false, // 비활성 상태로 저장
+        }),
+      });
+      
+      if (res.status === 409) {
+        // 이미 DB에 있으면 isActive=false로 업데이트
+        const err = await res.json();
+        if (err.existingPlace) {
+          await fetch(`/api/admin/places/${err.existingPlace.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ isActive: false }),
+          });
+        }
+      } else if (!res.ok) {
+        throw new Error("Failed to hide place");
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/places"] });
+      toast({ title: "장소가 숨겨졌습니다" });
+    } catch (error) {
+      toast({ title: "숨기기 실패", variant: "destructive" });
+    }
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: Partial<Place>) => {
       const res = await fetch("/api/admin/places", {
@@ -515,6 +560,7 @@ export default function AdminPlaces() {
                       }
                     }}
                     onDelete={deleteMutation.mutate}
+                    onHide={(p) => hideHardcodedPlace(p as UnifiedPlace)}
                     editingPlace={editingPlace}
                     setEditingPlace={setEditingPlace}
                     updateMutation={updateMutation}
@@ -539,18 +585,21 @@ interface SortablePlaceCardProps {
     phone?: string;
     description?: string;
     imageUrl?: string;
+    mapUrl?: string;
     sortOrder: number;
     isHardcoded: boolean;
     dbPlace?: Place;
+    hardcodedPlace?: HardcodedPlace;
   };
   onEdit: (place: SortablePlaceCardProps["place"]) => void;
   onDelete: (id: number) => void;
+  onHide: (place: SortablePlaceCardProps["place"]) => void;
   editingPlace: Place | null;
   setEditingPlace: (place: Place | null) => void;
   updateMutation: any;
 }
 
-function SortablePlaceCard({ place, onEdit, onDelete, editingPlace, setEditingPlace, updateMutation }: SortablePlaceCardProps) {
+function SortablePlaceCard({ place, onEdit, onDelete, onHide, editingPlace, setEditingPlace, updateMutation }: SortablePlaceCardProps) {
   const {
     attributes,
     listeners,
@@ -681,15 +730,43 @@ function SortablePlaceCard({ place, onEdit, onDelete, editingPlace, setEditingPl
                 </AlertDialog>
               </>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(place)}
-                data-testid={`button-copy-${place.id}`}
-              >
-                <Pencil className="h-3 w-3 mr-1" />
-                수정
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(place)}
+                  data-testid={`button-copy-${place.id}`}
+                >
+                  <Pencil className="h-3 w-3 mr-1" />
+                  수정
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      data-testid={`button-hide-${place.id}`}
+                    >
+                      <EyeOff className="h-3 w-3" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>장소 숨기기</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        "{place.name}"을(를) 숨기시겠습니까? 관광 가이드에서 표시되지 않습니다.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>취소</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onHide(place)}>
+                        숨기기
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
           </div>
         </div>
