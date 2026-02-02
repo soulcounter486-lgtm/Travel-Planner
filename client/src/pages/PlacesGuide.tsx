@@ -1428,8 +1428,9 @@ export default function PlacesGuide() {
 
   // DB 장소를 카테고리별로 분류하고 기존 데이터와 합치기
   const mergedPlacesData = useMemo(() => {
-    // DB 장소 이름 집합 생성
+    // DB 장소 이름 및 mapUrl 집합 생성 (중복 제거용)
     const dbPlaceNames = new Set(dbPlaces.filter(p => p.isActive).map(p => p.name));
+    const dbPlaceMapUrls = new Set(dbPlaces.filter(p => p.isActive && p.website).map(p => p.website));
     
     // 각 카테고리 처리
     const merged: Record<string, Category> = {};
@@ -1450,7 +1451,7 @@ export default function PlacesGuide() {
         if (converted) {
           // 하드코딩에서 이미지 가져오기 (DB에 이미지 없는 경우)
           if (!converted.imageUrl) {
-            const hardcoded = category.places.find(p => p.name === dbPlace.name);
+            const hardcoded = category.places.find(p => p.name === dbPlace.name || p.mapUrl === dbPlace.website);
             if (hardcoded?.imageUrl) {
               converted.imageUrl = hardcoded.imageUrl;
             }
@@ -1459,9 +1460,11 @@ export default function PlacesGuide() {
         }
       });
       
-      // 2. DB에 없는 하드코딩 장소 추가 (원래 순서 유지)
+      // 2. DB에 없는 하드코딩 장소 추가 (이름 또는 mapUrl로 중복 체크)
       category.places.forEach(place => {
-        if (!dbPlaceNames.has(place.name)) {
+        const isDuplicateByName = dbPlaceNames.has(place.name);
+        const isDuplicateByUrl = place.mapUrl && dbPlaceMapUrls.has(place.mapUrl);
+        if (!isDuplicateByName && !isDuplicateByUrl) {
           places.push({ ...place, sortOrder: 1000 });
         }
       });
