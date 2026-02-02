@@ -155,13 +155,18 @@ export default function AdminPlaces() {
     });
     
     // 2. DB에 없는 하드코딩 장소 추가 (맨 뒤에)
+    // 이름과 mapUrl 모두 체크하여 중복 방지
     const dbPlaceNames = new Set(dbPlaces.map(p => p.name));
+    const dbPlaceMapUrls = new Set(dbPlaces.map(p => p.website).filter(Boolean));
     let hardcodedIndex = 1000; // 하드코딩 장소는 큰 순서값
     
     Object.entries(placesData).forEach(([categoryKey, category]) => {
       const dbCategory = HARDCODED_TO_DB_CATEGORY[categoryKey] || "other";
       category.places.forEach((place, idx) => {
-        if (!dbPlaceNames.has(place.name)) {
+        // 이름 또는 mapUrl이 DB에 있으면 하드코딩 장소 숨김
+        const isInDbByName = dbPlaceNames.has(place.name);
+        const isInDbByMapUrl = place.mapUrl && dbPlaceMapUrls.has(place.mapUrl);
+        if (!isInDbByName && !isInDbByMapUrl) {
           list.push({
             id: `hardcoded-${categoryKey}-${idx}`,
             name: place.name,
