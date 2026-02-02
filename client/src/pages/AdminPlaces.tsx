@@ -945,10 +945,9 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
     e.preventDefault();
     const dataToSubmit = {
       ...formData,
-      // 이미지 배열이 있으면 첫 번째 이미지, 없으면 기존 mainImage 유지
-      mainImage: formData.images.length > 0 
-        ? formData.images[0] 
-        : (formData.mainImage || place?.mainImage || ""),
+      // formData.mainImage를 직접 사용 (사용자가 선택한 대표 이미지)
+      // mainImage가 없고 images가 있으면 첫 번째 이미지 사용
+      mainImage: formData.mainImage || (formData.images.length > 0 ? formData.images[0] : ""),
     };
     onSubmit(dataToSubmit);
   };
@@ -1195,40 +1194,68 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
         </div>
       </div>
 
+      {/* 현재 대표 이미지 표시 */}
+      {formData.mainImage && (
+        <div>
+          <Label className="flex items-center gap-2">
+            ⭐ 현재 대표 이미지
+          </Label>
+          <div className="mt-2 relative inline-block">
+            <img 
+              src={formData.mainImage} 
+              alt="대표 이미지" 
+              className="h-24 w-auto object-cover rounded ring-2 ring-primary ring-offset-2" 
+            />
+            <span className="absolute top-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">대표</span>
+          </div>
+        </div>
+      )}
+
+      {/* 등록된 이미지 목록 */}
       {formData.images.length > 0 && (
         <div>
           <Label>등록된 이미지 ({formData.images.length}개) - 클릭하여 대표 사진 선택</Label>
           <div className="grid grid-cols-4 gap-2 mt-2">
-            {formData.images.map((img: string, idx: number) => (
-              <div 
-                key={idx} 
-                className={`relative group cursor-pointer ${idx === 0 ? 'ring-2 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-muted-foreground hover:ring-offset-1'}`}
-                onClick={() => {
-                  if (idx !== 0) {
-                    const newImages = [...formData.images];
-                    const [selected] = newImages.splice(idx, 1);
-                    newImages.unshift(selected);
-                    setFormData({ ...formData, images: newImages });
-                    toast({ title: "대표 사진이 변경되었습니다" });
-                  }
-                }}
-              >
-                <img src={img} alt="" className="w-full h-20 object-cover rounded" />
-                {idx === 0 && (
-                  <span className="absolute top-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">대표</span>
-                )}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeImage(idx);
+            {formData.images.map((img: string, idx: number) => {
+              const isMainImage = formData.mainImage === img;
+              return (
+                <div 
+                  key={idx} 
+                  className={`relative group cursor-pointer ${isMainImage ? 'ring-2 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-muted-foreground hover:ring-offset-1'}`}
+                  onClick={() => {
+                    if (!isMainImage) {
+                      setFormData({ ...formData, mainImage: img });
+                      toast({ title: "대표 사진이 변경되었습니다" });
+                    }
                   }}
-                  className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-            ))}
+                  <img src={img} alt="" className="w-full h-20 object-cover rounded" />
+                  {isMainImage && (
+                    <span className="absolute top-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">대표</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // 대표 이미지를 삭제하면 mainImage도 초기화
+                      if (isMainImage) {
+                        const remainingImages = formData.images.filter((_: string, i: number) => i !== idx);
+                        setFormData({ 
+                          ...formData, 
+                          images: remainingImages,
+                          mainImage: remainingImages.length > 0 ? remainingImages[0] : ""
+                        });
+                      } else {
+                        removeImage(idx);
+                      }
+                    }}
+                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
