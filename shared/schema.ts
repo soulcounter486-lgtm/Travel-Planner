@@ -320,6 +320,7 @@ export const places = pgTable("places", {
   tags: jsonb("tags").$type<string[]>().default([]), // 태그 (예: ["해산물", "현지인맛집"])
   isPartner: boolean("is_partner").default(false), // 협력업체 여부
   discountText: text("discount_text"), // 할인 텍스트 (예: "붕따우 도깨비 카톡으로 예약 시 5% 할인")
+  menuImages: jsonb("menu_images").$type<string[]>().default([]), // 메뉴판 이미지들
   isActive: boolean("is_active").default(true), // 활성화 여부
   sortOrder: integer("sort_order").default(0), // 정렬 순서
   createdAt: timestamp("created_at").defaultNow(),
