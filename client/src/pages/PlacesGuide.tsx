@@ -1416,6 +1416,7 @@ export default function PlacesGuide() {
             phone: place.phone || "",
             website: place.mapUrl,
             description: place.description?.ko || "",
+            sortOrder: place.sortOrder ?? 0,
             isActive: true,
           }),
         });
