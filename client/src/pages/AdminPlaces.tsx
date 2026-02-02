@@ -237,13 +237,31 @@ export default function AdminPlaces() {
       return;
     }
     
-    // 같은 카테고리의 DB 장소 목록에서 새 인덱스 계산
-    const sameCategoryDbPlaces = filteredPlaces.filter(p => p.category === movedPlace.category && !p.isHardcoded);
-    const targetIndex = sameCategoryDbPlaces.findIndex(p => p.id === over.id);
+    // 같은 카테고리의 전체 장소 목록에서 새 인덱스 계산
+    const sameCategoryPlaces = filteredPlaces.filter(p => p.category === movedPlace.category);
+    const sameCategoryDbPlaces = sameCategoryPlaces.filter(p => !p.isHardcoded);
     
-    if (targetIndex === -1) {
+    // 전체 목록에서의 타겟 인덱스
+    const targetIndexInAll = sameCategoryPlaces.findIndex(p => p.id === over.id);
+    
+    if (targetIndexInAll === -1) {
       toast({ title: "순서 변경 실패", variant: "destructive" });
       return;
+    }
+    
+    // DB 장소 목록에서의 인덱스 계산 (하드코딩 장소 수를 고려)
+    let targetIndex = 0;
+    for (let i = 0; i <= targetIndexInAll; i++) {
+      if (!sameCategoryPlaces[i].isHardcoded && sameCategoryPlaces[i].id !== movedPlace.id) {
+        targetIndex++;
+      }
+    }
+    // 타겟이 하드코딩 장소면 그 바로 앞 DB 장소 위치 사용
+    if (targetPlace.isHardcoded) {
+      targetIndex = Math.max(0, targetIndex);
+    } else {
+      targetIndex = sameCategoryDbPlaces.findIndex(p => p.id === over.id);
+      if (targetIndex === -1) targetIndex = 0;
     }
     
     try {
