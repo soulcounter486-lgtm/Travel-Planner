@@ -222,9 +222,26 @@ export default function AdminPlaces() {
       return;
     }
     
-    // DB 장소의 sortOrder 업데이트
-    const targetPlace = filteredPlaces[newIndex];
-    const newSortOrder = targetPlace.sortOrder + (newIndex > oldIndex ? 1 : -1);
+    // 새 위치의 앞/뒤 아이템 sortOrder 계산
+    let newSortOrder: number;
+    
+    if (newIndex === 0) {
+      // 맨 앞으로 이동 - 첫 번째 아이템의 sortOrder - 1
+      newSortOrder = filteredPlaces[0].sortOrder - 1;
+    } else if (newIndex >= filteredPlaces.length - 1) {
+      // 맨 뒤로 이동 - 마지막 아이템의 sortOrder + 1
+      newSortOrder = filteredPlaces[filteredPlaces.length - 1].sortOrder + 1;
+    } else {
+      // 중간으로 이동 - 앞뒤 아이템의 중간값
+      const prevItem = filteredPlaces[newIndex > oldIndex ? newIndex : newIndex - 1];
+      const nextItem = filteredPlaces[newIndex > oldIndex ? newIndex + 1 : newIndex];
+      newSortOrder = Math.floor((prevItem.sortOrder + nextItem.sortOrder) / 2);
+      
+      // 중간값이 같으면 전체 순서 재정렬 필요
+      if (newSortOrder === prevItem.sortOrder || newSortOrder === nextItem.sortOrder) {
+        newSortOrder = newIndex > oldIndex ? nextItem.sortOrder + 1 : prevItem.sortOrder - 1;
+      }
+    }
     
     try {
       const res = await fetch(`/api/admin/places/${movedPlace.dbPlace!.id}/order`, {
