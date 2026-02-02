@@ -743,25 +743,28 @@ function SortablePlaceCard({ place, onEdit, onDelete, onHide, editingPlace, setE
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       size="icon"
                       className="h-8 w-8"
                       data-testid={`button-hide-${place.id}`}
                     >
-                      <EyeOff className="h-3 w-3" />
+                      <Trash2 className="h-3 w-3" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>장소 숨기기</AlertDialogTitle>
+                      <AlertDialogTitle>장소 삭제</AlertDialogTitle>
                       <AlertDialogDescription>
-                        "{place.name}"을(를) 숨기시겠습니까? 관광 가이드에서 표시되지 않습니다.
+                        "{place.name}"을(를) 삭제하시겠습니까? 관광 가이드에서 표시되지 않습니다.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>취소</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onHide(place)}>
-                        숨기기
+                      <AlertDialogAction 
+                        onClick={() => onHide(place)}
+                        className="bg-destructive text-destructive-foreground hover-elevate"
+                      >
+                        삭제
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
