@@ -1185,17 +1185,32 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
 
       {formData.images.length > 0 && (
         <div>
-          <Label>등록된 이미지 ({formData.images.length}개)</Label>
+          <Label>등록된 이미지 ({formData.images.length}개) - 클릭하여 대표 사진 선택</Label>
           <div className="grid grid-cols-4 gap-2 mt-2">
             {formData.images.map((img: string, idx: number) => (
-              <div key={idx} className="relative group">
+              <div 
+                key={idx} 
+                className={`relative group cursor-pointer ${idx === 0 ? 'ring-2 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-muted-foreground hover:ring-offset-1'}`}
+                onClick={() => {
+                  if (idx !== 0) {
+                    const newImages = [...formData.images];
+                    const [selected] = newImages.splice(idx, 1);
+                    newImages.unshift(selected);
+                    setFormData({ ...formData, images: newImages });
+                    toast({ title: "대표 사진이 변경되었습니다" });
+                  }
+                }}
+              >
                 <img src={img} alt="" className="w-full h-20 object-cover rounded" />
                 {idx === 0 && (
                   <span className="absolute top-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">대표</span>
                 )}
                 <button
                   type="button"
-                  onClick={() => removeImage(idx)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeImage(idx);
+                  }}
                   className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="h-3 w-3" />

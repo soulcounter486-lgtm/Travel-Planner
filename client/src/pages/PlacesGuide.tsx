@@ -1,5 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useLocation } from "wouter";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Place as DBPlace } from "@shared/schema";
@@ -8,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen, Map, List } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
@@ -76,6 +78,8 @@ export interface HardcodedPlace {
   sortOrder?: number; // 정렬 순서
   isPartner?: boolean; // 협력업체 여부
   discountText?: string; // 할인 안내 문구
+  latitude?: string; // 위도
+  longitude?: string; // 경도
 }
 
 export interface Category {
@@ -1349,6 +1353,8 @@ function convertDBPlace(dbPlace: DBPlace): Place | null {
     sortOrder: dbPlace.sortOrder ?? 0, // 정렬 순서
     isPartner: dbPlace.isPartner ?? false, // 협력업체 여부
     discountText: dbPlace.discountText || undefined, // 할인 안내 문구
+    latitude: dbPlace.latitude || undefined,
+    longitude: dbPlace.longitude || undefined,
   };
 }
 
@@ -1361,6 +1367,14 @@ export default function PlacesGuide() {
   const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
   const [realVisitorCount, setRealVisitorCount] = useState<number>(0);
   const [realTotalVisitorCount, setRealTotalVisitorCount] = useState<number>(0);
+  
+  // 지도 뷰 관련 상태
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [placesOnMap, setPlacesOnMap] = useState(0);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
 
   // DB에서 장소 데이터 가져오기
   const { data: dbPlaces = [] } = useQuery<DBPlace[]>({
@@ -1462,6 +1476,132 @@ export default function PlacesGuide() {
     return merged;
   }, [dbPlaces]);
 
+  // 모든 장소 (지도용)
+  const allPlaces = useMemo(() => {
+    const places: (Place & { categoryId: string })[] = [];
+    Object.entries(mergedPlacesData).forEach(([categoryId, category]) => {
+      category.places.forEach(place => {
+        places.push({ ...place, categoryId });
+      });
+    });
+    return places;
+  }, [mergedPlacesData]);
+
+  // 지도 초기화
+  useEffect(() => {
+    if (viewMode !== "map" || !mapContainerRef.current) return;
+    
+    if (mapRef.current) {
+      mapRef.current.invalidateSize();
+      return;
+    }
+    
+    const center: [number, number] = [10.3456, 107.0844];
+    const map = L.map(mapContainerRef.current).setView(center, 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map);
+    
+    mapRef.current = map;
+    
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [viewMode]);
+
+  // 마커 업데이트
+  useEffect(() => {
+    if (!mapRef.current || viewMode !== "map") return;
+    
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+    
+    // 좌표가 있는 장소들에 마커 추가
+    let placesWithCoords = 0;
+    allPlaces.forEach(place => {
+      let lat: number | null = null;
+      let lng: number | null = null;
+      
+      // 1. 직접 저장된 좌표 사용 (DB 장소)
+      if (place.latitude && place.longitude) {
+        lat = parseFloat(place.latitude);
+        lng = parseFloat(place.longitude);
+      }
+      // 2. mapUrl에서 좌표 추출 시도
+      else if (place.mapUrl.includes("q=")) {
+        const match = place.mapUrl.match(/q=([-\d.]+),([-\d.]+)/);
+        if (match) {
+          lat = parseFloat(match[1]);
+          lng = parseFloat(match[2]);
+        }
+      }
+      
+      if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
+      placesWithCoords++;
+      
+      const categoryColors: Record<string, string> = {
+        attractions: "#3b82f6",
+        localFood: "#ef4444",
+        koreanFood: "#f97316",
+        buffet: "#eab308",
+        chineseFood: "#22c55e",
+        coffee: "#6366f1",
+        nightlife: "#ec4899",
+        spa: "#8b5cf6",
+        exchange: "#64748b",
+        services: "#0ea5e9",
+      };
+      
+      const color = categoryColors[place.categoryId] || "#64748b";
+      
+      const iconHtml = place.imageUrl 
+        ? `<div style="
+            width: 40px; height: 40px; border-radius: 8px; overflow: hidden; 
+            border: 3px solid ${selectedPlace?.name === place.name ? '#3b82f6' : color}; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
+            background: white;
+          ">
+            <img src="${place.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>`
+        : `<div style="
+            width: 40px; height: 40px; border-radius: 8px; 
+            background: ${color}; 
+            display: flex; align-items: center; justify-content: center;
+            border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
+          ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+          </div>`;
+      
+      const customIcon = L.divIcon({
+        className: 'custom-place-marker',
+        html: iconHtml,
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+      });
+      
+      const marker = L.marker([lat, lng], { icon: customIcon })
+        .addTo(mapRef.current!)
+        .on('click', () => {
+          setSelectedPlace(place);
+        });
+      
+      marker.bindTooltip(place.name, { 
+        permanent: false, 
+        direction: 'top',
+        offset: [0, -40]
+      });
+      
+      markersRef.current.push(marker);
+    });
+    
+    setPlacesOnMap(placesWithCoords);
+  }, [allPlaces, viewMode, selectedPlace]);
+
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('visitor_counted');
     if (hasVisited) {
@@ -1524,7 +1664,135 @@ export default function PlacesGuide() {
       <TabNavigation language={language} />
 
       <div className="container mx-auto px-4 max-w-4xl py-8">
+        {/* 뷰 모드 토글 버튼 */}
+        <div className="flex justify-end mb-4 gap-2">
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            data-testid="button-list-view"
+          >
+            <List className="w-4 h-4 mr-1" />
+            {language === "ko" ? "목록" : "List"}
+          </Button>
+          <Button
+            variant={viewMode === "map" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("map")}
+            data-testid="button-map-view"
+          >
+            <Map className="w-4 h-4 mr-1" />
+            {language === "ko" ? "지도" : "Map"}
+          </Button>
+        </div>
 
+        {/* 지도 뷰 */}
+        {viewMode === "map" && (
+          <div className="mb-6">
+            <div 
+              ref={mapContainerRef}
+              className="w-full h-[60vh] rounded-lg border shadow-lg z-0"
+              data-testid="places-map-container"
+            />
+            
+            {/* 선택된 장소 정보 */}
+            <AnimatePresence>
+              {selectedPlace && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="mt-4"
+                >
+                  <Card className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        {selectedPlace.imageUrl && (
+                          <img 
+                            src={selectedPlace.imageUrl} 
+                            alt={selectedPlace.name}
+                            className="w-24 h-24 object-cover rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg">{selectedPlace.name}</h3>
+                          {selectedPlace.nameVi && (
+                            <p className="text-sm text-muted-foreground">{selectedPlace.nameVi}</p>
+                          )}
+                          {selectedPlace.address && (
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {selectedPlace.address}
+                            </p>
+                          )}
+                          <div className="flex gap-2 mt-2">
+                            <a 
+                              href={selectedPlace.mapUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <Button size="sm" variant="outline">
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Google Maps
+                              </Button>
+                            </a>
+                            {selectedPlace.phone && (
+                              <a href={`tel:${selectedPlace.phone}`}>
+                                <Button size="sm" variant="outline">
+                                  <Phone className="w-3 h-3 mr-1" />
+                                  {language === "ko" ? "전화" : "Call"}
+                                </Button>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setSelectedPlace(null)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            {/* 지도에 표시된 장소 수 */}
+            <div className="mt-4 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-blue-700 dark:text-blue-300">
+                {language === "ko" 
+                  ? `📍 지도에 ${placesOnMap}개 장소 표시 중 (전체 ${allPlaces.length}개 중 좌표가 있는 장소만 표시됩니다)`
+                  : `📍 ${placesOnMap} places shown on map (only places with coordinates from ${allPlaces.length} total)`}
+              </p>
+            </div>
+            
+            {/* 범례 */}
+            <div className="mt-4 p-3 bg-card rounded-lg border">
+              <p className="text-xs font-medium mb-2">{language === "ko" ? "카테고리별 색상" : "Category Colors"}</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "attractions", color: "#3b82f6", label: language === "ko" ? "관광명소" : "Attractions" },
+                  { id: "localFood", color: "#ef4444", label: language === "ko" ? "로컬맛집" : "Local Food" },
+                  { id: "koreanFood", color: "#f97316", label: language === "ko" ? "한식" : "Korean" },
+                  { id: "coffee", color: "#6366f1", label: language === "ko" ? "카페" : "Cafe" },
+                  { id: "nightlife", color: "#ec4899", label: language === "ko" ? "유흥" : "Nightlife" },
+                  { id: "spa", color: "#8b5cf6", label: language === "ko" ? "스파" : "Spa" },
+                ].map(item => (
+                  <div key={item.id} className="flex items-center gap-1">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-[10px]">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 리스트 뷰 */}
+        {viewMode === "list" && (
         <div className="space-y-4">
           {categoryOrder.map((key) => {
             const category = mergedPlacesData[key];
@@ -1597,6 +1865,7 @@ export default function PlacesGuide() {
             );
           })}
         </div>
+        )}
 
         <div className="h-20" />
       </div>
