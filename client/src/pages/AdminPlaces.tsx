@@ -669,6 +669,7 @@ interface PlaceFormProps {
 
 
 function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: place?.name || "",
     category: place?.category || "attraction",
