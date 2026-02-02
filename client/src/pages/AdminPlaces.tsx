@@ -259,8 +259,11 @@ export default function AdminPlaces() {
   const copyToDb = async (place: UnifiedPlace) => {
     if (!place.hardcodedPlace) return;
     
-    // 같은 이름의 DB 장소가 이미 있는지 확인
-    const existingDbPlace = dbPlaces.find(p => p.name === place.name);
+    // 같은 이름 또는 같은 mapUrl의 DB 장소가 이미 있는지 확인
+    const existingDbPlace = dbPlaces.find(p => 
+      p.name === place.name || 
+      (place.mapUrl && p.website && p.website === place.mapUrl)
+    );
     if (existingDbPlace) {
       // 이미 DB에 있으면 해당 장소를 편집 모드로
       setEditingPlace(existingDbPlace);
@@ -288,6 +291,13 @@ export default function AdminPlaces() {
       
       if (!res.ok) {
         const err = await res.json();
+        // 409 중복 에러: 기존 장소를 편집 모드로 전환
+        if (res.status === 409 && err.existingPlace) {
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/places"] });
+          setEditingPlace(err.existingPlace);
+          toast({ title: "이미 DB에 저장된 장소입니다. 수정하세요." });
+          return;
+        }
         toast({ title: err.error || "복사 실패", variant: "destructive" });
         return;
       }

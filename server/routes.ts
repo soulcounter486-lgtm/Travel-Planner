@@ -3119,7 +3119,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
   
-  // 장소 추가 (관리자만)
+  // 장소 추가 (관리자만) - 중복 체크 포함
   app.post("/api/admin/places", async (req, res) => {
     try {
       const user = (req as any).user;
@@ -3129,6 +3129,20 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(403).json({ error: "Admin access required" });
       }
       const data = insertPlaceSchema.parse(req.body);
+      
+      // 같은 이름 또는 같은 website(mapUrl)가 있는지 중복 체크
+      const existingByName = await db.select().from(places).where(eq(places.name, data.name)).limit(1);
+      if (existingByName.length > 0) {
+        return res.status(409).json({ error: "이미 같은 이름의 장소가 있습니다", existingPlace: existingByName[0] });
+      }
+      
+      if (data.website) {
+        const existingByWebsite = await db.select().from(places).where(eq(places.website, data.website)).limit(1);
+        if (existingByWebsite.length > 0) {
+          return res.status(409).json({ error: "이미 같은 지도 URL의 장소가 있습니다", existingPlace: existingByWebsite[0] });
+        }
+      }
+      
       const newPlace = await db.insert(places).values(data).returning();
       res.json(newPlace[0]);
     } catch (error) {
