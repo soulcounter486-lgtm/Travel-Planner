@@ -945,7 +945,10 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
     e.preventDefault();
     const dataToSubmit = {
       ...formData,
-      mainImage: formData.images.length > 0 ? formData.images[0] : "",
+      // 이미지 배열이 있으면 첫 번째 이미지, 없으면 기존 mainImage 유지
+      mainImage: formData.images.length > 0 
+        ? formData.images[0] 
+        : (formData.mainImage || place?.mainImage || ""),
     };
     onSubmit(dataToSubmit);
   };
