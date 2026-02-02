@@ -956,11 +956,22 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // images 배열에서 중복 제거
+    const uniqueImages = Array.from(new Set(formData.images.filter((img: string) => img)));
+    
+    // mainImage 결정
+    const mainImage = formData.mainImage || (uniqueImages.length > 0 ? uniqueImages[0] : "");
+    
+    // mainImage가 images에 없으면 추가 (일관성 유지)
+    const finalImages = mainImage && !uniqueImages.includes(mainImage) 
+      ? [mainImage, ...uniqueImages] 
+      : uniqueImages;
+    
     const dataToSubmit = {
       ...formData,
-      // formData.mainImage를 직접 사용 (사용자가 선택한 대표 이미지)
-      // mainImage가 없고 images가 있으면 첫 번째 이미지 사용
-      mainImage: formData.mainImage || (formData.images.length > 0 ? formData.images[0] : ""),
+      images: finalImages,
+      mainImage,
     };
     onSubmit(dataToSubmit);
   };
