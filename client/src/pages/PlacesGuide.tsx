@@ -42,7 +42,6 @@ import texasBbqImg from "@assets/Screenshot_20260121_234910_Maps_1769014231476.j
 import cobaImg from "@assets/Screenshot_20260122_000550_Maps_1769015581771.jpg";
 import coba2Img from "@assets/Screenshot_20260122_000613_Maps_1769015581776.jpg";
 import ganhHaoImg from "@assets/Screenshot_20260122_000631_Maps_1769015581781.jpg";
-import ganhHao2Img from "@assets/Screenshot_20260122_000656_Maps_1769015581784.jpg";
 import coThy2Img from "@assets/Screenshot_20260122_000711_Maps_1769015581789.jpg";
 import bunChaImg from "@assets/Screenshot_20260122_000727_Maps_1769015581794.jpg";
 import foodGarden88Img from "@assets/Screenshot_20260122_000755_Maps_1769015581799.jpg";
@@ -366,21 +365,6 @@ export const placesData: Record<string, Category> = {
           vi: "Nhà hàng BBQ phong cách Texas chính thống. Thưởng thức thịt hun khói và bia lạnh trong không gian tuyệt vời. Mở cửa 11AM-9PM.",
           ru: "Аутентичный техасский барбекю-ресторан. Копчёное мясо и холодное пиво в отличной атмосфере. Время работы 11:00-21:00.",
           ja: "本格テキサススタイルのBBQレストラン。燻製肉と冷たいビールが楽しめる雰囲気の良いお店。営業時間11AM-9PM。"
-        }
-      },
-      { 
-        name: "해산물 고급 식당 2호점", 
-        nameVi: "Gành Hào 2", 
-        mapUrl: "https://maps.app.goo.gl/JLXdK6XZC5SqHntC7", 
-        recommended: true,
-        imageUrl: ganhHao2Img,
-        description: {
-          ko: "간하오 2호점은 현대적인 건물에서 대규모 연회와 행사에 적합한 해산물 전문점입니다.",
-          en: "Gành Hào 2nd branch features a modern building, perfect for large banquets and events.",
-          zh: "Gành Hào 2号店位于现代化建筑，适合大型宴会和活动。",
-          vi: "Chi nhánh 2 Gành Hào có kiến trúc hiện đại, phù hợp tiệc lớn và sự kiện.",
-          ru: "Филиал 2 Gành Hào в современном здании, идеален для банкетов и мероприятий.",
-          ja: "ガンハオ2号店はモダンな建物で、大規模な宴会やイベントに最適です。"
         }
       },
       { 
