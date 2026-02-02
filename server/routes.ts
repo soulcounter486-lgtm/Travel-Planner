@@ -3193,6 +3193,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(403).json({ error: "Admin access required" });
       }
       const id = parseInt(req.params.id);
+      console.log("Place update request - mainImage:", req.body.mainImage, "images:", JSON.stringify(req.body.images));
       const data = insertPlaceSchema.partial().parse(req.body);
       const updatedPlace = await db.update(places)
         .set({ ...data, updatedAt: new Date() })
