@@ -1050,7 +1050,7 @@ export default function PlacesGuide() {
   const { language, t } = useLanguage();
   const { user, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["attractions", "localFood"]));
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [visitorCount, setVisitorCount] = useState<number>(0);
   const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
   const [realVisitorCount, setRealVisitorCount] = useState<number>(0);
