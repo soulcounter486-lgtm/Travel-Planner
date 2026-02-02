@@ -685,6 +685,7 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
     tags: place?.tags || [],
     isPartner: place?.isPartner ?? false,
     discountText: place?.discountText || "붕따우 도깨비 카톡으로 예약 시 5% 할인",
+    menuImages: place?.menuImages || [],
     isActive: place?.isActive ?? true,
     sortOrder: place?.sortOrder || 0,
   });
@@ -963,6 +964,59 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
     });
   };
 
+  // 메뉴판 이미지 업로드
+  const handleMenuUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        
+        const res = await fetch("/api/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            base64Data,
+            fileName: file.name,
+            contentType: file.type,
+          }),
+        });
+        
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || "업로드 실패");
+        }
+        
+        const { url } = await res.json();
+        setFormData((prev: any) => ({
+          ...prev,
+          menuImages: [...(prev.menuImages || []), url],
+        }));
+      }
+      toast({ title: "메뉴판 업로드 완료" });
+    } catch (error: any) {
+      toast({ title: error.message || "업로드 실패", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeMenuImage = (index: number) => {
+    setFormData({
+      ...formData,
+      menuImages: formData.menuImages.filter((_: string, i: number) => i !== index),
+    });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* 구글 맵 URL로 장소 정보 가져오기 */}
@@ -1141,6 +1195,50 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
                 <button
                   type="button"
                   onClick={() => removeImage(idx)}
+                  className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 메뉴판 이미지 업로드 */}
+      <div className="border-t pt-4">
+        <Label className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+          📋 메뉴판 이미지
+        </Label>
+        <p className="text-xs text-muted-foreground mt-1 mb-2">
+          메뉴판 사진을 업로드하면 사용자가 "메뉴판 보기" 버튼으로 볼 수 있습니다
+        </p>
+        <div className="mt-1">
+          <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-amber-300 rounded-lg cursor-pointer hover:bg-amber-50/50 dark:hover:bg-amber-900/20 transition-colors">
+            <Upload className="h-5 w-5 text-amber-600" />
+            <span className="text-sm text-amber-600">메뉴판 이미지 업로드</span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleMenuUpload}
+              className="hidden"
+              data-testid="input-menu-upload"
+            />
+          </label>
+        </div>
+      </div>
+
+      {formData.menuImages && formData.menuImages.length > 0 && (
+        <div>
+          <Label>등록된 메뉴판 ({formData.menuImages.length}개)</Label>
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            {formData.menuImages.map((img: string, idx: number) => (
+              <div key={idx} className="relative group">
+                <img src={img} alt={`메뉴 ${idx + 1}`} className="w-full h-24 object-cover rounded border" />
+                <button
+                  type="button"
+                  onClick={() => removeMenuImage(idx)}
                   className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="h-3 w-3" />
