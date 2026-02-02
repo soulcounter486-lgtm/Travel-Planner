@@ -1207,71 +1207,66 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
         </div>
       </div>
 
-      {/* 현재 대표 이미지 표시 */}
-      {formData.mainImage && (
-        <div>
-          <Label className="flex items-center gap-2">
-            ⭐ 현재 대표 이미지
-          </Label>
-          <div className="mt-2 relative inline-block">
-            <img 
-              src={formData.mainImage} 
-              alt="대표 이미지" 
-              className="h-24 w-auto object-cover rounded ring-2 ring-primary ring-offset-2" 
-            />
-            <span className="absolute top-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">대표</span>
-          </div>
-        </div>
-      )}
-
-      {/* 등록된 이미지 목록 */}
-      {formData.images.length > 0 && (
-        <div>
-          <Label>등록된 이미지 ({formData.images.length}개) - 클릭하여 대표 사진 선택</Label>
-          <div className="grid grid-cols-4 gap-2 mt-2">
-            {formData.images.map((img: string, idx: number) => {
-              const isMainImage = formData.mainImage === img;
-              return (
-                <div 
-                  key={idx} 
-                  className={`relative group cursor-pointer ${isMainImage ? 'ring-2 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-muted-foreground hover:ring-offset-1'}`}
-                  onClick={() => {
-                    if (!isMainImage) {
-                      setFormData({ ...formData, mainImage: img });
-                      toast({ title: "대표 사진이 변경되었습니다" });
-                    }
-                  }}
-                >
-                  <img src={img} alt="" className="w-full h-20 object-cover rounded" />
-                  {isMainImage && (
-                    <span className="absolute top-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">대표</span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // 대표 이미지를 삭제하면 mainImage도 초기화
-                      if (isMainImage) {
-                        const remainingImages = formData.images.filter((_: string, i: number) => i !== idx);
-                        setFormData({ 
-                          ...formData, 
-                          images: remainingImages,
-                          mainImage: remainingImages.length > 0 ? remainingImages[0] : ""
-                        });
-                      } else {
-                        removeImage(idx);
+      {/* 등록된 이미지 목록 (중복 제거) */}
+      {(() => {
+        // 중복 제거된 이미지 목록 생성
+        const uniqueImages = Array.from(new Set(formData.images as string[]));
+        
+        // mainImage가 있는데 images에 없으면 맨 앞에 추가
+        if (formData.mainImage && !uniqueImages.includes(formData.mainImage)) {
+          uniqueImages.unshift(formData.mainImage);
+        }
+        
+        if (uniqueImages.length === 0) return null;
+        
+        return (
+          <div>
+            <Label>등록된 이미지 ({uniqueImages.length}개) - 클릭하여 대표 사진 선택</Label>
+            <div className="grid grid-cols-4 gap-2 mt-2">
+              {uniqueImages.map((img: string, idx: number) => {
+                const isMainImage = formData.mainImage === img;
+                return (
+                  <div 
+                    key={img} 
+                    className={`relative group cursor-pointer ${isMainImage ? 'ring-2 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-muted-foreground hover:ring-offset-1'}`}
+                    onClick={() => {
+                      if (!isMainImage) {
+                        setFormData({ ...formData, mainImage: img });
+                        toast({ title: "대표 사진이 변경되었습니다" });
                       }
                     }}
-                    className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              );
-            })}
+                    <img src={img} alt="" className="w-full h-20 object-cover rounded" />
+                    {isMainImage && (
+                      <span className="absolute top-1 left-1 text-xs bg-primary text-primary-foreground px-1 rounded">⭐ 대표</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // 이미지 삭제
+                        const remainingImages = formData.images.filter((i: string) => i !== img);
+                        if (isMainImage) {
+                          setFormData({ 
+                            ...formData, 
+                            images: remainingImages,
+                            mainImage: remainingImages.length > 0 ? remainingImages[0] : ""
+                          });
+                        } else {
+                          setFormData({ ...formData, images: remainingImages });
+                        }
+                      }}
+                      className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 메뉴판 이미지 업로드 */}
       <div className="border-t pt-4">
