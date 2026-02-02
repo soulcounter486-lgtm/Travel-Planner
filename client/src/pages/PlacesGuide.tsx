@@ -1370,6 +1370,7 @@ export default function PlacesGuide() {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [placesOnMap, setPlacesOnMap] = useState(0);
+  const [selectedMapCategories, setSelectedMapCategories] = useState<Set<string>>(new Set()); // 빈 Set = 전체 표시
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -1517,9 +1518,14 @@ export default function PlacesGuide() {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
     
+    // 선택된 카테고리에 따라 필터링
+    const filteredPlaces = selectedMapCategories.size === 0 
+      ? allPlaces 
+      : allPlaces.filter(place => selectedMapCategories.has(place.categoryId));
+    
     // 좌표가 있는 장소들에 마커 추가
     let placesWithCoords = 0;
-    allPlaces.forEach(place => {
+    filteredPlaces.forEach(place => {
       let lat: number | null = null;
       let lng: number | null = null;
       
@@ -1649,7 +1655,7 @@ export default function PlacesGuide() {
     });
     
     setPlacesOnMap(placesWithCoords);
-  }, [allPlaces, viewMode, selectedPlace]);
+  }, [allPlaces, viewMode, selectedPlace, selectedMapCategories]);
 
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('visitor_counted');
@@ -1818,10 +1824,22 @@ export default function PlacesGuide() {
               </p>
             </div>
             
-            {/* 범례 */}
+            {/* 카테고리 필터 */}
             <div className="mt-4 p-3 bg-card rounded-lg border">
-              <p className="text-xs font-medium mb-2">{language === "ko" ? "카테고리별 색상" : "Category Colors"}</p>
+              <p className="text-xs font-medium mb-2">{language === "ko" ? "카테고리 필터 (클릭하여 선택)" : "Category Filter (click to select)"}</p>
               <div className="flex flex-wrap gap-2">
+                {/* 전체 버튼 */}
+                <button
+                  onClick={() => setSelectedMapCategories(new Set())}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-all ${
+                    selectedMapCategories.size === 0
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-muted/50 hover:bg-muted border-transparent"
+                  }`}
+                  data-testid="map-filter-all"
+                >
+                  <span className="text-[10px] font-medium">{language === "ko" ? "전체" : "All"}</span>
+                </button>
                 {[
                   { id: "attractions", color: "#3b82f6", label: language === "ko" ? "관광명소" : "Attractions" },
                   { id: "localFood", color: "#ef4444", label: language === "ko" ? "로컬맛집" : "Local Food" },
@@ -1829,12 +1847,43 @@ export default function PlacesGuide() {
                   { id: "coffee", color: "#6366f1", label: language === "ko" ? "카페" : "Cafe" },
                   { id: "nightlife", color: "#ec4899", label: language === "ko" ? "유흥" : "Nightlife" },
                   { id: "spa", color: "#8b5cf6", label: language === "ko" ? "스파" : "Spa" },
-                ].map(item => (
-                  <div key={item.id} className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-[10px]">{item.label}</span>
-                  </div>
-                ))}
+                  { id: "massage", color: "#14b8a6", label: language === "ko" ? "마사지" : "Massage" },
+                  { id: "golf", color: "#22c55e", label: language === "ko" ? "골프" : "Golf" },
+                  { id: "exchange", color: "#eab308", label: language === "ko" ? "환전" : "Exchange" },
+                ].map(item => {
+                  const isSelected = selectedMapCategories.has(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        const newSet = new Set(selectedMapCategories);
+                        if (isSelected) {
+                          newSet.delete(item.id);
+                        } else {
+                          newSet.add(item.id);
+                        }
+                        setSelectedMapCategories(newSet);
+                      }}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-all ${
+                        isSelected
+                          ? "ring-2 ring-offset-1"
+                          : "opacity-60 hover:opacity-100"
+                      }`}
+                      style={{ 
+                        backgroundColor: isSelected ? item.color : 'transparent',
+                        borderColor: item.color,
+                        color: isSelected ? 'white' : 'inherit'
+                      }}
+                      data-testid={`map-filter-${item.id}`}
+                    >
+                      <div 
+                        className="w-2.5 h-2.5 rounded-full" 
+                        style={{ backgroundColor: isSelected ? 'white' : item.color }} 
+                      />
+                      <span className="text-[10px] font-medium">{item.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
