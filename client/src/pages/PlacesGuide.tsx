@@ -1790,7 +1790,8 @@ export default function PlacesGuide() {
           <div className="mb-6">
             <div 
               ref={mapContainerRef}
-              className="w-full h-[60vh] rounded-lg border shadow-lg z-0"
+              className="w-full rounded-lg border shadow-lg"
+              style={{ height: "400px", minHeight: "400px", position: "relative", zIndex: 1 }}
               data-testid="places-map-container"
             />
             
