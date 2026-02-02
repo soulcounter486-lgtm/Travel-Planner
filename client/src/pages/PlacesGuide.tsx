@@ -1616,7 +1616,7 @@ export default function PlacesGuide() {
           ${place.address ? `<p style="font-size: 11px; color: #6b7280; margin: 2px 0;">📍 ${place.address}</p>` : ""}
           ${place.phone ? `<p style="font-size: 11px; color: #6b7280; margin: 2px 0;">📞 ${place.phone}</p>` : ""}
           ${descText ? `<p style="font-size: 11px; color: #374151; margin: 6px 0 0 0; line-height: 1.4;">${descText.slice(0, 100)}${descText.length > 100 ? "..." : ""}</p>` : ""}
-          ${place.discountText ? `<p style="font-size: 11px; color: #dc2626; font-weight: 500; margin: 6px 0 0 0;">🎁 ${place.discountText}</p>` : ""}
+          ${place.isPartner && place.discountText ? `<p style="font-size: 11px; color: #dc2626; font-weight: 500; margin: 6px 0 0 0;">🎁 ${place.discountText}</p>` : ""}
           <div style="margin-top: 8px; display: flex; gap: 6px;">
             <a href="${place.mapUrl}" target="_blank" rel="noopener noreferrer" 
               style="flex: 1; text-align: center; background: #3b82f6; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; text-decoration: none;">
