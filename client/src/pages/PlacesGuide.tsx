@@ -1584,10 +1584,61 @@ export default function PlacesGuide() {
         iconAnchor: [20, 40],
       });
       
+      // 팝업 HTML 생성
+      const categoryLabelsMap: Record<string, string> = {
+        attractions: language === "ko" ? "관광명소" : "Attractions",
+        localFood: language === "ko" ? "로컬맛집" : "Local Food",
+        koreanFood: language === "ko" ? "한식" : "Korean",
+        buffet: language === "ko" ? "뷔페" : "Buffet",
+        chineseFood: language === "ko" ? "중식" : "Chinese",
+        coffee: language === "ko" ? "카페" : "Cafe",
+        nightlife: language === "ko" ? "유흥" : "Nightlife",
+        spa: language === "ko" ? "스파/마사지" : "Spa",
+        exchange: language === "ko" ? "환전" : "Exchange",
+        services: language === "ko" ? "서비스" : "Services",
+      };
+      
+      const categoryLabel = categoryLabelsMap[place.categoryId] || place.categoryId;
+      const descText = place.description?.[language] || place.description?.ko || "";
+      
+      const popupHtml = `
+        <div style="min-width: 200px; max-width: 280px;">
+          ${place.imageUrl ? `
+            <img src="${place.imageUrl}" 
+              style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;" 
+              onerror="this.style.display='none'" />
+          ` : ""}
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <span style="background: ${color}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px;">
+              ${categoryLabel}
+            </span>
+            ${place.isPartner ? `<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">⭐ Partner</span>` : ""}
+          </div>
+          <h3 style="font-weight: 600; font-size: 14px; margin: 4px 0 6px 0; color: #1f2937;">${place.name}</h3>
+          ${place.address ? `<p style="font-size: 11px; color: #6b7280; margin: 2px 0;">📍 ${place.address}</p>` : ""}
+          ${place.phone ? `<p style="font-size: 11px; color: #6b7280; margin: 2px 0;">📞 ${place.phone}</p>` : ""}
+          ${descText ? `<p style="font-size: 11px; color: #374151; margin: 6px 0 0 0; line-height: 1.4;">${descText.slice(0, 100)}${descText.length > 100 ? "..." : ""}</p>` : ""}
+          ${place.discountText ? `<p style="font-size: 11px; color: #dc2626; font-weight: 500; margin: 6px 0 0 0;">🎁 ${place.discountText}</p>` : ""}
+          <div style="margin-top: 8px; display: flex; gap: 6px;">
+            <a href="${place.mapUrl}" target="_blank" rel="noopener noreferrer" 
+              style="flex: 1; text-align: center; background: #3b82f6; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; text-decoration: none;">
+              ${language === "ko" ? "길찾기" : "Directions"}
+            </a>
+            ${place.phone ? `
+              <a href="tel:${place.phone}" 
+                style="flex: 1; text-align: center; background: #22c55e; color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; text-decoration: none;">
+                ${language === "ko" ? "전화" : "Call"}
+              </a>
+            ` : ""}
+          </div>
+        </div>
+      `;
+      
       const marker = L.marker([lat, lng], { icon: customIcon })
         .addTo(mapRef.current!)
-        .on('click', () => {
-          setSelectedPlace(place);
+        .bindPopup(popupHtml, {
+          maxWidth: 300,
+          className: 'custom-popup'
         });
       
       marker.bindTooltip(place.name, { 
