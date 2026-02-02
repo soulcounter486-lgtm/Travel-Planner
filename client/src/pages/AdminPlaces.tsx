@@ -383,13 +383,18 @@ export default function AdminPlaces() {
 
   const createMutation = useMutation({
     mutationFn: async (data: Partial<Place>) => {
+      console.log("Creating place with data:", data);
       const res = await fetch("/api/admin/places", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Create place error:", res.status, errorData);
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -398,8 +403,9 @@ export default function AdminPlaces() {
       setIsAddOpen(false);
       toast({ title: "장소가 추가되었습니다" });
     },
-    onError: () => {
-      toast({ title: "추가 실패", variant: "destructive" });
+    onError: (error: Error) => {
+      console.error("Create mutation error:", error);
+      toast({ title: `추가 실패: ${error.message}`, variant: "destructive" });
     },
   });
 
@@ -511,6 +517,7 @@ export default function AdminPlaces() {
                 <DialogTitle>새 장소 추가</DialogTitle>
               </DialogHeader>
               <PlaceForm
+                defaultCategory={filterCategory !== "all" ? filterCategory : "attraction"}
                 onSubmit={(data) => createMutation.mutate(data)}
                 isLoading={createMutation.isPending}
                 onCancel={() => setIsAddOpen(false)}
@@ -799,13 +806,14 @@ function SortablePlaceCard({ place, onEdit, onDelete, onHide, editingPlace, setE
 
 interface PlaceFormProps {
   place?: Place | null;
+  defaultCategory?: string;
   onSubmit: (data: Partial<Place>) => void;
   isLoading: boolean;
   onCancel: () => void;
 }
 
 
-function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
+function PlaceForm({ place, defaultCategory, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   const { toast } = useToast();
   
   // 초기 images 배열 생성 - mainImage가 있으면 포함시킴
@@ -822,7 +830,7 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   
   const [formData, setFormData] = useState({
     name: place?.name || "",
-    category: place?.category || "attraction",
+    category: place?.category || defaultCategory || "attraction",
     description: place?.description || "",
     mainImage: place?.mainImage || "",
     images: getInitialImages(),
@@ -1084,6 +1092,12 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 장소명 필수 검증
+    if (!formData.name.trim()) {
+      toast({ title: "장소명을 입력해주세요", variant: "destructive" });
+      return;
+    }
     
     // images 배열에서 중복 제거
     const uniqueImages = Array.from(new Set(formData.images.filter((img: string) => img)));
