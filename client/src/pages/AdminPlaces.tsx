@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import L from "leaflet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -698,6 +699,65 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
   const [googleSearchQuery, setGoogleSearchQuery] = useState("");
   const [isSearchingGoogle, setIsSearchingGoogle] = useState(false);
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+  
+  // 지도 설정
+  const [showLocationMap, setShowLocationMap] = useState(false);
+  const locationMapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+  
+  // 지도 초기화
+  useEffect(() => {
+    if (!showLocationMap || !locationMapRef.current) return;
+    
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.invalidateSize();
+      return;
+    }
+    
+    // 붕따우 중심 좌표 또는 기존 좌표
+    const lat = formData.latitude ? parseFloat(formData.latitude) : 10.3456;
+    const lng = formData.longitude ? parseFloat(formData.longitude) : 107.0844;
+    
+    const map = L.map(locationMapRef.current).setView([lat, lng], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap',
+    }).addTo(map);
+    
+    mapInstanceRef.current = map;
+    
+    // 기존 좌표가 있으면 마커 표시
+    if (formData.latitude && formData.longitude) {
+      markerRef.current = L.marker([lat, lng]).addTo(map);
+    }
+    
+    // 지도 클릭 시 좌표 설정
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      
+      // 기존 마커 제거
+      if (markerRef.current) {
+        markerRef.current.remove();
+      }
+      
+      // 새 마커 추가
+      markerRef.current = L.marker([lat, lng]).addTo(map);
+      
+      // 좌표 설정
+      setFormData(prev => ({
+        ...prev,
+        latitude: lat.toFixed(6),
+        longitude: lng.toFixed(6),
+      }));
+    });
+    
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [showLocationMap]);
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
@@ -1064,27 +1124,64 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="latitude">위도</Label>
-          <Input
-            id="latitude"
-            value={formData.latitude}
-            onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-            placeholder="예: 10.3460"
-            data-testid="input-latitude"
-          />
+      {/* 위치 설정 - 지도에서 클릭 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            장소 위치 설정
+          </Label>
+          <Button 
+            type="button" 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowLocationMap(!showLocationMap)}
+          >
+            {showLocationMap ? "지도 닫기" : "지도에서 위치 선택"}
+          </Button>
         </div>
-        <div>
-          <Label htmlFor="longitude">경도</Label>
-          <Input
-            id="longitude"
-            value={formData.longitude}
-            onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-            placeholder="예: 107.0843"
-            data-testid="input-longitude"
-          />
+        
+        {showLocationMap && (
+          <div className="space-y-2">
+            <div 
+              ref={locationMapRef}
+              className="h-[300px] rounded-lg border border-slate-300 overflow-hidden"
+              data-testid="location-map"
+            />
+            <p className="text-xs text-muted-foreground text-center">
+              👆 지도를 클릭해서 장소 위치를 선택하세요
+            </p>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="latitude">위도</Label>
+            <Input
+              id="latitude"
+              value={formData.latitude}
+              onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+              placeholder="예: 10.3460"
+              data-testid="input-latitude"
+            />
+          </div>
+          <div>
+            <Label htmlFor="longitude">경도</Label>
+            <Input
+              id="longitude"
+              value={formData.longitude}
+              onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+              placeholder="예: 107.0843"
+              data-testid="input-longitude"
+            />
+          </div>
         </div>
+        
+        {formData.latitude && formData.longitude && (
+          <p className="text-xs text-green-600 flex items-center gap-1">
+            ✓ 위치 설정됨: {formData.latitude}, {formData.longitude}
+          </p>
+        )}
       </div>
 
       <div>
