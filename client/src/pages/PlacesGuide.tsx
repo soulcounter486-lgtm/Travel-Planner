@@ -1502,18 +1502,50 @@ export default function PlacesGuide() {
   useEffect(() => {
     if (viewMode !== "map" || !mapContainerRef.current) return;
     
+    // 기존 지도가 있으면 크기 재조정 후 반환
     if (mapRef.current) {
-      mapRef.current.invalidateSize();
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 100);
       return;
     }
     
-    const center: [number, number] = [10.3456, 107.0844];
-    const map = L.map(mapContainerRef.current).setView(center, 13);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map);
+    // 컨테이너 준비 확인
+    const container = mapContainerRef.current;
+    if (!container || container.clientHeight === 0) {
+      // 컨테이너가 준비되지 않았으면 잠시 후 다시 시도
+      const timer = setTimeout(() => {
+        if (mapContainerRef.current && !mapRef.current) {
+          initializeMap();
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
     
-    mapRef.current = map;
+    initializeMap();
+    
+    function initializeMap() {
+      if (!mapContainerRef.current || mapRef.current) return;
+      
+      const center: [number, number] = [10.3456, 107.0844];
+      const map = L.map(mapContainerRef.current, {
+        center,
+        zoom: 13,
+        zoomControl: true,
+      });
+      
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+      
+      mapRef.current = map;
+      
+      // 크기 재조정
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 100);
+    }
     
     return () => {
       if (mapRef.current) {
