@@ -826,6 +826,45 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [menuImageIndex, setMenuImageIndex] = useState(0);
   const [showEnlargedImage, setShowEnlargedImage] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEndImage = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe && allImages.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }
+    if (isRightSwipe && allImages.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    }
+  };
+
+  const onTouchEndMenu = () => {
+    if (!touchStart || !touchEnd || !place.menuImages) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe && place.menuImages.length > 1) {
+      setMenuImageIndex((prev) => (prev + 1) % place.menuImages!.length);
+    }
+    if (isRightSwipe && place.menuImages.length > 1) {
+      setMenuImageIndex((prev) => (prev - 1 + place.menuImages!.length) % place.menuImages!.length);
+    }
+  };
   
   const noteText = place.note ? (noteLabels[place.note]?.[language] || place.note) : null;
   const descriptionText = place.description?.[language] || place.description?.ko;
@@ -1103,11 +1142,17 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
               </button>
               
               {/* 메뉴판 이미지 */}
-              <div className="relative">
+              <div 
+                className="relative"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEndMenu}
+              >
                 <img
                   src={place.menuImages![menuImageIndex]}
                   alt={`메뉴판 ${menuImageIndex + 1}`}
-                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg select-none"
+                  draggable={false}
                 />
                 
                 {/* 이미지 슬라이드 화살표 */}
@@ -1179,11 +1224,17 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
               </button>
               
               {/* 확대 이미지 */}
-              <div className="relative">
+              <div 
+                className="relative"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEndImage}
+              >
                 <img
                   src={allImages[currentImageIndex]}
                   alt={place.name}
-                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg select-none"
+                  draggable={false}
                 />
                 
                 {/* 이미지 슬라이드 화살표 */}
