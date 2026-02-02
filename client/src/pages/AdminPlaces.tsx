@@ -683,6 +683,8 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
     openingHours: place?.openingHours || "",
     priceRange: place?.priceRange || "",
     tags: place?.tags || [],
+    isPartner: place?.isPartner ?? false,
+    discountText: place?.discountText || "붕따우 도깨비 카톡으로 예약 시 5% 할인",
     isActive: place?.isActive ?? true,
     sortOrder: place?.sortOrder || 0,
   });
@@ -1320,6 +1322,31 @@ function PlaceForm({ place, onSubmit, isLoading, onCancel }: PlaceFormProps) {
           />
           <Label>활성화</Label>
         </div>
+      </div>
+
+      {/* 협력업체 설정 */}
+      <div className="space-y-3 p-4 border rounded-lg bg-amber-50 dark:bg-amber-900/20">
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={formData.isPartner}
+            onCheckedChange={(checked) => setFormData({ ...formData, isPartner: checked })}
+            data-testid="switch-partner"
+          />
+          <Label className="font-medium text-amber-700 dark:text-amber-300">협력업체 뱃지 표시</Label>
+        </div>
+        {formData.isPartner && (
+          <div>
+            <Label htmlFor="discountText" className="text-sm text-amber-600 dark:text-amber-400">할인 안내 문구</Label>
+            <Input
+              id="discountText"
+              value={formData.discountText}
+              onChange={(e) => setFormData({ ...formData, discountText: e.target.value })}
+              placeholder="붕따우 도깨비 카톡으로 예약 시 5% 할인"
+              className="mt-1"
+              data-testid="input-discount-text"
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2 justify-end">

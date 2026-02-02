@@ -72,6 +72,8 @@ export interface HardcodedPlace {
   description?: Record<string, string>;
   dbId?: number; // DB에서 가져온 장소의 ID (수정 가능)
   sortOrder?: number; // 정렬 순서
+  isPartner?: boolean; // 협력업체 여부
+  discountText?: string; // 할인 안내 문구
 }
 
 export interface Category {
@@ -898,11 +900,21 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
                     {noteLabels[place.note]?.[language] || noteLabels[place.note]?.ko}
                   </Badge>
                 )}
+                {place.isPartner && (
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30">
+                    붕따우 도깨비 협력업체
+                  </Badge>
+                )}
               </div>
               {place.nameVi && <p className="text-xs text-muted-foreground truncate">{place.nameVi}</p>}
               {(place.note === "partnerRestaurant" || place.note === "partnerBarber") && (
                 <p className="text-[10px] text-green-600 dark:text-green-400 font-medium mt-0.5">
                   {discountLabel[place.note]?.[language] || discountLabel[place.note]?.ko}
+                </p>
+              )}
+              {place.isPartner && place.discountText && (
+                <p className="text-[10px] text-green-600 dark:text-green-400 font-medium mt-0.5">
+                  {place.discountText}
                 </p>
               )}
             </div>
@@ -1050,6 +1062,8 @@ function convertDBPlace(dbPlace: DBPlace): Place | null {
     description: Object.keys(description).length > 0 ? description : undefined,
     dbId: dbPlace.id, // DB 장소 ID 추가 (수정 가능)
     sortOrder: dbPlace.sortOrder ?? 0, // 정렬 순서
+    isPartner: dbPlace.isPartner ?? false, // 협력업체 여부
+    discountText: dbPlace.discountText || undefined, // 할인 안내 문구
   };
 }
 
