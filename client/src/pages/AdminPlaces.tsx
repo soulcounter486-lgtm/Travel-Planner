@@ -185,10 +185,15 @@ export default function AdminPlaces() {
     return list;
   }, [dbPlaces]);
 
-  // 필터링된 통합 장소
-  const filteredPlaces = filterCategory === "all"
-    ? unifiedPlaces
-    : unifiedPlaces.filter(p => p.category === filterCategory);
+  // 필터링된 통합 장소 (sortOrder로 정렬)
+  const filteredPlaces = useMemo(() => {
+    const filtered = filterCategory === "all"
+      ? [...unifiedPlaces]
+      : unifiedPlaces.filter(p => p.category === filterCategory);
+    
+    // sortOrder로 정렬
+    return filtered.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+  }, [unifiedPlaces, filterCategory]);
 
   // 드래그 앤 드롭 센서
   const sensors = useSensors(
