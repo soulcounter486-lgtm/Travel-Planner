@@ -1606,7 +1606,44 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       const placePattern = /\/place\/([^/@]+)/;
       const placeMatch = finalUrl.match(placePattern);
       if (placeMatch) {
-        name = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+        const fullName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+        
+        // 쉼표로 분리해서 이름과 주소 구분
+        // 예: "장소이름, 주소1, 주소2, 도시" -> 이름: "장소이름", 주소: "주소1, 주소2, 도시"
+        const parts = fullName.split(",").map(p => p.trim()).filter(p => p);
+        if (parts.length > 1) {
+          // 첫 번째 부분만 이름으로, 나머지는 주소로
+          name = parts[0];
+          address = parts.slice(1).join(", ");
+        } else {
+          name = fullName;
+        }
+      }
+      
+      // 좌표가 있고 주소가 없으면 Geocoding API로 주소 가져오기
+      if (latitude && longitude && !address && process.env.GOOGLE_MAPS_API_KEY) {
+        try {
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.GOOGLE_MAPS_API_KEY}&language=vi`;
+          const geocodeRes = await fetch(geocodeUrl);
+          const geocodeData = await geocodeRes.json() as {
+            status: string;
+            results: Array<{
+              formatted_address: string;
+              address_components: Array<{
+                long_name: string;
+                short_name: string;
+                types: string[];
+              }>;
+            }>;
+          };
+          
+          if (geocodeData.status === "OK" && geocodeData.results.length > 0) {
+            address = geocodeData.results[0].formatted_address;
+            console.log("Geocoding address:", address);
+          }
+        } catch (geocodeErr) {
+          console.error("Geocoding error:", geocodeErr);
+        }
       }
       
       // 좌표가 없어도 이름이 있으면 성공 처리
