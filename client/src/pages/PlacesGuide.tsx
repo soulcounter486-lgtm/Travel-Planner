@@ -1006,8 +1006,15 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
 // DB 카테고리를 기존 카테고리에 매핑
 const dbCategoryMap: Record<string, string> = {
   attraction: "attractions",
-  restaurant: "localFood",
+  services: "services",
+  local_food: "localFood",
+  korean_food: "koreanFood",
+  buffet: "buffet",
+  chinese_food: "chineseFood",
   cafe: "coffee",
+  exchange: "exchange",
+  nightlife: "nightlife",
+  restaurant: "localFood",
   other: "exchange",
 };
 
