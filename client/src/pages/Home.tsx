@@ -952,7 +952,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-primary/5" />
         <div className="container mx-auto px-4 py-4 relative z-10">
           {isAuthLoading ? null : isAuthenticated ? (
-            <div className="flex items-center gap-1 flex-wrap mb-2">
+            <div className="flex items-center gap-1 flex-wrap mb-2 justify-end">
               {isAdmin && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -1022,7 +1022,7 @@ export default function Home() {
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-1 flex-wrap mb-2">
+            <div className="flex items-center gap-1 flex-wrap mb-2 justify-end">
               <a href="/api/auth/kakao" data-testid="button-login-kakao">
                 <Button
                   size="sm"
