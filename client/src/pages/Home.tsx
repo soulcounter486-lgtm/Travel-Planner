@@ -1031,7 +1031,7 @@ export default function Home() {
                         <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.683 1.74 5.028 4.348 6.385-.19.71-.69 2.576-.788 2.976-.12.49.18.483.379.352.156-.103 2.484-1.69 3.502-2.378.85.126 1.723.192 2.559.192 5.523 0 10-3.463 10-7.714C22 6.463 17.523 3 12 3z"/>
                         </svg>
-                        카카오로그인
+                        카톡로그인
                       </Button>
                     </a>
                     <a href="/api/login" data-testid="button-login">
