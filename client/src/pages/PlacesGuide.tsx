@@ -1679,7 +1679,9 @@ export default function PlacesGuide() {
     // 선택된 카테고리에 따라 필터링
     const filteredPlaces = selectedMapCategories.size === 0 
       ? allPlaces 
-      : allPlaces.filter(place => selectedMapCategories.has(place.categoryId));
+      : selectedMapCategories.has("partner")
+        ? allPlaces.filter(place => place.isPartner)
+        : allPlaces.filter(place => selectedMapCategories.has(place.categoryId));
     
     // 좌표가 있는 장소들에 마커 추가
     let placesWithCoords = 0;
@@ -2027,6 +2029,28 @@ export default function PlacesGuide() {
                   data-testid="map-filter-all"
                 >
                   <span className="text-[10px] font-medium">{language === "ko" ? "전체" : "All"}</span>
+                </button>
+                {/* 도깨비 파트너 필터 버튼 */}
+                <button
+                  onClick={() => {
+                    const newSet = new Set(selectedMapCategories);
+                    if (newSet.has("partner")) {
+                      newSet.delete("partner");
+                    } else {
+                      newSet.clear();
+                      newSet.add("partner");
+                    }
+                    setSelectedMapCategories(newSet);
+                  }}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-all ${
+                    selectedMapCategories.has("partner")
+                      ? "ring-2 ring-offset-1 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-amber-500"
+                      : "opacity-80 hover:opacity-100 border-amber-500"
+                  }`}
+                  data-testid="map-filter-partner"
+                >
+                  <span className="text-[10px]">🏆</span>
+                  <span className="text-[10px] font-bold">{language === "ko" ? "도깨비 파트너" : "Dokkaebi Partner"}</span>
                 </button>
                 {[
                   { id: "attractions", color: "#3b82f6", label: language === "ko" ? "관광명소" : "Attractions" },
