@@ -1011,14 +1011,14 @@ export default function Home() {
                       </DropdownMenu>
                     )}
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="outline"
                       onClick={() => logout()}
-                      className="shrink-0 rounded-full h-6 px-2 text-[10px]"
+                      className="shrink-0 rounded-full h-6 w-6"
                       data-testid="button-logout"
+                      title={language === "ko" ? "로그아웃" : "Logout"}
                     >
-                      <LogOut className="w-3 h-3 mr-1" />
-                      {language === "ko" ? "로그아웃" : "Logout"}
+                      <LogOut className="w-3 h-3" />
                     </Button>
                   </div>
                 ) : (
