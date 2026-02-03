@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Place as DBPlace } from "@shared/schema";
@@ -1466,6 +1469,7 @@ export default function PlacesGuide() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
 
   // DB에서 장소 데이터 가져오기
   const { data: dbPlaces = [] } = useQuery<DBPlace[]>({
@@ -1624,12 +1628,25 @@ export default function PlacesGuide() {
         center,
         zoom: 13,
         zoomControl: true,
+        preferCanvas: true, // 성능 향상
       });
       
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
       }).addTo(map);
+      
+      // 마커 클러스터 그룹 생성
+      const clusterGroup = (L as any).markerClusterGroup({
+        maxClusterRadius: 50, // 클러스터 반경
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 16, // 줌 16 이상에서는 클러스터링 해제
+        chunkedLoading: true, // 청크 로딩으로 성능 향상
+      });
+      map.addLayer(clusterGroup);
+      clusterGroupRef.current = clusterGroup;
       
       mapRef.current = map;
       
@@ -1640,6 +1657,10 @@ export default function PlacesGuide() {
     }
     
     return () => {
+      if (clusterGroupRef.current) {
+        clusterGroupRef.current.clearLayers();
+        clusterGroupRef.current = null;
+      }
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -1649,9 +1670,10 @@ export default function PlacesGuide() {
 
   // 마커 업데이트
   useEffect(() => {
-    if (!mapRef.current || viewMode !== "map") return;
+    if (!mapRef.current || !clusterGroupRef.current || viewMode !== "map") return;
     
-    markersRef.current.forEach(marker => marker.remove());
+    // 클러스터 그룹 클리어
+    clusterGroupRef.current.clearLayers();
     markersRef.current = [];
     
     // 선택된 카테고리에 따라 필터링
@@ -1775,7 +1797,6 @@ export default function PlacesGuide() {
       `;
       
       const marker = L.marker([lat, lng], { icon: customIcon })
-        .addTo(mapRef.current!)
         .bindPopup(popupHtml, {
           maxWidth: 300,
           className: 'custom-popup'
@@ -1787,6 +1808,8 @@ export default function PlacesGuide() {
         offset: [0, -40]
       });
       
+      // 클러스터 그룹에 마커 추가
+      clusterGroupRef.current!.addLayer(marker);
       markersRef.current.push(marker);
     });
     
