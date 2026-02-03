@@ -151,7 +151,23 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Google OAuth 또는 Kakao 사용자는 별도 토큰 갱신 없이 통과
+  if (user.provider === "google" || user.provider === "kakao") {
+    // expires_at이 없거나 아직 유효하면 통과
+    const now = Math.floor(Date.now() / 1000);
+    if (!user.expires_at || now <= user.expires_at) {
+      return next();
+    }
+    // 만료됐으면 재로그인 필요
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Replit Auth 사용자
+  if (!user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
