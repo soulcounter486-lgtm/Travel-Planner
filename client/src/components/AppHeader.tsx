@@ -33,7 +33,7 @@ export function AppHeader() {
     <div className="relative bg-white border-b border-border/40">
       <div className="absolute inset-0 bg-primary/5" />
       <div className="container mx-auto px-4 py-3 relative z-10">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl flex items-center gap-3">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
           <div className="flex flex-col items-center shrink-0">
             <a 
               href="/vungtau-dokkaebi.apk" 
