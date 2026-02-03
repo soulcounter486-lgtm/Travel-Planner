@@ -1572,11 +1572,11 @@ export default function Home() {
                         <>
                           <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200">
                             <span className="text-amber-500 mt-0.5">📌</span>
-                            <span>{villaPriceNote}</span>
+                            <span className="whitespace-pre-line">{villaPriceNote}</span>
                           </div>
                           <div className="flex items-start gap-2 text-xs text-green-700 bg-green-50 p-2 rounded-lg border border-green-200">
                             <span className="text-green-500 mt-0.5">💰</span>
-                            <span>{lowestPriceGuarantee}</span>
+                            <span className="whitespace-pre-line">{lowestPriceGuarantee}</span>
                           </div>
                           {isAdmin && (
                             <Button
