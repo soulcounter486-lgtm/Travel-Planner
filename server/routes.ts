@@ -931,8 +931,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     return koreaTime.toISOString().split("T")[0];
   };
 
-  // Helper function to get random count between 4000 and 6000
-  const getRandomBaseCount = () => Math.floor(Math.random() * 2001) + 4000;
+  // Helper function to get random count between 600 and 1500
+  const getRandomBaseCount = () => Math.floor(Math.random() * 901) + 600;
 
   app.get("/api/visitor-count", async (req, res) => {
     try {
