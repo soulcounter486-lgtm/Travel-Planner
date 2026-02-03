@@ -39,6 +39,7 @@ interface UserCoupon {
 export default function MyPage() {
   const { toast } = useToast();
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [couponToUse, setCouponToUse] = useState<UserCoupon | null>(null);
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -79,9 +80,20 @@ export default function MyPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/my-coupons"] });
       queryClient.invalidateQueries({ queryKey: ["/api/my-notifications"] });
-      toast({ title: "쿠폰이 사용 처리되었습니다" });
+      setCouponToUse(null);
+      toast({ title: "쿠폰이 사용 처리되었습니다", description: "할인이 적용됩니다!" });
     },
   });
+
+  const handleUseCoupon = (coupon: UserCoupon) => {
+    setCouponToUse(coupon);
+  };
+
+  const confirmUseCoupon = () => {
+    if (couponToUse) {
+      useCouponMutation.mutate(couponToUse.id);
+    }
+  };
 
   const handleOpenMessage = (msg: Message) => {
     setSelectedMessage(msg);
@@ -266,7 +278,7 @@ export default function MyPage() {
                               size="sm"
                               variant="outline"
                               className="shrink-0 h-7 text-xs"
-                              onClick={() => useCouponMutation.mutate(coupon.id)}
+                              onClick={() => handleUseCoupon(coupon)}
                               disabled={useCouponMutation.isPending}
                               data-testid={`button-use-coupon-${coupon.id}`}
                             >
@@ -295,6 +307,53 @@ export default function MyPage() {
             </p>
             <div className="p-3 bg-muted/30 rounded-lg min-h-[100px]">
               <p className="text-sm whitespace-pre-wrap">{selectedMessage?.content}</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!couponToUse} onOpenChange={() => setCouponToUse(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-lg text-center">쿠폰 사용 확인</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                <Gift className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="font-bold text-lg mb-1">{couponToUse?.name}</h3>
+              <Badge variant="default" className="text-sm px-3 py-1">
+                {couponToUse?.discountType === "percent"
+                  ? `${couponToUse?.discountValue}% 할인`
+                  : `${couponToUse?.discountValue?.toLocaleString()}원 할인`}
+              </Badge>
+              {couponToUse?.description && (
+                <p className="text-sm text-muted-foreground mt-3">{couponToUse.description}</p>
+              )}
+            </div>
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-center">
+              <p className="text-sm text-destructive font-medium">
+                사용 후에는 취소할 수 없습니다
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setCouponToUse(null)}
+                data-testid="button-cancel-coupon"
+              >
+                취소
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={confirmUseCoupon}
+                disabled={useCouponMutation.isPending}
+                data-testid="button-confirm-coupon"
+              >
+                {useCouponMutation.isPending ? "처리 중..." : "사용하기"}
+              </Button>
             </div>
           </div>
         </DialogContent>
