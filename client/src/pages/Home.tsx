@@ -46,7 +46,7 @@ function isVietnamHoliday(date: Date): boolean {
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 
 import { useLanguage } from "@/lib/i18n";
@@ -103,7 +103,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List } from "lucide-react";
+import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil } from "lucide-react";
 import type { Villa, VillaAmenity } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -117,6 +117,15 @@ export default function Home() {
   const { data: villas = [] } = useQuery<Villa[]>({
     queryKey: ["/api/villas"],
   });
+  
+  // 사이트 설정 조회
+  const { data: siteSettingsData = {} } = useQuery<Record<string, string>>({
+    queryKey: ["/api/site-settings"],
+  });
+  
+  // 기본값 설정
+  const villaPriceNote = siteSettingsData["villa_price_note"] || "가격은 방 오픈 갯수와 성수기(6,7,8,9월) 공휴일에 따라 상이 할 수 있습니다.";
+  const lowestPriceGuarantee = siteSettingsData["lowest_price_guarantee"] || "최저가 보장! 어플가격이 더 싸다면 링크 보내주시면 더 저렴하게 부킹 해 드립니다.";
   const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
   const [amenityFilters, setAmenityFilters] = useState<VillaAmenity[]>([]);
   const [showAmenityFilters, setShowAmenityFilters] = useState(false);
@@ -167,6 +176,22 @@ export default function Home() {
   const [realTotalVisitorCount, setRealTotalVisitorCount] = useState<number>(0);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+  
+  // 관리자 공지사항 수정 상태
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [editPriceNote, setEditPriceNote] = useState("");
+  const [editLowestPriceGuarantee, setEditLowestPriceGuarantee] = useState("");
+  
+  // 공지사항 수정 mutation
+  const updateSettingMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      const res = await apiRequest("PUT", "/api/admin/site-settings", { key, value });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/site-settings"] });
+    }
+  });
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -1500,14 +1525,76 @@ export default function Home() {
                       <strong> {t("villa.holiday") || "공휴일"}:</strong> ${selectedVilla?.holidayPrice ?? 550}
                     </p>
                     <div className="mt-3 space-y-2">
-                      <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200">
-                        <span className="text-amber-500 mt-0.5">📌</span>
-                        <span>가격은 방 오픈 갯수와 성수기(6,7,8,9월) 공휴일에 따라 상이 할 수 있습니다.</span>
-                      </div>
-                      <div className="flex items-start gap-2 text-xs text-green-700 bg-green-50 p-2 rounded-lg border border-green-200">
-                        <span className="text-green-500 mt-0.5">💰</span>
-                        <span><strong>최저가 보장!</strong> 어플가격이 더 싸다면 링크 보내주시면 더 저렴하게 부킹 해 드립니다.</span>
-                      </div>
+                      {isEditingNotes ? (
+                        <>
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-600">가격 안내 문구</label>
+                            <textarea
+                              value={editPriceNote}
+                              onChange={(e) => setEditPriceNote(e.target.value)}
+                              className="w-full text-xs p-2 rounded-lg border border-amber-200 bg-amber-50 text-amber-700"
+                              rows={2}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-600">최저가 보장 문구</label>
+                            <textarea
+                              value={editLowestPriceGuarantee}
+                              onChange={(e) => setEditLowestPriceGuarantee(e.target.value)}
+                              className="w-full text-xs p-2 rounded-lg border border-green-200 bg-green-50 text-green-700"
+                              rows={2}
+                            />
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              onClick={async () => {
+                                await updateSettingMutation.mutateAsync({ key: "villa_price_note", value: editPriceNote });
+                                await updateSettingMutation.mutateAsync({ key: "lowest_price_guarantee", value: editLowestPriceGuarantee });
+                                setIsEditingNotes(false);
+                                toast({ title: "저장 완료" });
+                              }}
+                              disabled={updateSettingMutation.isPending}
+                            >
+                              {updateSettingMutation.isPending ? "저장 중..." : "저장"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setIsEditingNotes(false)}
+                            >
+                              취소
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                            <span className="text-amber-500 mt-0.5">📌</span>
+                            <span>{villaPriceNote}</span>
+                          </div>
+                          <div className="flex items-start gap-2 text-xs text-green-700 bg-green-50 p-2 rounded-lg border border-green-200">
+                            <span className="text-green-500 mt-0.5">💰</span>
+                            <span>{lowestPriceGuarantee}</span>
+                          </div>
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-xs text-slate-500 h-6"
+                              onClick={() => {
+                                setEditPriceNote(villaPriceNote);
+                                setEditLowestPriceGuarantee(lowestPriceGuarantee);
+                                setIsEditingNotes(true);
+                              }}
+                            >
+                              <Pencil className="w-3 h-3 mr-1" />
+                              문구 수정 (관리자)
+                            </Button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                   {(villaEstimate.price > 0 || (loadedQuoteId && breakdown?.villa?.price)) && (

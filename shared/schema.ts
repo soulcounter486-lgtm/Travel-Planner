@@ -331,3 +331,16 @@ export const insertPlaceSchema = createInsertSchema(places).omit({ id: true, cre
 
 export type Place = typeof places.$inferSelect;
 export type InsertPlace = z.infer<typeof insertPlaceSchema>;
+
+// 사이트 설정 (관리자가 수정 가능한 텍스트 등)
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(), // 설정 키 (예: "villa_price_note", "lowest_price_guarantee")
+  value: text("value").notNull(), // 설정 값
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSiteSettingSchema = createInsertSchema(siteSettings).omit({ id: true, updatedAt: true });
+
+export type SiteSetting = typeof siteSettings.$inferSelect;
+export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;

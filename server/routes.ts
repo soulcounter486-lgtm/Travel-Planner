@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, siteSettings } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -2843,6 +2843,56 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     } catch (error) {
       console.error("Serve public image error:", error);
       res.status(500).json({ error: "Failed to serve image" });
+    }
+  });
+
+  // ============ 사이트 설정 API ============
+  
+  // 모든 설정 조회
+  app.get("/api/site-settings", async (req, res) => {
+    try {
+      const settings = await db.select().from(siteSettings);
+      const settingsMap: Record<string, string> = {};
+      settings.forEach(s => {
+        settingsMap[s.key] = s.value;
+      });
+      res.json(settingsMap);
+    } catch (error) {
+      console.error("Get site settings error:", error);
+      res.status(500).json({ error: "Failed to get site settings" });
+    }
+  });
+
+  // 설정 업데이트 (관리자 전용)
+  app.put("/api/admin/site-settings", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const { key, value } = req.body;
+      if (!key || value === undefined) {
+        return res.status(400).json({ error: "key와 value가 필요합니다" });
+      }
+
+      // upsert - 있으면 업데이트, 없으면 생성
+      const existing = await db.select().from(siteSettings).where(eq(siteSettings.key, key));
+      
+      if (existing.length > 0) {
+        await db.update(siteSettings)
+          .set({ value, updatedAt: new Date() })
+          .where(eq(siteSettings.key, key));
+      } else {
+        await db.insert(siteSettings).values({ key, value });
+      }
+      
+      res.json({ success: true, key, value });
+    } catch (error) {
+      console.error("Update site setting error:", error);
+      res.status(500).json({ error: "Failed to update site setting" });
     }
   });
 
