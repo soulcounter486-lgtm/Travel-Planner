@@ -72,41 +72,29 @@ export async function setupGoogleAuth(app: Express) {
     });
   });
 
+  // 테스트용 콜백 - JSON 응답 반환
   app.get("/api/auth/google/callback", (req, res, next) => {
-    console.log("Google callback received, query:", req.query);
-    console.log("Callback session ID:", req.sessionID);
     const returnTo = (req.session as any).returnTo || "/";
     
     passport.authenticate("google", (err: any, user: any, info: any) => {
-      console.log("Google authenticate result - err:", err, "user:", user ? "exists" : "null", "info:", info);
-      
       if (err) {
-        console.error("Google auth error:", err);
-        return res.redirect("/?error=google_auth_error&message=" + encodeURIComponent(err.message || "Unknown error"));
+        return res.json({ step: "authenticate", error: err.message, info });
       }
       if (!user) {
-        console.log("Google auth failed - no user:", info);
-        return res.redirect("/?error=google_no_user&message=" + encodeURIComponent(JSON.stringify(info) || "No user"));
+        return res.json({ step: "no_user", info: JSON.stringify(info) });
       }
       
       req.logIn(user, (loginErr) => {
         if (loginErr) {
-          console.error("Login error:", loginErr);
-          return res.redirect("/?error=login_error&message=" + encodeURIComponent(loginErr.message || "Login failed"));
+          return res.json({ step: "login", error: loginErr.message });
         }
         
-        console.log("Google login successful for:", user.claims?.email);
-        console.log("Session after login - ID:", req.sessionID, "passport:", (req.session as any).passport);
-        
-        // 세션을 명시적으로 저장
         req.session.save((saveErr) => {
           if (saveErr) {
-            console.error("Session save error after login:", saveErr);
-            return res.redirect("/?error=session_error&message=" + encodeURIComponent(saveErr.message || "Session save failed"));
+            return res.json({ step: "save", error: saveErr.message });
           }
-          console.log("Session saved successfully, redirecting to:", returnTo);
-          // 성공 시 세션 ID를 URL에 포함하여 디버그
-          res.redirect("/?login=success&sid=" + req.sessionID);
+          // 성공 시 리다이렉트
+          res.redirect("/?login=success&email=" + encodeURIComponent(user.claims?.email || "unknown"));
         });
       });
     })(req, res, next);
