@@ -3618,8 +3618,16 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
-      const parsed = insertCouponSchema.safeParse(req.body);
+      // 날짜 문자열을 Date 객체로 변환
+      const body = {
+        ...req.body,
+        validUntil: req.body.validUntil ? new Date(req.body.validUntil) : null,
+        validFrom: req.body.validFrom ? new Date(req.body.validFrom) : null,
+      };
+
+      const parsed = insertCouponSchema.safeParse(body);
       if (!parsed.success) {
+        console.error("쿠폰 생성 검증 오류:", parsed.error);
         return res.status(400).json({ error: "잘못된 요청", details: parsed.error });
       }
 
