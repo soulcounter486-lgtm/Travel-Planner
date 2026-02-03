@@ -52,6 +52,44 @@ export default function MyPage() {
     enabled: isAuthenticated,
   });
 
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/my-messages/${id}/read`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-messages"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-notifications"] });
+    },
+  });
+
+  const useCouponMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/my-coupons/${id}/use`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-coupons"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-notifications"] });
+      toast({ title: "쿠폰이 사용 처리되었습니다" });
+    },
+  });
+
+  const handleOpenMessage = (msg: Message) => {
+    setSelectedMessage(msg);
+    if (!msg.isRead) {
+      markAsReadMutation.mutate(msg.id);
+    }
+  };
+
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -92,44 +130,6 @@ export default function MyPage() {
       </div>
     );
   }
-
-  const markAsReadMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`/api/my-messages/${id}/read`, {
-        method: "PATCH",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/my-messages"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/my-notifications"] });
-    },
-  });
-
-  const useCouponMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await fetch(`/api/my-coupons/${id}/use`, {
-        method: "PATCH",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/my-coupons"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/my-notifications"] });
-      toast({ title: "쿠폰이 사용 처리되었습니다" });
-    },
-  });
-
-  const handleOpenMessage = (msg: Message) => {
-    setSelectedMessage(msg);
-    if (!msg.isRead) {
-      markAsReadMutation.mutate(msg.id);
-    }
-  };
 
   const unreadCount = messages.filter((m) => !m.isRead).length;
   const unusedCouponCount = coupons.filter((c) => !c.isUsed).length;
