@@ -186,6 +186,16 @@ export default function AdminMembers() {
   });
 
   const [newAnnouncementOpen, setNewAnnouncementOpen] = useState(false);
+  const [editCouponOpen, setEditCouponOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [editCouponForm, setEditCouponForm] = useState({
+    name: "",
+    description: "",
+    discountType: "percent",
+    discountValue: 10,
+    validFrom: "",
+    validUntil: "",
+  });
   const [announcementForm, setAnnouncementForm] = useState({
     title: "",
     content: "",
@@ -349,6 +359,38 @@ export default function AdminMembers() {
       toast({ title: "쿠폰이 삭제되었습니다" });
     },
   });
+
+  const updateCouponMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: typeof editCouponForm }) => {
+      const res = await fetch(`/api/admin/coupons/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+      setEditCouponOpen(false);
+      setEditingCoupon(null);
+      toast({ title: "쿠폰이 수정되었습니다" });
+    },
+  });
+
+  const handleEditCoupon = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setEditCouponForm({
+      name: coupon.name,
+      description: coupon.description || "",
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      validFrom: coupon.validFrom ? coupon.validFrom.split("T")[0] : "",
+      validUntil: coupon.validUntil ? coupon.validUntil.split("T")[0] : "",
+    });
+    setEditCouponOpen(true);
+  };
 
   const createAnnouncementMutation = useMutation({
     mutationFn: async (data: typeof announcementForm) => {
@@ -672,20 +714,117 @@ export default function AdminMembers() {
                             </p>
                           )}
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-red-500 hover:text-red-600"
-                          onClick={() => deleteCouponMutation.mutate(coupon.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2"
+                            onClick={() => handleEditCoupon(coupon)}
+                            data-testid={`button-edit-coupon-${coupon.id}`}
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-red-500 hover:text-red-600"
+                            onClick={() => deleteCouponMutation.mutate(coupon.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </CardContent>
             </Card>
+
+            {/* 쿠폰 수정 다이얼로그 */}
+            <Dialog open={editCouponOpen} onOpenChange={setEditCouponOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="text-base">쿠폰 수정</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs">쿠폰명</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      value={editCouponForm.name}
+                      onChange={(e) => setEditCouponForm({ ...editCouponForm, name: e.target.value })}
+                      data-testid="input-edit-coupon-name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">설명</Label>
+                    <Textarea
+                      className="text-sm min-h-[60px]"
+                      value={editCouponForm.description}
+                      onChange={(e) => setEditCouponForm({ ...editCouponForm, description: e.target.value })}
+                      data-testid="input-edit-coupon-description"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">할인유형</Label>
+                      <Select
+                        value={editCouponForm.discountType}
+                        onValueChange={(v) => setEditCouponForm({ ...editCouponForm, discountType: v })}
+                      >
+                        <SelectTrigger className="h-8 text-sm" data-testid="select-edit-discount-type">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percent">%</SelectItem>
+                          <SelectItem value="fixed">원</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs">할인값</Label>
+                      <Input
+                        type="number"
+                        className="h-8 text-sm"
+                        value={editCouponForm.discountValue}
+                        onChange={(e) => setEditCouponForm({ ...editCouponForm, discountValue: Number(e.target.value) })}
+                        data-testid="input-edit-discount-value"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">시작일</Label>
+                      <Input
+                        type="date"
+                        className="h-8 text-sm"
+                        value={editCouponForm.validFrom}
+                        onChange={(e) => setEditCouponForm({ ...editCouponForm, validFrom: e.target.value })}
+                        data-testid="input-edit-valid-from"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">종료일</Label>
+                      <Input
+                        type="date"
+                        className="h-8 text-sm"
+                        value={editCouponForm.validUntil}
+                        onChange={(e) => setEditCouponForm({ ...editCouponForm, validUntil: e.target.value })}
+                        data-testid="input-edit-valid-until"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => editingCoupon && updateCouponMutation.mutate({ id: editingCoupon.id, data: editCouponForm })}
+                    disabled={updateCouponMutation.isPending}
+                    data-testid="button-save-coupon"
+                  >
+                    {updateCouponMutation.isPending ? "저장 중..." : "저장"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="announcements" className="mt-0">
