@@ -72,29 +72,30 @@ export async function setupGoogleAuth(app: Express) {
     });
   });
 
-  // 테스트용 콜백 - JSON 응답 반환
   app.get("/api/auth/google/callback", (req, res, next) => {
     const returnTo = (req.session as any).returnTo || "/";
     
     passport.authenticate("google", (err: any, user: any, info: any) => {
       if (err) {
-        return res.json({ step: "authenticate", error: err.message, info });
+        console.error("Google auth error:", err);
+        return res.redirect("/?error=auth&message=" + encodeURIComponent(err.message || "Unknown error"));
       }
       if (!user) {
-        return res.json({ step: "no_user", info: JSON.stringify(info) });
+        return res.redirect("/?error=no_user");
       }
       
       req.logIn(user, (loginErr) => {
         if (loginErr) {
-          return res.json({ step: "login", error: loginErr.message });
+          console.error("Login error:", loginErr);
+          return res.redirect("/?error=login&message=" + encodeURIComponent(loginErr.message || "Login failed"));
         }
         
         req.session.save((saveErr) => {
           if (saveErr) {
-            return res.json({ step: "save", error: saveErr.message });
+            console.error("Session save error:", saveErr);
+            return res.redirect("/?error=session");
           }
-          // 성공 시 리다이렉트
-          res.redirect("/?login=success&email=" + encodeURIComponent(user.claims?.email || "unknown"));
+          res.redirect(returnTo);
         });
       });
     })(req, res, next);
