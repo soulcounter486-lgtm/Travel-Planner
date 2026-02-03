@@ -49,7 +49,7 @@ export function AppHeader() {
       <div className="container mx-auto px-4 py-2 relative z-10">
         {/* 로그인/관리자 버튼 - 제목 위에 한 줄로 배치 */}
         {isAuthLoading ? null : (
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-end gap-1 mb-2 flex-wrap">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-end gap-1 mb-2 overflow-x-auto">
             {isAuthenticated ? (
               <>
                 {isAdmin && (
