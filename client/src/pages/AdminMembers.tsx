@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, CheckCircle2, Clock } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, CheckCircle2, Clock, Megaphone } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -32,9 +32,9 @@ import {
 interface User {
   id: string;
   email: string;
-  name?: string;
-  profileImage?: string;
-  provider?: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
   createdAt?: string;
 }
 
@@ -75,6 +75,8 @@ export default function AdminMembers() {
   const [messageContent, setMessageContent] = useState("");
   const [sendCouponOpen, setSendCouponOpen] = useState(false);
   const [selectedCouponId, setSelectedCouponId] = useState<string>("");
+  const [broadcastMessageOpen, setBroadcastMessageOpen] = useState(false);
+  const [broadcastCouponOpen, setBroadcastCouponOpen] = useState(false);
 
   const [newCouponOpen, setNewCouponOpen] = useState(false);
   const [couponForm, setCouponForm] = useState({
@@ -91,7 +93,7 @@ export default function AdminMembers() {
     content: "",
     imageUrl: "",
     linkUrl: "",
-    type: "banner",
+    type: "notice",
     isActive: true,
     sortOrder: 0,
   });
@@ -134,6 +136,28 @@ export default function AdminMembers() {
     },
   });
 
+  const broadcastMessageMutation = useMutation({
+    mutationFn: async (data: { title: string; content: string }) => {
+      const res = await fetch("/api/admin/messages/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setBroadcastMessageOpen(false);
+      setMessageTitle("");
+      setMessageContent("");
+      toast({ title: `전체 ${data.sentCount}명에게 쪽지 발송 완료` });
+    },
+    onError: () => {
+      toast({ title: "전체 쪽지 발송 실패", variant: "destructive" });
+    },
+  });
+
   const sendCouponMutation = useMutation({
     mutationFn: async (data: { userId: string; couponId: number }) => {
       const res = await fetch("/api/admin/user-coupons", {
@@ -153,6 +177,27 @@ export default function AdminMembers() {
     },
     onError: () => {
       toast({ title: "쿠폰 발급 실패", variant: "destructive" });
+    },
+  });
+
+  const broadcastCouponMutation = useMutation({
+    mutationFn: async (data: { couponId: number }) => {
+      const res = await fetch("/api/admin/user-coupons/broadcast", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setBroadcastCouponOpen(false);
+      setSelectedCouponId("");
+      toast({ title: `전체 ${data.issuedCount}명에게 쿠폰 발급 완료` });
+    },
+    onError: () => {
+      toast({ title: "전체 쿠폰 발급 실패", variant: "destructive" });
     },
   });
 
@@ -210,7 +255,7 @@ export default function AdminMembers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/announcements"] });
       setNewAnnouncementOpen(false);
-      setAnnouncementForm({ title: "", content: "", imageUrl: "", linkUrl: "", type: "banner", isActive: true, sortOrder: 0 });
+      setAnnouncementForm({ title: "", content: "", imageUrl: "", linkUrl: "", type: "notice", isActive: true, sortOrder: 0 });
       toast({ title: "공지사항이 생성되었습니다" });
     },
     onError: () => {
@@ -259,85 +304,94 @@ export default function AdminMembers() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto p-4">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="max-w-4xl mx-auto p-2 sm:p-4">
+        <div className="flex items-center gap-2 mb-3">
           <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">관리자 대시보드</h1>
+          <h1 className="text-lg sm:text-xl font-bold">관리자</h1>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="members" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              회원 관리
+          <TabsList className="grid w-full grid-cols-3 h-9 mb-3">
+            <TabsTrigger value="members" className="text-xs px-1">
+              <Users className="w-3 h-3 mr-1" />
+              회원
             </TabsTrigger>
-            <TabsTrigger value="coupons" className="flex items-center gap-2">
-              <Ticket className="w-4 h-4" />
-              쿠폰 관리
+            <TabsTrigger value="coupons" className="text-xs px-1">
+              <Ticket className="w-3 h-3 mr-1" />
+              쿠폰
             </TabsTrigger>
-            <TabsTrigger value="announcements" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
-              공지 관리
+            <TabsTrigger value="announcements" className="text-xs px-1">
+              <Bell className="w-3 h-3 mr-1" />
+              공지
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="members">
+          <TabsContent value="members" className="mt-0">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  전체 회원 ({members.length}명)
-                </CardTitle>
+              <CardHeader className="p-3 pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    회원 ({members.length}명)
+                  </CardTitle>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="default" className="h-7 text-xs" onClick={() => setBroadcastMessageOpen(true)}>
+                      <Megaphone className="w-3 h-3 mr-1" />
+                      전체 쪽지
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setBroadcastCouponOpen(true)}>
+                      <Gift className="w-3 h-3 mr-1" />
+                      전체 쿠폰
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-2 pt-0">
                 {membersLoading ? (
-                  <p className="text-muted-foreground">로딩 중...</p>
+                  <p className="text-muted-foreground text-sm p-2">로딩 중...</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-1 max-h-[60vh] overflow-y-auto">
                     {members.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          {member.profileImage ? (
-                            <img src={member.profileImage} alt="" className="w-10 h-10 rounded-full" />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                              <Users className="w-5 h-5 text-primary" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium">{member.name || "이름 없음"}</p>
-                            <p className="text-sm text-muted-foreground">{member.email}</p>
+                      <div key={member.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                            {member.profileImageUrl ? (
+                              <img src={member.profileImageUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                            ) : (
+                              <Users className="w-3 h-3 text-primary" />
+                            )}
                           </div>
-                          <Badge variant="outline" className="ml-2">
-                            {member.provider === "kakao" ? "카카오" : "Replit"}
-                          </Badge>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium truncate">{member.firstName || member.email?.split("@")[0] || "이름없음"}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
+                          </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 flex-shrink-0">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
+                            className="h-6 px-2 text-[10px]"
                             onClick={() => {
                               setSelectedUser(member);
                               setSendMessageOpen(true);
                             }}
                           >
-                            <MessageSquare className="w-4 h-4 mr-1" />
-                            쪽지
+                            <MessageSquare className="w-3 h-3" />
                           </Button>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
+                            className="h-6 px-2 text-[10px]"
                             onClick={() => {
                               setSelectedUser(member);
                               setSendCouponOpen(true);
                             }}
                           >
-                            <Gift className="w-4 h-4 mr-1" />
-                            쿠폰
+                            <Gift className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>
@@ -348,117 +402,117 @@ export default function AdminMembers() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="coupons">
+          <TabsContent value="coupons" className="mt-0">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Ticket className="w-5 h-5" />
-                  쿠폰 목록
+              <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-1">
+                  <Ticket className="w-4 h-4" />
+                  쿠폰 ({allCoupons.length}개)
                 </CardTitle>
                 <Dialog open={newCouponOpen} onOpenChange={setNewCouponOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Plus className="w-4 h-4 mr-1" />
+                    <Button size="sm" className="h-7 text-xs">
+                      <Plus className="w-3 h-3 mr-1" />
                       새 쿠폰
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-sm">
                     <DialogHeader>
-                      <DialogTitle>새 쿠폰 생성</DialogTitle>
+                      <DialogTitle className="text-base">새 쿠폰 생성</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div>
-                        <Label>쿠폰 이름</Label>
+                        <Label className="text-xs">쿠폰 이름</Label>
                         <Input
+                          className="h-8 text-sm"
                           value={couponForm.name}
                           onChange={(e) => setCouponForm({ ...couponForm, name: e.target.value })}
                           placeholder="예: 첫 방문 10% 할인"
                         />
                       </div>
                       <div>
-                        <Label>설명</Label>
+                        <Label className="text-xs">설명</Label>
                         <Textarea
+                          className="text-sm min-h-[60px]"
                           value={couponForm.description}
                           onChange={(e) => setCouponForm({ ...couponForm, description: e.target.value })}
-                          placeholder="쿠폰 설명..."
+                          placeholder="쿠폰 설명"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <Label>할인 유형</Label>
+                          <Label className="text-xs">할인 유형</Label>
                           <Select
                             value={couponForm.discountType}
                             onValueChange={(v) => setCouponForm({ ...couponForm, discountType: v })}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger className="h-8 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="percent">퍼센트 (%)</SelectItem>
-                              <SelectItem value="fixed">정액 (원)</SelectItem>
+                              <SelectItem value="percent">% 할인</SelectItem>
+                              <SelectItem value="fixed">금액 할인</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label>할인 값</Label>
+                          <Label className="text-xs">할인값</Label>
                           <Input
                             type="number"
+                            className="h-8 text-sm"
                             value={couponForm.discountValue}
-                            onChange={(e) => setCouponForm({ ...couponForm, discountValue: parseInt(e.target.value) || 0 })}
+                            onChange={(e) => setCouponForm({ ...couponForm, discountValue: Number(e.target.value) })}
                           />
                         </div>
                       </div>
                       <div>
-                        <Label>유효기간</Label>
+                        <Label className="text-xs">유효기간</Label>
                         <Input
                           type="date"
+                          className="h-8 text-sm"
                           value={couponForm.validUntil}
                           onChange={(e) => setCouponForm({ ...couponForm, validUntil: e.target.value })}
                         />
                       </div>
                       <Button
-                        className="w-full"
+                        className="w-full h-8 text-sm"
                         onClick={() => createCouponMutation.mutate(couponForm)}
                         disabled={!couponForm.name || createCouponMutation.isPending}
                       >
-                        생성하기
+                        생성
                       </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-2 pt-0">
                 {couponsLoading ? (
-                  <p className="text-muted-foreground">로딩 중...</p>
-                ) : allCoupons.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">등록된 쿠폰이 없습니다</p>
+                  <p className="text-muted-foreground text-sm p-2">로딩 중...</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-1 max-h-[60vh] overflow-y-auto">
                     {allCoupons.map((coupon) => (
-                      <div key={coupon.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                        <div>
-                          <p className="font-medium">{coupon.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {coupon.discountType === "percent" ? `${coupon.discountValue}% 할인` : `${coupon.discountValue.toLocaleString()}원 할인`}
-                          </p>
+                      <div key={coupon.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1">
+                            <span className="font-medium">{coupon.name}</span>
+                            <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                              {coupon.discountType === "percent" ? `${coupon.discountValue}%` : `${coupon.discountValue.toLocaleString()}원`}
+                            </Badge>
+                          </div>
                           {coupon.validUntil && (
-                            <p className="text-xs text-muted-foreground">
-                              ~ {format(new Date(coupon.validUntil), "yyyy.MM.dd", { locale: ko })}까지
+                            <p className="text-[10px] text-muted-foreground">
+                              ~{format(new Date(coupon.validUntil), "yy.MM.dd")}
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={coupon.isActive ? "default" : "secondary"}>
-                            {coupon.isActive ? "활성" : "비활성"}
-                          </Badge>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => deleteCouponMutation.mutate(coupon.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 px-2 text-red-500 hover:text-red-600"
+                          onClick={() => deleteCouponMutation.mutate(coupon.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -467,119 +521,120 @@ export default function AdminMembers() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="announcements">
+          <TabsContent value="announcements" className="mt-0">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="w-5 h-5" />
-                  공지사항/배너
+              <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-1">
+                  <Bell className="w-4 h-4" />
+                  공지 ({allAnnouncements.length}개)
                 </CardTitle>
                 <Dialog open={newAnnouncementOpen} onOpenChange={setNewAnnouncementOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Plus className="w-4 h-4 mr-1" />
+                    <Button size="sm" className="h-7 text-xs">
+                      <Plus className="w-3 h-3 mr-1" />
                       새 공지
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-sm">
                     <DialogHeader>
-                      <DialogTitle>새 공지사항</DialogTitle>
+                      <DialogTitle className="text-base">새 공지사항</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       <div>
-                        <Label>제목</Label>
+                        <Label className="text-xs">제목</Label>
                         <Input
+                          className="h-8 text-sm"
                           value={announcementForm.title}
                           onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
                           placeholder="공지 제목"
                         />
                       </div>
                       <div>
-                        <Label>내용</Label>
+                        <Label className="text-xs">내용</Label>
                         <Textarea
+                          className="text-sm min-h-[80px]"
                           value={announcementForm.content}
                           onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
-                          placeholder="공지 내용..."
+                          placeholder="공지 내용"
                         />
                       </div>
                       <div>
-                        <Label>이미지 URL (선택)</Label>
+                        <Label className="text-xs">유형</Label>
+                        <Select
+                          value={announcementForm.type}
+                          onValueChange={(v) => setAnnouncementForm({ ...announcementForm, type: v })}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="notice">공지</SelectItem>
+                            <SelectItem value="event">이벤트</SelectItem>
+                            <SelectItem value="promotion">프로모션</SelectItem>
+                            <SelectItem value="urgent">긴급</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">이미지 URL (선택)</Label>
                         <Input
+                          className="h-8 text-sm"
                           value={announcementForm.imageUrl}
                           onChange={(e) => setAnnouncementForm({ ...announcementForm, imageUrl: e.target.value })}
                           placeholder="https://..."
                         />
                       </div>
                       <div>
-                        <Label>링크 URL (선택)</Label>
+                        <Label className="text-xs">링크 URL (선택)</Label>
                         <Input
+                          className="h-8 text-sm"
                           value={announcementForm.linkUrl}
                           onChange={(e) => setAnnouncementForm({ ...announcementForm, linkUrl: e.target.value })}
-                          placeholder="클릭 시 이동할 URL"
+                          placeholder="https://..."
                         />
                       </div>
-                      <div>
-                        <Label>유형</Label>
-                        <Select
-                          value={announcementForm.type}
-                          onValueChange={(v) => setAnnouncementForm({ ...announcementForm, type: v })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="banner">배너</SelectItem>
-                            <SelectItem value="popup">팝업</SelectItem>
-                            <SelectItem value="notice">공지</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
                       <Button
-                        className="w-full"
+                        className="w-full h-8 text-sm"
                         onClick={() => createAnnouncementMutation.mutate(announcementForm)}
                         disabled={!announcementForm.title || createAnnouncementMutation.isPending}
                       >
-                        생성하기
+                        생성
                       </Button>
                     </div>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-2 pt-0">
                 {announcementsLoading ? (
-                  <p className="text-muted-foreground">로딩 중...</p>
-                ) : allAnnouncements.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">등록된 공지사항이 없습니다</p>
+                  <p className="text-muted-foreground text-sm p-2">로딩 중...</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-1 max-h-[60vh] overflow-y-auto">
                     {allAnnouncements.map((ann) => (
-                      <div key={ann.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          {ann.imageUrl && (
-                            <img src={ann.imageUrl} alt="" className="w-16 h-10 object-cover rounded" />
-                          )}
-                          <div>
-                            <p className="font-medium">{ann.title}</p>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">
-                                {ann.type === "banner" ? "배너" : ann.type === "popup" ? "팝업" : "공지"}
-                              </Badge>
-                            </div>
+                      <div key={ann.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1">
+                            <Badge variant={ann.isActive ? "default" : "secondary"} className="text-[10px] h-4 px-1">
+                              {ann.type === "notice" && "공지"}
+                              {ann.type === "event" && "이벤트"}
+                              {ann.type === "promotion" && "프로모션"}
+                              {ann.type === "urgent" && "긴급"}
+                            </Badge>
+                            <span className="font-medium truncate">{ann.title}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <Switch
                             checked={ann.isActive}
-                            onCheckedChange={(checked) =>
-                              toggleAnnouncementMutation.mutate({ id: ann.id, isActive: checked })
-                            }
+                            onCheckedChange={(checked) => toggleAnnouncementMutation.mutate({ id: ann.id, isActive: checked })}
+                            className="scale-75"
                           />
                           <Button
-                            size="icon"
+                            size="sm"
                             variant="ghost"
+                            className="h-6 px-2 text-red-500 hover:text-red-600"
                             onClick={() => deleteAnnouncementMutation.mutate(ann.id)}
                           >
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>
@@ -592,90 +647,161 @@ export default function AdminMembers() {
         </Tabs>
       </div>
 
+      {/* 개별 쪽지 발송 다이얼로그 */}
       <Dialog open={sendMessageOpen} onOpenChange={setSendMessageOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>쪽지 보내기</DialogTitle>
+            <DialogTitle className="text-base">쪽지 보내기</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              받는 사람: <strong>{selectedUser?.name || selectedUser?.email}</strong>
+              받는 사람: <span className="font-medium text-foreground">{selectedUser?.firstName || selectedUser?.email}</span>
             </p>
             <div>
-              <Label>제목</Label>
+              <Label className="text-xs">제목</Label>
               <Input
+                className="h-8 text-sm"
                 value={messageTitle}
                 onChange={(e) => setMessageTitle(e.target.value)}
                 placeholder="쪽지 제목"
               />
             </div>
             <div>
-              <Label>내용</Label>
+              <Label className="text-xs">내용</Label>
               <Textarea
+                className="text-sm min-h-[80px]"
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
-                placeholder="쪽지 내용을 입력하세요..."
-                rows={4}
+                placeholder="쪽지 내용"
               />
             </div>
             <Button
-              className="w-full"
-              onClick={() => {
-                if (selectedUser) {
-                  sendMessageMutation.mutate({
-                    receiverId: selectedUser.id,
-                    title: messageTitle,
-                    content: messageContent,
-                  });
-                }
-              }}
+              className="w-full h-8 text-sm"
+              onClick={() => selectedUser && sendMessageMutation.mutate({ receiverId: selectedUser.id, title: messageTitle, content: messageContent })}
               disabled={!messageTitle || !messageContent || sendMessageMutation.isPending}
             >
-              <Send className="w-4 h-4 mr-2" />
-              발송하기
+              <Send className="w-3 h-3 mr-1" />
+              보내기
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={sendCouponOpen} onOpenChange={setSendCouponOpen}>
-        <DialogContent>
+      {/* 전체 쪽지 발송 다이얼로그 */}
+      <Dialog open={broadcastMessageOpen} onOpenChange={setBroadcastMessageOpen}>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>쿠폰 발급</DialogTitle>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <Megaphone className="w-4 h-4" />
+              전체 회원 쪽지
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              받는 사람: <strong>{selectedUser?.name || selectedUser?.email}</strong>
+              전체 <span className="font-medium text-foreground">{members.length}명</span>에게 쪽지를 보냅니다
             </p>
             <div>
-              <Label>발급할 쿠폰 선택</Label>
+              <Label className="text-xs">제목</Label>
+              <Input
+                className="h-8 text-sm"
+                value={messageTitle}
+                onChange={(e) => setMessageTitle(e.target.value)}
+                placeholder="쪽지 제목"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">내용</Label>
+              <Textarea
+                className="text-sm min-h-[80px]"
+                value={messageContent}
+                onChange={(e) => setMessageContent(e.target.value)}
+                placeholder="쪽지 내용"
+              />
+            </div>
+            <Button
+              className="w-full h-8 text-sm"
+              onClick={() => broadcastMessageMutation.mutate({ title: messageTitle, content: messageContent })}
+              disabled={!messageTitle || !messageContent || broadcastMessageMutation.isPending}
+            >
+              <Megaphone className="w-3 h-3 mr-1" />
+              전체 발송
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 개별 쿠폰 발급 다이얼로그 */}
+      <Dialog open={sendCouponOpen} onOpenChange={setSendCouponOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">쿠폰 발급</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              받는 사람: <span className="font-medium text-foreground">{selectedUser?.firstName || selectedUser?.email}</span>
+            </p>
+            <div>
+              <Label className="text-xs">쿠폰 선택</Label>
               <Select value={selectedCouponId} onValueChange={setSelectedCouponId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="쿠폰을 선택하세요" />
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="쿠폰 선택" />
                 </SelectTrigger>
                 <SelectContent>
-                  {allCoupons.filter(c => c.isActive).map((coupon) => (
-                    <SelectItem key={coupon.id} value={coupon.id.toString()}>
-                      {coupon.name} ({coupon.discountType === "percent" ? `${coupon.discountValue}%` : `${coupon.discountValue.toLocaleString()}원`})
+                  {allCoupons.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name} ({c.discountType === "percent" ? `${c.discountValue}%` : `${c.discountValue}원`})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <Button
-              className="w-full"
-              onClick={() => {
-                if (selectedUser && selectedCouponId) {
-                  sendCouponMutation.mutate({
-                    userId: selectedUser.id,
-                    couponId: parseInt(selectedCouponId),
-                  });
-                }
-              }}
+              className="w-full h-8 text-sm"
+              onClick={() => selectedUser && selectedCouponId && sendCouponMutation.mutate({ userId: selectedUser.id, couponId: Number(selectedCouponId) })}
               disabled={!selectedCouponId || sendCouponMutation.isPending}
             >
-              <Gift className="w-4 h-4 mr-2" />
+              <Gift className="w-3 h-3 mr-1" />
               발급하기
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 전체 쿠폰 발급 다이얼로그 */}
+      <Dialog open={broadcastCouponOpen} onOpenChange={setBroadcastCouponOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <Gift className="w-4 h-4" />
+              전체 회원 쿠폰
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              전체 <span className="font-medium text-foreground">{members.length}명</span>에게 쿠폰을 발급합니다
+            </p>
+            <div>
+              <Label className="text-xs">쿠폰 선택</Label>
+              <Select value={selectedCouponId} onValueChange={setSelectedCouponId}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="쿠폰 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allCoupons.map((c) => (
+                    <SelectItem key={c.id} value={c.id.toString()}>
+                      {c.name} ({c.discountType === "percent" ? `${c.discountValue}%` : `${c.discountValue}원`})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              className="w-full h-8 text-sm"
+              onClick={() => selectedCouponId && broadcastCouponMutation.mutate({ couponId: Number(selectedCouponId) })}
+              disabled={!selectedCouponId || broadcastCouponMutation.isPending}
+            >
+              <Megaphone className="w-3 h-3 mr-1" />
+              전체 발급
             </Button>
           </div>
         </DialogContent>

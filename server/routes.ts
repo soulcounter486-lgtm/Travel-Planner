@@ -3474,6 +3474,76 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 전체 회원에게 쪽지 발송 (관리자)
+  app.post("/api/admin/messages/broadcast", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const { title, content } = req.body;
+      if (!title || !content) {
+        return res.status(400).json({ error: "제목과 내용이 필요합니다" });
+      }
+
+      const allUsers = await db.select().from(users);
+      const senderId = user?.claims?.sub || userEmail;
+      
+      let sentCount = 0;
+      for (const targetUser of allUsers) {
+        await db.insert(adminMessages).values({
+          receiverId: targetUser.id,
+          senderId,
+          title,
+          content,
+        });
+        sentCount++;
+      }
+
+      res.json({ success: true, sentCount });
+    } catch (err) {
+      console.error("전체 쪽지 발송 오류:", err);
+      res.status(500).json({ error: "전체 쪽지 발송 실패" });
+    }
+  });
+
+  // 전체 회원에게 쿠폰 발급 (관리자)
+  app.post("/api/admin/user-coupons/broadcast", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const { couponId } = req.body;
+      if (!couponId) {
+        return res.status(400).json({ error: "couponId가 필요합니다" });
+      }
+
+      const allUsers = await db.select().from(users);
+      
+      let issuedCount = 0;
+      for (const targetUser of allUsers) {
+        await db.insert(userCoupons).values({
+          userId: targetUser.id,
+          couponId,
+          isUsed: false,
+        });
+        issuedCount++;
+      }
+
+      res.json({ success: true, issuedCount });
+    } catch (err) {
+      console.error("전체 쿠폰 발급 오류:", err);
+      res.status(500).json({ error: "전체 쿠폰 발급 실패" });
+    }
+  });
+
   // 내 쪽지 목록 조회
   app.get("/api/messages", isAuthenticated, async (req, res) => {
     try {
