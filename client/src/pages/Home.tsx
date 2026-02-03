@@ -1041,7 +1041,7 @@ export default function Home() {
                   className="shrink-0 rounded-full h-6 px-2 text-[10px]"
                 >
                   <LogIn className="w-3 h-3 mr-1" />
-                  로그인
+                  구글로그인
                 </Button>
               </a>
             </div>
