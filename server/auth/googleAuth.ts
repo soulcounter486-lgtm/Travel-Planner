@@ -121,5 +121,22 @@ export async function setupGoogleAuth(app: Express) {
     });
   });
 
+  // 디버그 엔드포인트
+  app.get("/api/auth/debug", (req: any, res) => {
+    res.json({
+      isAuthenticated: req.isAuthenticated?.() || false,
+      sessionID: req.sessionID,
+      user: req.user ? {
+        provider: req.user.provider,
+        claims: req.user.claims,
+        expires_at: req.user.expires_at
+      } : null,
+      session: {
+        cookie: req.session?.cookie,
+        hasPassport: !!req.session?.passport
+      }
+    });
+  });
+
   console.log("Google OAuth configured successfully");
 }
