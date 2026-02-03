@@ -5,10 +5,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
 import { useQuery } from "@tanstack/react-query";
-import { LogIn, LogOut, Settings, ChevronDown, Users, Ticket, Bell, RefreshCw } from "lucide-react";
+import { LogIn, LogOut, Settings, ChevronDown, Users, Ticket, Bell, RefreshCw, Gift, User } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
+
+interface Notifications {
+  unreadMessagesCount: number;
+  unusedCouponsCount: number;
+}
 
 interface ExchangeRates {
   rates: {
@@ -28,6 +34,14 @@ export function AppHeader() {
   const { data: exchangeRatesData } = useQuery<ExchangeRates>({
     queryKey: ["/api/exchange-rates"],
   });
+
+  const { data: notifications } = useQuery<Notifications>({
+    queryKey: ["/api/my-notifications"],
+    enabled: isAuthenticated,
+    refetchInterval: 30000,
+  });
+
+  const totalNotifications = (notifications?.unreadMessagesCount || 0) + (notifications?.unusedCouponsCount || 0);
 
   return (
     <div className="relative bg-white border-b border-border/40">
@@ -55,6 +69,22 @@ export function AppHeader() {
               </h1>
               {isAuthLoading ? null : isAuthenticated ? (
                 <div className="flex items-center gap-1">
+                  <Link href="/mypage">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 rounded-full h-6 px-2 text-[10px] relative"
+                      data-testid="button-mypage"
+                    >
+                      <User className="w-3 h-3 mr-1" />
+                      마이페이지
+                      {totalNotifications > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-1 animate-pulse">
+                          {totalNotifications > 9 ? "9+" : totalNotifications}
+                        </span>
+                      )}
+                    </Button>
+                  </Link>
                   {isAdmin && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
