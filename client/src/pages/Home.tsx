@@ -1010,6 +1010,17 @@ export default function Home() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
+                    <Link href="/mypage">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="shrink-0 rounded-full h-6 px-2 text-[10px]"
+                        data-testid="button-mypage"
+                      >
+                        <User className="w-3 h-3 mr-1" />
+                        마이페이지
+                      </Button>
+                    </Link>
                     <Button
                       size="icon"
                       variant="outline"

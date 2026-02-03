@@ -3782,6 +3782,73 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // === 회원 쪽지함 API ===
+  // 내 쪽지 목록 조회
+  app.get("/api/my-messages", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+      const userId = user.claims?.sub || user.id;
+
+      const myMessages = await db.select().from(adminMessages)
+        .where(eq(adminMessages.receiverId, userId))
+        .orderBy(desc(adminMessages.createdAt));
+
+      res.json(myMessages);
+    } catch (err) {
+      console.error("쪽지 조회 오류:", err);
+      res.status(500).json({ error: "쪽지 조회 실패" });
+    }
+  });
+
+  // 쪽지 읽음 처리
+  app.patch("/api/my-messages/:id/read", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const messageId = parseInt(req.params.id);
+      const [updated] = await db.update(adminMessages)
+        .set({ isRead: true })
+        .where(eq(adminMessages.id, messageId))
+        .returning();
+
+      res.json(updated);
+    } catch (err) {
+      console.error("쪽지 읽음 처리 오류:", err);
+      res.status(500).json({ error: "쪽지 읽음 처리 실패" });
+    }
+  });
+
+  // 안읽은 쪽지/쿠폰 수 조회
+  app.get("/api/my-notifications", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+      const userId = user.claims?.sub || user.id;
+
+      const unreadMessages = await db.select().from(adminMessages)
+        .where(and(eq(adminMessages.receiverId, userId), eq(adminMessages.isRead, false)));
+      
+      const unusedCoupons = await db.select().from(userCoupons)
+        .where(and(eq(userCoupons.userId, userId), eq(userCoupons.isUsed, false)));
+
+      res.json({
+        unreadMessages: unreadMessages.length,
+        unusedCoupons: unusedCoupons.length,
+      });
+    } catch (err) {
+      console.error("알림 조회 오류:", err);
+      res.status(500).json({ error: "알림 조회 실패" });
+    }
+  });
+
   // === 공지사항/배너 API ===
   // 공지사항 목록 조회 (공개)
   app.get("/api/announcements", async (req, res) => {
