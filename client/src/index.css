@@ -142,3 +142,13 @@ input[type="number"]::-webkit-outer-spin-button {
 .leaflet-popup-pane {
   z-index: 700;
 }
+
+/* 도깨비 파트너 마커 반짝이 효과 */
+@keyframes partnerGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4), 0 2px 8px rgba(0,0,0,0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.8), 0 2px 8px rgba(0,0,0,0.3);
+  }
+}

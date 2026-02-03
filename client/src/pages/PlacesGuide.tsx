@@ -1719,31 +1719,55 @@ export default function PlacesGuide() {
       
       const color = categoryColors[place.categoryId] || "#64748b";
       
+      // 파트너 업체는 더 크고 특별한 마커
+      const markerSize = place.isPartner ? 50 : 40;
+      const borderColor = place.isPartner ? '#f59e0b' : (selectedPlace?.name === place.name ? '#3b82f6' : color);
+      const borderWidth = place.isPartner ? 4 : 3;
+      
+      // 파트너 배지 HTML
+      const partnerBadge = place.isPartner ? `
+        <div style="
+          position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+          background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
+          padding: 2px 6px; border-radius: 8px; font-size: 8px; font-weight: bold;
+          white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          border: 1px solid #fbbf24;
+        ">🏆 도깨비 파트너</div>
+      ` : '';
+      
       const iconHtml = place.imageUrl 
-        ? `<div style="
-            width: 40px; height: 40px; border-radius: 8px; overflow: hidden; 
-            border: 3px solid ${selectedPlace?.name === place.name ? '#3b82f6' : color}; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
-            background: white;
-          ">
-            <img src="${place.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+        ? `<div style="position: relative;">
+            ${partnerBadge}
+            <div style="
+              width: ${markerSize}px; height: ${markerSize}px; border-radius: 8px; overflow: hidden; 
+              border: ${borderWidth}px solid ${borderColor}; 
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
+              background: white;
+              ${place.isPartner ? 'animation: partnerGlow 2s ease-in-out infinite;' : ''}
+            ">
+              <img src="${place.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
           </div>`
-        : `<div style="
-            width: 40px; height: 40px; border-radius: 8px; 
-            background: ${color}; 
-            display: flex; align-items: center; justify-content: center;
-            border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
-          ">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-            </svg>
+        : `<div style="position: relative;">
+            ${partnerBadge}
+            <div style="
+              width: ${markerSize}px; height: ${markerSize}px; border-radius: 8px; 
+              background: ${place.isPartner ? 'linear-gradient(135deg, #f59e0b, #d97706)' : color}; 
+              display: flex; align-items: center; justify-content: center;
+              border: ${borderWidth}px solid ${place.isPartner ? '#fbbf24' : '#fff'}; 
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer;
+            ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+            </div>
           </div>`;
       
       const customIcon = L.divIcon({
         className: 'custom-place-marker',
         html: iconHtml,
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
+        iconSize: [markerSize, markerSize + (place.isPartner ? 14 : 0)],
+        iconAnchor: [markerSize / 2, markerSize + (place.isPartner ? 14 : 0)],
       });
       
       // 팝업 HTML 생성
@@ -1805,11 +1829,15 @@ export default function PlacesGuide() {
       marker.bindTooltip(place.name, { 
         permanent: false, 
         direction: 'top',
-        offset: [0, -40]
+        offset: [0, place.isPartner ? -54 : -40]
       });
       
-      // 클러스터 그룹에 마커 추가
-      clusterGroupRef.current!.addLayer(marker);
+      // 파트너 업체는 클러스터링 없이 항상 표시, 일반 업체는 클러스터 그룹에 추가
+      if (place.isPartner) {
+        marker.addTo(mapRef.current!);
+      } else {
+        clusterGroupRef.current!.addLayer(marker);
+      }
       markersRef.current.push(marker);
     });
     
