@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Mail, Ticket, ArrowLeft, Check, Gift } from "lucide-react";
-import { Link } from "wouter";
+import { Mail, Ticket, ArrowLeft, Check, Gift, LogIn } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Message {
   id: number;
@@ -38,14 +39,54 @@ interface UserCoupon {
 export default function MyPage() {
   const { toast } = useToast();
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const [, setLocation] = useLocation();
 
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/my-messages"],
+    enabled: isAuthenticated,
   });
 
   const { data: coupons = [], isLoading: couponsLoading } = useQuery<UserCoupon[]>({
     queryKey: ["/api/my-coupons"],
+    enabled: isAuthenticated,
   });
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">로딩 중...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-4 max-w-2xl">
+          <div className="flex items-center gap-2 mb-4">
+            <Link href="/">
+              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-back-home">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            </Link>
+            <h1 className="text-lg font-bold">마이페이지</h1>
+          </div>
+          <Card>
+            <CardContent className="py-12 text-center">
+              <LogIn className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-4">로그인이 필요합니다</p>
+              <a href="/api/auth/kakao">
+                <Button className="bg-[#FEE500] hover:bg-[#FDD800] text-[#3C1E1E]">
+                  카카오로 로그인
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const markAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
