@@ -1000,16 +1000,36 @@ export default function Home() {
                   마이페이지
                 </Button>
               </Link>
-              <a href="/api/auth/kakao/relogin" data-testid="button-switch-account">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="shrink-0 rounded-full h-5 px-1.5 text-[8px]"
-                >
-                  <RefreshCw className="w-2.5 h-2.5 mr-0.5" />
-                  계정변경
-                </Button>
-              </a>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 rounded-full h-5 px-1.5 text-[8px]"
+                    data-testid="button-switch-account"
+                  >
+                    <RefreshCw className="w-2.5 h-2.5 mr-0.5" />
+                    계정변경
+                    <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36">
+                  <DropdownMenuItem asChild>
+                    <a href="/api/auth/kakao/relogin" className="flex items-center cursor-pointer">
+                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.683 1.74 5.028 4.348 6.385-.19.71-.69 2.576-.788 2.976-.12.49.18.483.379.352.156-.103 2.484-1.69 3.502-2.378.85.126 1.723.192 2.559.192 5.523 0 10-3.463 10-7.714C22 6.463 17.523 3 12 3z"/>
+                      </svg>
+                      카카오 계정
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href="/api/login" className="flex items-center cursor-pointer">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      구글 계정
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 size="sm"
                 variant="outline"
