@@ -3855,8 +3855,8 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         .where(and(eq(userCoupons.userId, userId), eq(userCoupons.isUsed, false)));
 
       res.json({
-        unreadMessages: unreadMessages.length,
-        unusedCoupons: unusedCoupons.length,
+        unreadMessagesCount: unreadMessages.length,
+        unusedCouponsCount: unusedCoupons.length,
       });
     } catch (err) {
       console.error("알림 조회 오류:", err);
