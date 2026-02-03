@@ -104,7 +104,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown } from "lucide-react";
+import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown, RefreshCw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { Villa, VillaAmenity } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
@@ -1021,6 +1021,16 @@ export default function Home() {
                         마이페이지
                       </Button>
                     </Link>
+                    <a href="/api/auth/kakao/relogin" data-testid="button-switch-account">
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="shrink-0 rounded-full h-6 w-6"
+                        title="다른 아이디로 로그인"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </Button>
+                    </a>
                     <Button
                       size="icon"
                       variant="outline"
