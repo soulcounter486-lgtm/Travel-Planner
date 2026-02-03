@@ -55,7 +55,12 @@ export default function MyPage() {
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">로딩 중...</p>
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-foreground">로딩 중...</p>
+          </div>
+        </Card>
       </div>
     );
   }
