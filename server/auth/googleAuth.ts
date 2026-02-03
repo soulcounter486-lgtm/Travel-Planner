@@ -23,6 +23,8 @@ export async function setupGoogleAuth(app: Express) {
       async (accessToken, refreshToken, profile, done) => {
         try {
           const email = profile.emails?.[0]?.value || "";
+          // expires_at: 7일 후 만료 (Replit Auth와 동일한 형식)
+          const expiresAt = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
           const user = {
             claims: {
               sub: `google:${profile.id}`,
@@ -30,9 +32,11 @@ export async function setupGoogleAuth(app: Express) {
               first_name: profile.name?.givenName || "",
               last_name: profile.name?.familyName || "",
               profile_image_url: profile.photos?.[0]?.value || "",
+              exp: expiresAt,
             },
             access_token: accessToken,
             refresh_token: refreshToken,
+            expires_at: expiresAt,
             provider: "google",
           };
 
