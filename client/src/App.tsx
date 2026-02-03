@@ -16,6 +16,8 @@ import LocationShare from "@/pages/LocationShare";
 import Privacy from "@/pages/Privacy";
 import AdminVillas from "@/pages/AdminVillas";
 import AdminPlaces from "@/pages/AdminPlaces";
+import AdminMembers from "@/pages/AdminMembers";
+import MyCoupons from "@/pages/MyCoupons";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +35,8 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/admin/villas" component={AdminVillas} />
       <Route path="/admin/places" component={AdminPlaces} />
+      <Route path="/admin/members" component={AdminMembers} />
+      <Route path="/my-coupons" component={MyCoupons} />
       <Route component={NotFound} />
     </Switch>
   );

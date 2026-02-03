@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, siteSettings } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -3425,6 +3425,390 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     const users = Array.from(chatUsers.values()).map((u) => u.nickname);
     broadcast(JSON.stringify({ type: "users", users }));
   }
+
+  // === 회원 관리, 쪽지, 쿠폰, 공지사항 API ===
+
+  // 전체 회원 목록 조회 (관리자용)
+  app.get("/api/admin/members", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const allUsers = await db.select().from(users).orderBy(desc(users.createdAt));
+      res.json(allUsers);
+    } catch (err) {
+      console.error("회원 목록 조회 오류:", err);
+      res.status(500).json({ error: "회원 목록 조회 실패" });
+    }
+  });
+
+  // === 쪽지 API ===
+  // 쪽지 발송 (관리자 → 사용자)
+  app.post("/api/admin/messages", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const parsed = insertAdminMessageSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "잘못된 요청", details: parsed.error });
+      }
+
+      const [message] = await db.insert(adminMessages).values({
+        ...parsed.data,
+        senderId: user?.claims?.sub || userEmail,
+      }).returning();
+
+      res.json(message);
+    } catch (err) {
+      console.error("쪽지 발송 오류:", err);
+      res.status(500).json({ error: "쪽지 발송 실패" });
+    }
+  });
+
+  // 내 쪽지 목록 조회
+  app.get("/api/messages", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const userId = user?.claims?.sub || user?.claims?.email;
+      const myMessages = await db.select().from(adminMessages)
+        .where(eq(adminMessages.receiverId, userId))
+        .orderBy(desc(adminMessages.createdAt));
+
+      res.json(myMessages);
+    } catch (err) {
+      console.error("쪽지 조회 오류:", err);
+      res.status(500).json({ error: "쪽지 조회 실패" });
+    }
+  });
+
+  // 쪽지 읽음 처리
+  app.patch("/api/messages/:id/read", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const messageId = parseInt(req.params.id);
+      await db.update(adminMessages)
+        .set({ isRead: true })
+        .where(eq(adminMessages.id, messageId));
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("쪽지 읽음 처리 오류:", err);
+      res.status(500).json({ error: "쪽지 읽음 처리 실패" });
+    }
+  });
+
+  // 안읽은 쪽지 개수
+  app.get("/api/messages/unread-count", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const userId = user?.claims?.sub || user?.claims?.email;
+      const result = await db.select({ count: sql<number>`count(*)` })
+        .from(adminMessages)
+        .where(and(
+          eq(adminMessages.receiverId, userId),
+          eq(adminMessages.isRead, false)
+        ));
+
+      res.json({ count: result[0]?.count || 0 });
+    } catch (err) {
+      console.error("안읽은 쪽지 개수 조회 오류:", err);
+      res.json({ count: 0 });
+    }
+  });
+
+  // === 쿠폰 API ===
+  // 쿠폰 생성 (관리자)
+  app.post("/api/admin/coupons", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const parsed = insertCouponSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "잘못된 요청", details: parsed.error });
+      }
+
+      const [coupon] = await db.insert(coupons).values(parsed.data).returning();
+      res.json(coupon);
+    } catch (err) {
+      console.error("쿠폰 생성 오류:", err);
+      res.status(500).json({ error: "쿠폰 생성 실패" });
+    }
+  });
+
+  // 쿠폰 목록 조회 (관리자)
+  app.get("/api/admin/coupons", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const allCoupons = await db.select().from(coupons).orderBy(desc(coupons.createdAt));
+      res.json(allCoupons);
+    } catch (err) {
+      console.error("쿠폰 목록 조회 오류:", err);
+      res.status(500).json({ error: "쿠폰 목록 조회 실패" });
+    }
+  });
+
+  // 쿠폰 수정 (관리자)
+  app.patch("/api/admin/coupons/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const couponId = parseInt(req.params.id);
+      const [updated] = await db.update(coupons)
+        .set(req.body)
+        .where(eq(coupons.id, couponId))
+        .returning();
+
+      res.json(updated);
+    } catch (err) {
+      console.error("쿠폰 수정 오류:", err);
+      res.status(500).json({ error: "쿠폰 수정 실패" });
+    }
+  });
+
+  // 쿠폰 삭제 (관리자)
+  app.delete("/api/admin/coupons/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const couponId = parseInt(req.params.id);
+      await db.delete(coupons).where(eq(coupons.id, couponId));
+      res.json({ success: true });
+    } catch (err) {
+      console.error("쿠폰 삭제 오류:", err);
+      res.status(500).json({ error: "쿠폰 삭제 실패" });
+    }
+  });
+
+  // 사용자에게 쿠폰 발급 (관리자)
+  app.post("/api/admin/user-coupons", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const { userId, couponId } = req.body;
+      if (!userId || !couponId) {
+        return res.status(400).json({ error: "userId와 couponId가 필요합니다" });
+      }
+
+      const [userCoupon] = await db.insert(userCoupons).values({
+        userId,
+        couponId,
+        isUsed: false,
+      }).returning();
+
+      res.json(userCoupon);
+    } catch (err) {
+      console.error("쿠폰 발급 오류:", err);
+      res.status(500).json({ error: "쿠폰 발급 실패" });
+    }
+  });
+
+  // 내 쿠폰 목록 조회
+  app.get("/api/my-coupons", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const userId = user?.claims?.sub || user?.claims?.email;
+      const myCoupons = await db.select({
+        id: userCoupons.id,
+        couponId: userCoupons.couponId,
+        isUsed: userCoupons.isUsed,
+        usedAt: userCoupons.usedAt,
+        issuedAt: userCoupons.issuedAt,
+        name: coupons.name,
+        description: coupons.description,
+        discountType: coupons.discountType,
+        discountValue: coupons.discountValue,
+        validFrom: coupons.validFrom,
+        validUntil: coupons.validUntil,
+      })
+        .from(userCoupons)
+        .innerJoin(coupons, eq(userCoupons.couponId, coupons.id))
+        .where(eq(userCoupons.userId, userId))
+        .orderBy(desc(userCoupons.issuedAt));
+
+      res.json(myCoupons);
+    } catch (err) {
+      console.error("내 쿠폰 조회 오류:", err);
+      res.status(500).json({ error: "쿠폰 조회 실패" });
+    }
+  });
+
+  // 쿠폰 사용 처리
+  app.patch("/api/my-coupons/:id/use", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (!user) {
+        return res.status(401).json({ error: "로그인이 필요합니다" });
+      }
+
+      const userCouponId = parseInt(req.params.id);
+      const [updated] = await db.update(userCoupons)
+        .set({ isUsed: true, usedAt: new Date() })
+        .where(eq(userCoupons.id, userCouponId))
+        .returning();
+
+      res.json(updated);
+    } catch (err) {
+      console.error("쿠폰 사용 처리 오류:", err);
+      res.status(500).json({ error: "쿠폰 사용 처리 실패" });
+    }
+  });
+
+  // === 공지사항/배너 API ===
+  // 공지사항 목록 조회 (공개)
+  app.get("/api/announcements", async (req, res) => {
+    try {
+      const now = new Date();
+      const activeAnnouncements = await db.select().from(announcements)
+        .where(eq(announcements.isActive, true))
+        .orderBy(announcements.sortOrder);
+
+      // 날짜 필터링 (startDate, endDate)
+      const filtered = activeAnnouncements.filter(a => {
+        if (a.startDate && new Date(a.startDate) > now) return false;
+        if (a.endDate && new Date(a.endDate) < now) return false;
+        return true;
+      });
+
+      res.json(filtered);
+    } catch (err) {
+      console.error("공지사항 조회 오류:", err);
+      res.status(500).json({ error: "공지사항 조회 실패" });
+    }
+  });
+
+  // 공지사항 생성 (관리자)
+  app.post("/api/admin/announcements", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const parsed = insertAnnouncementSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "잘못된 요청", details: parsed.error });
+      }
+
+      const [announcement] = await db.insert(announcements).values(parsed.data).returning();
+      res.json(announcement);
+    } catch (err) {
+      console.error("공지사항 생성 오류:", err);
+      res.status(500).json({ error: "공지사항 생성 실패" });
+    }
+  });
+
+  // 공지사항 수정 (관리자)
+  app.patch("/api/admin/announcements/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const announcementId = parseInt(req.params.id);
+      const [updated] = await db.update(announcements)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(announcements.id, announcementId))
+        .returning();
+
+      res.json(updated);
+    } catch (err) {
+      console.error("공지사항 수정 오류:", err);
+      res.status(500).json({ error: "공지사항 수정 실패" });
+    }
+  });
+
+  // 공지사항 삭제 (관리자)
+  app.delete("/api/admin/announcements/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const announcementId = parseInt(req.params.id);
+      await db.delete(announcements).where(eq(announcements.id, announcementId));
+      res.json({ success: true });
+    } catch (err) {
+      console.error("공지사항 삭제 오류:", err);
+      res.status(500).json({ error: "공지사항 삭제 실패" });
+    }
+  });
+
+  // 관리자용 전체 공지사항 조회
+  app.get("/api/admin/announcements", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const allAnnouncements = await db.select().from(announcements).orderBy(desc(announcements.createdAt));
+      res.json(allAnnouncements);
+    } catch (err) {
+      console.error("관리자 공지사항 조회 오류:", err);
+      res.status(500).json({ error: "공지사항 조회 실패" });
+    }
+  });
 
   return httpServer;
 }
