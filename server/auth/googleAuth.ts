@@ -53,9 +53,14 @@ export async function setupGoogleAuth(app: Express) {
   );
 
   app.get("/api/auth/google/login", (req, res, next) => {
+    console.log("Google login initiated");
     const returnTo = req.query.returnTo as string || req.headers.referer || "/";
     (req.session as any).returnTo = returnTo;
-    req.session.save(() => {
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.redirect("/");
+      }
       passport.authenticate("google", {
         scope: ["profile", "email"],
         prompt: "select_account",
@@ -64,17 +69,40 @@ export async function setupGoogleAuth(app: Express) {
   });
 
   app.get("/api/auth/google/callback", (req, res, next) => {
+    console.log("Google callback received");
     const returnTo = (req.session as any).returnTo || "/";
-    passport.authenticate("google", {
-      successRedirect: returnTo,
-      failureRedirect: "/",
+    passport.authenticate("google", (err: any, user: any, info: any) => {
+      if (err) {
+        console.error("Google auth error:", err);
+        return res.redirect("/");
+      }
+      if (!user) {
+        console.log("Google auth failed - no user:", info);
+        return res.redirect("/");
+      }
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          console.error("Login error:", loginErr);
+          return res.redirect("/");
+        }
+        console.log("Google login successful for:", user.claims?.email);
+        res.redirect(returnTo);
+      });
     })(req, res, next);
   });
 
   app.get("/api/auth/google/relogin", (req, res, next) => {
-    req.logout(() => {
+    console.log("Google relogin initiated");
+    req.logout((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+      }
       (req.session as any).returnTo = "/";
-      req.session.save(() => {
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error("Session save error:", saveErr);
+          return res.redirect("/");
+        }
         passport.authenticate("google", {
           scope: ["profile", "email"],
           prompt: "select_account",
