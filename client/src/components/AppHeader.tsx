@@ -37,7 +37,12 @@ export function AppHeader() {
 
   const { data: notifications } = useQuery<Notifications>({
     queryKey: ["/api/my-notifications"],
-    enabled: isAuthenticated,
+    queryFn: async () => {
+      const res = await fetch("/api/my-notifications", { credentials: "include" });
+      if (!res.ok) return { unreadMessagesCount: 0, unusedCouponsCount: 0 };
+      return res.json();
+    },
+    enabled: isAuthenticated && !isAuthLoading,
     refetchInterval: 30000,
   });
 
