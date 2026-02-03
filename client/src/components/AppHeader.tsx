@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
 import { useQuery } from "@tanstack/react-query";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Settings, ChevronDown, Users, Ticket, Bell } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Link } from "wouter";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 
 interface ExchangeRates {
@@ -21,7 +23,7 @@ interface ExchangeRates {
 
 export function AppHeader() {
   const { t, language } = useLanguage();
-  const { isAuthenticated, logout, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, logout, isLoading: isAuthLoading, isAdmin } = useAuth();
 
   const { data: exchangeRatesData } = useQuery<ExchangeRates>({
     queryKey: ["/api/exchange-rates"],
@@ -52,16 +54,55 @@ export function AppHeader() {
                 <span className="whitespace-nowrap text-xs sm:text-base">{language === "ko" ? "실시간 여행견적" : "Live Travel Quote"}</span>
               </h1>
               {isAuthLoading ? null : isAuthenticated ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => logout()}
-                  className="shrink-0 rounded-full h-6 px-2 text-[10px]"
-                  data-testid="button-logout"
-                >
-                  <LogOut className="w-3 h-3 mr-1" />
-                  {language === "ko" ? "로그아웃" : "Logout"}
-                </Button>
+                <div className="flex items-center gap-1">
+                  {isAdmin && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="shrink-0 rounded-full h-6 px-2 text-[10px] bg-orange-500 hover:bg-orange-600"
+                          data-testid="button-admin-menu"
+                        >
+                          <Settings className="w-3 h-3 mr-1" />
+                          관리자
+                          <ChevronDown className="w-3 h-3 ml-1" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/members" className="flex items-center cursor-pointer" data-testid="link-admin-members">
+                            <Users className="w-4 h-4 mr-2" />
+                            고객관리
+                            <span className="ml-1 text-[10px] text-muted-foreground">(회원/쿠폰/공지)</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/villas" className="flex items-center cursor-pointer" data-testid="link-admin-villas">
+                            <Settings className="w-4 h-4 mr-2" />
+                            빌라관리
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/places" className="flex items-center cursor-pointer" data-testid="link-admin-places">
+                            <Settings className="w-4 h-4 mr-2" />
+                            관광지관리
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => logout()}
+                    className="shrink-0 rounded-full h-6 px-2 text-[10px]"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="w-3 h-3 mr-1" />
+                    {language === "ko" ? "로그아웃" : "Logout"}
+                  </Button>
+                </div>
               ) : (
                 <div className="flex items-center gap-1">
                   <a href="/api/auth/kakao" data-testid="button-login-kakao">
