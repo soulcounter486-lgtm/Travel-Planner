@@ -90,7 +90,13 @@ export async function setupGoogleAuth(app: Express) {
           return res.redirect("/");
         }
         console.log("Google login successful for:", user.claims?.email);
-        res.redirect(returnTo);
+        // 세션을 명시적으로 저장
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error after login:", saveErr);
+          }
+          res.redirect(returnTo);
+        });
       });
     })(req, res, next);
   });
