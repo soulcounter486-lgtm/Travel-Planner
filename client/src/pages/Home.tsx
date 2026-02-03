@@ -74,6 +74,7 @@ import vehicleImg from "@assets/Photo＿1725451852943-1_1768289649378.jpg";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
 import { TabNavigation } from "@/components/TabNavigation";
+import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 
 import { 
   Plane, 
@@ -1016,6 +1017,7 @@ export default function Home() {
         </div>
       </div>
       <TabNavigation language={language} />
+      <AnnouncementBanner />
 
       <div className="container mx-auto px-4 py-10">
         <div className="grid lg:grid-cols-12 gap-8">
