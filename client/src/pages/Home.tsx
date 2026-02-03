@@ -972,19 +972,18 @@ export default function Home() {
                   <span className="whitespace-nowrap text-base sm:text-xl md:text-2xl">{language === "ko" ? "실시간 여행견적" : "Live Travel Quote"}</span>
                 </h1>
                 {isAuthLoading ? null : isAuthenticated ? (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap justify-end shrink-0">
                     {isAdmin && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="default"
-                            className="shrink-0 rounded-full h-6 px-2 text-[10px] bg-orange-500 hover:bg-orange-600"
+                            className="shrink-0 rounded-full h-6 w-6 bg-orange-500 hover:bg-orange-600"
                             data-testid="button-admin-menu"
+                            title="관리자 메뉴"
                           >
-                            <Settings className="w-3 h-3 mr-1" />
-                            관리자
-                            <ChevronDown className="w-3 h-3 ml-1" />
+                            <Settings className="w-3 h-3" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
@@ -1012,13 +1011,13 @@ export default function Home() {
                     )}
                     <Link href="/mypage">
                       <Button
-                        size="sm"
+                        size="icon"
                         variant="outline"
-                        className="shrink-0 rounded-full h-6 px-2 text-[10px]"
+                        className="shrink-0 rounded-full h-6 w-6"
                         data-testid="button-mypage"
+                        title="마이페이지"
                       >
-                        <User className="w-3 h-3 mr-1" />
-                        마이페이지
+                        <User className="w-3 h-3" />
                       </Button>
                     </Link>
                     <a href="/api/auth/kakao/relogin" data-testid="button-switch-account">
