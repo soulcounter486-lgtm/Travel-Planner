@@ -74,6 +74,7 @@ export async function setupGoogleAuth(app: Express) {
 
   app.get("/api/auth/google/callback", (req, res, next) => {
     console.log("Google callback received, query:", req.query);
+    console.log("Callback session ID:", req.sessionID);
     const returnTo = (req.session as any).returnTo || "/";
     
     passport.authenticate("google", (err: any, user: any, info: any) => {
@@ -95,6 +96,7 @@ export async function setupGoogleAuth(app: Express) {
         }
         
         console.log("Google login successful for:", user.claims?.email);
+        console.log("Session after login - ID:", req.sessionID, "passport:", (req.session as any).passport);
         
         // 세션을 명시적으로 저장
         req.session.save((saveErr) => {
@@ -103,7 +105,8 @@ export async function setupGoogleAuth(app: Express) {
             return res.redirect("/?error=session_error&message=" + encodeURIComponent(saveErr.message || "Session save failed"));
           }
           console.log("Session saved successfully, redirecting to:", returnTo);
-          res.redirect(returnTo);
+          // 성공 시 세션 ID를 URL에 포함하여 디버그
+          res.redirect("/?login=success&sid=" + req.sessionID);
         });
       });
     })(req, res, next);
