@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
 import { useQuery } from "@tanstack/react-query";
-import { LogIn, LogOut, Settings, ChevronDown, Users, Ticket, Bell } from "lucide-react";
+import { LogIn, LogOut, Settings, ChevronDown, Users, Ticket, Bell, RefreshCw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link } from "wouter";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
@@ -92,6 +92,16 @@ export function AppHeader() {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
+                  <a href="/api/auth/kakao/relogin" data-testid="button-switch-account">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="shrink-0 rounded-full h-6 w-6"
+                      title="다른 아이디로 로그인"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                    </Button>
+                  </a>
                   <Button
                     size="icon"
                     variant="outline"

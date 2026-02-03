@@ -203,6 +203,19 @@ export async function registerRoutes(
     });
   });
 
+  // 카카오 다른 계정으로 로그인 (prompt=login으로 항상 로그인 화면 표시)
+  app.get("/api/auth/kakao/relogin", (req, res) => {
+    const state = crypto.randomBytes(16).toString("hex");
+    (req.session as any).kakaoState = state;
+    req.session.save(() => {
+      const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
+      console.log("Kakao relogin start - redirectUri:", redirectUri);
+      // prompt=login 파라미터로 항상 카카오 로그인 화면 표시
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}&prompt=login`;
+      res.redirect(kakaoAuthUrl);
+    });
+  });
+
   // 카카오 콜백 처리
   app.get("/api/auth/kakao/callback", async (req, res) => {
     try {
