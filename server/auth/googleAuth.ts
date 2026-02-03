@@ -73,28 +73,36 @@ export async function setupGoogleAuth(app: Express) {
   });
 
   app.get("/api/auth/google/callback", (req, res, next) => {
-    console.log("Google callback received");
+    console.log("Google callback received, query:", req.query);
     const returnTo = (req.session as any).returnTo || "/";
+    
     passport.authenticate("google", (err: any, user: any, info: any) => {
+      console.log("Google authenticate result - err:", err, "user:", user ? "exists" : "null", "info:", info);
+      
       if (err) {
         console.error("Google auth error:", err);
-        return res.redirect("/");
+        return res.redirect("/?error=google_auth_error&message=" + encodeURIComponent(err.message || "Unknown error"));
       }
       if (!user) {
         console.log("Google auth failed - no user:", info);
-        return res.redirect("/");
+        return res.redirect("/?error=google_no_user&message=" + encodeURIComponent(JSON.stringify(info) || "No user"));
       }
+      
       req.logIn(user, (loginErr) => {
         if (loginErr) {
           console.error("Login error:", loginErr);
-          return res.redirect("/");
+          return res.redirect("/?error=login_error&message=" + encodeURIComponent(loginErr.message || "Login failed"));
         }
+        
         console.log("Google login successful for:", user.claims?.email);
+        
         // 세션을 명시적으로 저장
         req.session.save((saveErr) => {
           if (saveErr) {
             console.error("Session save error after login:", saveErr);
+            return res.redirect("/?error=session_error&message=" + encodeURIComponent(saveErr.message || "Session save failed"));
           }
+          console.log("Session saved successfully, redirecting to:", returnTo);
           res.redirect(returnTo);
         });
       });
