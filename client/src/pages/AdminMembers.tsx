@@ -10,10 +10,9 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, CheckCircle2, Clock, Megaphone } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import { ko } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +27,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface User {
   id: string;
@@ -64,6 +80,86 @@ interface Announcement {
   createdAt?: string;
 }
 
+function SortableAnnouncementItem({ 
+  ann, 
+  onToggle, 
+  onDelete, 
+  onEdit 
+}: { 
+  ann: Announcement; 
+  onToggle: (id: number, isActive: boolean) => void; 
+  onDelete: (id: number) => void;
+  onEdit: (ann: Announcement) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: ann.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs"
+    >
+      <div className="flex items-center gap-1 min-w-0 flex-1">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 touch-none"
+          data-testid={`drag-handle-${ann.id}`}
+        >
+          <GripVertical className="w-3 h-3 text-muted-foreground" />
+        </button>
+        <Badge variant={ann.isActive ? "default" : "secondary"} className="text-[10px] h-4 px-1 flex-shrink-0">
+          {ann.type === "notice" && "공지"}
+          {ann.type === "event" && "이벤트"}
+          {ann.type === "promotion" && "프로모션"}
+          {ann.type === "urgent" && "긴급"}
+          {ann.type === "banner" && "배너"}
+          {ann.type === "popup" && "팝업"}
+        </Badge>
+        <span className="font-medium truncate">{ann.title}</span>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 px-2"
+          onClick={() => onEdit(ann)}
+          data-testid={`edit-announcement-${ann.id}`}
+        >
+          <Edit2 className="w-3 h-3" />
+        </Button>
+        <Switch
+          checked={ann.isActive}
+          onCheckedChange={(checked) => onToggle(ann.id, checked)}
+          className="scale-75"
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 px-2 text-red-500 hover:text-red-600"
+          onClick={() => onDelete(ann.id)}
+          data-testid={`delete-announcement-${ann.id}`}
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminMembers() {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
@@ -77,6 +173,8 @@ export default function AdminMembers() {
   const [selectedCouponId, setSelectedCouponId] = useState<string>("");
   const [broadcastMessageOpen, setBroadcastMessageOpen] = useState(false);
   const [broadcastCouponOpen, setBroadcastCouponOpen] = useState(false);
+  const [editAnnouncementOpen, setEditAnnouncementOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
 
   const [newCouponOpen, setNewCouponOpen] = useState(false);
   const [couponForm, setCouponForm] = useState({
@@ -97,6 +195,17 @@ export default function AdminMembers() {
     isActive: true,
     sortOrder: 0,
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const { data: members = [], isLoading: membersLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/members"],
@@ -263,6 +372,28 @@ export default function AdminMembers() {
     },
   });
 
+  const updateAnnouncementMutation = useMutation({
+    mutationFn: async (data: Partial<Announcement> & { id: number }) => {
+      const res = await fetch(`/api/admin/announcements/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/announcements"] });
+      setEditAnnouncementOpen(false);
+      setEditingAnnouncement(null);
+      toast({ title: "공지사항이 수정되었습니다" });
+    },
+    onError: () => {
+      toast({ title: "공지사항 수정 실패", variant: "destructive" });
+    },
+  });
+
   const toggleAnnouncementMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
       const res = await fetch(`/api/admin/announcements/${id}`, {
@@ -276,6 +407,25 @@ export default function AdminMembers() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/announcements"] });
+    },
+  });
+
+  const reorderAnnouncementsMutation = useMutation({
+    mutationFn: async (orderedIds: number[]) => {
+      const res = await fetch("/api/admin/announcements/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ orderedIds }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/announcements"] });
+    },
+    onError: () => {
+      toast({ title: "순서 변경 실패", variant: "destructive" });
     },
   });
 
@@ -293,6 +443,23 @@ export default function AdminMembers() {
       toast({ title: "공지사항이 삭제되었습니다" });
     },
   });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = allAnnouncements.findIndex((a) => a.id === active.id);
+      const newIndex = allAnnouncements.findIndex((a) => a.id === over.id);
+      const newOrder = arrayMove(allAnnouncements, oldIndex, newIndex);
+      const orderedIds = newOrder.map((a) => a.id);
+      reorderAnnouncementsMutation.mutate(orderedIds);
+    }
+  };
+
+  const handleEditAnnouncement = (ann: Announcement) => {
+    setEditingAnnouncement(ann);
+    setEditAnnouncementOpen(true);
+  };
 
   if (!isAdmin) {
     return (
@@ -608,38 +775,28 @@ export default function AdminMembers() {
                 {announcementsLoading ? (
                   <p className="text-muted-foreground text-sm p-2">로딩 중...</p>
                 ) : (
-                  <div className="space-y-1 max-h-[60vh] overflow-y-auto">
-                    {allAnnouncements.map((ann) => (
-                      <div key={ann.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1">
-                            <Badge variant={ann.isActive ? "default" : "secondary"} className="text-[10px] h-4 px-1">
-                              {ann.type === "notice" && "공지"}
-                              {ann.type === "event" && "이벤트"}
-                              {ann.type === "promotion" && "프로모션"}
-                              {ann.type === "urgent" && "긴급"}
-                            </Badge>
-                            <span className="font-medium truncate">{ann.title}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <Switch
-                            checked={ann.isActive}
-                            onCheckedChange={(checked) => toggleAnnouncementMutation.mutate({ id: ann.id, isActive: checked })}
-                            className="scale-75"
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={allAnnouncements.map((a) => a.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-1 max-h-[60vh] overflow-y-auto">
+                        {allAnnouncements.map((ann) => (
+                          <SortableAnnouncementItem
+                            key={ann.id}
+                            ann={ann}
+                            onToggle={(id, isActive) => toggleAnnouncementMutation.mutate({ id, isActive })}
+                            onDelete={(id) => deleteAnnouncementMutation.mutate(id)}
+                            onEdit={handleEditAnnouncement}
                           />
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 px-2 text-red-500 hover:text-red-600"
-                            onClick={() => deleteAnnouncementMutation.mutate(ann.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </CardContent>
             </Card>
@@ -804,6 +961,87 @@ export default function AdminMembers() {
               전체 발급
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 공지사항 수정 다이얼로그 */}
+      <Dialog open={editAnnouncementOpen} onOpenChange={setEditAnnouncementOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base">공지사항 수정</DialogTitle>
+          </DialogHeader>
+          {editingAnnouncement && (
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">제목</Label>
+                <Input
+                  className="h-8 text-sm"
+                  value={editingAnnouncement.title}
+                  onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, title: e.target.value })}
+                  placeholder="공지 제목"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">내용</Label>
+                <Textarea
+                  className="text-sm min-h-[80px]"
+                  value={editingAnnouncement.content || ""}
+                  onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, content: e.target.value })}
+                  placeholder="공지 내용"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">유형</Label>
+                <Select
+                  value={editingAnnouncement.type}
+                  onValueChange={(v) => setEditingAnnouncement({ ...editingAnnouncement, type: v })}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="notice">공지</SelectItem>
+                    <SelectItem value="event">이벤트</SelectItem>
+                    <SelectItem value="promotion">프로모션</SelectItem>
+                    <SelectItem value="urgent">긴급</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">이미지 URL (선택)</Label>
+                <Input
+                  className="h-8 text-sm"
+                  value={editingAnnouncement.imageUrl || ""}
+                  onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, imageUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+              <div>
+                <Label className="text-xs">링크 URL (선택)</Label>
+                <Input
+                  className="h-8 text-sm"
+                  value={editingAnnouncement.linkUrl || ""}
+                  onChange={(e) => setEditingAnnouncement({ ...editingAnnouncement, linkUrl: e.target.value })}
+                  placeholder="https://..."
+                />
+              </div>
+              <Button
+                className="w-full h-8 text-sm"
+                onClick={() => updateAnnouncementMutation.mutate({
+                  id: editingAnnouncement.id,
+                  title: editingAnnouncement.title,
+                  content: editingAnnouncement.content,
+                  type: editingAnnouncement.type,
+                  imageUrl: editingAnnouncement.imageUrl,
+                  linkUrl: editingAnnouncement.linkUrl,
+                })}
+                disabled={!editingAnnouncement.title || updateAnnouncementMutation.isPending}
+              >
+                <Edit2 className="w-3 h-3 mr-1" />
+                수정
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

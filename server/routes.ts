@@ -3820,6 +3820,34 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 공지사항 순서 변경 (관리자)
+  app.post("/api/admin/announcements/reorder", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const userEmail = user?.claims?.email;
+      if (!userEmail || !adminIds.includes(userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const { orderedIds } = req.body;
+      if (!orderedIds || !Array.isArray(orderedIds)) {
+        return res.status(400).json({ error: "orderedIds 배열이 필요합니다" });
+      }
+
+      for (let i = 0; i < orderedIds.length; i++) {
+        await db.update(announcements)
+          .set({ sortOrder: i, updatedAt: new Date() })
+          .where(eq(announcements.id, orderedIds[i]));
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("공지사항 순서 변경 오류:", err);
+      res.status(500).json({ error: "공지사항 순서 변경 실패" });
+    }
+  });
+
   // 공지사항 수정 (관리자)
   app.patch("/api/admin/announcements/:id", isAuthenticated, async (req, res) => {
     try {
@@ -3872,7 +3900,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
-      const allAnnouncements = await db.select().from(announcements).orderBy(desc(announcements.createdAt));
+      const allAnnouncements = await db.select().from(announcements).orderBy(announcements.sortOrder, desc(announcements.createdAt));
       res.json(allAnnouncements);
     } catch (err) {
       console.error("관리자 공지사항 조회 오류:", err);
