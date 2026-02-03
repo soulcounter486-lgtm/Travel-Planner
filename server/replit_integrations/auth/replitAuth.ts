@@ -134,6 +134,18 @@ export async function setupAuth(app: Express) {
       );
     });
   });
+
+  // Replit 계정 변경: 먼저 로그아웃 후 다시 로그인
+  app.get("/api/auth/replit/relogin", (req, res) => {
+    req.logout(() => {
+      // Replit에서 로그아웃 후 로그인 페이지로 리다이렉트
+      const endSessionUrl = client.buildEndSessionUrl(config, {
+        client_id: process.env.REPL_ID!,
+        post_logout_redirect_uri: `${req.protocol}://${req.hostname}/api/login`,
+      }).href;
+      res.redirect(endSessionUrl);
+    });
+  });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {

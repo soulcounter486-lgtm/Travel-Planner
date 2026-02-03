@@ -1023,7 +1023,7 @@ export default function Home() {
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="/api/login" className="flex items-center cursor-pointer">
+                    <a href="/api/auth/replit/relogin" className="flex items-center cursor-pointer">
                       <LogIn className="w-4 h-4 mr-2" />
                       구글 계정
                     </a>
