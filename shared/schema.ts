@@ -344,3 +344,71 @@ export const insertSiteSettingSchema = createInsertSchema(siteSettings).omit({ i
 
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
+
+// === 회원 관리, 쪽지, 쿠폰, 공지사항 시스템 ===
+
+// 관리자 쪽지 테이블
+export const adminMessages = pgTable("admin_messages", {
+  id: serial("id").primaryKey(),
+  senderId: text("sender_id").notNull(), // 발신자 ID (관리자)
+  receiverId: text("receiver_id").notNull(), // 수신자 ID
+  title: text("title").notNull(), // 제목
+  content: text("content").notNull(), // 내용
+  isRead: boolean("is_read").default(false), // 읽음 여부
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAdminMessageSchema = createInsertSchema(adminMessages).omit({ id: true, createdAt: true });
+export type AdminMessage = typeof adminMessages.$inferSelect;
+export type InsertAdminMessage = z.infer<typeof insertAdminMessageSchema>;
+
+// 쿠폰 테이블 (관리자가 생성하는 쿠폰 템플릿)
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // 쿠폰 이름
+  description: text("description"), // 쿠폰 설명
+  discountType: text("discount_type").notNull().default("percent"), // percent(%), fixed(고정금액)
+  discountValue: integer("discount_value").notNull().default(0), // 할인 값
+  validFrom: timestamp("valid_from"), // 유효 시작일
+  validUntil: timestamp("valid_until"), // 유효 종료일
+  isActive: boolean("is_active").default(true), // 활성화 여부
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertCouponSchema = createInsertSchema(coupons).omit({ id: true, createdAt: true });
+export type Coupon = typeof coupons.$inferSelect;
+export type InsertCoupon = z.infer<typeof insertCouponSchema>;
+
+// 사용자 쿠폰 테이블 (개별 사용자에게 발급된 쿠폰)
+export const userCoupons = pgTable("user_coupons", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // 사용자 ID
+  couponId: integer("coupon_id").notNull(), // 쿠폰 ID
+  isUsed: boolean("is_used").default(false), // 사용 여부
+  usedAt: timestamp("used_at"), // 사용일시
+  issuedAt: timestamp("issued_at").defaultNow(), // 발급일시
+});
+
+export const insertUserCouponSchema = createInsertSchema(userCoupons).omit({ id: true, issuedAt: true });
+export type UserCoupon = typeof userCoupons.$inferSelect;
+export type InsertUserCoupon = z.infer<typeof insertUserCouponSchema>;
+
+// 공지사항/배너 테이블
+export const announcements = pgTable("announcements", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(), // 제목
+  content: text("content"), // 내용
+  imageUrl: text("image_url"), // 배너 이미지 URL
+  linkUrl: text("link_url"), // 클릭 시 이동할 URL
+  type: text("type").notNull().default("banner"), // banner(배너), popup(팝업), notice(공지)
+  isActive: boolean("is_active").default(true), // 활성화 여부
+  sortOrder: integer("sort_order").default(0), // 정렬 순서
+  startDate: timestamp("start_date"), // 표시 시작일
+  endDate: timestamp("end_date"), // 표시 종료일
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, createdAt: true, updatedAt: true });
+export type Announcement = typeof announcements.$inferSelect;
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
