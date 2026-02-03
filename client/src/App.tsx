@@ -17,7 +17,6 @@ import Privacy from "@/pages/Privacy";
 import AdminVillas from "@/pages/AdminVillas";
 import AdminPlaces from "@/pages/AdminPlaces";
 import AdminMembers from "@/pages/AdminMembers";
-import MyCoupons from "@/pages/MyCoupons";
 import MyPage from "@/pages/MyPage";
 import NotFound from "@/pages/not-found";
 
@@ -37,8 +36,8 @@ function Router() {
       <Route path="/admin/villas" component={AdminVillas} />
       <Route path="/admin/places" component={AdminPlaces} />
       <Route path="/admin/members" component={AdminMembers} />
-      <Route path="/my-coupons" component={MyCoupons} />
       <Route path="/mypage" component={MyPage} />
+      <Route path="/my-coupons" component={MyPage} />
       <Route component={NotFound} />
     </Switch>
   );
