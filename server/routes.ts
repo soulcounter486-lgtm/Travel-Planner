@@ -10,6 +10,7 @@ import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
 import { setupAuth, registerAuthRoutes, isAuthenticated, getSession } from "./replit_integrations/auth";
+import { setupGoogleAuth } from "./auth/googleAuth";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
 import { registerObjectStorageRoutes, objectStorageClient } from "./replit_integrations/object_storage";
@@ -185,6 +186,7 @@ export async function registerRoutes(
   // Setup authentication (MUST be before other routes)
   await setupAuth(app);
   registerAuthRoutes(app);
+  await setupGoogleAuth(app);
 
   // === 카카오 로그인 OAuth ===
   const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY || "";

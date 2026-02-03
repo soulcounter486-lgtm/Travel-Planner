@@ -1023,7 +1023,7 @@ export default function Home() {
                     </a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <a href="/api/auth/replit/relogin" className="flex items-center cursor-pointer">
+                    <a href="/api/auth/google/relogin" className="flex items-center cursor-pointer">
                       <LogIn className="w-4 h-4 mr-2" />
                       구글 계정
                     </a>
@@ -1054,7 +1054,7 @@ export default function Home() {
                   카톡로그인
                 </Button>
               </a>
-              <a href="/api/login" data-testid="button-login">
+              <a href="/api/auth/google/login" data-testid="button-login">
                 <Button
                   size="sm"
                   variant="default"
