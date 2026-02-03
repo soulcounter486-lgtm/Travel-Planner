@@ -24,16 +24,16 @@ interface Message {
 
 interface UserCoupon {
   id: number;
-  userId: string;
   couponId: number;
-  couponName: string;
-  couponDescription: string | null;
+  name: string;
+  description: string | null;
   discountType: string;
   discountValue: number;
+  validFrom: string | null;
   validUntil: string | null;
   isUsed: boolean;
   usedAt: string | null;
-  createdAt: string;
+  issuedAt: string;
 }
 
 export default function MyPage() {
@@ -238,7 +238,7 @@ export default function MyPage() {
                             <div className="flex items-center gap-2">
                               <Gift className={`w-4 h-4 ${coupon.isUsed ? "text-muted-foreground" : "text-primary"}`} />
                               <span className={`font-medium text-sm ${coupon.isUsed ? "line-through" : ""}`}>
-                                {coupon.couponName}
+                                {coupon.name}
                               </span>
                               <Badge variant={coupon.isUsed ? "secondary" : "default"} className="h-5 px-1.5 text-[10px]">
                                 {coupon.discountType === "percent"
@@ -246,11 +246,11 @@ export default function MyPage() {
                                   : `${coupon.discountValue.toLocaleString()}원 할인`}
                               </Badge>
                             </div>
-                            {coupon.couponDescription && (
-                              <p className="text-xs text-muted-foreground mt-1">{coupon.couponDescription}</p>
+                            {coupon.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{coupon.description}</p>
                             )}
                             <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
-                              <span>발급일: {format(new Date(coupon.createdAt), "yyyy.MM.dd")}</span>
+                              <span>발급일: {format(new Date(coupon.issuedAt), "yyyy.MM.dd")}</span>
                               {coupon.validUntil && (
                                 <span>· 유효기간: ~{format(new Date(coupon.validUntil), "yyyy.MM.dd")}</span>
                               )}
