@@ -1238,7 +1238,7 @@ export default function Home() {
                     data-testid="button-account-menu"
                   >
                     <User className="w-2.5 h-2.5 mr-0.5" />
-                    {currentUser?.nickname || currentUser?.email?.split('@')[0] || '계정'}
+                    {user?.nickname || user?.email?.split('@')[0] || '계정'}
                     <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
                   </Button>
                 </DropdownMenuTrigger>
