@@ -430,8 +430,14 @@ export default function MyCoupons() {
                     </p>
                   </div>
                 </div>
+                <p className="text-center text-sm text-destructive mt-4">
+                  쿠폰 사용 후에는 취소할 수 없습니다.<br />
+                  <span className="text-xs text-muted-foreground">Sau khi sử dụng phiếu giảm giá, bạn không thể hủy.</span><br />
+                  직원에게 이 화면을 보여주고<br />사용 버튼을 눌러주세요.<br />
+                  <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này<br />và nhấn nút sử dụng.</span>
+                </p>
                 {selectedCoupon?.placeName && (
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-2 mt-4">
                     <div className="text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
@@ -484,12 +490,6 @@ export default function MyCoupons() {
                     )}
                   </div>
                 )}
-                <p className="text-center text-sm text-destructive mt-4">
-                  쿠폰 사용 후에는 취소할 수 없습니다.<br />
-                  <span className="text-xs text-muted-foreground">Sau khi sử dụng phiếu giảm giá, bạn không thể hủy.</span><br />
-                  직원에게 이 화면을 보여주고<br />사용 버튼을 눌러주세요.<br />
-                  <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này<br />và nhấn nút sử dụng.</span>
-                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
