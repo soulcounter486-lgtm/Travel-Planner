@@ -221,12 +221,16 @@ export type InstagramSyncedPost = typeof instagramSyncedPosts.$inferSelect;
 // 푸시 알림 구독
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // 사용자 ID
   endpoint: text("endpoint").notNull().unique(),
-  keys: jsonb("keys").notNull(), // { p256dh, auth }
+  p256dh: text("p256dh").notNull(), // 공개키
+  auth: text("auth").notNull(), // 인증 토큰
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({ id: true, createdAt: true });
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
 
 // 위치 공유 테이블
 export const userLocations = pgTable("user_locations", {
