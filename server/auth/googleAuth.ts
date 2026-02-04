@@ -2,6 +2,9 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import type { Express, RequestHandler } from "express";
 import { authStorage } from "../replit_integrations/auth/storage";
+import { db } from "../db";
+import { users, coupons, userCoupons } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function setupGoogleAuth(app: Express) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -40,13 +43,45 @@ export async function setupGoogleAuth(app: Express) {
             provider: "google",
           };
 
+          const googleUserId = `google:${profile.id}`;
+          
+          // 기존 사용자 확인
+          const existingUser = await db.select().from(users).where(eq(users.id, googleUserId)).limit(1);
+          const isNewUser = existingUser.length === 0;
+          
           await authStorage.upsertUser({
-            id: `google:${profile.id}`,
+            id: googleUserId,
             email: email,
             firstName: profile.name?.givenName || "",
             lastName: profile.name?.familyName || "",
             profileImageUrl: profile.photos?.[0]?.value || "",
           });
+
+          // 첫 로그인 환영 쿠폰 발급
+          const currentUser = existingUser[0];
+          if (isNewUser || (currentUser && !currentUser.welcomeCouponIssued)) {
+            try {
+              const welcomeCoupons = await db.select().from(coupons).where(
+                and(
+                  eq(coupons.isWelcomeCoupon, true),
+                  eq(coupons.isActive, true)
+                )
+              );
+              
+              for (const coupon of welcomeCoupons) {
+                await db.insert(userCoupons).values({
+                  userId: googleUserId,
+                  couponId: coupon.id,
+                  isUsed: false,
+                });
+              }
+              
+              await db.update(users).set({ welcomeCouponIssued: true }).where(eq(users.id, googleUserId));
+              console.log("Welcome coupon issued for Google user:", googleUserId);
+            } catch (couponError) {
+              console.error("Welcome coupon issue error:", couponError);
+            }
+          }
 
           done(null, user);
         } catch (error) {

@@ -300,6 +300,9 @@ export async function registerRoutes(
       console.log("Kakao user info - gender:", gender);
 
       // DB에 사용자 저장/업데이트
+      const existingUser = await db.select().from(users).where(eq(users.id, kakaoUserId)).limit(1);
+      const isNewUser = existingUser.length === 0;
+      
       await db.insert(users).values({
         id: kakaoUserId,
         email: email,
@@ -317,6 +320,32 @@ export async function registerRoutes(
           updatedAt: new Date(),
         },
       });
+
+      // 첫 로그인 환영 쿠폰 발급 (신규 사용자 또는 아직 쿠폰 미발급)
+      const currentUser = existingUser[0];
+      if (isNewUser || (currentUser && !currentUser.welcomeCouponIssued)) {
+        try {
+          const welcomeCoupons = await db.select().from(coupons).where(
+            and(
+              eq(coupons.isWelcomeCoupon, true),
+              eq(coupons.isActive, true)
+            )
+          );
+          
+          for (const coupon of welcomeCoupons) {
+            await db.insert(userCoupons).values({
+              userId: kakaoUserId,
+              couponId: coupon.id,
+              isUsed: false,
+            });
+          }
+          
+          await db.update(users).set({ welcomeCouponIssued: true }).where(eq(users.id, kakaoUserId));
+          console.log("Welcome coupon issued for Kakao user:", kakaoUserId);
+        } catch (couponError) {
+          console.error("Welcome coupon issue error:", couponError);
+        }
+      }
 
       // 세션에 사용자 정보 저장 (Replit Auth와 호환되는 형식)
       const user = {
