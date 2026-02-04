@@ -1786,6 +1786,47 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         longitude = parseFloat(qMatch[2]);
       }
       
+      // 패턴 4: 좌표가 없으면 페이지에서 추출 시도
+      if (!latitude || !longitude) {
+        try {
+          const pageRes = await fetch(finalUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              "Accept": "text/html,application/xhtml+xml",
+              "Accept-Language": "en-US,en;q=0.9"
+            }
+          });
+          const html = await pageRes.text();
+          
+          // HTML에서 좌표 패턴 찾기: APP_INITIALIZATION_STATE, window.APP_OPTIONS 등에서
+          // 패턴: [null,null,LAT,LNG] 또는 [LAT,LNG]
+          const coordPatterns = [
+            /\[null,null,(-?\d+\.\d+),(-?\d+\.\d+)\]/,
+            /"center":\[(-?\d+\.\d+),(-?\d+\.\d+)\]/,
+            /\/@(-?\d+\.\d+),(-?\d+\.\d+)/,
+            /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,
+            /ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
+          ];
+          
+          for (const pattern of coordPatterns) {
+            const match = html.match(pattern);
+            if (match) {
+              const lat = parseFloat(match[1]);
+              const lng = parseFloat(match[2]);
+              // 붕따우 근처인지 확인 (lat: 10.3~10.5, lng: 107.0~107.2)
+              if (lat > 10 && lat < 11 && lng > 107 && lng < 108) {
+                latitude = lat;
+                longitude = lng;
+                console.log("Extracted coords from HTML:", latitude, longitude);
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("HTML coord extraction error:", e);
+        }
+      }
+      
       // 장소 이름 추출 시도 (URL 경로에서)
       // /place/장소이름/ 패턴
       const placePattern = /\/place\/([^/@]+)/;
@@ -1802,6 +1843,38 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
           address = parts.slice(1).join(", ");
         } else {
           name = fullName;
+        }
+      }
+      
+      // 좌표가 없고 이름/주소가 있으면 Geocoding/Places API로 좌표 가져오기
+      console.log("Geocoding check - lat:", latitude, "lng:", longitude, "name:", name, "address:", address, "hasApiKey:", !!process.env.GOOGLE_MAPS_API_KEY);
+      if ((!latitude || !longitude) && (name || address) && process.env.GOOGLE_MAPS_API_KEY) {
+        try {
+          const searchQuery = name ? `${name}, Vũng Tàu, Vietnam` : address;
+          console.log("Geocoding search query:", searchQuery);
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchQuery || "")}&key=${process.env.GOOGLE_MAPS_API_KEY}&language=vi`;
+          const geocodeRes = await fetch(geocodeUrl);
+          const geocodeData = await geocodeRes.json() as {
+            status: string;
+            results: Array<{
+              geometry: { location: { lat: number; lng: number } };
+              formatted_address: string;
+            }>;
+            error_message?: string;
+          };
+          console.log("Geocoding API response:", geocodeData.status, geocodeData.error_message || "");
+          
+          if (geocodeData.status === "OK" && geocodeData.results.length > 0) {
+            const result = geocodeData.results[0];
+            latitude = result.geometry.location.lat;
+            longitude = result.geometry.location.lng;
+            if (!address) {
+              address = result.formatted_address;
+            }
+            console.log("Geocoding found coords:", latitude, longitude);
+          }
+        } catch (geocodeErr) {
+          console.error("Forward geocoding error:", geocodeErr);
         }
       }
       
