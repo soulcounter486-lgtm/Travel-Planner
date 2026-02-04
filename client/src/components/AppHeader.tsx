@@ -431,7 +431,152 @@ export function AppHeader() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72 p-3">
-                  {!showRegister && !showEmailLogin ? (
+                  {showEmailVerification ? (
+                    <>
+                      {/* 이메일 인증 화면 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-sm">이메일 인증</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowEmailVerification(false);
+                              setVerificationCode("");
+                              setRegisterError("");
+                            }}
+                          >
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            <strong>{verificationEmail}</strong>로 6자리 인증 코드가 발송되었습니다.
+                            <br />30분 내에 아래 입력란에 코드를 입력해주세요.
+                          </p>
+                        </div>
+                        
+                        {registerError && (
+                          <p className="text-xs text-red-500 text-center">{registerError}</p>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <Label htmlFor="verify-code" className="text-xs">인증 코드 (6자리)</Label>
+                            <Input
+                              id="verify-code"
+                              type="text"
+                              placeholder="123456"
+                              className="h-10 text-lg text-center tracking-widest font-mono"
+                              maxLength={6}
+                              value={verificationCode}
+                              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-verification-code"
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button
+                          className="w-full h-9"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleVerifyEmail();
+                          }}
+                          disabled={registerLoading || verificationCode.length !== 6}
+                          data-testid="button-verify-email"
+                        >
+                          {registerLoading ? "인증 중..." : "인증 확인"}
+                        </Button>
+                        
+                        <div className="text-center">
+                          <button 
+                            className="text-xs text-muted-foreground underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleResendVerification();
+                            }}
+                            disabled={registerLoading}
+                            data-testid="button-resend-verification"
+                          >
+                            인증 코드 다시 받기
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : showForgotPassword ? (
+                    <>
+                      {/* 비밀번호 찾기 화면 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-sm">비밀번호 찾기</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowForgotPassword(false);
+                              setShowEmailLogin(true);
+                              setRegisterError("");
+                              setForgotPasswordSuccess("");
+                            }}
+                          >
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        
+                        {registerError && (
+                          <p className="text-xs text-red-500 text-center">{registerError}</p>
+                        )}
+                        
+                        {forgotPasswordSuccess && (
+                          <p className="text-xs text-green-600 text-center">{forgotPasswordSuccess}</p>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <Label htmlFor="forgot-email" className="text-xs">가입한 이메일</Label>
+                            <Input
+                              id="forgot-email"
+                              type="email"
+                              placeholder="email@example.com"
+                              className="h-8 text-sm"
+                              value={forgotPasswordEmail}
+                              onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-forgot-email"
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button
+                          className="w-full h-9"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleForgotPassword();
+                          }}
+                          disabled={registerLoading}
+                          data-testid="button-send-temp-password"
+                        >
+                          {registerLoading ? "발송 중..." : "임시 비밀번호 발송"}
+                        </Button>
+                        
+                        <p className="text-xs text-muted-foreground text-center">
+                          임시 비밀번호가 이메일로 발송됩니다.<br />
+                          로그인 후 비밀번호를 변경해주세요.
+                        </p>
+                      </div>
+                    </>
+                  ) : !showRegister && !showEmailLogin ? (
                     <>
                       <div className="space-y-2">
                         <a href="/api/auth/kakao" className="block" data-testid="button-login-kakao">
@@ -585,150 +730,6 @@ export function AppHeader() {
                             회원가입
                           </button>
                         </div>
-                      </div>
-                    </>
-                  ) : showEmailVerification ? (
-                    <>
-                      {/* 이메일 인증 화면 */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-sm">이메일 인증</h3>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowEmailVerification(false);
-                              setVerificationCode("");
-                              setRegisterError("");
-                            }}
-                          >
-                            ← 뒤로
-                          </Button>
-                        </div>
-                        
-                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
-                            <strong>{verificationEmail}</strong>로 6자리 인증 코드가 발송되었습니다.
-                            <br />30분 내에 아래 입력란에 코드를 입력해주세요.
-                          </p>
-                        </div>
-                        
-                        {registerError && (
-                          <p className="text-xs text-red-500 text-center">{registerError}</p>
-                        )}
-                        
-                        <div className="space-y-2">
-                          <div>
-                            <Label htmlFor="verify-code" className="text-xs">인증 코드 (6자리)</Label>
-                            <Input
-                              id="verify-code"
-                              type="text"
-                              placeholder="123456"
-                              className="h-10 text-lg text-center tracking-widest font-mono"
-                              maxLength={6}
-                              value={verificationCode}
-                              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                              onClick={(e) => e.stopPropagation()}
-                              data-testid="input-verification-code"
-                            />
-                          </div>
-                        </div>
-                        
-                        <Button
-                          className="w-full h-9"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleVerifyEmail();
-                          }}
-                          disabled={registerLoading || verificationCode.length !== 6}
-                          data-testid="button-verify-email"
-                        >
-                          {registerLoading ? "인증 중..." : "인증 확인"}
-                        </Button>
-                        
-                        <div className="text-center">
-                          <button 
-                            className="text-xs text-muted-foreground underline"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleResendVerification();
-                            }}
-                            disabled={registerLoading}
-                            data-testid="button-resend-verification"
-                          >
-                            인증 코드 다시 받기
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  ) : showForgotPassword ? (
-                    <>
-                      {/* 비밀번호 찾기 화면 */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-sm">비밀번호 찾기</h3>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-xs"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setShowForgotPassword(false);
-                              setRegisterError("");
-                              setForgotPasswordSuccess("");
-                            }}
-                          >
-                            ← 뒤로
-                          </Button>
-                        </div>
-                        
-                        {registerError && (
-                          <p className="text-xs text-red-500 text-center">{registerError}</p>
-                        )}
-                        
-                        {forgotPasswordSuccess && (
-                          <p className="text-xs text-green-600 text-center">{forgotPasswordSuccess}</p>
-                        )}
-                        
-                        <div className="space-y-2">
-                          <div>
-                            <Label htmlFor="forgot-email" className="text-xs">가입한 이메일</Label>
-                            <Input
-                              id="forgot-email"
-                              type="email"
-                              placeholder="email@example.com"
-                              className="h-8 text-sm"
-                              value={forgotPasswordEmail}
-                              onChange={(e) => setForgotPasswordEmail(e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                              data-testid="input-forgot-email"
-                            />
-                          </div>
-                        </div>
-                        
-                        <Button
-                          className="w-full h-9"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleForgotPassword();
-                          }}
-                          disabled={registerLoading}
-                          data-testid="button-send-temp-password"
-                        >
-                          {registerLoading ? "발송 중..." : "임시 비밀번호 발송"}
-                        </Button>
-                        
-                        <p className="text-xs text-muted-foreground text-center">
-                          임시 비밀번호가 이메일로 발송됩니다.<br />
-                          로그인 후 비밀번호를 변경해주세요.
-                        </p>
                       </div>
                     </>
                   ) : (
