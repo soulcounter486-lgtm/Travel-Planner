@@ -183,6 +183,7 @@ export default function AdminMembers() {
     discountType: "percent",
     discountValue: 10,
     validUntil: "",
+    placeId: null as number | null,
   });
 
   const [newAnnouncementOpen, setNewAnnouncementOpen] = useState(false);
@@ -230,6 +231,10 @@ export default function AdminMembers() {
   const { data: allAnnouncements = [], isLoading: announcementsLoading } = useQuery<Announcement[]>({
     queryKey: ["/api/admin/announcements"],
     enabled: isAdmin,
+  });
+
+  const { data: allPlaces = [] } = useQuery<{ id: number; name: string; category: string; latitude?: string; longitude?: string; address?: string }[]>({
+    queryKey: ["/api/places"],
   });
 
   const sendMessageMutation = useMutation({
@@ -340,7 +345,7 @@ export default function AdminMembers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
       setNewCouponOpen(false);
-      setCouponForm({ name: "", description: "", discountType: "percent", discountValue: 10, validUntil: "" });
+      setCouponForm({ name: "", description: "", discountType: "percent", discountValue: 10, validUntil: "", placeId: null });
       toast({ title: "쿠폰이 생성되었습니다" });
     },
     onError: () => {
@@ -685,6 +690,25 @@ export default function AdminMembers() {
                           value={couponForm.validUntil}
                           onChange={(e) => setCouponForm({ ...couponForm, validUntil: e.target.value })}
                         />
+                      </div>
+                      <div>
+                        <Label className="text-xs">연결 장소 (선택)</Label>
+                        <Select
+                          value={couponForm.placeId?.toString() || "none"}
+                          onValueChange={(v) => setCouponForm({ ...couponForm, placeId: v === "none" ? null : Number(v) })}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="장소 선택 (선택사항)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">없음</SelectItem>
+                            {allPlaces.map((place) => (
+                              <SelectItem key={place.id} value={place.id.toString()}>
+                                {place.name} ({place.category === "attraction" ? "관광" : place.category === "restaurant" ? "맛집" : place.category === "cafe" ? "카페" : "기타"})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <Button
                         className="w-full h-8 text-sm"
