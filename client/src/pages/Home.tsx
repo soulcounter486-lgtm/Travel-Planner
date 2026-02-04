@@ -104,8 +104,8 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown, RefreshCw } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown, RefreshCw, Mail, Ticket } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import type { Villa, VillaAmenity } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -114,6 +114,84 @@ export default function Home() {
   const { toast } = useToast();
   const { t, language } = useLanguage();
   const { user, isAuthenticated, isAdmin, logout, isLoading: isAuthLoading } = useAuth();
+  
+  // 이메일 로그인/회원가입 상태
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerError, setRegisterError] = useState("");
+  const [registerData, setRegisterData] = useState({
+    email: "",
+    password: "",
+    nickname: "",
+    gender: "",
+    birthDate: ""
+  });
+
+  // 알림 데이터 조회 (쪽지함/쿠폰함)
+  const { data: notifications } = useQuery<{unreadMessagesCount: number; unusedCouponsCount: number}>({
+    queryKey: ["/api/my-notifications"],
+    enabled: isAuthenticated,
+    refetchInterval: 30000,
+  });
+
+  // 이메일로 로그인
+  const handleEmailLogin = async () => {
+    if (!registerData.email || !registerData.password) {
+      setRegisterError("이메일과 비밀번호를 입력해주세요");
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError("");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: registerData.email, password: registerData.password })
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        setRegisterError(data.message || "로그인에 실패했습니다");
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setRegisterError("로그인 중 오류가 발생했습니다");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 이메일로 회원가입
+  const handleEmailRegister = async () => {
+    if (!registerData.email || !registerData.password) {
+      setRegisterError("이메일과 비밀번호를 입력해주세요");
+      return;
+    }
+    if (registerData.password.length < 6) {
+      setRegisterError("비밀번호는 6자 이상이어야 합니다");
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError("");
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(registerData)
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        setRegisterError(data.message || "회원가입에 실패했습니다");
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setRegisterError("회원가입 중 오류가 발생했습니다");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
   
   // 빌라 목록 조회
   const { data: villas = [] } = useQuery<Villa[]>({
@@ -989,6 +1067,41 @@ export default function Home() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
+              {/* 쪽지함 버튼 */}
+              <Link href="/mypage?tab=messages">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 rounded-full h-5 px-1.5 text-[8px] relative"
+                  data-testid="button-messages"
+                >
+                  <Mail className="w-2.5 h-2.5 mr-0.5" />
+                  쪽지함
+                  {(notifications?.unreadMessagesCount || 0) > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[6px] font-bold rounded-full min-w-[12px] h-[12px] flex items-center justify-center px-0.5 animate-pulse">
+                      {notifications!.unreadMessagesCount > 9 ? "9+" : notifications!.unreadMessagesCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+              {/* 쿠폰함 버튼 */}
+              <Link href="/mypage?tab=coupons">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0 rounded-full h-5 px-1.5 text-[8px] relative"
+                  data-testid="button-coupons"
+                >
+                  <Ticket className="w-2.5 h-2.5 mr-0.5" />
+                  쿠폰함
+                  {(notifications?.unusedCouponsCount || 0) > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[6px] font-bold rounded-full min-w-[12px] h-[12px] flex items-center justify-center px-0.5">
+                      {notifications!.unusedCouponsCount > 9 ? "9+" : notifications!.unusedCouponsCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
+              {/* 마이페이지 버튼 */}
               <Link href="/mypage">
                 <Button
                   size="sm"
@@ -1000,70 +1113,152 @@ export default function Home() {
                   마이페이지
                 </Button>
               </Link>
+              {/* 계정 드롭다운 (계정변경 + 로그아웃 통합) */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="sm"
                     variant="outline"
                     className="shrink-0 rounded-full h-5 px-1.5 text-[8px]"
-                    data-testid="button-switch-account"
+                    data-testid="button-account-menu"
                   >
-                    <RefreshCw className="w-2.5 h-2.5 mr-0.5" />
-                    계정변경
+                    <Settings className="w-2.5 h-2.5 mr-0.5" />
+                    계정
                     <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-36">
                   <DropdownMenuItem asChild>
                     <a href="/api/auth/kakao/relogin" className="flex items-center cursor-pointer">
-                      <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.683 1.74 5.028 4.348 6.385-.19.71-.69 2.576-.788 2.976-.12.49.18.483.379.352.156-.103 2.484-1.69 3.502-2.378.85.126 1.723.192 2.559.192 5.523 0 10-3.463 10-7.714C22 6.463 17.523 3 12 3z"/>
-                      </svg>
-                      카카오 계정
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      계정변경
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/api/auth/google/relogin" className="flex items-center cursor-pointer">
-                      <LogIn className="w-4 h-4 mr-2" />
-                      구글 계정
-                    </a>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => logout()}
+                    className="cursor-pointer text-red-600"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    로그아웃
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => logout()}
-                className="shrink-0 rounded-full h-5 px-1.5 text-[8px]"
-                data-testid="button-logout"
-              >
-                <LogOut className="w-2.5 h-2.5 mr-0.5" />
-                로그아웃
-              </Button>
             </div>
           ) : (
             <div className="flex items-center gap-0.5 mb-2 justify-end">
-              <a href="/api/auth/kakao" data-testid="button-login-kakao">
-                <Button
-                  size="sm"
-                  className="shrink-0 rounded-full h-5 px-1.5 text-[8px] bg-[#FEE500] hover:bg-[#FDD800] text-[#3C1E1E] border-0"
-                >
-                  <svg className="w-2.5 h-2.5 mr-0.5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.683 1.74 5.028 4.348 6.385-.19.71-.69 2.576-.788 2.976-.12.49.18.483.379.352.156-.103 2.484-1.69 3.502-2.378.85.126 1.723.192 2.559.192 5.523 0 10-3.463 10-7.714C22 6.463 17.523 3 12 3z"/>
-                  </svg>
-                  카톡로그인
-                </Button>
-              </a>
-              <a href="/api/auth/google/login" data-testid="button-login">
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="shrink-0 rounded-full h-5 px-1.5 text-[8px]"
-                >
-                  <LogIn className="w-2.5 h-2.5 mr-0.5" />
-                  구글로그인
-                </Button>
-              </a>
+              {/* 로그인 드롭다운 */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="shrink-0 rounded-full h-5 px-1.5 text-[8px]"
+                    data-testid="button-login-dropdown"
+                  >
+                    <LogIn className="w-2.5 h-2.5 mr-0.5" />
+                    로그인
+                    <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64 p-3">
+                  {!showRegister && !showEmailLogin ? (
+                    <>
+                      <div className="space-y-2">
+                        <a href="/api/auth/kakao" className="block" data-testid="button-login-kakao">
+                          <Button className="w-full h-8 bg-[#FEE500] hover:bg-[#FDD800] text-[#3C1E1E] border-0 text-xs">
+                            <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.683 1.74 5.028 4.348 6.385-.19.71-.69 2.576-.788 2.976-.12.49.18.483.379.352.156-.103 2.484-1.69 3.502-2.378.85.126 1.723.192 2.559.192 5.523 0 10-3.463 10-7.714C22 6.463 17.523 3 12 3z"/>
+                            </svg>
+                            카카오로 로그인
+                          </Button>
+                        </a>
+                        <a href="/api/auth/google/login" className="block" data-testid="button-login-google">
+                          <Button variant="outline" className="w-full h-8 text-xs">
+                            <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24">
+                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                            구글로 로그인
+                          </Button>
+                        </a>
+                        <Button
+                          variant="secondary"
+                          className="w-full h-8 text-xs"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(true); }}
+                          data-testid="button-show-email-login"
+                        >
+                          <Mail className="w-3.5 h-3.5 mr-1.5" />
+                          이메일로 로그인
+                        </Button>
+                      </div>
+                      <DropdownMenuSeparator className="my-2" />
+                      <Button
+                        variant="ghost"
+                        className="w-full h-8 text-xs text-primary"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowRegister(true); }}
+                        data-testid="button-show-register"
+                      >
+                        <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                        회원가입
+                      </Button>
+                    </>
+                  ) : showEmailLogin ? (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-xs">이메일 로그인</h3>
+                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setRegisterError(""); }}>
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
+                        <div>
+                          <Label htmlFor="login-email-home" className="text-[10px]">이메일</Label>
+                          <Input id="login-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={registerData.email} onChange={(e) => setRegisterData({...registerData, email: e.target.value})} onClick={(e) => e.stopPropagation()} />
+                        </div>
+                        <div>
+                          <Label htmlFor="login-password-home" className="text-[10px]">비밀번호</Label>
+                          <Input id="login-password-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} onClick={(e) => e.stopPropagation()} />
+                        </div>
+                        <Button className="w-full h-8 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEmailLogin(); }} disabled={registerLoading}>
+                          {registerLoading ? "로그인 중..." : "로그인"}
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-xs">회원가입</h3>
+                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowRegister(false); setRegisterError(""); }}>
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
+                        <div>
+                          <Label htmlFor="reg-email-home" className="text-[10px]">이메일 *</Label>
+                          <Input id="reg-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={registerData.email} onChange={(e) => setRegisterData({...registerData, email: e.target.value})} onClick={(e) => e.stopPropagation()} />
+                        </div>
+                        <div>
+                          <Label htmlFor="reg-password-home" className="text-[10px]">비밀번호 * (6자 이상)</Label>
+                          <Input id="reg-password-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} onClick={(e) => e.stopPropagation()} />
+                        </div>
+                        <div>
+                          <Label htmlFor="reg-nickname-home" className="text-[10px]">닉네임</Label>
+                          <Input id="reg-nickname-home" type="text" placeholder="별명" className="h-7 text-xs" value={registerData.nickname} onChange={(e) => setRegisterData({...registerData, nickname: e.target.value})} onClick={(e) => e.stopPropagation()} />
+                        </div>
+                        <Button className="w-full h-8 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEmailRegister(); }} disabled={registerLoading}>
+                          {registerLoading ? "가입 중..." : "이메일로 가입"}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl flex items-center gap-6">
