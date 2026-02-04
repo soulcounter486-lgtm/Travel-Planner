@@ -413,31 +413,31 @@ export default function MyCoupons() {
               쿠폰 사용
               <span className="block text-sm font-normal text-muted-foreground mt-1">Sử dụng phiếu giảm giá</span>
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4" asChild>
+            <AlertDialogDescription className="space-y-2" asChild>
               <div>
-                <div className="text-center py-6 mx-auto">
-                  <div className="border-2 border-dashed border-primary/30 rounded-xl p-6 bg-gradient-to-b from-primary/5 to-transparent">
-                    <p className="text-xl font-bold text-primary mb-3">{selectedCoupon?.name}</p>
-                    <p className="text-3xl font-bold text-center leading-tight">
+                <div className="text-center py-3 mx-auto">
+                  <div className="border-2 border-dashed border-primary/30 rounded-xl p-4 bg-gradient-to-b from-primary/5 to-transparent">
+                    <p className="text-lg font-bold text-primary mb-1">{selectedCoupon?.name}</p>
+                    <p className="text-2xl font-bold text-center leading-tight">
                       {selectedCoupon?.discountType === "percent"
                         ? `${selectedCoupon?.discountValue}% 할인`
                         : `${selectedCoupon?.discountValue.toLocaleString()}đ 할인`}
                     </p>
-                    <p className="text-2xl font-semibold text-primary/80 mt-1">
+                    <p className="text-xl font-semibold text-primary/80">
                       {selectedCoupon?.discountType === "percent"
                         ? `Giảm ${selectedCoupon?.discountValue}%`
                         : `Giảm ${selectedCoupon?.discountValue.toLocaleString()}đ`}
                     </p>
                   </div>
                 </div>
-                <p className="text-center text-sm text-destructive mt-4">
+                <p className="text-center text-sm text-destructive">
                   쿠폰 사용 후에는 취소할 수 없습니다.<br />
                   <span className="text-xs text-muted-foreground">Sau khi sử dụng phiếu giảm giá, bạn không thể hủy.</span><br />
-                  직원에게 이 화면을 보여주고<br />사용 버튼을 눌러주세요.<br />
-                  <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này<br />và nhấn nút sử dụng.</span>
+                  직원에게 이 화면을 보여주고 사용 버튼을 눌러주세요.<br />
+                  <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này và nhấn nút sử dụng.</span>
                 </p>
                 {selectedCoupon?.placeName && (
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-2 mt-4">
+                  <div className="bg-muted/50 rounded-lg p-2 space-y-1 mt-2">
                     <div className="text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
@@ -449,8 +449,8 @@ export default function MyCoupons() {
                       <p className="text-xs text-muted-foreground ml-6">{selectedCoupon.placeAddress}</p>
                     )}
                     {selectedCoupon.placeLatitude && selectedCoupon.placeLongitude && (
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap gap-2 mt-1 justify-center">
                           <Button
                             size="sm"
                             variant={showInlineMap ? "default" : "outline"}
@@ -493,7 +493,7 @@ export default function MyCoupons() {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+          <AlertDialogFooter className="flex-col gap-1 sm:flex-col mt-2">
             <AlertDialogAction
               onClick={() => {
                 if (selectedCoupon && !useCouponMutation.isSuccess) {
@@ -501,7 +501,7 @@ export default function MyCoupons() {
                 }
               }}
               disabled={useCouponMutation.isPending || useCouponMutation.isSuccess}
-              className={`w-full h-12 text-base font-bold ${useCouponMutation.isSuccess ? "bg-green-600" : "bg-primary"}`}
+              className={`w-full h-10 text-base font-bold ${useCouponMutation.isSuccess ? "bg-green-600" : "bg-primary"}`}
             >
               <CheckCircle2 className="w-5 h-5 mr-2" />
               {useCouponMutation.isSuccess ? "사용 완료 / Đã sử dụng" : "사용하기 / Sử dụng"}
