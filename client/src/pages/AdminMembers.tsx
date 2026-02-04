@@ -23,7 +23,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -705,11 +707,35 @@ export default function AdminMembers() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">없음</SelectItem>
-                            {allPlaces.map((place) => (
-                              <SelectItem key={place.id} value={place.id.toString()}>
-                                {place.name} ({place.category === "attraction" ? "관광" : place.category === "restaurant" ? "맛집" : place.category === "cafe" ? "카페" : "기타"})
-                              </SelectItem>
-                            ))}
+                            {(() => {
+                              const categoryLabels: Record<string, string> = {
+                                attraction: "관광명소",
+                                korean_food: "한식",
+                                local_food: "현지음식",
+                                restaurant: "맛집",
+                                cafe: "카페",
+                                services: "서비스/마사지",
+                                exchange: "환전소",
+                              };
+                              const grouped = allPlaces.reduce((acc, place) => {
+                                const cat = place.category || "other";
+                                if (!acc[cat]) acc[cat] = [];
+                                acc[cat].push(place);
+                                return acc;
+                              }, {} as Record<string, typeof allPlaces>);
+                              const order = ["attraction", "korean_food", "local_food", "restaurant", "cafe", "services", "exchange"];
+                              const sortedCategories = Array.from(new Set([...order.filter(c => grouped[c]), ...Object.keys(grouped).filter(c => !order.includes(c))]));
+                              return sortedCategories.map((cat) => (
+                                <SelectGroup key={cat}>
+                                  <SelectLabel>{categoryLabels[cat] || "기타"}</SelectLabel>
+                                  {grouped[cat].map((place) => (
+                                    <SelectItem key={place.id} value={place.id.toString()}>
+                                      {place.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              ));
+                            })()}
                           </SelectContent>
                         </Select>
                       </div>
@@ -855,11 +881,35 @@ export default function AdminMembers() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">없음</SelectItem>
-                        {allPlaces.map((place) => (
-                          <SelectItem key={place.id} value={place.id.toString()}>
-                            {place.name} ({place.category === "attraction" ? "관광" : place.category === "restaurant" ? "맛집" : place.category === "cafe" ? "카페" : "기타"})
-                          </SelectItem>
-                        ))}
+                        {(() => {
+                          const categoryLabels: Record<string, string> = {
+                            attraction: "관광명소",
+                            korean_food: "한식",
+                            local_food: "현지음식",
+                            restaurant: "맛집",
+                            cafe: "카페",
+                            services: "서비스/마사지",
+                            exchange: "환전소",
+                          };
+                          const grouped = allPlaces.reduce((acc, place) => {
+                            const cat = place.category || "other";
+                            if (!acc[cat]) acc[cat] = [];
+                            acc[cat].push(place);
+                            return acc;
+                          }, {} as Record<string, typeof allPlaces>);
+                          const order = ["attraction", "korean_food", "local_food", "restaurant", "cafe", "services", "exchange"];
+                          const sortedCategories = Array.from(new Set([...order.filter(c => grouped[c]), ...Object.keys(grouped).filter(c => !order.includes(c))]));
+                          return sortedCategories.map((cat) => (
+                            <SelectGroup key={cat}>
+                              <SelectLabel>{categoryLabels[cat] || "기타"}</SelectLabel>
+                              {grouped[cat].map((place) => (
+                                <SelectItem key={place.id} value={place.id.toString()}>
+                                  {place.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          ));
+                        })()}
                       </SelectContent>
                     </Select>
                   </div>
