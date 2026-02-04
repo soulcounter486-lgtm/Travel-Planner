@@ -35,6 +35,8 @@ export function AppHeader() {
   const { t, language } = useLanguage();
   const { isAuthenticated, logout, isLoading: isAuthLoading, isAdmin } = useAuth();
   const { toast } = useToast();
+  // 드롭다운 열림 상태 (controlled)
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   // 단일 화면 상태 관리: 'default' | 'emailLogin' | 'register' | 'forgotPassword' | 'emailVerification'
   const [authScreen, setAuthScreen] = useState<'default' | 'emailLogin' | 'register' | 'forgotPassword' | 'emailVerification'>('default');
   const [verificationEmail, setVerificationEmail] = useState("");
@@ -412,7 +414,18 @@ export function AppHeader() {
                 </DropdownMenu>
               </>
             ) : (
-              <DropdownMenu modal={false}>
+              <DropdownMenu 
+                open={dropdownOpen} 
+                onOpenChange={(open) => {
+                  setDropdownOpen(open);
+                  if (!open) {
+                    setAuthScreen('default');
+                    setRegisterError("");
+                    setForgotPasswordSuccess("");
+                    setVerificationCode("");
+                  }
+                }}
+              >
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="sm"
@@ -428,11 +441,7 @@ export function AppHeader() {
                 <DropdownMenuContent 
                   align="end" 
                   className="w-72 p-3"
-                  onInteractOutside={(e) => {
-                    if (authScreen !== 'default') {
-                      e.preventDefault();
-                    }
-                  }}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
                 >
                   {authScreen === 'emailVerification' ? (
                     <>
