@@ -407,21 +407,28 @@ export default function MyCoupons() {
       </div>
 
       <AlertDialog open={showUseConfirm} onOpenChange={setShowUseConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader className="text-center">
+            <AlertDialogTitle className="text-center">
               쿠폰 사용
-              <span className="block text-sm font-normal text-muted-foreground">Sử dụng phiếu giảm giá</span>
+              <span className="block text-sm font-normal text-muted-foreground mt-1">Sử dụng phiếu giảm giá</span>
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-4" asChild>
               <div>
-                <div className="text-center py-4">
-                  <p className="text-2xl font-bold text-primary mb-2">{selectedCoupon?.name}</p>
-                  <p className="text-4xl font-bold">
-                    {selectedCoupon?.discountType === "percent"
-                      ? `${selectedCoupon?.discountValue}% 할인 / Giảm ${selectedCoupon?.discountValue}%`
-                      : `${selectedCoupon?.discountValue.toLocaleString()}원 할인 / Giảm ${selectedCoupon?.discountValue.toLocaleString()}₩`}
-                  </p>
+                <div className="text-center py-6 mx-auto">
+                  <div className="border-2 border-dashed border-primary/30 rounded-xl p-6 bg-gradient-to-b from-primary/5 to-transparent">
+                    <p className="text-xl font-bold text-primary mb-3">{selectedCoupon?.name}</p>
+                    <p className="text-3xl font-bold text-center leading-tight">
+                      {selectedCoupon?.discountType === "percent"
+                        ? `${selectedCoupon?.discountValue}% 할인`
+                        : `${selectedCoupon?.discountValue.toLocaleString()}원 할인`}
+                    </p>
+                    <p className="text-2xl font-semibold text-primary/80 mt-1">
+                      {selectedCoupon?.discountType === "percent"
+                        ? `Giảm ${selectedCoupon?.discountValue}%`
+                        : `Giảm ${selectedCoupon?.discountValue.toLocaleString()}₩`}
+                    </p>
+                  </div>
                 </div>
                 {selectedCoupon?.placeName && (
                   <div className="bg-muted/50 rounded-lg p-3 space-y-2">
