@@ -417,17 +417,7 @@ export function AppHeader() {
                 </DropdownMenu>
               </>
             ) : (
-              <DropdownMenu onOpenChange={(open) => {
-                if (!open) {
-                  setShowEmailLogin(false);
-                  setShowRegister(false);
-                  setShowForgotPassword(false);
-                  setShowEmailVerification(false);
-                  setRegisterError("");
-                  setForgotPasswordSuccess("");
-                  setVerificationCode("");
-                }
-              }}>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="sm"
