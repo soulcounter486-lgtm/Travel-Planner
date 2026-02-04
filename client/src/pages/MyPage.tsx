@@ -315,7 +315,10 @@ export default function MyPage() {
       <Dialog open={!!couponToUse} onOpenChange={() => setCouponToUse(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-lg text-center">쿠폰 사용 확인</DialogTitle>
+            <DialogTitle className="text-lg text-center">
+              쿠폰 사용 확인
+              <span className="block text-sm font-normal text-muted-foreground mt-1">Xác nhận sử dụng phiếu giảm giá</span>
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="text-center">
@@ -325,8 +328,8 @@ export default function MyPage() {
               <h3 className="font-bold text-lg mb-1">{couponToUse?.name}</h3>
               <Badge variant="default" className="text-sm px-3 py-1">
                 {couponToUse?.discountType === "percent"
-                  ? `${couponToUse?.discountValue}% 할인`
-                  : `${couponToUse?.discountValue?.toLocaleString()}원 할인`}
+                  ? `${couponToUse?.discountValue}% 할인 / Giảm ${couponToUse?.discountValue}%`
+                  : `${couponToUse?.discountValue?.toLocaleString()}원 할인 / Giảm ${couponToUse?.discountValue?.toLocaleString()}₩`}
               </Badge>
               {couponToUse?.description && (
                 <p className="text-sm text-muted-foreground mt-3">{couponToUse.description}</p>
@@ -336,6 +339,9 @@ export default function MyPage() {
               <p className="text-sm text-destructive font-medium">
                 사용 후에는 취소할 수 없습니다
               </p>
+              <p className="text-xs text-destructive/80 mt-1">
+                Không thể hủy sau khi sử dụng
+              </p>
             </div>
             <div className="flex gap-2">
               <Button
@@ -344,7 +350,7 @@ export default function MyPage() {
                 onClick={() => setCouponToUse(null)}
                 data-testid="button-cancel-coupon"
               >
-                취소
+                취소 / Hủy
               </Button>
               <Button
                 className="flex-1"
@@ -352,7 +358,7 @@ export default function MyPage() {
                 disabled={useCouponMutation.isPending}
                 data-testid="button-confirm-coupon"
               >
-                {useCouponMutation.isPending ? "처리 중..." : "사용하기"}
+                {useCouponMutation.isPending ? "처리 중..." : "사용하기 / Sử dụng"}
               </Button>
             </div>
           </div>
