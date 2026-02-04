@@ -29,6 +29,34 @@ async function syncAuthorName(): Promise<void> {
   }
 }
 
+async function applyPendingRegistration(): Promise<void> {
+  try {
+    const pendingData = localStorage.getItem('pendingRegistration');
+    if (!pendingData) return;
+    
+    const data = JSON.parse(pendingData);
+    if (!data.nickname && !data.gender && !data.birthDate) return;
+    
+    const response = await fetch("/api/auth/user", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        nickname: data.nickname || undefined,
+        gender: data.gender || undefined,
+        birthDate: data.birthDate || undefined,
+      }),
+    });
+    
+    if (response.ok) {
+      localStorage.removeItem('pendingRegistration');
+      console.log("Pending registration data applied successfully");
+    }
+  } catch (err) {
+    console.error("Failed to apply pending registration:", err);
+  }
+}
+
 async function logout(): Promise<void> {
   window.location.href = "/api/logout";
 }
@@ -42,12 +70,16 @@ export function useAuth() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // 로그인 시 게시글 작성자 이름 동기화
+  // 로그인 시 게시글 작성자 이름 동기화 및 대기 중인 회원가입 정보 적용
   useEffect(() => {
     if (user) {
       syncAuthorName();
+      applyPendingRegistration().then(() => {
+        // 프로필 업데이트 후 사용자 정보 새로고침
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      });
     }
-  }, [user?.id]);
+  }, [user?.id, queryClient]);
 
   const logoutMutation = useMutation({
     mutationFn: logout,

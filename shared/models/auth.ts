@@ -20,8 +20,10 @@ export const users = pgTable("users", {
   email: varchar("email"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  nickname: varchar("nickname"), // 별명
   profileImageUrl: varchar("profile_image_url"),
-  gender: varchar("gender"), // 카카오 로그인에서 가져온 성별 (male, female)
+  gender: varchar("gender"), // 성별 (male, female)
+  birthDate: varchar("birth_date"), // 생년월일 (YYYY-MM-DD)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
