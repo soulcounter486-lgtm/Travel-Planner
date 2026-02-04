@@ -272,7 +272,7 @@ export default function Board() {
   const { language, t } = useLanguage();
   const labels = boardLabels[language] || boardLabels.ko;
   const { toast } = useToast();
-  const { isSupported, isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
+  const { isSupported, isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications(false, false);
   
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showNewPostDialog, setShowNewPostDialog] = useState(false);

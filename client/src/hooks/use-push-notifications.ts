@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
-export function usePushNotifications() {
+export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn: boolean = false) {
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
+  const autoSubscribeAttempted = useRef(false);
 
   useEffect(() => {
     const checkSupport = () => {
@@ -19,6 +20,46 @@ export function usePushNotifications() {
     checkSupport();
     checkSubscription();
   }, []);
+
+  // 로그인 시 자동 구독
+  useEffect(() => {
+    if (autoSubscribe && isLoggedIn && isSupported && !isSubscribed && !autoSubscribeAttempted.current) {
+      autoSubscribeAttempted.current = true;
+      // 이미 권한이 granted인 경우에만 자동 구독
+      if (Notification.permission === "granted") {
+        subscribeAuto();
+      }
+    }
+  }, [autoSubscribe, isLoggedIn, isSupported, isSubscribed]);
+
+  const subscribeAuto = async () => {
+    try {
+      const vapidResponse = await fetch("/api/push/vapid-public-key");
+      const { publicKey } = await vapidResponse.json();
+      
+      if (!publicKey) return;
+
+      const registration = await navigator.serviceWorker.ready;
+      const existingSub = await registration.pushManager.getSubscription();
+      
+      if (existingSub) {
+        // 이미 구독되어 있으면 서버에 등록만
+        const subJson = existingSub.toJSON();
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            endpoint: subJson.endpoint,
+            keys: subJson.keys
+          })
+        });
+        setIsSubscribed(true);
+      }
+    } catch (err) {
+      console.error("Auto subscribe error:", err);
+    }
+  };
 
   const checkSubscription = async () => {
     if (!("serviceWorker" in navigator)) return;
