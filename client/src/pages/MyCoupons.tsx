@@ -364,22 +364,25 @@ export default function MyCoupons() {
       <AlertDialog open={showUseConfirm} onOpenChange={setShowUseConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>쿠폰 사용</AlertDialogTitle>
+            <AlertDialogTitle>
+              쿠폰 사용
+              <span className="block text-sm font-normal text-muted-foreground">Sử dụng phiếu giảm giá</span>
+            </AlertDialogTitle>
             <AlertDialogDescription className="space-y-4" asChild>
               <div>
                 <div className="text-center py-4">
                   <p className="text-2xl font-bold text-primary mb-2">{selectedCoupon?.name}</p>
                   <p className="text-4xl font-bold">
                     {selectedCoupon?.discountType === "percent"
-                      ? `${selectedCoupon?.discountValue}% 할인`
-                      : `${selectedCoupon?.discountValue.toLocaleString()}원 할인`}
+                      ? `${selectedCoupon?.discountValue}% 할인 / Giảm ${selectedCoupon?.discountValue}%`
+                      : `${selectedCoupon?.discountValue.toLocaleString()}원 할인 / Giảm ${selectedCoupon?.discountValue.toLocaleString()}₩`}
                   </p>
                 </div>
                 {selectedCoupon?.placeName && (
                   <div className="bg-muted/50 rounded-lg p-3 space-y-2">
                     <div className="flex items-center gap-2 text-sm font-medium">
                       <MapPin className="w-4 h-4 text-primary" />
-                      <span>사용 가능 장소: {selectedCoupon.placeName}</span>
+                      <span>사용 가능 장소 / Địa điểm: {selectedCoupon.placeName}</span>
                     </div>
                     {selectedCoupon.placeAddress && (
                       <p className="text-xs text-muted-foreground ml-6">{selectedCoupon.placeAddress}</p>
@@ -398,7 +401,7 @@ export default function MyCoupons() {
                             data-testid="button-view-map"
                           >
                             <Map className="w-3 h-3 mr-1" />
-                            {showInlineMap ? "지도닫기" : "지도보기"}
+                            {showInlineMap ? "지도닫기 / Đóng" : "지도보기 / Bản đồ"}
                           </Button>
                           <Button
                             size="sm"
@@ -411,7 +414,7 @@ export default function MyCoupons() {
                             data-testid="button-directions"
                           >
                             <Navigation className="w-3 h-3 mr-1" />
-                            길찾기
+                            길찾기 / Chỉ đường
                           </Button>
                         </div>
                         {showInlineMap && (
@@ -428,13 +431,15 @@ export default function MyCoupons() {
                 )}
                 <p className="text-center text-sm text-destructive mt-4">
                   쿠폰 사용 후에는 취소할 수 없습니다.<br />
-                  직원에게 이 화면을 보여주고 사용 버튼을 눌러주세요.
+                  <span className="text-xs text-muted-foreground">Sau khi sử dụng phiếu giảm giá, bạn không thể hủy.</span><br />
+                  직원에게 이 화면을 보여주고 사용 버튼을 눌러주세요.<br />
+                  <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này và nhấn nút sử dụng.</span>
                 </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>취소 / Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 if (selectedCoupon) {
@@ -445,7 +450,7 @@ export default function MyCoupons() {
               className="bg-primary"
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
-              사용 완료
+              사용 완료 / Hoàn tất
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
