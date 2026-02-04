@@ -64,6 +64,7 @@ interface Coupon {
   validUntil?: string;
   isActive: boolean;
   createdAt?: string;
+  placeId?: number | null;
 }
 
 interface Announcement {
@@ -196,6 +197,7 @@ export default function AdminMembers() {
     discountValue: 10,
     validFrom: "",
     validUntil: "",
+    placeId: null as number | null,
   });
   const [announcementForm, setAnnouncementForm] = useState({
     title: "",
@@ -396,6 +398,7 @@ export default function AdminMembers() {
       discountValue: coupon.discountValue,
       validFrom: coupon.validFrom ? coupon.validFrom.split("T")[0] : "",
       validUntil: coupon.validUntil ? coupon.validUntil.split("T")[0] : "",
+      placeId: coupon.placeId || null,
     });
     setEditCouponOpen(true);
   };
@@ -840,6 +843,25 @@ export default function AdminMembers() {
                         data-testid="input-edit-valid-until"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">연결 장소 (선택)</Label>
+                    <Select
+                      value={editCouponForm.placeId?.toString() || "none"}
+                      onValueChange={(v) => setEditCouponForm({ ...editCouponForm, placeId: v === "none" ? null : Number(v) })}
+                    >
+                      <SelectTrigger className="h-8 text-xs" data-testid="select-edit-place">
+                        <SelectValue placeholder="장소 선택 (선택사항)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">없음</SelectItem>
+                        {allPlaces.map((place) => (
+                          <SelectItem key={place.id} value={place.id.toString()}>
+                            {place.name} ({place.category === "attraction" ? "관광" : place.category === "restaurant" ? "맛집" : place.category === "cafe" ? "카페" : "기타"})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <Button
                     className="w-full"
