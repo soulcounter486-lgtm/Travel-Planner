@@ -1847,11 +1847,9 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       }
       
       // 좌표가 없고 이름/주소가 있으면 Geocoding/Places API로 좌표 가져오기
-      console.log("Geocoding check - lat:", latitude, "lng:", longitude, "name:", name, "address:", address, "hasApiKey:", !!process.env.GOOGLE_MAPS_API_KEY);
       if ((!latitude || !longitude) && (name || address) && process.env.GOOGLE_MAPS_API_KEY) {
         try {
           const searchQuery = name ? `${name}, Vũng Tàu, Vietnam` : address;
-          console.log("Geocoding search query:", searchQuery);
           const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchQuery || "")}&key=${process.env.GOOGLE_MAPS_API_KEY}&language=vi`;
           const geocodeRes = await fetch(geocodeUrl);
           const geocodeData = await geocodeRes.json() as {
@@ -1862,7 +1860,6 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
             }>;
             error_message?: string;
           };
-          console.log("Geocoding API response:", geocodeData.status, geocodeData.error_message || "");
           
           if (geocodeData.status === "OK" && geocodeData.results.length > 0) {
             const result = geocodeData.results[0];
