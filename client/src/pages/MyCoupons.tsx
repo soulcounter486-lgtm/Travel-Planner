@@ -302,7 +302,7 @@ export default function MyCoupons() {
                               <p className="text-2xl font-bold text-primary mt-1">
                                 {coupon.discountType === "percent"
                                   ? `${coupon.discountValue}% 할인`
-                                  : `${coupon.discountValue.toLocaleString()}원 할인`}
+                                  : `${coupon.discountValue.toLocaleString()}đ 할인`}
                               </p>
                               {coupon.description && (
                                 <p className="text-sm text-muted-foreground mt-1">{coupon.description}</p>
@@ -421,12 +421,12 @@ export default function MyCoupons() {
                     <p className="text-3xl font-bold text-center leading-tight">
                       {selectedCoupon?.discountType === "percent"
                         ? `${selectedCoupon?.discountValue}% 할인`
-                        : `${selectedCoupon?.discountValue.toLocaleString()}원 할인`}
+                        : `${selectedCoupon?.discountValue.toLocaleString()}đ 할인`}
                     </p>
                     <p className="text-2xl font-semibold text-primary/80 mt-1">
                       {selectedCoupon?.discountType === "percent"
                         ? `Giảm ${selectedCoupon?.discountValue}%`
-                        : `Giảm ${selectedCoupon?.discountValue.toLocaleString()}₩`}
+                        : `Giảm ${selectedCoupon?.discountValue.toLocaleString()}đ`}
                     </p>
                   </div>
                 </div>

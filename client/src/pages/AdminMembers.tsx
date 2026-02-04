@@ -676,17 +676,20 @@ export default function AdminMembers() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="percent">% 할인</SelectItem>
-                              <SelectItem value="fixed">금액 할인</SelectItem>
+                              <SelectItem value="fixed">금액 할인 (VND)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label className="text-xs">할인값</Label>
+                          <Label className="text-xs">할인값 {couponForm.discountType === 'fixed' && '(VND)'}</Label>
                           <Input
                             type="number"
                             className="h-8 text-sm"
-                            value={couponForm.discountValue}
-                            onChange={(e) => setCouponForm({ ...couponForm, discountValue: Number(e.target.value) })}
+                            value={couponForm.discountValue || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setCouponForm({ ...couponForm, discountValue: val === '' ? 0 : parseInt(val, 10) || 0 });
+                            }}
                           />
                         </div>
                       </div>
@@ -854,17 +857,20 @@ export default function AdminMembers() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="percent">%</SelectItem>
-                          <SelectItem value="fixed">원</SelectItem>
+                          <SelectItem value="fixed">금액 할인 (VND)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs">할인값</Label>
+                      <Label className="text-xs">할인값 {editCouponForm.discountType === 'fixed' && '(VND)'}</Label>
                       <Input
                         type="number"
                         className="h-8 text-sm"
-                        value={editCouponForm.discountValue}
-                        onChange={(e) => setEditCouponForm({ ...editCouponForm, discountValue: Number(e.target.value) })}
+                        value={editCouponForm.discountValue || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditCouponForm({ ...editCouponForm, discountValue: val === '' ? 0 : parseInt(val, 10) || 0 });
+                        }}
                         data-testid="input-edit-discount-value"
                       />
                     </div>
