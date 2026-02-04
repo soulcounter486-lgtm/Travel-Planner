@@ -442,7 +442,7 @@ export function AppHeader() {
                 </PopoverTrigger>
                 <PopoverContent 
                   align="end" 
-                  className="w-72 p-3"
+                  className="w-72 p-3 max-h-[80vh] overflow-y-auto"
                   onOpenAutoFocus={(e) => e.preventDefault()}
                   onInteractOutside={() => {
                     console.log('Popover onInteractOutside 호출');
