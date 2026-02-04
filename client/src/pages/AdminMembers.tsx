@@ -240,7 +240,10 @@ export default function AdminMembers() {
         credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -250,8 +253,8 @@ export default function AdminMembers() {
       setSelectedUser(null);
       toast({ title: "쪽지를 발송했습니다" });
     },
-    onError: () => {
-      toast({ title: "쪽지 발송 실패", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "쪽지 발송 실패", description: error.message, variant: "destructive" });
     },
   });
 
