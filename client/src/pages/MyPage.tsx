@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Mail, Ticket, ArrowLeft, Check, Gift, LogIn, User, Calendar, UserCircle } from "lucide-react";
+import { Mail, Ticket, ArrowLeft, Check, Gift, LogIn, User, Calendar, UserCircle, MapPin, Navigation } from "lucide-react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -34,6 +34,11 @@ interface UserCoupon {
   isUsed: boolean;
   usedAt: string | null;
   issuedAt: string;
+  placeId?: number;
+  placeName?: string;
+  placeAddress?: string;
+  placeLatitude?: string;
+  placeLongitude?: string;
 }
 
 export default function MyPage() {
@@ -446,6 +451,47 @@ export default function MyPage() {
                 <p className="text-sm text-muted-foreground mt-3">{couponToUse.description}</p>
               )}
             </div>
+            {couponToUse?.placeName && (
+              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <span>사용 가능 장소: {couponToUse.placeName}</span>
+                </div>
+                {couponToUse.placeAddress && (
+                  <p className="text-xs text-muted-foreground ml-6">{couponToUse.placeAddress}</p>
+                )}
+                {couponToUse.placeLatitude && couponToUse.placeLongitude && (
+                  <div className="flex gap-2 ml-6 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`/guide?lat=${couponToUse.placeLatitude}&lng=${couponToUse.placeLongitude}&name=${encodeURIComponent(couponToUse.placeName || "")}`, "_blank");
+                      }}
+                      data-testid="button-view-map"
+                    >
+                      <MapPin className="w-3 h-3 mr-1" />
+                      지도보기
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${couponToUse.placeLatitude},${couponToUse.placeLongitude}`, "_blank");
+                      }}
+                      data-testid="button-directions"
+                    >
+                      <Navigation className="w-3 h-3 mr-1" />
+                      길찾기
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-center">
               <p className="text-sm text-destructive font-medium">
                 사용 후에는 취소할 수 없습니다
