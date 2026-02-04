@@ -407,7 +407,7 @@ export default function MyCoupons() {
       </div>
 
       <AlertDialog open={showUseConfirm} onOpenChange={setShowUseConfirm}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="max-w-[90vw] sm:max-w-md mx-4">
           <AlertDialogHeader className="text-center">
             <AlertDialogTitle className="text-center">
               쿠폰 사용
@@ -441,7 +441,7 @@ export default function MyCoupons() {
                     )}
                     {selectedCoupon.placeLatitude && selectedCoupon.placeLongitude && (
                       <div className="space-y-2">
-                        <div className="flex gap-2 ml-6 mt-2">
+                        <div className="flex flex-wrap gap-2 mt-2 justify-center">
                           <Button
                             size="sm"
                             variant={showInlineMap ? "default" : "outline"}
