@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Mail, Ticket, ArrowLeft, Check, Gift, LogIn, User, Calendar, UserCircle, MapPin, Navigation } from "lucide-react";
+import { Mail, Ticket, ArrowLeft, Check, Gift, LogIn, User, Calendar, UserCircle, MapPin, Navigation, Map } from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { Link, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -48,6 +50,61 @@ export default function MyPage() {
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const [, setLocation] = useLocation();
   const searchString = useSearch();
+  const [showInlineMap, setShowInlineMap] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (showInlineMap && couponToUse?.placeLatitude && couponToUse?.placeLongitude && mapContainerRef.current) {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      
+      const lat = parseFloat(couponToUse.placeLatitude);
+      const lng = parseFloat(couponToUse.placeLongitude);
+      
+      const map = L.map(mapContainerRef.current).setView([lat, lng], 16);
+      mapInstanceRef.current = map;
+      
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      
+      const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: #3b82f6; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+      
+      L.marker([lat, lng], { icon: customIcon })
+        .addTo(map)
+        .bindPopup(`<strong>${couponToUse.placeName || "위치"}</strong><br/>${couponToUse.placeAddress || ""}`)
+        .openPopup();
+      
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+    
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [showInlineMap, couponToUse]);
+
+  useEffect(() => {
+    if (!couponToUse) {
+      setShowInlineMap(false);
+    }
+  }, [couponToUse]);
   
   // URL 쿼리에서 탭 파라미터 읽기
   const urlParams = new URLSearchParams(searchString);
@@ -461,33 +518,43 @@ export default function MyPage() {
                   <p className="text-xs text-muted-foreground ml-6">{couponToUse.placeAddress}</p>
                 )}
                 {couponToUse.placeLatitude && couponToUse.placeLongitude && (
-                  <div className="flex gap-2 ml-6 mt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`/guide?lat=${couponToUse.placeLatitude}&lng=${couponToUse.placeLongitude}&name=${encodeURIComponent(couponToUse.placeName || "")}`, "_blank");
-                      }}
-                      data-testid="button-view-map"
-                    >
-                      <MapPin className="w-3 h-3 mr-1" />
-                      지도보기
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${couponToUse.placeLatitude},${couponToUse.placeLongitude}`, "_blank");
-                      }}
-                      data-testid="button-directions"
-                    >
-                      <Navigation className="w-3 h-3 mr-1" />
-                      길찾기
-                    </Button>
+                  <div className="space-y-2">
+                    <div className="flex gap-2 ml-6 mt-2">
+                      <Button
+                        size="sm"
+                        variant={showInlineMap ? "default" : "outline"}
+                        className="h-7 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowInlineMap(!showInlineMap);
+                        }}
+                        data-testid="button-view-map"
+                      >
+                        <Map className="w-3 h-3 mr-1" />
+                        {showInlineMap ? "지도닫기" : "지도보기"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`https://www.google.com/maps/dir/?api=1&destination=${couponToUse.placeLatitude},${couponToUse.placeLongitude}`, "_blank");
+                        }}
+                        data-testid="button-directions"
+                      >
+                        <Navigation className="w-3 h-3 mr-1" />
+                        길찾기
+                      </Button>
+                    </div>
+                    {showInlineMap && (
+                      <div 
+                        ref={mapContainerRef}
+                        className="w-full h-48 rounded-lg overflow-hidden border"
+                        style={{ minHeight: "192px" }}
+                        data-testid="inline-map-container"
+                      />
+                    )}
                   </div>
                 )}
               </div>
