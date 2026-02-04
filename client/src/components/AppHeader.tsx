@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n";
@@ -35,16 +36,26 @@ export function AppHeader() {
     queryKey: ["/api/exchange-rates"],
   });
 
-  const { data: notifications } = useQuery<Notifications>({
+  const { data: notifications, refetch: refetchNotifications } = useQuery<Notifications>({
     queryKey: ["/api/my-notifications"],
     queryFn: async () => {
       const res = await fetch("/api/my-notifications", { credentials: "include" });
       if (!res.ok) return { unreadMessagesCount: 0, unusedCouponsCount: 0 };
       return res.json();
     },
-    enabled: isAuthenticated && !isAuthLoading,
+    enabled: !!isAuthenticated,
     refetchInterval: 30000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
+  
+  // 로그인 상태 변경 시 알림 refetch
+  useEffect(() => {
+    if (isAuthenticated && !isAuthLoading) {
+      refetchNotifications();
+    }
+  }, [isAuthenticated, isAuthLoading, refetchNotifications]);
 
   const totalNotifications = (notifications?.unreadMessagesCount || 0) + (notifications?.unusedCouponsCount || 0);
 
