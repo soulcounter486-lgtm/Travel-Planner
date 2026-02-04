@@ -27,6 +27,45 @@ const vapidSubject = process.env.VAPID_SUBJECT || "mailto:admin@vungtau.blog";
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+  console.log("Web Push configured successfully");
+}
+
+// 푸시 알림 전송 함수
+async function sendPushNotification(userId: string, title: string, body: string, url: string = "/") {
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    console.log("VAPID keys not configured, skipping push notification");
+    return;
+  }
+  
+  try {
+    const subscriptions = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+    
+    for (const sub of subscriptions) {
+      try {
+        await webpush.sendNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth,
+            },
+          },
+          JSON.stringify({ title, body, url })
+        );
+        console.log("Push notification sent to:", userId);
+      } catch (error: any) {
+        // 구독이 만료되었거나 유효하지 않은 경우 삭제
+        if (error.statusCode === 404 || error.statusCode === 410) {
+          await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
+          console.log("Removed expired push subscription:", sub.endpoint);
+        } else {
+          console.error("Push notification error:", error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Failed to send push notification:", error);
+  }
 }
 
 // 베트남 공휴일 목록 (2025-2028)
@@ -740,6 +779,91 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Forgot password error:", error);
       res.status(500).json({ error: "비밀번호 재설정 처리 중 오류가 발생했습니다. 관리자에게 문의해주세요." });
+    }
+  });
+
+  // === 푸시 알림 API ===
+  
+  // VAPID 공개키 반환
+  app.get("/api/push/vapid-public-key", (req, res) => {
+    res.json({ publicKey: vapidPublicKey });
+  });
+
+  // 푸시 알림 구독
+  app.post("/api/push/subscribe", isAuthenticated, async (req: any, res) => {
+    try {
+      const { endpoint, keys } = req.body;
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.status(401).json({ error: "로그인이 필요합니다." });
+      }
+      
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        return res.status(400).json({ error: "잘못된 구독 정보입니다." });
+      }
+
+      // 기존 구독 확인 및 업데이트
+      const existing = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint)).limit(1);
+      
+      if (existing.length > 0) {
+        await db.update(pushSubscriptions)
+          .set({ userId, p256dh: keys.p256dh, auth: keys.auth })
+          .where(eq(pushSubscriptions.endpoint, endpoint));
+      } else {
+        await db.insert(pushSubscriptions).values({
+          userId,
+          endpoint,
+          p256dh: keys.p256dh,
+          auth: keys.auth,
+        });
+      }
+
+      console.log("Push subscription saved for user:", userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Push subscription error:", error);
+      res.status(500).json({ error: "구독 저장 실패" });
+    }
+  });
+
+  // 푸시 알림 구독 해제
+  app.post("/api/push/unsubscribe", isAuthenticated, async (req: any, res) => {
+    try {
+      const { endpoint } = req.body;
+      
+      if (!endpoint) {
+        return res.status(400).json({ error: "endpoint가 필요합니다." });
+      }
+
+      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
+      
+      console.log("Push subscription removed:", endpoint);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Push unsubscribe error:", error);
+      res.status(500).json({ error: "구독 해제 실패" });
+    }
+  });
+
+  // 푸시 알림 구독 상태 확인
+  app.get("/api/push/status", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      
+      if (!userId) {
+        return res.json({ subscribed: false });
+      }
+
+      const subscriptions = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+      
+      res.json({ 
+        subscribed: subscriptions.length > 0,
+        count: subscriptions.length
+      });
+    } catch (error) {
+      console.error("Push status error:", error);
+      res.status(500).json({ error: "상태 확인 실패" });
     }
   });
 
@@ -3956,6 +4080,14 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         senderId: user?.claims?.sub || userEmail,
       }).returning();
 
+      // 푸시 알림 전송
+      await sendPushNotification(
+        parsed.data.receiverId,
+        "📬 새 쪽지가 도착했습니다",
+        parsed.data.title,
+        "/my-coupons?tab=messages"
+      );
+
       res.json(message);
     } catch (err) {
       console.error("쪽지 발송 오류:", err);
@@ -3994,6 +4126,15 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
           title,
           content,
         });
+        
+        // 푸시 알림 전송
+        sendPushNotification(
+          targetUser.id,
+          "📬 새 쪽지가 도착했습니다",
+          title,
+          "/my-coupons?tab=messages"
+        );
+        
         sentCount++;
       }
 
@@ -4021,6 +4162,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
 
       const allUsers = await db.select().from(users);
       
+      // 쿠폰 정보 가져오기
+      const [couponInfo] = await db.select().from(coupons).where(eq(coupons.id, couponId));
+      
       let issuedCount = 0;
       for (const targetUser of allUsers) {
         await db.insert(userCoupons).values({
@@ -4028,6 +4172,15 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
           couponId,
           isUsed: false,
         });
+        
+        // 푸시 알림 전송
+        sendPushNotification(
+          targetUser.id,
+          "🎫 새 쿠폰이 도착했습니다",
+          couponInfo?.name || "할인 쿠폰",
+          "/my-coupons?tab=coupons"
+        );
+        
         issuedCount++;
       }
 
@@ -4213,6 +4366,15 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         couponId,
         isUsed: false,
       }).returning();
+
+      // 쿠폰 정보 가져오기 및 푸시 알림 전송
+      const [couponInfo] = await db.select().from(coupons).where(eq(coupons.id, couponId));
+      await sendPushNotification(
+        userId,
+        "🎫 새 쿠폰이 도착했습니다",
+        couponInfo?.name || "할인 쿠폰",
+        "/my-coupons?tab=coupons"
+      );
 
       res.json(userCoupon);
     } catch (err) {
