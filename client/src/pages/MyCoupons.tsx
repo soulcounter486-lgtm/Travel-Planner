@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Ticket, MessageSquare, CheckCircle2, Clock, Gift, Mail, MailOpen, X, MapPin, Navigation, Map } from "lucide-react";
+import { ArrowLeft, Ticket, MessageSquare, CheckCircle2, Clock, Gift, Mail, MailOpen, X, MapPin, Navigation, Map, Bell, BellOff } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Link, useSearch } from "wouter";
@@ -60,6 +62,7 @@ export default function MyCoupons() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { isSupported, isSubscribed, isLoading: pushLoading, subscribe, unsubscribe, permission } = usePushNotifications();
   const searchString = useSearch();
   const urlParams = new URLSearchParams(searchString);
   const tabFromUrl = urlParams.get("tab");
@@ -70,6 +73,22 @@ export default function MyCoupons() {
   const [showInlineMap, setShowInlineMap] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+
+  const handleNotificationToggle = async () => {
+    if (isSubscribed) {
+      const success = await unsubscribe();
+      if (success) {
+        toast({ title: "알림이 해제되었습니다" });
+      }
+    } else {
+      const success = await subscribe();
+      if (success) {
+        toast({ title: "알림이 설정되었습니다", description: "새 쪽지나 쿠폰이 도착하면 알림을 받습니다" });
+      } else if (permission === "denied") {
+        toast({ title: "알림 권한이 거부되었습니다", description: "브라우저 설정에서 알림을 허용해주세요", variant: "destructive" });
+      }
+    }
+  };
 
   useEffect(() => {
     if (tabFromUrl && ["coupons", "messages"].includes(tabFromUrl)) {
@@ -205,6 +224,32 @@ export default function MyCoupons() {
             </Button>
           </Link>
           <h1 className="text-xl font-bold">내 쿠폰 & 쪽지</h1>
+          
+          {/* 푸시 알림 토글 */}
+          {isSupported && (
+            <Button
+              variant={isSubscribed ? "default" : "outline"}
+              size="sm"
+              onClick={handleNotificationToggle}
+              disabled={pushLoading}
+              className="ml-auto flex items-center gap-2"
+              data-testid="button-notification-toggle"
+            >
+              {pushLoading ? (
+                <span className="animate-spin">⏳</span>
+              ) : isSubscribed ? (
+                <>
+                  <Bell className="w-4 h-4" />
+                  <span className="hidden sm:inline">알림 ON</span>
+                </>
+              ) : (
+                <>
+                  <BellOff className="w-4 h-4" />
+                  <span className="hidden sm:inline">알림 OFF</span>
+                </>
+              )}
+            </Button>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
