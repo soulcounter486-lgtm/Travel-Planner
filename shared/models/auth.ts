@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, jsonb, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 // Session storage table.
 // (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
@@ -26,6 +26,9 @@ export const users = pgTable("users", {
   gender: varchar("gender"), // 성별 (male, female)
   birthDate: varchar("birth_date"), // 생년월일 (YYYY-MM-DD)
   loginMethod: varchar("login_method"), // 로그인 방법 (email, kakao, google, replit)
+  emailVerified: boolean("email_verified").default(false), // 이메일 인증 여부
+  emailVerificationToken: varchar("email_verification_token"), // 인증 토큰
+  emailVerificationExpires: timestamp("email_verification_expires"), // 토큰 만료 시간
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

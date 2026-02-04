@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 
 interface Notifications {
@@ -33,9 +34,13 @@ interface ExchangeRates {
 export function AppHeader() {
   const { t, language } = useLanguage();
   const { isAuthenticated, logout, isLoading: isAuthLoading, isAdmin } = useAuth();
+  const { toast } = useToast();
   const [showRegister, setShowRegister] = useState(false);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState("");
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
@@ -109,14 +114,99 @@ export function AppHeader() {
       const data = await res.json();
       
       if (!res.ok) {
+        // 이미 등록되었지만 인증이 필요한 경우
+        if (data.needsVerification) {
+          setVerificationEmail(data.email);
+          setShowRegister(false);
+          setShowEmailVerification(true);
+          setRegisterError("");
+          return;
+        }
         setRegisterError(data.error || "회원가입에 실패했습니다.");
         return;
       }
       
-      // 회원가입 성공 - 페이지 새로고침
-      window.location.reload();
+      // 회원가입 성공 - 이메일 인증 화면으로 이동
+      if (data.needsVerification) {
+        setVerificationEmail(data.email);
+        setShowRegister(false);
+        setShowEmailVerification(true);
+        setRegisterError("");
+      } else {
+        window.location.reload();
+      }
     } catch (err) {
       setRegisterError("회원가입 처리 중 오류가 발생했습니다.");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 이메일 인증 코드 확인
+  const handleVerifyEmail = async () => {
+    if (!verificationCode) {
+      setRegisterError("인증 코드를 입력해주세요.");
+      return;
+    }
+    
+    setRegisterLoading(true);
+    setRegisterError("");
+    
+    try {
+      const res = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: verificationEmail, code: verificationCode }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setRegisterError(data.error || "인증에 실패했습니다.");
+        return;
+      }
+      
+      // 인증 성공 - 페이지 새로고침
+      window.location.reload();
+    } catch (err) {
+      setRegisterError("인증 처리 중 오류가 발생했습니다.");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 인증 이메일 재발송
+  const handleResendVerification = async () => {
+    if (!verificationEmail) {
+      setRegisterError("이메일 주소가 없습니다.");
+      return;
+    }
+    
+    setRegisterLoading(true);
+    setRegisterError("");
+    
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: verificationEmail }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setRegisterError(data.error || "재발송에 실패했습니다.");
+        return;
+      }
+      
+      setRegisterError("");
+      toast({
+        title: "인증 이메일 재발송",
+        description: "인증 코드가 이메일로 다시 발송되었습니다.",
+      });
+    } catch (err) {
+      setRegisterError("재발송 처리 중 오류가 발생했습니다.");
     } finally {
       setRegisterLoading(false);
     }
@@ -143,6 +233,14 @@ export function AppHeader() {
       const data = await res.json();
       
       if (!res.ok) {
+        // 이메일 인증이 필요한 경우
+        if (data.needsVerification) {
+          setVerificationEmail(data.email);
+          setShowEmailLogin(false);
+          setShowEmailVerification(true);
+          setRegisterError("");
+          return;
+        }
         setRegisterError(data.error || "로그인에 실패했습니다.");
         return;
       }
@@ -485,6 +583,85 @@ export function AppHeader() {
                             }}
                           >
                             회원가입
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : showEmailVerification ? (
+                    <>
+                      {/* 이메일 인증 화면 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-sm">이메일 인증</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowEmailVerification(false);
+                              setVerificationCode("");
+                              setRegisterError("");
+                            }}
+                          >
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            <strong>{verificationEmail}</strong>로 6자리 인증 코드가 발송되었습니다.
+                            <br />30분 내에 아래 입력란에 코드를 입력해주세요.
+                          </p>
+                        </div>
+                        
+                        {registerError && (
+                          <p className="text-xs text-red-500 text-center">{registerError}</p>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <Label htmlFor="verify-code" className="text-xs">인증 코드 (6자리)</Label>
+                            <Input
+                              id="verify-code"
+                              type="text"
+                              placeholder="123456"
+                              className="h-10 text-lg text-center tracking-widest font-mono"
+                              maxLength={6}
+                              value={verificationCode}
+                              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-verification-code"
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button
+                          className="w-full h-9"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleVerifyEmail();
+                          }}
+                          disabled={registerLoading || verificationCode.length !== 6}
+                          data-testid="button-verify-email"
+                        >
+                          {registerLoading ? "인증 중..." : "인증 확인"}
+                        </Button>
+                        
+                        <div className="text-center">
+                          <button 
+                            className="text-xs text-muted-foreground underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleResendVerification();
+                            }}
+                            disabled={registerLoading}
+                            data-testid="button-resend-verification"
+                          >
+                            인증 코드 다시 받기
                           </button>
                         </div>
                       </div>

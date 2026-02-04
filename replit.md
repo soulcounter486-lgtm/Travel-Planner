@@ -10,6 +10,14 @@ A travel quote calculator application for generating custom trip estimates. The 
 - **빌라 선택 갤러리**: Home 페이지에서 사용자가 빌라 선택 시 해당 빌라의 가격으로 자동 견적 계산
 - **견적 저장**: 저장된 견적에 villaId, villaName 포함
 
+### Email Verification System (2026-02-04 추가)
+- **이메일 인증 필수**: 이메일/비밀번호 회원가입 시 6자리 인증 코드를 이메일로 발송
+- **인증 코드 만료**: 30분 후 자동 만료
+- **미인증 로그인 차단**: 이메일 인증을 완료하지 않은 사용자는 로그인 불가
+- **재발송 기능**: 인증 코드 재발송 가능
+- **자동 로그인**: 인증 완료 시 자동으로 로그인 처리
+- **DB 필드**: users 테이블에 emailVerified, emailVerificationToken, emailVerificationExpires 추가
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

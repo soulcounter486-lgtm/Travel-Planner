@@ -363,13 +363,25 @@ export async function registerRoutes(
       // 이메일 중복 확인
       const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
       if (existingUser.length > 0) {
+        // 인증되지 않은 사용자인 경우 재발송 안내
+        if (!existingUser[0].emailVerified && existingUser[0].loginMethod === "email") {
+          return res.status(400).json({ 
+            error: "이미 등록된 이메일입니다. 인증 이메일을 확인하거나 재발송해주세요.",
+            needsVerification: true,
+            email: email
+          });
+        }
         return res.status(400).json({ error: "이미 등록된 이메일입니다." });
       }
       
       // 비밀번호 해시
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // 사용자 생성 (UUID 자동 생성)
+      // 인증 토큰 생성 (6자리 숫자)
+      const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+      const tokenExpires = new Date(Date.now() + 30 * 60 * 1000); // 30분 후 만료
+      
+      // 사용자 생성 (UUID 자동 생성) - 이메일 미인증 상태
       const [newUser] = await db.insert(users).values({
         email,
         password: hashedPassword,
@@ -377,15 +389,97 @@ export async function registerRoutes(
         gender: gender || null,
         birthDate: birthDate || null,
         loginMethod: "email",
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+        emailVerificationExpires: tokenExpires,
       }).returning();
       
-      // 세션에 사용자 정보 저장
-      (req.session as any).userId = newUser.id;
+      // 인증 이메일 발송
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.SMTP_EMAIL,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+      
+      const mailOptions = {
+        from: `"붕따우 도깨비" <${process.env.SMTP_EMAIL}>`,
+        to: email,
+        subject: "[붕따우 도깨비] 이메일 인증 코드",
+        html: `
+          <div style="font-family: 'Malgun Gothic', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2563eb;">붕따우 도깨비 이메일 인증</h2>
+            <p>안녕하세요!</p>
+            <p>회원가입을 완료하려면 아래 인증 코드를 입력해주세요.</p>
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">${verificationToken}</p>
+            </div>
+            <p style="color: #666;">이 코드는 30분 후에 만료됩니다.</p>
+            <p style="color: #666;">본인이 요청하지 않은 경우 이 이메일을 무시해주세요.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">붕따우 도깨비 (사업자등록번호: 350-70-00679)</p>
+          </div>
+        `,
+      };
+      
+      await transporter.sendMail(mailOptions);
+      console.log(`Verification email sent to ${email} with code ${verificationToken}`);
+      
+      res.json({ 
+        success: true, 
+        message: "인증 이메일이 발송되었습니다. 이메일을 확인해주세요.",
+        needsVerification: true,
+        email: email
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "회원가입 처리 중 오류가 발생했습니다." });
+    }
+  });
+
+  // === 이메일 인증 확인 ===
+  app.post("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { email, code } = req.body;
+      
+      if (!email || !code) {
+        return res.status(400).json({ error: "이메일과 인증 코드를 입력해주세요." });
+      }
+      
+      const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (!user) {
+        return res.status(400).json({ error: "등록되지 않은 이메일입니다." });
+      }
+      
+      if (user.emailVerified) {
+        return res.status(400).json({ error: "이미 인증된 이메일입니다." });
+      }
+      
+      if (user.emailVerificationToken !== code) {
+        return res.status(400).json({ error: "인증 코드가 일치하지 않습니다." });
+      }
+      
+      if (user.emailVerificationExpires && new Date() > user.emailVerificationExpires) {
+        return res.status(400).json({ error: "인증 코드가 만료되었습니다. 재발송해주세요." });
+      }
+      
+      // 이메일 인증 완료
+      await db.update(users)
+        .set({ 
+          emailVerified: true, 
+          emailVerificationToken: null, 
+          emailVerificationExpires: null 
+        })
+        .where(eq(users.id, user.id));
+      
+      // 세션에 사용자 정보 저장 (자동 로그인)
+      (req.session as any).userId = user.id;
       (req.session as any).user = {
-        id: newUser.id,
-        email: newUser.email,
-        name: newUser.nickname || newUser.email?.split("@")[0],
-        profileImageUrl: newUser.profileImageUrl,
+        id: user.id,
+        email: user.email,
+        name: user.nickname || user.email?.split("@")[0],
+        profileImageUrl: user.profileImageUrl,
       };
       
       req.session.save((err) => {
@@ -393,11 +487,79 @@ export async function registerRoutes(
           console.error("Session save error:", err);
           return res.status(500).json({ error: "세션 저장 실패" });
         }
-        res.json({ success: true, user: { id: newUser.id, email: newUser.email, nickname: newUser.nickname } });
+        res.json({ success: true, message: "이메일 인증이 완료되었습니다.", user: { id: user.id, email: user.email, nickname: user.nickname } });
       });
     } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ error: "회원가입 처리 중 오류가 발생했습니다." });
+      console.error("Email verification error:", error);
+      res.status(500).json({ error: "이메일 인증 처리 중 오류가 발생했습니다." });
+    }
+  });
+
+  // === 인증 이메일 재발송 ===
+  app.post("/api/auth/resend-verification", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "이메일을 입력해주세요." });
+      }
+      
+      const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (!user) {
+        return res.status(400).json({ error: "등록되지 않은 이메일입니다." });
+      }
+      
+      if (user.emailVerified) {
+        return res.status(400).json({ error: "이미 인증된 이메일입니다." });
+      }
+      
+      // 새 인증 토큰 생성
+      const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+      const tokenExpires = new Date(Date.now() + 30 * 60 * 1000); // 30분 후 만료
+      
+      await db.update(users)
+        .set({ 
+          emailVerificationToken: verificationToken, 
+          emailVerificationExpires: tokenExpires 
+        })
+        .where(eq(users.id, user.id));
+      
+      // 인증 이메일 재발송
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.SMTP_EMAIL,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+      
+      const mailOptions = {
+        from: `"붕따우 도깨비" <${process.env.SMTP_EMAIL}>`,
+        to: email,
+        subject: "[붕따우 도깨비] 이메일 인증 코드 (재발송)",
+        html: `
+          <div style="font-family: 'Malgun Gothic', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2563eb;">붕따우 도깨비 이메일 인증</h2>
+            <p>안녕하세요!</p>
+            <p>회원가입을 완료하려면 아래 인증 코드를 입력해주세요.</p>
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #2563eb;">${verificationToken}</p>
+            </div>
+            <p style="color: #666;">이 코드는 30분 후에 만료됩니다.</p>
+            <p style="color: #666;">본인이 요청하지 않은 경우 이 이메일을 무시해주세요.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">붕따우 도깨비 (사업자등록번호: 350-70-00679)</p>
+          </div>
+        `,
+      };
+      
+      await transporter.sendMail(mailOptions);
+      console.log(`Verification email resent to ${email} with code ${verificationToken}`);
+      
+      res.json({ success: true, message: "인증 이메일이 재발송되었습니다." });
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      res.status(500).json({ error: "인증 이메일 재발송 중 오류가 발생했습니다." });
     }
   });
 
@@ -419,6 +581,15 @@ export async function registerRoutes(
       // 비밀번호가 없는 경우 (OAuth로 가입한 사용자)
       if (!user.password) {
         return res.status(401).json({ error: "이 이메일은 소셜 로그인으로 등록되었습니다. 카카오 또는 구글로 로그인해주세요." });
+      }
+      
+      // 이메일 인증 확인
+      if (!user.emailVerified && user.loginMethod === "email") {
+        return res.status(401).json({ 
+          error: "이메일 인증이 필요합니다. 이메일을 확인해주세요.",
+          needsVerification: true,
+          email: email
+        });
       }
       
       // 비밀번호 확인
