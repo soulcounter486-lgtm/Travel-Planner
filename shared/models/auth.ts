@@ -29,6 +29,7 @@ export const users = pgTable("users", {
   emailVerified: boolean("email_verified").default(false), // 이메일 인증 여부
   emailVerificationToken: varchar("email_verification_token"), // 인증 토큰
   emailVerificationExpires: timestamp("email_verification_expires"), // 토큰 만료 시간
+  welcomeCouponIssued: boolean("welcome_coupon_issued").default(false), // 첫 로그인 쿠폰 발급 여부
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

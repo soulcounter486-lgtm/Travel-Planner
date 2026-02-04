@@ -187,6 +187,7 @@ export default function AdminMembers() {
     discountValue: 10,
     validUntil: "",
     placeId: null as number | null,
+    isWelcomeCoupon: false,
   });
 
   const [newAnnouncementOpen, setNewAnnouncementOpen] = useState(false);
@@ -200,6 +201,7 @@ export default function AdminMembers() {
     validFrom: "",
     validUntil: "",
     placeId: null as number | null,
+    isWelcomeCoupon: false,
   });
   const [announcementForm, setAnnouncementForm] = useState({
     title: "",
@@ -349,7 +351,7 @@ export default function AdminMembers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
       setNewCouponOpen(false);
-      setCouponForm({ name: "", description: "", discountType: "percent", discountValue: 10, validUntil: "", placeId: null });
+      setCouponForm({ name: "", description: "", discountType: "percent", discountValue: 10, validUntil: "", placeId: null, isWelcomeCoupon: false });
       toast({ title: "쿠폰이 생성되었습니다" });
     },
     onError: () => {
@@ -401,6 +403,7 @@ export default function AdminMembers() {
       validFrom: coupon.validFrom ? coupon.validFrom.split("T")[0] : "",
       validUntil: coupon.validUntil ? coupon.validUntil.split("T")[0] : "",
       placeId: coupon.placeId || null,
+      isWelcomeCoupon: coupon.isWelcomeCoupon || false,
     });
     setEditCouponOpen(true);
   };
@@ -739,6 +742,19 @@ export default function AdminMembers() {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                        <input
+                          type="checkbox"
+                          id="isWelcomeCoupon"
+                          checked={couponForm.isWelcomeCoupon}
+                          onChange={(e) => setCouponForm({ ...couponForm, isWelcomeCoupon: e.target.checked })}
+                          className="w-4 h-4"
+                          data-testid="checkbox-welcome-coupon"
+                        />
+                        <Label htmlFor="isWelcomeCoupon" className="text-xs cursor-pointer">
+                          첫 로그인 쿠폰 (신규 회원 첫 로그인 시 자동 발급)
+                        </Label>
+                      </div>
                       <Button
                         className="w-full h-8 text-sm"
                         onClick={() => createCouponMutation.mutate(couponForm)}
@@ -758,11 +774,16 @@ export default function AdminMembers() {
                     {allCoupons.map((coupon) => (
                       <div key={coupon.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 flex-wrap">
                             <span className="font-medium">{coupon.name}</span>
                             <Badge variant="secondary" className="text-[10px] h-4 px-1">
                               {coupon.discountType === "percent" ? `${coupon.discountValue}%` : `${coupon.discountValue.toLocaleString()}원`}
                             </Badge>
+                            {coupon.isWelcomeCoupon && (
+                              <Badge variant="default" className="text-[10px] h-4 px-1 bg-green-600">
+                                첫 로그인
+                              </Badge>
+                            )}
                           </div>
                           {coupon.validUntil && (
                             <p className="text-[10px] text-muted-foreground">
@@ -912,6 +933,19 @@ export default function AdminMembers() {
                         })()}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="editIsWelcomeCoupon"
+                      checked={editCouponForm.isWelcomeCoupon}
+                      onChange={(e) => setEditCouponForm({ ...editCouponForm, isWelcomeCoupon: e.target.checked })}
+                      className="w-4 h-4"
+                      data-testid="checkbox-edit-welcome-coupon"
+                    />
+                    <Label htmlFor="editIsWelcomeCoupon" className="text-xs cursor-pointer">
+                      첫 로그인 쿠폰 (신규 회원 첫 로그인 시 자동 발급)
+                    </Label>
                   </div>
                   <Button
                     className="w-full"

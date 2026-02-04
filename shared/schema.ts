@@ -373,6 +373,7 @@ export const coupons = pgTable("coupons", {
   validUntil: timestamp("valid_until"), // 유효 종료일
   placeId: integer("place_id"), // 연결된 관광명소/장소 ID
   isActive: boolean("is_active").default(true), // 활성화 여부
+  isWelcomeCoupon: boolean("is_welcome_coupon").default(false), // 첫 로그인 쿠폰 여부
   createdAt: timestamp("created_at").defaultNow(),
 });
 

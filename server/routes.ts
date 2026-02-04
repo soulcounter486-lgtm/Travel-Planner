@@ -598,6 +598,34 @@ export async function registerRoutes(
         return res.status(401).json({ error: "비밀번호가 일치하지 않습니다." });
       }
       
+      // 첫 로그인 환영 쿠폰 발급
+      if (!user.welcomeCouponIssued) {
+        try {
+          // 활성화된 환영 쿠폰 찾기
+          const welcomeCoupons = await db.select().from(coupons).where(
+            and(
+              eq(coupons.isWelcomeCoupon, true),
+              eq(coupons.isActive, true)
+            )
+          );
+          
+          // 환영 쿠폰 발급
+          for (const coupon of welcomeCoupons) {
+            await db.insert(userCoupons).values({
+              userId: user.id,
+              couponId: coupon.id,
+              isUsed: false,
+            });
+          }
+          
+          // 환영 쿠폰 발급 완료 표시
+          await db.update(users).set({ welcomeCouponIssued: true }).where(eq(users.id, user.id));
+        } catch (couponError) {
+          console.error("Welcome coupon issue error:", couponError);
+          // 쿠폰 발급 실패해도 로그인은 진행
+        }
+      }
+      
       // 세션에 사용자 정보 저장
       (req.session as any).userId = user.id;
       (req.session as any).user = {
