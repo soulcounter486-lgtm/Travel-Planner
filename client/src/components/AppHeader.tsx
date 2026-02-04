@@ -445,6 +445,9 @@ export function AppHeader() {
                               e.preventDefault();
                               e.stopPropagation();
                               setShowEmailVerification(false);
+                              setShowEmailLogin(false);
+                              setShowRegister(false);
+                              setShowForgotPassword(false);
                               setVerificationCode("");
                               setRegisterError("");
                             }}
@@ -523,8 +526,10 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowForgotPassword(false);
                               setShowEmailLogin(true);
+                              setShowForgotPassword(false);
+                              setShowRegister(false);
+                              setShowEmailVerification(false);
                               setRegisterError("");
                               setForgotPasswordSuccess("");
                             }}
@@ -610,6 +615,10 @@ export function AppHeader() {
                             e.preventDefault();
                             e.stopPropagation();
                             setShowEmailLogin(true);
+                            setShowRegister(false);
+                            setShowForgotPassword(false);
+                            setShowEmailVerification(false);
+                            setRegisterError("");
                           }}
                           data-testid="button-show-email-login"
                         >
@@ -627,6 +636,10 @@ export function AppHeader() {
                           e.preventDefault();
                           e.stopPropagation();
                           setShowRegister(true);
+                          setShowEmailLogin(false);
+                          setShowForgotPassword(false);
+                          setShowEmailVerification(false);
+                          setRegisterError("");
                         }}
                         data-testid="button-show-register"
                       >
@@ -708,8 +721,10 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowEmailLogin(false);
                               setShowForgotPassword(true);
+                              setShowEmailLogin(false);
+                              setShowRegister(false);
+                              setShowEmailVerification(false);
                               setRegisterError("");
                               setForgotPasswordSuccess("");
                             }}
@@ -722,8 +737,10 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowEmailLogin(false);
                               setShowRegister(true);
+                              setShowEmailLogin(false);
+                              setShowForgotPassword(false);
+                              setShowEmailVerification(false);
                               setRegisterError("");
                             }}
                           >
@@ -907,6 +924,9 @@ export function AppHeader() {
                               e.preventDefault();
                               e.stopPropagation();
                               setShowEmailLogin(true);
+                              setShowRegister(false);
+                              setShowForgotPassword(false);
+                              setShowEmailVerification(false);
                               setRegisterError("");
                             }}
                           >
