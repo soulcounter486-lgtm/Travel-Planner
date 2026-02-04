@@ -151,7 +151,22 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
+  const session = req.session as any;
 
+  // 1. 세션 기반 이메일 로그인 확인
+  if (session?.userId) {
+    // 세션에 사용자 ID가 있으면 인증됨 - req.user에도 설정
+    if (!req.user) {
+      (req as any).user = { 
+        claims: { sub: session.userId }, 
+        provider: 'email',
+        ...session.user 
+      };
+    }
+    return next();
+  }
+
+  // 2. Passport.js 인증 확인
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
