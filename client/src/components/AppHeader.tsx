@@ -35,10 +35,8 @@ export function AppHeader() {
   const { t, language } = useLanguage();
   const { isAuthenticated, logout, isLoading: isAuthLoading, isAdmin } = useAuth();
   const { toast } = useToast();
-  const [showRegister, setShowRegister] = useState(false);
-  const [showEmailLogin, setShowEmailLogin] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  // 단일 화면 상태 관리: 'default' | 'emailLogin' | 'register' | 'forgotPassword' | 'emailVerification'
+  const [authScreen, setAuthScreen] = useState<'default' | 'emailLogin' | 'register' | 'forgotPassword' | 'emailVerification'>('default');
   const [verificationEmail, setVerificationEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
@@ -117,8 +115,7 @@ export function AppHeader() {
         // 이미 등록되었지만 인증이 필요한 경우
         if (data.needsVerification) {
           setVerificationEmail(data.email);
-          setShowRegister(false);
-          setShowEmailVerification(true);
+          setAuthScreen('emailVerification');
           setRegisterError("");
           return;
         }
@@ -129,8 +126,7 @@ export function AppHeader() {
       // 회원가입 성공 - 이메일 인증 화면으로 이동
       if (data.needsVerification) {
         setVerificationEmail(data.email);
-        setShowRegister(false);
-        setShowEmailVerification(true);
+        setAuthScreen('emailVerification');
         setRegisterError("");
       } else {
         window.location.reload();
@@ -236,8 +232,7 @@ export function AppHeader() {
         // 이메일 인증이 필요한 경우
         if (data.needsVerification) {
           setVerificationEmail(data.email);
-          setShowEmailLogin(false);
-          setShowEmailVerification(true);
+          setAuthScreen('emailVerification');
           setRegisterError("");
           return;
         }
@@ -430,8 +425,16 @@ export function AppHeader() {
                     <ChevronDown className="w-3 h-3 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 p-3">
-                  {showEmailVerification ? (
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-72 p-3"
+                  onInteractOutside={(e) => {
+                    if (authScreen !== 'default') {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  {authScreen === 'emailVerification' ? (
                     <>
                       {/* 이메일 인증 화면 */}
                       <div className="space-y-3">
@@ -444,10 +447,7 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowEmailVerification(false);
-                              setShowEmailLogin(false);
-                              setShowRegister(false);
-                              setShowForgotPassword(false);
+                              setAuthScreen('default');
                               setVerificationCode("");
                               setRegisterError("");
                             }}
@@ -513,7 +513,7 @@ export function AppHeader() {
                         </div>
                       </div>
                     </>
-                  ) : showForgotPassword ? (
+                  ) : authScreen === 'forgotPassword' ? (
                     <>
                       {/* 비밀번호 찾기 화면 */}
                       <div className="space-y-3">
@@ -526,10 +526,7 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowEmailLogin(true);
-                              setShowForgotPassword(false);
-                              setShowRegister(false);
-                              setShowEmailVerification(false);
+                              setAuthScreen('emailLogin');
                               setRegisterError("");
                               setForgotPasswordSuccess("");
                             }}
@@ -581,7 +578,7 @@ export function AppHeader() {
                         </p>
                       </div>
                     </>
-                  ) : !showRegister && !showEmailLogin ? (
+                  ) : authScreen === 'default' ? (
                     <>
                       <div className="space-y-2">
                         <a href="/api/auth/kakao" className="block" data-testid="button-login-kakao">
@@ -614,10 +611,7 @@ export function AppHeader() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setShowEmailLogin(true);
-                            setShowRegister(false);
-                            setShowForgotPassword(false);
-                            setShowEmailVerification(false);
+                            setAuthScreen('emailLogin');
                             setRegisterError("");
                           }}
                           data-testid="button-show-email-login"
@@ -635,10 +629,7 @@ export function AppHeader() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          setShowRegister(true);
-                          setShowEmailLogin(false);
-                          setShowForgotPassword(false);
-                          setShowEmailVerification(false);
+                          setAuthScreen('register');
                           setRegisterError("");
                         }}
                         data-testid="button-show-register"
@@ -647,7 +638,7 @@ export function AppHeader() {
                         회원가입
                       </Button>
                     </>
-                  ) : showEmailLogin ? (
+                  ) : authScreen === 'emailLogin' ? (
                     <>
                       {/* 이메일 로그인 화면 */}
                       <div className="space-y-3">
@@ -660,7 +651,7 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowEmailLogin(false);
+                              setAuthScreen('default');
                               setRegisterError("");
                             }}
                           >
@@ -721,10 +712,7 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowForgotPassword(true);
-                              setShowEmailLogin(false);
-                              setShowRegister(false);
-                              setShowEmailVerification(false);
+                              setAuthScreen('forgotPassword');
                               setRegisterError("");
                               setForgotPasswordSuccess("");
                             }}
@@ -737,10 +725,7 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowRegister(true);
-                              setShowEmailLogin(false);
-                              setShowForgotPassword(false);
-                              setShowEmailVerification(false);
+                              setAuthScreen('register');
                               setRegisterError("");
                             }}
                           >
@@ -762,7 +747,7 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowRegister(false);
+                              setAuthScreen('default');
                               setRegisterError("");
                             }}
                           >
@@ -923,10 +908,7 @@ export function AppHeader() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setShowEmailLogin(true);
-                              setShowRegister(false);
-                              setShowForgotPassword(false);
-                              setShowEmailVerification(false);
+                              setAuthScreen('emailLogin');
                               setRegisterError("");
                             }}
                           >
