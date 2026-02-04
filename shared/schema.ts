@@ -371,6 +371,7 @@ export const coupons = pgTable("coupons", {
   discountValue: integer("discount_value").notNull().default(0), // 할인 값
   validFrom: timestamp("valid_from"), // 유효 시작일
   validUntil: timestamp("valid_until"), // 유효 종료일
+  placeId: integer("place_id"), // 연결된 관광명소/장소 ID
   isActive: boolean("is_active").default(true), // 활성화 여부
   createdAt: timestamp("created_at").defaultNow(),
 });
