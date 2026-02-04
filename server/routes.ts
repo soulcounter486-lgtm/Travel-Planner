@@ -3466,9 +3466,15 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/admin/messages", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const adminEmails = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const adminUserIds = ["42663365", "kakao_42663365"]; // 관리자 userId도 허용
       const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub;
+      
+      const isAdmin = (userEmail && adminEmails.includes(userEmail)) || 
+                      (userId && adminUserIds.includes(userId));
+      if (!isAdmin) {
+        console.log("Admin message denied - email:", userEmail, "userId:", userId);
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -3493,9 +3499,14 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/admin/messages/broadcast", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const adminEmails = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
+      const adminUserIds = ["42663365", "kakao_42663365"];
       const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub;
+      
+      const isAdmin = (userEmail && adminEmails.includes(userEmail)) || 
+                      (userId && adminUserIds.includes(userId));
+      if (!isAdmin) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
