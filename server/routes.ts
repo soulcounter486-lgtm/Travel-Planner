@@ -18,6 +18,7 @@ import webpush from "web-push";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
 
 // Web Push 설정
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || "";
@@ -445,6 +446,72 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "로그인 처리 중 오류가 발생했습니다." });
+    }
+  });
+
+  // === 비밀번호 찾기 (임시 비밀번호 이메일 발송) ===
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "이메일을 입력해주세요." });
+      }
+      
+      // 사용자 찾기
+      const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (!user) {
+        return res.status(404).json({ error: "등록되지 않은 이메일입니다." });
+      }
+      
+      // OAuth로 가입한 사용자 체크
+      if (user.loginMethod && user.loginMethod !== "email") {
+        return res.status(400).json({ 
+          error: `이 이메일은 ${user.loginMethod === "kakao" ? "카카오" : user.loginMethod === "google" ? "구글" : user.loginMethod} 로그인으로 등록되었습니다.` 
+        });
+      }
+      
+      // 임시 비밀번호 생성 (8자리 영문+숫자)
+      const tempPassword = crypto.randomBytes(4).toString("hex");
+      
+      // 비밀번호 해시 및 업데이트
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+      await db.update(users).set({ password: hashedPassword }).where(eq(users.id, user.id));
+      
+      // 이메일 발송
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.SMTP_EMAIL,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
+      
+      const mailOptions = {
+        from: `"붕따우 도깨비" <${process.env.SMTP_EMAIL}>`,
+        to: email,
+        subject: "[붕따우 도깨비] 임시 비밀번호 안내",
+        html: `
+          <div style="font-family: 'Malgun Gothic', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2563eb;">붕따우 도깨비 임시 비밀번호</h2>
+            <p>안녕하세요, ${user.nickname || user.email?.split("@")[0]}님!</p>
+            <p>요청하신 임시 비밀번호를 안내해 드립니다.</p>
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; font-size: 18px;">임시 비밀번호: <strong style="color: #dc2626;">${tempPassword}</strong></p>
+            </div>
+            <p style="color: #666;">로그인 후 반드시 비밀번호를 변경해주세요.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="color: #999; font-size: 12px;">붕따우 도깨비 (사업자등록번호: 350-70-00679)</p>
+          </div>
+        `,
+      };
+      
+      await transporter.sendMail(mailOptions);
+      
+      res.json({ success: true, message: "임시 비밀번호가 이메일로 발송되었습니다." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ error: "비밀번호 재설정 처리 중 오류가 발생했습니다. 관리자에게 문의해주세요." });
     }
   });
 
