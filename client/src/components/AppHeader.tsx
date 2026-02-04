@@ -40,6 +40,7 @@ export function AppHeader() {
   const [registerData, setRegisterData] = useState({
     email: "",
     password: "",
+    passwordConfirm: "",
     nickname: "",
     gender: "",
     birthDate: ""
@@ -84,6 +85,10 @@ export function AppHeader() {
     }
     if (registerData.password.length < 6) {
       setRegisterError("비밀번호는 최소 6자 이상이어야 합니다.");
+      return;
+    }
+    if (registerData.password !== registerData.passwordConfirm) {
+      setRegisterError("비밀번호가 일치하지 않습니다.");
       return;
     }
     
@@ -485,6 +490,20 @@ export function AppHeader() {
                               onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
                               onClick={(e) => e.stopPropagation()}
                               data-testid="input-register-password"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="reg-password-confirm" className="text-xs">비밀번호 확인 *</Label>
+                            <Input
+                              id="reg-password-confirm"
+                              type="password"
+                              placeholder="••••••"
+                              className="h-8 text-sm"
+                              value={registerData.passwordConfirm}
+                              onChange={(e) => setRegisterData({...registerData, passwordConfirm: e.target.value})}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-register-password-confirm"
                             />
                           </div>
                           

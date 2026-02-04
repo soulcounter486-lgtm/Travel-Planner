@@ -123,6 +123,7 @@ export default function Home() {
   const [registerData, setRegisterData] = useState({
     email: "",
     password: "",
+    passwordConfirm: "",
     nickname: "",
     gender: "",
     birthDate: ""
@@ -170,6 +171,10 @@ export default function Home() {
     }
     if (registerData.password.length < 6) {
       setRegisterError("비밀번호는 6자 이상이어야 합니다");
+      return;
+    }
+    if (registerData.password !== registerData.passwordConfirm) {
+      setRegisterError("비밀번호가 일치하지 않습니다");
       return;
     }
     setRegisterLoading(true);
@@ -1246,6 +1251,10 @@ export default function Home() {
                         <div>
                           <Label htmlFor="reg-password-home" className="text-[10px]">비밀번호 * (6자 이상)</Label>
                           <Input id="reg-password-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} onClick={(e) => e.stopPropagation()} />
+                        </div>
+                        <div>
+                          <Label htmlFor="reg-password-confirm-home" className="text-[10px]">비밀번호 확인 *</Label>
+                          <Input id="reg-password-confirm-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.passwordConfirm} onChange={(e) => setRegisterData({...registerData, passwordConfirm: e.target.value})} onClick={(e) => e.stopPropagation()} />
                         </div>
                         <div>
                           <Label htmlFor="reg-nickname-home" className="text-[10px]">닉네임</Label>
