@@ -1,6 +1,5 @@
-const CACHE_NAME = 'vungtau-dokkaebi-v3';
+const CACHE_NAME = 'vungtau-dokkaebi-v5';
 const APP_SHELL = [
-  '/',
   '/manifest.json',
   '/favicon.png',
   '/icons/icon-192x192.png',
@@ -58,6 +57,14 @@ self.addEventListener('fetch', (event) => {
 
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // JS, CSS 파일은 항상 네트워크에서 가져옴 (캐시 안함)
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname === '/') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
     return;
   }
 
