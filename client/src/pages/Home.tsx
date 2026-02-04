@@ -165,7 +165,7 @@ export default function Home() {
             description: "회원가입 시 발송된 인증 코드를 입력해주세요.",
           });
         } else {
-          setRegisterError(data.message || "로그인에 실패했습니다");
+          setRegisterError(data.error || data.message || "로그인에 실패했습니다");
         }
         return;
       }
