@@ -4007,9 +4007,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.get("/api/admin/members", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4117,9 +4117,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/admin/user-coupons/broadcast", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4227,9 +4227,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/admin/coupons", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4258,9 +4258,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.get("/api/admin/coupons", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4276,9 +4276,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.patch("/api/admin/coupons/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4299,9 +4299,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.delete("/api/admin/coupons/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4318,9 +4318,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/admin/user-coupons", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const adminUserId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const adminEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(adminUserId, adminEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4506,9 +4506,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/admin/announcements", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4529,9 +4529,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/admin/announcements/reorder", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4557,9 +4557,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.patch("/api/admin/announcements/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4580,9 +4580,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.delete("/api/admin/announcements/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
@@ -4599,9 +4599,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.get("/api/admin/announcements", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const adminIds = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const userEmail = user?.claims?.email;
-      if (!userEmail || !adminIds.includes(userEmail)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
