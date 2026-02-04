@@ -1265,10 +1265,10 @@ export default function Home() {
                           {registerLoading ? "로그인 중..." : "로그인"}
                         </Button>
                         <div className="flex justify-between text-[10px] text-muted-foreground">
-                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowForgotPassword(true); setRegisterError(""); setForgotPasswordSuccess(""); }}>
+                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowForgotPassword(true); setRegisterError(""); setForgotPasswordSuccess(""); }} data-testid="button-forgot-password-home">
                             비밀번호 찾기
                           </button>
-                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowRegister(true); setRegisterError(""); }}>
+                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowRegister(true); setRegisterError(""); }} data-testid="button-goto-register-home">
                             회원가입
                           </button>
                         </div>
@@ -1287,9 +1287,9 @@ export default function Home() {
                         {forgotPasswordSuccess && <p className="text-[10px] text-green-600 text-center">{forgotPasswordSuccess}</p>}
                         <div>
                           <Label htmlFor="forgot-email-home" className="text-[10px]">가입한 이메일</Label>
-                          <Input id="forgot-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={forgotPasswordEmail} onChange={(e) => setForgotPasswordEmail(e.target.value)} onClick={(e) => e.stopPropagation()} />
+                          <Input id="forgot-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={forgotPasswordEmail} onChange={(e) => setForgotPasswordEmail(e.target.value)} onClick={(e) => e.stopPropagation()} data-testid="input-forgot-email-home" />
                         </div>
-                        <Button className="w-full h-8 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleForgotPassword(); }} disabled={registerLoading}>
+                        <Button className="w-full text-xs" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleForgotPassword(); }} disabled={registerLoading} data-testid="button-send-temp-password-home">
                           {registerLoading ? "발송 중..." : "임시 비밀번호 발송"}
                         </Button>
                         <p className="text-[10px] text-muted-foreground text-center">
