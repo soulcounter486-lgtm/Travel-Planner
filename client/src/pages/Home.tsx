@@ -1237,8 +1237,8 @@ export default function Home() {
                     className="shrink-0 rounded-full h-5 px-1.5 text-[8px]"
                     data-testid="button-account-menu"
                   >
-                    <Settings className="w-2.5 h-2.5 mr-0.5" />
-                    계정
+                    <User className="w-2.5 h-2.5 mr-0.5" />
+                    {currentUser?.nickname || currentUser?.email?.split('@')[0] || '계정'}
                     <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
                   </Button>
                 </DropdownMenuTrigger>
