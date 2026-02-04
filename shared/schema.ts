@@ -358,7 +358,7 @@ export const adminMessages = pgTable("admin_messages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertAdminMessageSchema = createInsertSchema(adminMessages).omit({ id: true, createdAt: true });
+export const insertAdminMessageSchema = createInsertSchema(adminMessages).omit({ id: true, createdAt: true, senderId: true });
 export type AdminMessage = typeof adminMessages.$inferSelect;
 export type InsertAdminMessage = z.infer<typeof insertAdminMessageSchema>;
 
