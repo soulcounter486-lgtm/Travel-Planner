@@ -3020,17 +3020,6 @@ export default function Home() {
               </div>
             </div>
             
-            <div>
-              <Label htmlFor="dialog-reg-birthdate-home">생년월일</Label>
-              <Input
-                id="dialog-reg-birthdate-home"
-                type="date"
-                value={registerData.birthDate}
-                onChange={(e) => setRegisterData({...registerData, birthDate: e.target.value})}
-                data-testid="input-register-birthdate"
-              />
-            </div>
-            
             <Button
               className="w-full"
               onClick={() => {
