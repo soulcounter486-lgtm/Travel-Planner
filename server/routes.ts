@@ -3467,7 +3467,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     try {
       const user = req.user as any;
       const adminEmails = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const adminUserIds = ["42663365", "kakao_42663365"]; // 관리자 userId도 허용
+      const adminUserIds = ["42663365", "kakao_4725775455"]; // 관리자 userId도 허용
       const userEmail = user?.claims?.email;
       const userId = user?.claims?.sub;
       
@@ -3500,7 +3500,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     try {
       const user = req.user as any;
       const adminEmails = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-      const adminUserIds = ["42663365", "kakao_42663365"];
+      const adminUserIds = ["42663365", "kakao_4725775455"];
       const userEmail = user?.claims?.email;
       const userId = user?.claims?.sub;
       
