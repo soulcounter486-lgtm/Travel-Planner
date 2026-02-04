@@ -202,7 +202,7 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) {
-        setRegisterError(data.message || "회원가입에 실패했습니다");
+        setRegisterError(data.error || data.message || "회원가입에 실패했습니다");
         return;
       }
       // 이메일 인증 화면으로 전환
@@ -236,7 +236,7 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) {
-        setRegisterError(data.message || "인증에 실패했습니다");
+        setRegisterError(data.error || data.message || "인증에 실패했습니다");
         return;
       }
       toast({
@@ -264,7 +264,7 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) {
-        setRegisterError(data.message || "재발송에 실패했습니다");
+        setRegisterError(data.error || data.message || "재발송에 실패했습니다");
         return;
       }
       toast({
