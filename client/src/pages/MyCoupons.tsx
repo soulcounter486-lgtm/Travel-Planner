@@ -433,9 +433,24 @@ export default function MyCoupons() {
                 <p className="text-center text-sm text-destructive">
                   쿠폰 사용 후에는 취소할 수 없습니다.<br />
                   <span className="text-xs text-muted-foreground">Sau khi sử dụng phiếu giảm giá, bạn không thể hủy.</span><br />
-                  직원에게 이 화면을 보여주고 사용 버튼을 눌러주세요.<br />
+                  직원에게 이 화면을 보여주고<br />사용 버튼을 눌러주세요.<br />
                   <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này và nhấn nút sử dụng.</span>
                 </p>
+                <div className="flex flex-col gap-1 mt-2">
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (selectedCoupon && !useCouponMutation.isSuccess) {
+                        useCouponMutation.mutate(selectedCoupon.id);
+                      }
+                    }}
+                    disabled={useCouponMutation.isPending || useCouponMutation.isSuccess}
+                    className={`w-full h-10 text-base font-bold ${useCouponMutation.isSuccess ? "bg-green-600" : "bg-primary"}`}
+                  >
+                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                    {useCouponMutation.isSuccess ? "사용 완료 / Đã sử dụng" : "사용하기 / Sử dụng"}
+                  </AlertDialogAction>
+                  <AlertDialogCancel disabled={useCouponMutation.isSuccess} className="w-full">취소 / Hủy</AlertDialogCancel>
+                </div>
                 {selectedCoupon?.placeName && (
                   <div className="bg-muted/50 rounded-lg p-2 space-y-1 mt-2">
                     <div className="text-sm font-medium">
@@ -493,21 +508,6 @@ export default function MyCoupons() {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-1 sm:flex-col mt-2">
-            <AlertDialogAction
-              onClick={() => {
-                if (selectedCoupon && !useCouponMutation.isSuccess) {
-                  useCouponMutation.mutate(selectedCoupon.id);
-                }
-              }}
-              disabled={useCouponMutation.isPending || useCouponMutation.isSuccess}
-              className={`w-full h-10 text-base font-bold ${useCouponMutation.isSuccess ? "bg-green-600" : "bg-primary"}`}
-            >
-              <CheckCircle2 className="w-5 h-5 mr-2" />
-              {useCouponMutation.isSuccess ? "사용 완료 / Đã sử dụng" : "사용하기 / Sử dụng"}
-            </AlertDialogAction>
-            <AlertDialogCancel disabled={useCouponMutation.isSuccess} className="w-full">취소 / Hủy</AlertDialogCancel>
-          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
