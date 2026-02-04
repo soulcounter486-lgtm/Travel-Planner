@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
 import { useQuery } from "@tanstack/react-query";
-import { LogIn, LogOut, Settings, ChevronDown, Users, RefreshCw, User, UserPlus } from "lucide-react";
+import { LogIn, LogOut, Settings, ChevronDown, Users, RefreshCw, User, UserPlus, Mail, Ticket } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,22 +59,16 @@ export function AppHeader() {
     staleTime: 0,
   });
   
-  // 로그인 상태 변경 시 알림 refetch
   useEffect(() => {
     if (isAuthenticated && !isAuthLoading) {
       refetchNotifications();
     }
   }, [isAuthenticated, isAuthLoading, refetchNotifications]);
 
-  const totalNotifications = (notifications?.unreadMessagesCount || 0) + (notifications?.unusedCouponsCount || 0);
-
-  // 회원가입 정보 저장 후 로그인 처리
   const handleRegisterAndLogin = (provider: 'kakao' | 'google') => {
-    // localStorage에 회원가입 정보 저장
     if (registerData.email || registerData.nickname || registerData.gender || registerData.birthDate) {
       localStorage.setItem('pendingRegistration', JSON.stringify(registerData));
     }
-    // OAuth 로그인으로 리다이렉트
     window.location.href = provider === 'kakao' ? '/api/auth/kakao' : '/api/login';
   };
 
@@ -124,43 +118,87 @@ export function AppHeader() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
-                <Link href="/mypage">
+                
+                {/* 쪽지함 버튼 */}
+                <Link href="/mypage?tab=messages">
                   <Button
                     size="sm"
                     variant="outline"
                     className="shrink-0 rounded-full h-6 px-2 text-[10px] relative"
-                    data-testid="button-mypage"
+                    data-testid="button-messages"
                   >
-                    <User className="w-3 h-3 mr-1" />
-                    마이페이지
-                    {totalNotifications > 0 && (
+                    <Mail className="w-3 h-3 mr-1" />
+                    쪽지함
+                    {(notifications?.unreadMessagesCount || 0) > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-1 animate-pulse">
-                        {totalNotifications > 9 ? "9+" : totalNotifications}
+                        {notifications!.unreadMessagesCount > 9 ? "9+" : notifications!.unreadMessagesCount}
                       </span>
                     )}
                   </Button>
                 </Link>
-                <a href="/api/auth/kakao/relogin" data-testid="button-switch-account">
+                
+                {/* 쿠폰함 버튼 */}
+                <Link href="/mypage?tab=coupons">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 rounded-full h-6 px-2 text-[10px] relative"
+                    data-testid="button-coupons"
+                  >
+                    <Ticket className="w-3 h-3 mr-1" />
+                    쿠폰함
+                    {(notifications?.unusedCouponsCount || 0) > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[8px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-1">
+                        {notifications!.unusedCouponsCount > 9 ? "9+" : notifications!.unusedCouponsCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+                
+                {/* 마이페이지 버튼 */}
+                <Link href="/mypage">
                   <Button
                     size="sm"
                     variant="outline"
                     className="shrink-0 rounded-full h-6 px-2 text-[10px]"
-                    title="다른 아이디로 로그인"
+                    data-testid="button-mypage"
                   >
-                    <RefreshCw className="w-3 h-3 mr-1" />
-                    계정변경
+                    <User className="w-3 h-3 mr-1" />
+                    마이페이지
                   </Button>
-                </a>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => logout()}
-                  className="shrink-0 rounded-full h-6 px-2 text-[10px]"
-                  data-testid="button-logout"
-                >
-                  <LogOut className="w-3 h-3 mr-1" />
-                  로그아웃
-                </Button>
+                </Link>
+                
+                {/* 계정 드롭다운 (계정변경 + 로그아웃 통합) */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 rounded-full h-6 px-2 text-[10px]"
+                      data-testid="button-account-menu"
+                    >
+                      계정
+                      <ChevronDown className="w-3 h-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem asChild>
+                      <a href="/api/auth/kakao/relogin" className="flex items-center cursor-pointer" data-testid="button-switch-account">
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        계정변경
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => logout()}
+                      className="cursor-pointer text-red-600"
+                      data-testid="button-logout"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      로그아웃
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <DropdownMenu>
@@ -179,7 +217,6 @@ export function AppHeader() {
                 <DropdownMenuContent align="end" className="w-72 p-3">
                   {!showRegister ? (
                     <>
-                      {/* 로그인 옵션 */}
                       <div className="space-y-2">
                         <a href="/api/auth/kakao" className="block" data-testid="button-login-kakao">
                           <Button
@@ -209,7 +246,6 @@ export function AppHeader() {
                       
                       <DropdownMenuSeparator className="my-3" />
                       
-                      {/* 회원가입 버튼 */}
                       <Button
                         variant="ghost"
                         className="w-full h-9 text-primary"
@@ -226,7 +262,6 @@ export function AppHeader() {
                     </>
                   ) : (
                     <>
-                      {/* 회원가입 폼 */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-sm">회원가입</h3>

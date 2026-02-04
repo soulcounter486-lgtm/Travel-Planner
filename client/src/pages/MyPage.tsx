@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Mail, Ticket, ArrowLeft, Check, Gift, LogIn } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { Mail, Ticket, ArrowLeft, Check, Gift, LogIn, User, Calendar, UserCircle } from "lucide-react";
+import { Link, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 
 interface Message {
@@ -40,8 +40,21 @@ export default function MyPage() {
   const { toast } = useToast();
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [couponToUse, setCouponToUse] = useState<UserCoupon | null>(null);
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const [, setLocation] = useLocation();
+  const searchString = useSearch();
+  
+  // URL 쿼리에서 탭 파라미터 읽기
+  const urlParams = new URLSearchParams(searchString);
+  const tabFromUrl = urlParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "profile");
+
+  // URL 파라미터 변경 시 탭 업데이트
+  useEffect(() => {
+    if (tabFromUrl && ["messages", "coupons", "profile"].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/my-messages"],
@@ -146,6 +159,26 @@ export default function MyPage() {
   const unreadCount = messages.filter((m) => !m.isRead).length;
   const unusedCouponCount = coupons.filter((c) => !c.isUsed).length;
 
+  // 사용자 정보 표시 헬퍼
+  const getUserDisplayName = () => {
+    if (user?.nickname) return user.nickname;
+    if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`;
+    if (user?.firstName) return user.firstName;
+    return "미설정";
+  };
+
+  const getGenderDisplay = () => {
+    if (user?.gender === "male") return "남성";
+    if (user?.gender === "female") return "여성";
+    return "미설정";
+  };
+
+  const getLoginProvider = () => {
+    if (user?.id?.startsWith("kakao_")) return "카카오";
+    if (user?.id?.startsWith("google:")) return "구글";
+    return "Replit";
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-4 max-w-2xl">
@@ -158,8 +191,12 @@ export default function MyPage() {
           <h1 className="text-lg font-bold">마이페이지</h1>
         </div>
 
-        <Tabs defaultValue="messages" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-10">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-10">
+            <TabsTrigger value="profile" className="text-sm" data-testid="tab-profile">
+              <User className="w-4 h-4 mr-1" />
+              회원정보
+            </TabsTrigger>
             <TabsTrigger value="messages" className="text-sm" data-testid="tab-messages">
               <Mail className="w-4 h-4 mr-1" />
               쪽지함
@@ -179,6 +216,80 @@ export default function MyPage() {
               )}
             </TabsTrigger>
           </TabsList>
+
+          {/* 회원정보 탭 */}
+          <TabsContent value="profile" className="mt-4">
+            <Card>
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <UserCircle className="w-5 h-5" />
+                  회원 정보
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 space-y-4">
+                {/* 프로필 이미지 */}
+                <div className="flex justify-center">
+                  {user?.profileImageUrl ? (
+                    <img 
+                      src={user.profileImageUrl} 
+                      alt="프로필" 
+                      className="w-20 h-20 rounded-full border-2 border-primary/20"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                      <User className="w-10 h-10 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+
+                {/* 회원 정보 목록 */}
+                <div className="space-y-3 bg-muted/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">로그인 방식</span>
+                    <Badge variant="outline" className="text-xs">
+                      {getLoginProvider()}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">이메일</span>
+                    <span className="text-sm font-medium">{user?.email || "미설정"}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">성명(별명)</span>
+                    <span className="text-sm font-medium">{getUserDisplayName()}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">성별</span>
+                    <span className="text-sm font-medium">{getGenderDisplay()}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2 border-b border-border/50">
+                    <span className="text-sm text-muted-foreground">생년월일</span>
+                    <span className="text-sm font-medium">
+                      {user?.birthDate ? format(new Date(user.birthDate), "yyyy년 MM월 dd일") : "미설정"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-sm text-muted-foreground">가입일</span>
+                    <span className="text-sm font-medium">
+                      {user?.createdAt ? format(new Date(user.createdAt), "yyyy년 MM월 dd일") : "-"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 계정 정보 안내 */}
+                <div className="bg-primary/5 rounded-lg p-3 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    회원정보 수정이 필요한 경우 관리자에게 문의해주세요
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="messages" className="mt-4">
             <Card>
