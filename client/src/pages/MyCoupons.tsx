@@ -439,18 +439,18 @@ export default function MyCoupons() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소 / Hủy</AlertDialogCancel>
+            <AlertDialogCancel disabled={useCouponMutation.isSuccess}>취소 / Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (selectedCoupon) {
+                if (selectedCoupon && !useCouponMutation.isSuccess) {
                   useCouponMutation.mutate(selectedCoupon.id);
                 }
               }}
-              disabled={useCouponMutation.isPending}
-              className="bg-primary"
+              disabled={useCouponMutation.isPending || useCouponMutation.isSuccess}
+              className={useCouponMutation.isSuccess ? "bg-green-600" : "bg-primary"}
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
-              사용 완료 / Hoàn tất
+              {useCouponMutation.isSuccess ? "사용 완료 / Đã sử dụng" : "사용하기 / Sử dụng"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
