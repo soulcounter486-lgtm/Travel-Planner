@@ -116,9 +116,10 @@ export default function Home() {
   const { user, isAuthenticated, isAdmin, logout, isLoading: isAuthLoading } = useAuth();
   
   // 이메일 로그인/회원가입 상태
-  const [showEmailLogin, setShowEmailLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [loginPopoverOpen, setLoginPopoverOpen] = useState(false);
+  const [authScreen, setAuthScreen] = useState<'default' | 'emailLogin' | 'register' | 'forgotPassword' | 'emailVerification'>('default');
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState("");
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
@@ -151,11 +152,21 @@ export default function Home() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: registerData.email, password: registerData.password })
       });
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
-        setRegisterError(data.message || "로그인에 실패했습니다");
+        if (data.needsVerification) {
+          setVerificationEmail(registerData.email);
+          setAuthScreen('emailVerification');
+          toast({
+            title: "이메일 인증 필요",
+            description: "회원가입 시 발송된 인증 코드를 입력해주세요.",
+          });
+        } else {
+          setRegisterError(data.message || "로그인에 실패했습니다");
+        }
         return;
       }
       window.location.reload();
@@ -186,16 +197,82 @@ export default function Home() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(registerData)
       });
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
         setRegisterError(data.message || "회원가입에 실패했습니다");
         return;
       }
-      window.location.reload();
+      // 이메일 인증 화면으로 전환
+      setVerificationEmail(registerData.email);
+      setAuthScreen('emailVerification');
+      toast({
+        title: "인증 코드 발송됨",
+        description: "이메일로 발송된 6자리 인증 코드를 입력해주세요.",
+      });
     } catch {
       setRegisterError("회원가입 중 오류가 발생했습니다");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 이메일 인증 확인
+  const handleVerifyEmail = async () => {
+    if (verificationCode.length !== 6) {
+      setRegisterError("6자리 인증 코드를 입력해주세요");
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError("");
+    try {
+      const response = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: verificationEmail, code: verificationCode })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setRegisterError(data.message || "인증에 실패했습니다");
+        return;
+      }
+      toast({
+        title: "인증 완료",
+        description: "이메일 인증이 완료되었습니다. 자동으로 로그인됩니다.",
+      });
+      window.location.reload();
+    } catch {
+      setRegisterError("인증 중 오류가 발생했습니다");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 인증 코드 재발송
+  const handleResendVerification = async () => {
+    setRegisterLoading(true);
+    setRegisterError("");
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: verificationEmail })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setRegisterError(data.message || "재발송에 실패했습니다");
+        return;
+      }
+      toast({
+        title: "인증 코드 재발송됨",
+        description: "새로운 인증 코드가 이메일로 발송되었습니다.",
+      });
+    } catch {
+      setRegisterError("재발송 중 오류가 발생했습니다");
     } finally {
       setRegisterLoading(false);
     }
@@ -214,6 +291,7 @@ export default function Home() {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: forgotPasswordEmail })
       });
       const data = await response.json();
@@ -1185,9 +1263,16 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex items-center gap-0.5 mb-2 justify-end">
-              {/* 로그인 드롭다운 */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <Popover 
+                open={loginPopoverOpen} 
+                modal={false}
+                onOpenChange={(open) => {
+                  if (open) {
+                    setLoginPopoverOpen(true);
+                  }
+                }}
+              >
+                <PopoverTrigger asChild>
                   <Button
                     size="sm"
                     variant="default"
@@ -1198,13 +1283,147 @@ export default function Home() {
                     로그인
                     <ChevronDown className="w-2.5 h-2.5 ml-0.5" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 p-3">
-                  {!showRegister && !showEmailLogin ? (
+                </PopoverTrigger>
+                <PopoverContent 
+                  align="end" 
+                  className="w-64 p-3"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onInteractOutside={() => {
+                    setLoginPopoverOpen(false);
+                    setAuthScreen('default');
+                    setRegisterError("");
+                    setForgotPasswordSuccess("");
+                    setVerificationCode("");
+                  }}
+                  onEscapeKeyDown={() => {
+                    setLoginPopoverOpen(false);
+                    setAuthScreen('default');
+                    setRegisterError("");
+                    setForgotPasswordSuccess("");
+                    setVerificationCode("");
+                  }}
+                >
+                  {authScreen === 'emailVerification' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-xs">이메일 인증</h3>
+                        <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('default'); setVerificationCode(""); setRegisterError(""); }}>
+                          ← 뒤로
+                        </Button>
+                      </div>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded-md">
+                        <p className="text-[10px] text-blue-700 dark:text-blue-300">
+                          <strong>{verificationEmail}</strong>로 6자리 인증 코드가 발송되었습니다.
+                        </p>
+                      </div>
+                      {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
+                      <div>
+                        <Label htmlFor="verify-code-home" className="text-[10px]">인증 코드 (6자리)</Label>
+                        <Input
+                          id="verify-code-home"
+                          type="text"
+                          placeholder="123456"
+                          className="h-8 text-base text-center tracking-widest font-mono"
+                          maxLength={6}
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          onClick={(e) => e.stopPropagation()}
+                          data-testid="input-verification-code"
+                        />
+                      </div>
+                      <Button className="w-full h-7 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleVerifyEmail(); }} disabled={registerLoading || verificationCode.length !== 6} data-testid="button-verify-email">
+                        {registerLoading ? "인증 중..." : "인증 확인"}
+                      </Button>
+                      <div className="text-center">
+                        <button type="button" className="text-[10px] text-muted-foreground underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleResendVerification(); }} disabled={registerLoading} data-testid="button-resend-verification">
+                          인증 코드 다시 받기
+                        </button>
+                      </div>
+                    </div>
+                  ) : authScreen === 'forgotPassword' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-xs">비밀번호 재설정</h3>
+                        <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('emailLogin'); setRegisterError(""); setForgotPasswordSuccess(""); }}>
+                          ← 뒤로
+                        </Button>
+                      </div>
+                      {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
+                      {forgotPasswordSuccess && <p className="text-[10px] text-green-600 text-center">{forgotPasswordSuccess}</p>}
+                      <div>
+                        <Label htmlFor="forgot-email-home" className="text-[10px]">가입한 이메일</Label>
+                        <Input id="forgot-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={forgotPasswordEmail} onChange={(e) => setForgotPasswordEmail(e.target.value)} onClick={(e) => e.stopPropagation()} data-testid="input-forgot-email" />
+                      </div>
+                      <Button className="w-full h-7 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleForgotPassword(); }} disabled={registerLoading} data-testid="button-send-temp-password">
+                        {registerLoading ? "발송 중..." : "임시 비밀번호 발송"}
+                      </Button>
+                      <p className="text-[10px] text-muted-foreground text-center">
+                        임시 비밀번호가 이메일로 발송됩니다.
+                      </p>
+                    </div>
+                  ) : authScreen === 'emailLogin' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-xs">이메일 로그인</h3>
+                        <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('default'); setRegisterError(""); }}>
+                          ← 뒤로
+                        </Button>
+                      </div>
+                      {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
+                      <div>
+                        <Label htmlFor="login-email-home" className="text-[10px]">이메일</Label>
+                        <Input id="login-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={registerData.email} onChange={(e) => setRegisterData({...registerData, email: e.target.value})} onClick={(e) => e.stopPropagation()} data-testid="input-email" />
+                      </div>
+                      <div>
+                        <Label htmlFor="login-password-home" className="text-[10px]">비밀번호</Label>
+                        <Input id="login-password-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} onClick={(e) => e.stopPropagation()} data-testid="input-password" />
+                      </div>
+                      <Button className="w-full h-7 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEmailLogin(); }} disabled={registerLoading} data-testid="button-login">
+                        {registerLoading ? "로그인 중..." : "로그인"}
+                      </Button>
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <button type="button" className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('forgotPassword'); setRegisterError(""); setForgotPasswordSuccess(""); }} data-testid="button-forgot-password">
+                          비밀번호 찾기
+                        </button>
+                        <button type="button" className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('register'); setRegisterError(""); }} data-testid="button-goto-register">
+                          회원가입
+                        </button>
+                      </div>
+                    </div>
+                  ) : authScreen === 'register' ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-xs">회원가입</h3>
+                        <Button type="button" variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('default'); setRegisterError(""); }}>
+                          ← 뒤로
+                        </Button>
+                      </div>
+                      {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
+                      <div>
+                        <Label htmlFor="reg-email-home" className="text-[10px]">이메일 *</Label>
+                        <Input id="reg-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={registerData.email} onChange={(e) => setRegisterData({...registerData, email: e.target.value})} onClick={(e) => e.stopPropagation()} data-testid="input-register-email" />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-password-home" className="text-[10px]">비밀번호 * (6자 이상)</Label>
+                        <Input id="reg-password-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} onClick={(e) => e.stopPropagation()} data-testid="input-register-password" />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-password-confirm-home" className="text-[10px]">비밀번호 확인 *</Label>
+                        <Input id="reg-password-confirm-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.passwordConfirm} onChange={(e) => setRegisterData({...registerData, passwordConfirm: e.target.value})} onClick={(e) => e.stopPropagation()} data-testid="input-register-password-confirm" />
+                      </div>
+                      <div>
+                        <Label htmlFor="reg-nickname-home" className="text-[10px]">닉네임</Label>
+                        <Input id="reg-nickname-home" type="text" placeholder="별명" className="h-7 text-xs" value={registerData.nickname} onChange={(e) => setRegisterData({...registerData, nickname: e.target.value})} onClick={(e) => e.stopPropagation()} data-testid="input-register-nickname" />
+                      </div>
+                      <Button className="w-full h-7 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEmailRegister(); }} disabled={registerLoading} data-testid="button-register">
+                        {registerLoading ? "가입 중..." : "이메일로 가입"}
+                      </Button>
+                    </div>
+                  ) : (
                     <>
                       <div className="space-y-2">
                         <a href="/api/auth/kakao" className="block" data-testid="button-login-kakao">
-                          <Button className="w-full h-8 bg-[#FEE500] hover:bg-[#FDD800] text-[#3C1E1E] border-0 text-xs">
+                          <Button className="w-full h-7 bg-[#FEE500] hover:bg-[#FDD800] text-[#3C1E1E] border-0 text-xs">
                             <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M12 3C6.477 3 2 6.463 2 10.714c0 2.683 1.74 5.028 4.348 6.385-.19.71-.69 2.576-.788 2.976-.12.49.18.483.379.352.156-.103 2.484-1.69 3.502-2.378.85.126 1.723.192 2.559.192 5.523 0 10-3.463 10-7.714C22 6.463 17.523 3 12 3z"/>
                             </svg>
@@ -1212,7 +1431,7 @@ export default function Home() {
                           </Button>
                         </a>
                         <a href="/api/auth/google/login" className="block" data-testid="button-login-google">
-                          <Button variant="outline" className="w-full h-8 text-xs">
+                          <Button variant="outline" className="w-full h-7 text-xs">
                             <svg className="w-3.5 h-3.5 mr-1.5" viewBox="0 0 24 24">
                               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -1223,9 +1442,10 @@ export default function Home() {
                           </Button>
                         </a>
                         <Button
+                          type="button"
                           variant="secondary"
-                          className="w-full h-8 text-xs"
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(true); }}
+                          className="w-full h-7 text-xs"
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('emailLogin'); }}
                           data-testid="button-show-email-login"
                         >
                           <Mail className="w-3.5 h-3.5 mr-1.5" />
@@ -1234,103 +1454,19 @@ export default function Home() {
                       </div>
                       <DropdownMenuSeparator className="my-2" />
                       <Button
+                        type="button"
                         variant="ghost"
-                        className="w-full h-8 text-xs text-primary"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowRegister(true); }}
+                        className="w-full h-7 text-xs text-primary"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAuthScreen('register'); }}
                         data-testid="button-show-register"
                       >
                         <UserPlus className="w-3.5 h-3.5 mr-1.5" />
                         회원가입
                       </Button>
                     </>
-                  ) : showEmailLogin ? (
-                    <>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-xs">이메일 로그인</h3>
-                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setRegisterError(""); }}>
-                            ← 뒤로
-                          </Button>
-                        </div>
-                        {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
-                        <div>
-                          <Label htmlFor="login-email-home" className="text-[10px]">이메일</Label>
-                          <Input id="login-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={registerData.email} onChange={(e) => setRegisterData({...registerData, email: e.target.value})} onClick={(e) => e.stopPropagation()} />
-                        </div>
-                        <div>
-                          <Label htmlFor="login-password-home" className="text-[10px]">비밀번호</Label>
-                          <Input id="login-password-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} onClick={(e) => e.stopPropagation()} />
-                        </div>
-                        <Button className="w-full h-8 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEmailLogin(); }} disabled={registerLoading}>
-                          {registerLoading ? "로그인 중..." : "로그인"}
-                        </Button>
-                        <div className="flex justify-between text-[10px] text-muted-foreground">
-                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowForgotPassword(true); setRegisterError(""); setForgotPasswordSuccess(""); }} data-testid="button-forgot-password-home">
-                            비밀번호 찾기
-                          </button>
-                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowRegister(true); setRegisterError(""); }} data-testid="button-goto-register-home">
-                            회원가입
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  ) : showForgotPassword ? (
-                    <>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-xs">비밀번호 찾기</h3>
-                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowForgotPassword(false); setRegisterError(""); setForgotPasswordSuccess(""); }}>
-                            ← 뒤로
-                          </Button>
-                        </div>
-                        {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
-                        {forgotPasswordSuccess && <p className="text-[10px] text-green-600 text-center">{forgotPasswordSuccess}</p>}
-                        <div>
-                          <Label htmlFor="forgot-email-home" className="text-[10px]">가입한 이메일</Label>
-                          <Input id="forgot-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={forgotPasswordEmail} onChange={(e) => setForgotPasswordEmail(e.target.value)} onClick={(e) => e.stopPropagation()} data-testid="input-forgot-email-home" />
-                        </div>
-                        <Button className="w-full text-xs" size="sm" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleForgotPassword(); }} disabled={registerLoading} data-testid="button-send-temp-password-home">
-                          {registerLoading ? "발송 중..." : "임시 비밀번호 발송"}
-                        </Button>
-                        <p className="text-[10px] text-muted-foreground text-center">
-                          임시 비밀번호가 이메일로 발송됩니다.
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold text-xs">회원가입</h3>
-                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowRegister(false); setRegisterError(""); }}>
-                            ← 뒤로
-                          </Button>
-                        </div>
-                        {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
-                        <div>
-                          <Label htmlFor="reg-email-home" className="text-[10px]">이메일 *</Label>
-                          <Input id="reg-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={registerData.email} onChange={(e) => setRegisterData({...registerData, email: e.target.value})} onClick={(e) => e.stopPropagation()} />
-                        </div>
-                        <div>
-                          <Label htmlFor="reg-password-home" className="text-[10px]">비밀번호 * (6자 이상)</Label>
-                          <Input id="reg-password-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.password} onChange={(e) => setRegisterData({...registerData, password: e.target.value})} onClick={(e) => e.stopPropagation()} />
-                        </div>
-                        <div>
-                          <Label htmlFor="reg-password-confirm-home" className="text-[10px]">비밀번호 확인 *</Label>
-                          <Input id="reg-password-confirm-home" type="password" placeholder="••••••" className="h-7 text-xs" value={registerData.passwordConfirm} onChange={(e) => setRegisterData({...registerData, passwordConfirm: e.target.value})} onClick={(e) => e.stopPropagation()} />
-                        </div>
-                        <div>
-                          <Label htmlFor="reg-nickname-home" className="text-[10px]">닉네임</Label>
-                          <Input id="reg-nickname-home" type="text" placeholder="별명" className="h-7 text-xs" value={registerData.nickname} onChange={(e) => setRegisterData({...registerData, nickname: e.target.value})} onClick={(e) => e.stopPropagation()} />
-                        </div>
-                        <Button className="w-full h-8 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEmailRegister(); }} disabled={registerLoading}>
-                          {registerLoading ? "가입 중..." : "이메일로 가입"}
-                        </Button>
-                      </div>
-                    </>
                   )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl flex items-center gap-6">

@@ -8,6 +8,7 @@ import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
 import { useQuery } from "@tanstack/react-query";
 import { LogIn, LogOut, Settings, ChevronDown, Users, RefreshCw, User, UserPlus, Mail, Ticket } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -414,19 +415,20 @@ export function AppHeader() {
                 </DropdownMenu>
               </>
             ) : (
-              <DropdownMenu 
+              <Popover 
                 open={dropdownOpen} 
+                modal={false}
                 onOpenChange={(open) => {
-                  setDropdownOpen(open);
-                  if (!open) {
-                    setAuthScreen('default');
-                    setRegisterError("");
-                    setForgotPasswordSuccess("");
-                    setVerificationCode("");
+                  console.log('Popover onOpenChange 호출:', open, 'current authScreen:', authScreen);
+                  // 내부 클릭 시 닫히는 것을 방지하기 위해, 닫힘 요청이 오면 무시
+                  // 사용자가 외부를 클릭하거나 명시적으로 닫을 때만 처리
+                  if (open) {
+                    setDropdownOpen(true);
                   }
+                  // 닫힐 때는 onInteractOutside에서 처리
                 }}
               >
-                <DropdownMenuTrigger asChild>
+                <PopoverTrigger asChild>
                   <Button
                     size="sm"
                     variant="default"
@@ -437,11 +439,27 @@ export function AppHeader() {
                     로그인
                     <ChevronDown className="w-3 h-3 ml-1" />
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
+                </PopoverTrigger>
+                <PopoverContent 
                   align="end" 
                   className="w-72 p-3"
-                  onCloseAutoFocus={(e) => e.preventDefault()}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onInteractOutside={() => {
+                    console.log('Popover onInteractOutside 호출');
+                    setDropdownOpen(false);
+                    setAuthScreen('default');
+                    setRegisterError("");
+                    setForgotPasswordSuccess("");
+                    setVerificationCode("");
+                  }}
+                  onEscapeKeyDown={() => {
+                    console.log('Popover onEscapeKeyDown 호출');
+                    setDropdownOpen(false);
+                    setAuthScreen('default');
+                    setRegisterError("");
+                    setForgotPasswordSuccess("");
+                    setVerificationCode("");
+                  }}
                 >
                   {authScreen === 'emailVerification' ? (
                     <>
@@ -508,6 +526,7 @@ export function AppHeader() {
                         
                         <div className="text-center">
                           <button 
+                            type="button"
                             className="text-xs text-muted-foreground underline"
                             onClick={(e) => {
                               e.preventDefault();
@@ -717,10 +736,12 @@ export function AppHeader() {
                         
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <button 
+                            type="button"
                             className="text-primary underline"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
+                              console.log('비밀번호 찾기 클릭, authScreen 변경 시도');
                               setAuthScreen('forgotPassword');
                               setRegisterError("");
                               setForgotPasswordSuccess("");
@@ -730,6 +751,7 @@ export function AppHeader() {
                             비밀번호 찾기
                           </button>
                           <button 
+                            type="button"
                             className="text-primary underline"
                             onClick={(e) => {
                               e.preventDefault();
@@ -913,6 +935,7 @@ export function AppHeader() {
                         <p className="text-xs text-muted-foreground text-center">
                           이미 계정이 있으신가요?{" "}
                           <button 
+                            type="button"
                             className="text-primary underline"
                             onClick={(e) => {
                               e.preventDefault();
@@ -927,8 +950,8 @@ export function AppHeader() {
                       </div>
                     </>
                   )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </PopoverContent>
+              </Popover>
             )}
           </motion.div>
         )}
