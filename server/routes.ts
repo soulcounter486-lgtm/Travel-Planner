@@ -119,7 +119,7 @@ async function sendPushNotifications(title: string, body: string, url: string = 
       try {
         await webpush.sendNotification({
           endpoint: sub.endpoint,
-          keys: sub.keys as { p256dh: string; auth: string }
+          keys: { p256dh: sub.p256dh, auth: sub.auth }
         }, payload);
       } catch (err: any) {
         if (err.statusCode === 410 || err.statusCode === 404) {
@@ -1003,48 +1003,6 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
-  // === 푸시 알림 API ===
-  
-  // VAPID 공개키 조회
-  app.get("/api/push/vapid-public-key", (req, res) => {
-    res.json({ publicKey: vapidPublicKey });
-  });
-  
-  // 푸시 구독 등록
-  app.post("/api/push/subscribe", async (req, res) => {
-    try {
-      const { endpoint, keys } = req.body;
-      if (!endpoint || !keys?.p256dh || !keys?.auth) {
-        return res.status(400).json({ message: "Invalid subscription" });
-      }
-      
-      const existing = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
-      if (existing.length === 0) {
-        await db.insert(pushSubscriptions).values({ endpoint, keys });
-      }
-      
-      res.json({ success: true });
-    } catch (err) {
-      console.error("Push subscribe error:", err);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-  
-  // 푸시 구독 해제
-  app.post("/api/push/unsubscribe", async (req, res) => {
-    try {
-      const { endpoint } = req.body;
-      if (!endpoint) {
-        return res.status(400).json({ message: "Endpoint required" });
-      }
-      
-      await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint));
-      res.json({ success: true });
-    } catch (err) {
-      console.error("Push unsubscribe error:", err);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
 
   const vehiclePrices: Record<string, { city: number; oneway: number; roundtrip: number }> = {
     "7_seater": { city: 100, oneway: 80, roundtrip: 150 },

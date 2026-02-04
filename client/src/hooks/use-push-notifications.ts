@@ -63,6 +63,7 @@ export function usePushNotifications() {
       await fetch("/api/push/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           endpoint: subJson.endpoint,
           keys: subJson.keys
@@ -91,6 +92,7 @@ export function usePushNotifications() {
         await fetch("/api/push/unsubscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ endpoint: subscription.endpoint })
         });
         
