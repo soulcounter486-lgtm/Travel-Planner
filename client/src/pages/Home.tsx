@@ -1183,7 +1183,7 @@ export default function Home() {
                 </DropdownMenu>
               )}
               {/* 쪽지함 버튼 */}
-              <Link href="/mypage?tab=messages">
+              <Link href="/my-coupons?tab=messages">
                 <Button
                   size="sm"
                   variant="outline"
@@ -1200,7 +1200,7 @@ export default function Home() {
                 </Button>
               </Link>
               {/* 쿠폰함 버튼 */}
-              <Link href="/mypage?tab=coupons">
+              <Link href="/my-coupons?tab=coupons">
                 <Button
                   size="sm"
                   variant="outline"

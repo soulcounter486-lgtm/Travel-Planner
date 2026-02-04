@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Ticket, MessageSquare, CheckCircle2, Clock, Gift, Mail, MailOpen, X, MapPin, Navigation, Map } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import {
@@ -60,13 +60,22 @@ export default function MyCoupons() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("coupons");
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
+  const tabFromUrl = urlParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabFromUrl === "messages" ? "messages" : "coupons");
   const [selectedCoupon, setSelectedCoupon] = useState<MyCoupon | null>(null);
   const [showUseConfirm, setShowUseConfirm] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showInlineMap, setShowInlineMap] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (tabFromUrl && ["coupons", "messages"].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
 
   useEffect(() => {
     if (showInlineMap && selectedCoupon?.placeLatitude && selectedCoupon?.placeLongitude && mapContainerRef.current) {
