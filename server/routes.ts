@@ -17,6 +17,7 @@ import { registerObjectStorageRoutes, objectStorageClient } from "./replit_integ
 import webpush from "web-push";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
+import bcrypt from "bcryptjs";
 
 // Web Push 설정
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || "";
@@ -342,6 +343,108 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Kakao OAuth error:", error);
       res.status(500).send("Authentication failed");
+    }
+  });
+
+  // === 이메일/비밀번호 회원가입 ===
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { email, password, nickname, gender, birthDate } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "이메일과 비밀번호를 입력해주세요." });
+      }
+      
+      if (password.length < 6) {
+        return res.status(400).json({ error: "비밀번호는 최소 6자 이상이어야 합니다." });
+      }
+      
+      // 이메일 중복 확인
+      const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (existingUser.length > 0) {
+        return res.status(400).json({ error: "이미 등록된 이메일입니다." });
+      }
+      
+      // 비밀번호 해시
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // 사용자 생성 (UUID 자동 생성)
+      const [newUser] = await db.insert(users).values({
+        email,
+        password: hashedPassword,
+        nickname: nickname || email.split("@")[0],
+        gender: gender || null,
+        birthDate: birthDate || null,
+        loginMethod: "email",
+      }).returning();
+      
+      // 세션에 사용자 정보 저장
+      (req.session as any).userId = newUser.id;
+      (req.session as any).user = {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.nickname || newUser.email?.split("@")[0],
+        profileImageUrl: newUser.profileImageUrl,
+      };
+      
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "세션 저장 실패" });
+        }
+        res.json({ success: true, user: { id: newUser.id, email: newUser.email, nickname: newUser.nickname } });
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "회원가입 처리 중 오류가 발생했습니다." });
+    }
+  });
+
+  // === 이메일/비밀번호 로그인 ===
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "이메일과 비밀번호를 입력해주세요." });
+      }
+      
+      // 사용자 찾기
+      const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      if (!user) {
+        return res.status(401).json({ error: "등록되지 않은 이메일입니다." });
+      }
+      
+      // 비밀번호가 없는 경우 (OAuth로 가입한 사용자)
+      if (!user.password) {
+        return res.status(401).json({ error: "이 이메일은 소셜 로그인으로 등록되었습니다. 카카오 또는 구글로 로그인해주세요." });
+      }
+      
+      // 비밀번호 확인
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ error: "비밀번호가 일치하지 않습니다." });
+      }
+      
+      // 세션에 사용자 정보 저장
+      (req.session as any).userId = user.id;
+      (req.session as any).user = {
+        id: user.id,
+        email: user.email,
+        name: user.nickname || user.email?.split("@")[0],
+        profileImageUrl: user.profileImageUrl,
+      };
+      
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ error: "세션 저장 실패" });
+        }
+        res.json({ success: true, user: { id: user.id, email: user.email, nickname: user.nickname } });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "로그인 처리 중 오류가 발생했습니다." });
     }
   });
 

@@ -34,8 +34,12 @@ export function AppHeader() {
   const { t, language } = useLanguage();
   const { isAuthenticated, logout, isLoading: isAuthLoading, isAdmin } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
+  const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [registerLoading, setRegisterLoading] = useState(false);
+  const [registerError, setRegisterError] = useState("");
   const [registerData, setRegisterData] = useState({
     email: "",
+    password: "",
     nickname: "",
     gender: "",
     birthDate: ""
@@ -70,6 +74,78 @@ export function AppHeader() {
       localStorage.setItem('pendingRegistration', JSON.stringify(registerData));
     }
     window.location.href = provider === 'kakao' ? '/api/auth/kakao' : '/api/login';
+  };
+
+  // 이메일로 회원가입
+  const handleEmailRegister = async () => {
+    if (!registerData.email || !registerData.password) {
+      setRegisterError("이메일과 비밀번호를 입력해주세요.");
+      return;
+    }
+    if (registerData.password.length < 6) {
+      setRegisterError("비밀번호는 최소 6자 이상이어야 합니다.");
+      return;
+    }
+    
+    setRegisterLoading(true);
+    setRegisterError("");
+    
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(registerData),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setRegisterError(data.error || "회원가입에 실패했습니다.");
+        return;
+      }
+      
+      // 회원가입 성공 - 페이지 새로고침
+      window.location.reload();
+    } catch (err) {
+      setRegisterError("회원가입 처리 중 오류가 발생했습니다.");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 이메일로 로그인
+  const handleEmailLogin = async () => {
+    if (!registerData.email || !registerData.password) {
+      setRegisterError("이메일과 비밀번호를 입력해주세요.");
+      return;
+    }
+    
+    setRegisterLoading(true);
+    setRegisterError("");
+    
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: registerData.email, password: registerData.password }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setRegisterError(data.error || "로그인에 실패했습니다.");
+        return;
+      }
+      
+      // 로그인 성공 - 페이지 새로고침
+      window.location.reload();
+    } catch (err) {
+      setRegisterError("로그인 처리 중 오류가 발생했습니다.");
+    } finally {
+      setRegisterLoading(false);
+    }
   };
 
   return (
@@ -215,7 +291,7 @@ export function AppHeader() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-72 p-3">
-                  {!showRegister ? (
+                  {!showRegister && !showEmailLogin ? (
                     <>
                       <div className="space-y-2">
                         <a href="/api/auth/kakao" className="block" data-testid="button-login-kakao">
@@ -242,6 +318,19 @@ export function AppHeader() {
                             구글로 로그인
                           </Button>
                         </a>
+                        <Button
+                          variant="secondary"
+                          className="w-full h-9"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowEmailLogin(true);
+                          }}
+                          data-testid="button-show-email-login"
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          이메일로 로그인
+                        </Button>
                       </div>
                       
                       <DropdownMenuSeparator className="my-3" />
@@ -260,8 +349,94 @@ export function AppHeader() {
                         회원가입
                       </Button>
                     </>
+                  ) : showEmailLogin ? (
+                    <>
+                      {/* 이메일 로그인 화면 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-sm">이메일 로그인</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowEmailLogin(false);
+                              setRegisterError("");
+                            }}
+                          >
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        
+                        {registerError && (
+                          <p className="text-xs text-red-500 text-center">{registerError}</p>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <Label htmlFor="login-email" className="text-xs">이메일</Label>
+                            <Input
+                              id="login-email"
+                              type="email"
+                              placeholder="email@example.com"
+                              className="h-8 text-sm"
+                              value={registerData.email}
+                              onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-login-email"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="login-password" className="text-xs">비밀번호</Label>
+                            <Input
+                              id="login-password"
+                              type="password"
+                              placeholder="••••••"
+                              className="h-8 text-sm"
+                              value={registerData.password}
+                              onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-login-password"
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button
+                          className="w-full h-9"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleEmailLogin();
+                          }}
+                          disabled={registerLoading}
+                          data-testid="button-email-login"
+                        >
+                          {registerLoading ? "로그인 중..." : "로그인"}
+                        </Button>
+                        
+                        <p className="text-xs text-muted-foreground text-center">
+                          계정이 없으신가요?{" "}
+                          <button 
+                            className="text-primary underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowEmailLogin(false);
+                              setShowRegister(true);
+                              setRegisterError("");
+                            }}
+                          >
+                            회원가입
+                          </button>
+                        </p>
+                      </div>
+                    </>
                   ) : (
                     <>
+                      {/* 회원가입 화면 */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <h3 className="font-semibold text-sm">회원가입</h3>
@@ -273,15 +448,20 @@ export function AppHeader() {
                               e.preventDefault();
                               e.stopPropagation();
                               setShowRegister(false);
+                              setRegisterError("");
                             }}
                           >
                             ← 뒤로
                           </Button>
                         </div>
                         
+                        {registerError && (
+                          <p className="text-xs text-red-500 text-center">{registerError}</p>
+                        )}
+                        
                         <div className="space-y-2">
                           <div>
-                            <Label htmlFor="reg-email" className="text-xs">이메일</Label>
+                            <Label htmlFor="reg-email" className="text-xs">이메일 *</Label>
                             <Input
                               id="reg-email"
                               type="email"
@@ -291,6 +471,20 @@ export function AppHeader() {
                               onChange={(e) => setRegisterData({...registerData, email: e.target.value})}
                               onClick={(e) => e.stopPropagation()}
                               data-testid="input-register-email"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="reg-password" className="text-xs">비밀번호 * (6자 이상)</Label>
+                            <Input
+                              id="reg-password"
+                              type="password"
+                              placeholder="••••••"
+                              className="h-8 text-sm"
+                              value={registerData.password}
+                              onChange={(e) => setRegisterData({...registerData, password: e.target.value})}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-register-password"
                             />
                           </div>
                           
@@ -338,10 +532,24 @@ export function AppHeader() {
                           </div>
                         </div>
                         
+                        {/* 이메일로 가입 버튼 */}
+                        <Button
+                          className="w-full h-9"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleEmailRegister();
+                          }}
+                          disabled={registerLoading}
+                          data-testid="button-email-register"
+                        >
+                          {registerLoading ? "가입 중..." : "이메일로 가입"}
+                        </Button>
+                        
                         <DropdownMenuSeparator />
                         
                         <p className="text-xs text-muted-foreground text-center">
-                          위 정보 입력 후 아래 로그인을 진행하세요
+                          또는 소셜 계정으로 가입
                         </p>
                         
                         <div className="space-y-2">
@@ -378,6 +586,21 @@ export function AppHeader() {
                             구글로 가입
                           </Button>
                         </div>
+                        
+                        <p className="text-xs text-muted-foreground text-center">
+                          이미 계정이 있으신가요?{" "}
+                          <button 
+                            className="text-primary underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowEmailLogin(true);
+                              setRegisterError("");
+                            }}
+                          >
+                            로그인
+                          </button>
+                        </p>
                       </div>
                     </>
                   )}
