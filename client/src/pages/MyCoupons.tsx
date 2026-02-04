@@ -407,7 +407,7 @@ export default function MyCoupons() {
       </div>
 
       <AlertDialog open={showUseConfirm} onOpenChange={setShowUseConfirm}>
-        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader className="text-center">
             <AlertDialogTitle className="text-center">
               쿠폰 사용
