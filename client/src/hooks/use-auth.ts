@@ -2,6 +2,23 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import type { User } from "@shared/models/auth";
 
+interface AdminCheckResponse {
+  isAdmin: boolean;
+  isLoggedIn: boolean;
+  userId?: string;
+  adminUserIds?: string[];
+}
+
+async function fetchAdminCheck(): Promise<AdminCheckResponse> {
+  const response = await fetch("/api/admin/check", {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    return { isAdmin: false, isLoggedIn: false };
+  }
+  return response.json();
+}
+
 async function fetchUser(): Promise<User | null> {
   const response = await fetch("/api/auth/user", {
     credentials: "include",
@@ -70,6 +87,15 @@ export function useAuth() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  // 서버에서 관리자 여부 확인
+  const { data: adminCheck } = useQuery<AdminCheckResponse>({
+    queryKey: ["/api/admin/check"],
+    queryFn: fetchAdminCheck,
+    retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!user, // 로그인한 경우에만 체크
+  });
+
   // 로그인 시 게시글 작성자 이름 동기화 및 대기 중인 회원가입 정보 적용
   useEffect(() => {
     if (user) {
@@ -85,12 +111,12 @@ export function useAuth() {
     mutationFn: logout,
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
+      queryClient.setQueryData(["/api/admin/check"], { isAdmin: false, isLoggedIn: false });
     },
   });
 
-  // 관리자 확인 (Replit email: soulcounter486@gmail.com, Kakao email: vungtau1004@daum.net)
-  const ADMIN_EMAILS = ["soulcounter486@gmail.com", "vungtau1004@daum.net"];
-  const isAdmin = user ? ADMIN_EMAILS.includes(user.email || "") : false;
+  // 서버에서 받아온 관리자 상태 사용
+  const isAdmin = adminCheck?.isAdmin ?? false;
 
   return {
     user,
