@@ -2487,7 +2487,11 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   
   // 관리자 체크 헬퍼 함수
   const isUserAdmin = (userId: string | undefined, userEmail: string | undefined): boolean => {
-    if (userId && String(userId) === String(ADMIN_USER_ID)) return true;
+    // ADMIN_USER_ID가 쉼표로 구분된 여러 ID일 수 있음
+    if (userId && ADMIN_USER_ID) {
+      const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
+      if (adminIds.includes(String(userId))) return true;
+    }
     if (userEmail && userEmail === ADMIN_EMAIL) return true;
     return false;
   };
@@ -2780,23 +2784,29 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
 
   // 관리자 여부 확인
-  app.get("/api/admin/check", (req, res) => {
-    const user = req.user as any;
-    const userId = user?.claims?.sub;
-    const userEmail = user?.claims?.email || user?.email;
-    const isAdmin = isUserAdmin(userId, userEmail);
+  app.get("/api/admin/check", async (req: any, res) => {
+    // OAuth 사용자 (Kakao, Google)
+    const oauthUser = req.user as any;
+    let userId = oauthUser?.claims?.sub;
+    let userEmail = oauthUser?.claims?.email || oauthUser?.email;
     
-    // 관리자 ID 목록 (Replit ID와 카카오 ID 등 - 모든 관리자 계정의 ID 포함)
-    // ADMIN_USER_ID는 Replit 관리자 ID, 현재 로그인한 관리자의 ID도 추가
-    const adminUserIds: string[] = [];
-    if (ADMIN_USER_ID) adminUserIds.push(ADMIN_USER_ID);
-    // 현재 로그인한 사용자가 관리자인 경우, 그 사용자의 ID도 관리자 목록에 추가
-    if (isAdmin && userId && !adminUserIds.includes(userId)) {
-      adminUserIds.push(userId);
+    // 세션 기반 이메일 로그인 사용자
+    if (!userId && req.session?.userId) {
+      const dbUser = await db.select().from(users).where(eq(users.id, req.session.userId));
+      if (dbUser.length > 0) {
+        userId = dbUser[0].id;
+        userEmail = dbUser[0].email;
+      }
     }
     
+    const isAdmin = isUserAdmin(userId, userEmail);
+    const isLoggedIn = !!(oauthUser || req.session?.userId);
+    
+    // 관리자 ID 목록 (쉼표로 구분된 ID들을 배열로 분리)
+    const adminUserIds: string[] = ADMIN_USER_ID ? ADMIN_USER_ID.split(",").map(id => id.trim()) : [];
+    
     console.log("Admin check - userId:", userId, "userEmail:", userEmail, "ADMIN_USER_ID:", ADMIN_USER_ID, "ADMIN_EMAIL:", ADMIN_EMAIL, "isAdmin:", isAdmin, "adminUserIds:", adminUserIds);
-    res.json({ isAdmin, isLoggedIn: !!user, userId, adminUserIds });
+    res.json({ isAdmin, isLoggedIn, userId, adminUserIds });
   });
 
   // === 인스타그램 동기화 ===
