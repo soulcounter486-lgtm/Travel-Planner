@@ -118,8 +118,11 @@ export default function Home() {
   // 이메일 로그인/회원가입 상태
   const [showEmailLogin, setShowEmailLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState("");
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState("");
   const [registerData, setRegisterData] = useState({
     email: "",
     password: "",
@@ -193,6 +196,35 @@ export default function Home() {
       window.location.reload();
     } catch {
       setRegisterError("회원가입 중 오류가 발생했습니다");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 비밀번호 찾기
+  const handleForgotPassword = async () => {
+    if (!forgotPasswordEmail) {
+      setRegisterError("이메일을 입력해주세요");
+      return;
+    }
+    setRegisterLoading(true);
+    setRegisterError("");
+    setForgotPasswordSuccess("");
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotPasswordEmail })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setRegisterError(data.error || "비밀번호 찾기에 실패했습니다");
+        return;
+      }
+      setForgotPasswordSuccess("임시 비밀번호가 이메일로 발송되었습니다");
+      setForgotPasswordEmail("");
+    } catch {
+      setRegisterError("비밀번호 찾기 중 오류가 발생했습니다");
     } finally {
       setRegisterLoading(false);
     }
@@ -1232,6 +1264,37 @@ export default function Home() {
                         <Button className="w-full h-8 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleEmailLogin(); }} disabled={registerLoading}>
                           {registerLoading ? "로그인 중..." : "로그인"}
                         </Button>
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowForgotPassword(true); setRegisterError(""); setForgotPasswordSuccess(""); }}>
+                            비밀번호 찾기
+                          </button>
+                          <button className="text-primary underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowEmailLogin(false); setShowRegister(true); setRegisterError(""); }}>
+                            회원가입
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : showForgotPassword ? (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-xs">비밀번호 찾기</h3>
+                          <Button variant="ghost" size="sm" className="h-5 px-1.5 text-[10px]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowForgotPassword(false); setRegisterError(""); setForgotPasswordSuccess(""); }}>
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        {registerError && <p className="text-[10px] text-red-500 text-center">{registerError}</p>}
+                        {forgotPasswordSuccess && <p className="text-[10px] text-green-600 text-center">{forgotPasswordSuccess}</p>}
+                        <div>
+                          <Label htmlFor="forgot-email-home" className="text-[10px]">가입한 이메일</Label>
+                          <Input id="forgot-email-home" type="email" placeholder="email@example.com" className="h-7 text-xs" value={forgotPasswordEmail} onChange={(e) => setForgotPasswordEmail(e.target.value)} onClick={(e) => e.stopPropagation()} />
+                        </div>
+                        <Button className="w-full h-8 text-xs" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleForgotPassword(); }} disabled={registerLoading}>
+                          {registerLoading ? "발송 중..." : "임시 비밀번호 발송"}
+                        </Button>
+                        <p className="text-[10px] text-muted-foreground text-center">
+                          임시 비밀번호가 이메일로 발송됩니다.
+                        </p>
                       </div>
                     </>
                   ) : (

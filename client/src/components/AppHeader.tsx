@@ -35,8 +35,11 @@ export function AppHeader() {
   const { isAuthenticated, logout, isLoading: isAuthLoading, isAdmin } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
   const [showEmailLogin, setShowEmailLogin] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registerError, setRegisterError] = useState("");
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState("");
   const [registerData, setRegisterData] = useState({
     email: "",
     password: "",
@@ -148,6 +151,40 @@ export function AppHeader() {
       window.location.reload();
     } catch (err) {
       setRegisterError("로그인 처리 중 오류가 발생했습니다.");
+    } finally {
+      setRegisterLoading(false);
+    }
+  };
+
+  // 비밀번호 찾기
+  const handleForgotPassword = async () => {
+    if (!forgotPasswordEmail) {
+      setRegisterError("이메일을 입력해주세요.");
+      return;
+    }
+    
+    setRegisterLoading(true);
+    setRegisterError("");
+    setForgotPasswordSuccess("");
+    
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setRegisterError(data.error || "비밀번호 찾기에 실패했습니다.");
+        return;
+      }
+      
+      setForgotPasswordSuccess("임시 비밀번호가 이메일로 발송되었습니다.");
+      setForgotPasswordEmail("");
+    } catch (err) {
+      setRegisterError("비밀번호 찾기 처리 중 오류가 발생했습니다.");
     } finally {
       setRegisterLoading(false);
     }
@@ -422,8 +459,21 @@ export function AppHeader() {
                           {registerLoading ? "로그인 중..." : "로그인"}
                         </Button>
                         
-                        <p className="text-xs text-muted-foreground text-center">
-                          계정이 없으신가요?{" "}
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <button 
+                            className="text-primary underline"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowEmailLogin(false);
+                              setShowForgotPassword(true);
+                              setRegisterError("");
+                              setForgotPasswordSuccess("");
+                            }}
+                            data-testid="button-forgot-password"
+                          >
+                            비밀번호 찾기
+                          </button>
                           <button 
                             className="text-primary underline"
                             onClick={(e) => {
@@ -436,6 +486,71 @@ export function AppHeader() {
                           >
                             회원가입
                           </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : showForgotPassword ? (
+                    <>
+                      {/* 비밀번호 찾기 화면 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold text-sm">비밀번호 찾기</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowForgotPassword(false);
+                              setRegisterError("");
+                              setForgotPasswordSuccess("");
+                            }}
+                          >
+                            ← 뒤로
+                          </Button>
+                        </div>
+                        
+                        {registerError && (
+                          <p className="text-xs text-red-500 text-center">{registerError}</p>
+                        )}
+                        
+                        {forgotPasswordSuccess && (
+                          <p className="text-xs text-green-600 text-center">{forgotPasswordSuccess}</p>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <div>
+                            <Label htmlFor="forgot-email" className="text-xs">가입한 이메일</Label>
+                            <Input
+                              id="forgot-email"
+                              type="email"
+                              placeholder="email@example.com"
+                              className="h-8 text-sm"
+                              value={forgotPasswordEmail}
+                              onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid="input-forgot-email"
+                            />
+                          </div>
+                        </div>
+                        
+                        <Button
+                          className="w-full h-9"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleForgotPassword();
+                          }}
+                          disabled={registerLoading}
+                          data-testid="button-send-temp-password"
+                        >
+                          {registerLoading ? "발송 중..." : "임시 비밀번호 발송"}
+                        </Button>
+                        
+                        <p className="text-xs text-muted-foreground text-center">
+                          임시 비밀번호가 이메일로 발송됩니다.<br />
+                          로그인 후 비밀번호를 변경해주세요.
                         </p>
                       </div>
                     </>
