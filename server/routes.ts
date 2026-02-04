@@ -3944,9 +3944,15 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         discountValue: coupons.discountValue,
         validFrom: coupons.validFrom,
         validUntil: coupons.validUntil,
+        placeId: coupons.placeId,
+        placeName: places.name,
+        placeAddress: places.address,
+        placeLatitude: places.latitude,
+        placeLongitude: places.longitude,
       })
         .from(userCoupons)
         .innerJoin(coupons, eq(userCoupons.couponId, coupons.id))
+        .leftJoin(places, eq(coupons.placeId, places.id))
         .where(eq(userCoupons.userId, userId))
         .orderBy(desc(userCoupons.issuedAt));
 

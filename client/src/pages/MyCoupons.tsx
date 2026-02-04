@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Ticket, MessageSquare, CheckCircle2, Clock, Gift, Mail, MailOpen, X } from "lucide-react";
+import { ArrowLeft, Ticket, MessageSquare, CheckCircle2, Clock, Gift, Mail, MailOpen, X, MapPin, Navigation } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -39,6 +39,11 @@ interface MyCoupon {
   discountValue: number;
   validFrom?: string;
   validUntil?: string;
+  placeId?: number;
+  placeName?: string;
+  placeAddress?: string;
+  placeLatitude?: string;
+  placeLongitude?: string;
 }
 
 interface Message {
@@ -294,19 +299,62 @@ export default function MyCoupons() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>쿠폰 사용</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4">
-              <div className="text-center py-4">
-                <p className="text-2xl font-bold text-primary mb-2">{selectedCoupon?.name}</p>
-                <p className="text-4xl font-bold">
-                  {selectedCoupon?.discountType === "percent"
-                    ? `${selectedCoupon?.discountValue}% 할인`
-                    : `${selectedCoupon?.discountValue.toLocaleString()}원 할인`}
+            <AlertDialogDescription className="space-y-4" asChild>
+              <div>
+                <div className="text-center py-4">
+                  <p className="text-2xl font-bold text-primary mb-2">{selectedCoupon?.name}</p>
+                  <p className="text-4xl font-bold">
+                    {selectedCoupon?.discountType === "percent"
+                      ? `${selectedCoupon?.discountValue}% 할인`
+                      : `${selectedCoupon?.discountValue.toLocaleString()}원 할인`}
+                  </p>
+                </div>
+                {selectedCoupon?.placeName && (
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span>사용 가능 장소: {selectedCoupon.placeName}</span>
+                    </div>
+                    {selectedCoupon.placeAddress && (
+                      <p className="text-xs text-muted-foreground ml-6">{selectedCoupon.placeAddress}</p>
+                    )}
+                    {selectedCoupon.placeLatitude && selectedCoupon.placeLongitude && (
+                      <div className="flex gap-2 ml-6 mt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`/guide?lat=${selectedCoupon.placeLatitude}&lng=${selectedCoupon.placeLongitude}&name=${encodeURIComponent(selectedCoupon.placeName || "")}`, "_blank");
+                          }}
+                          data-testid="button-view-map"
+                        >
+                          <MapPin className="w-3 h-3 mr-1" />
+                          지도보기
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedCoupon.placeLatitude},${selectedCoupon.placeLongitude}`, "_blank");
+                          }}
+                          data-testid="button-directions"
+                        >
+                          <Navigation className="w-3 h-3 mr-1" />
+                          길찾기
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <p className="text-center text-sm text-destructive mt-4">
+                  쿠폰 사용 후에는 취소할 수 없습니다.<br />
+                  직원에게 이 화면을 보여주고 사용 버튼을 눌러주세요.
                 </p>
               </div>
-              <p className="text-center text-sm text-destructive">
-                ⚠️ 쿠폰 사용 후에는 취소할 수 없습니다.<br />
-                직원에게 이 화면을 보여주고 사용 버튼을 눌러주세요.
-              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
