@@ -1656,8 +1656,8 @@ export default function PlacesGuide() {
   const allPlaces = useMemo(() => {
     const places: (Place & { categoryId: string })[] = [];
     Object.entries(mergedPlacesData).forEach(([categoryId, category]) => {
-      // nightlife18 카테고리는 관리자 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
-      if (categoryId === "nightlife18" && !isAdmin && !user?.canViewNightlife18) {
+      // nightlife18 카테고리는 관리자, 남성 회원, 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
+      if (categoryId === "nightlife18" && !isAdmin && user?.gender !== 'male' && !user?.canViewNightlife18) {
         return;
       }
       category.places.forEach(place => {
@@ -1665,7 +1665,7 @@ export default function PlacesGuide() {
       });
     });
     return places;
-  }, [mergedPlacesData, isAdmin, user?.canViewNightlife18]);
+  }, [mergedPlacesData, isAdmin, user?.gender, user?.canViewNightlife18]);
 
   // 지도 초기화
   useEffect(() => {
@@ -2133,8 +2133,8 @@ export default function PlacesGuide() {
                   { id: "koreanFood", color: "#f97316", label: language === "ko" ? "한식" : "Korean" },
                   { id: "coffee", color: "#6366f1", label: language === "ko" ? "카페" : "Cafe" },
                   { id: "nightlife", color: "#ec4899", label: language === "ko" ? "유흥" : "Nightlife" },
-                  // nightlife18은 관리자 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
-                  ...(isAdmin || user?.canViewNightlife18 ? [{ id: "nightlife18", color: "#dc2626", label: language === "ko" ? "밤문화 18+" : "Nightlife 18+" }] : []),
+                  // nightlife18은 관리자, 남성 회원, 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
+                  ...(isAdmin || user?.gender === 'male' || user?.canViewNightlife18 ? [{ id: "nightlife18", color: "#dc2626", label: language === "ko" ? "밤문화 18+" : "Nightlife 18+" }] : []),
                   { id: "spa", color: "#8b5cf6", label: language === "ko" ? "스파" : "Spa" },
                   { id: "massage", color: "#14b8a6", label: language === "ko" ? "마사지" : "Massage" },
                   { id: "golf", color: "#22c55e", label: language === "ko" ? "골프" : "Golf" },
@@ -2182,8 +2182,8 @@ export default function PlacesGuide() {
         {viewMode === "list" && (
         <div className="space-y-4">
           {categoryOrder.map((key) => {
-            // nightlife18 카테고리는 관리자 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
-            if (key === "nightlife18" && !isAdmin && !user?.canViewNightlife18) return null;
+            // nightlife18 카테고리는 관리자, 남성 회원, 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
+            if (key === "nightlife18" && !isAdmin && user?.gender !== 'male' && !user?.canViewNightlife18) return null;
             const category = mergedPlacesData[key];
             if (!category) return null;
             const Icon = category.icon;
