@@ -753,25 +753,25 @@ export default function AdminMembers() {
                           </Button>
                           <Button
                             size="sm"
-                            variant={member.canViewNightlife18 ? "default" : "ghost"}
-                            className={`h-6 px-2 text-[10px] ${member.canViewNightlife18 ? "bg-rose-500 hover:bg-rose-600" : ""}`}
+                            variant={member.canViewNightlife18 ? "default" : "outline"}
+                            className={`h-6 px-2 text-[10px] ${member.canViewNightlife18 ? "bg-rose-500 hover:bg-rose-600 text-white" : "border-rose-300 dark:border-rose-700"}`}
                             onClick={() => toggleNightlife18Mutation.mutate({ userId: member.id, canViewNightlife18: !member.canViewNightlife18 })}
                             disabled={toggleNightlife18Mutation.isPending}
                             title={member.canViewNightlife18 ? "밤문화18 권한 해제" : "밤문화18 권한 부여"}
                             data-testid={`toggle-nightlife18-${member.id}`}
                           >
-                            <Moon className="w-3 h-3" />
+                            <Moon className={`w-3 h-3 ${member.canViewNightlife18 ? "" : "text-rose-500"}`} />
                           </Button>
                           <Button
                             size="sm"
-                            variant={member.canViewEco ? "default" : "ghost"}
-                            className={`h-6 px-2 text-[10px] ${member.canViewEco ? "bg-pink-500 hover:bg-pink-600" : ""}`}
+                            variant={member.canViewEco ? "default" : "outline"}
+                            className={`h-6 px-2 text-[10px] ${member.canViewEco ? "bg-pink-500 hover:bg-pink-600 text-white" : "border-pink-300 dark:border-pink-700"}`}
                             onClick={() => toggleEcoMutation.mutate({ userId: member.id, canViewEco: !member.canViewEco })}
                             disabled={toggleEcoMutation.isPending}
                             title={member.canViewEco ? "에코 권한 해제" : "에코 권한 부여"}
                             data-testid={`toggle-eco-${member.id}`}
                           >
-                            <Sparkles className="w-3 h-3" />
+                            <Sparkles className={`w-3 h-3 ${member.canViewEco ? "" : "text-pink-500"}`} />
                           </Button>
                           <Button
                             size="sm"
