@@ -767,7 +767,7 @@ export const placesData: Record<string, Category> = {
   }
 };
 
-const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "coffee", "exchange", "nightlife", "nightlife18"];
+const defaultCategoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "coffee", "exchange", "nightlife", "nightlife18"];
 
 const categoryLabels: Record<string, Record<string, string>> = {
   attractions: { ko: "관광명소", en: "Attractions", zh: "景点", vi: "Địa điểm du lịch", ru: "Достопримечательности", ja: "観光スポット" },
@@ -1518,6 +1518,32 @@ export default function PlacesGuide() {
     // 하드코딩된 categoryLabels에서 찾기
     return categoryLabels[categoryId]?.[language] || categoryLabels[categoryId]?.ko || categoryId;
   };
+
+  // DB 카테고리 sortOrder 기반 동적 순서 생성
+  const categoryOrder = useMemo(() => {
+    if (dbCategories.length === 0) {
+      return defaultCategoryOrder;
+    }
+    
+    // DB 카테고리 ID -> 하드코딩 ID 매핑 (역매핑)
+    const dbToHardcodedMap: Record<string, string> = {
+      attraction: "attractions",
+      local_food: "localFood",
+      korean_food: "koreanFood",
+      chinese_food: "chineseFood",
+      cafe: "coffee",
+    };
+    
+    // DB 카테고리를 sortOrder로 정렬하고 하드코딩 ID로 변환
+    const sortedDbIds = [...dbCategories]
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      .map(c => dbToHardcodedMap[c.id] || c.id);
+    
+    // DB에 없는 기존 하드코딩 카테고리 추가 (예: nightlife18은 관리자만 보는 특수 카테고리)
+    const remaining = defaultCategoryOrder.filter(id => !sortedDbIds.includes(id));
+    
+    return [...sortedDbIds, ...remaining];
+  }, [dbCategories]);
 
   // 장소 수정 핸들러
   const handleEditPlace = async (place: Place, categoryId: string) => {
