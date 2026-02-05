@@ -53,6 +53,7 @@ const CATEGORY_ORDER = [
   "cafe",            // 커피숍
   "exchange",        // 환전소
   "nightlife",       // 밤문화
+  "nightlife18",     // 밤문화 18+
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -65,6 +66,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   cafe: "커피숍",
   exchange: "환전소",
   nightlife: "밤문화",
+  nightlife18: "밤문화 18+",
 };
 
 // placesData 카테고리 -> DB 카테고리 매핑
@@ -78,6 +80,7 @@ const HARDCODED_TO_DB_CATEGORY: Record<string, string> = {
   coffee: "cafe",
   exchange: "exchange",
   nightlife: "nightlife",
+  nightlife18: "nightlife18",
   partnerRestaurant: "local_food",
   partnerBarber: "services",
 };
@@ -93,6 +96,7 @@ const DB_TO_HARDCODED_CATEGORY: Record<string, string> = {
   cafe: "coffee",
   exchange: "exchange",
   nightlife: "nightlife",
+  nightlife18: "nightlife18",
 };
 
 export default function AdminPlaces() {

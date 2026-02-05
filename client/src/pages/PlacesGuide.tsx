@@ -758,10 +758,16 @@ export const placesData: Record<string, Category> = {
         }
       },
     ]
+  },
+  nightlife18: {
+    id: "nightlife18",
+    icon: Music,
+    gradient: "from-red-600 to-pink-700",
+    places: []
   }
 };
 
-const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "coffee", "exchange", "nightlife"];
+const categoryOrder = ["attractions", "services", "localFood", "koreanFood", "buffet", "chineseFood", "coffee", "exchange", "nightlife", "nightlife18"];
 
 const categoryLabels: Record<string, Record<string, string>> = {
   attractions: { ko: "관광명소", en: "Attractions", zh: "景点", vi: "Địa điểm du lịch", ru: "Достопримечательности", ja: "観光スポット" },
@@ -772,7 +778,8 @@ const categoryLabels: Record<string, Record<string, string>> = {
   exchange: { ko: "환전소", en: "Currency Exchange", zh: "货币兑换", vi: "Đổi tiền", ru: "Обмен валюты", ja: "両替所" },
   coffee: { ko: "커피숍", en: "Coffee Shops", zh: "咖啡店", vi: "Quán cà phê", ru: "Кофейни", ja: "カフェ" },
   services: { ko: "마사지/이발소", en: "Massage & Barber", zh: "按摩/理发", vi: "Massage/Cắt tóc", ru: "Массаж/Парикмахерская", ja: "マッサージ/理髪店" },
-  nightlife: { ko: "밤문화", en: "Nightlife", zh: "夜生活", vi: "Cuộc sống về đêm", ru: "Ночная жизнь", ja: "ナイトライフ" }
+  nightlife: { ko: "밤문화", en: "Nightlife", zh: "夜生活", vi: "Cuộc sống về đêm", ru: "Ночная жизнь", ja: "ナイトライフ" },
+  nightlife18: { ko: "밤문화 18+", en: "Nightlife 18+", zh: "夜生活 18+", vi: "Cuộc sống về đêm 18+", ru: "Ночная жизнь 18+", ja: "ナイトライフ 18+" }
 };
 
 const noteLabels: Record<string, Record<string, string>> = {
@@ -1406,6 +1413,7 @@ const dbCategoryMap: Record<string, string> = {
   cafe: "coffee",
   exchange: "exchange",
   nightlife: "nightlife",
+  nightlife18: "nightlife18",
   restaurant: "localFood",
   other: "exchange",
 };
@@ -1714,6 +1722,7 @@ export default function PlacesGuide() {
         chineseFood: "#22c55e",
         coffee: "#6366f1",
         nightlife: "#ec4899",
+        nightlife18: "#dc2626",
         spa: "#8b5cf6",
         exchange: "#64748b",
         services: "#0ea5e9",
@@ -1781,6 +1790,7 @@ export default function PlacesGuide() {
         chineseFood: language === "ko" ? "중식" : "Chinese",
         coffee: language === "ko" ? "카페" : "Cafe",
         nightlife: language === "ko" ? "유흥" : "Nightlife",
+        nightlife18: language === "ko" ? "밤문화 18+" : "Nightlife 18+",
         spa: language === "ko" ? "스파/마사지" : "Spa",
         exchange: language === "ko" ? "환전" : "Exchange",
         services: language === "ko" ? "서비스" : "Services",
@@ -2058,6 +2068,8 @@ export default function PlacesGuide() {
                   { id: "koreanFood", color: "#f97316", label: language === "ko" ? "한식" : "Korean" },
                   { id: "coffee", color: "#6366f1", label: language === "ko" ? "카페" : "Cafe" },
                   { id: "nightlife", color: "#ec4899", label: language === "ko" ? "유흥" : "Nightlife" },
+                  // nightlife18은 남성에게만 표시
+                  ...(user?.gender === "male" ? [{ id: "nightlife18", color: "#dc2626", label: language === "ko" ? "밤문화 18+" : "Nightlife 18+" }] : []),
                   { id: "spa", color: "#8b5cf6", label: language === "ko" ? "스파" : "Spa" },
                   { id: "massage", color: "#14b8a6", label: language === "ko" ? "마사지" : "Massage" },
                   { id: "golf", color: "#22c55e", label: language === "ko" ? "골프" : "Golf" },
@@ -2105,6 +2117,8 @@ export default function PlacesGuide() {
         {viewMode === "list" && (
         <div className="space-y-4">
           {categoryOrder.map((key) => {
+            // nightlife18 카테고리는 남성 사용자에게만 표시
+            if (key === "nightlife18" && user?.gender !== "male") return null;
             const category = mergedPlacesData[key];
             if (!category) return null;
             const Icon = category.icon;
