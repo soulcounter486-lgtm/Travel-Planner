@@ -695,11 +695,17 @@ export default function AdminMembers() {
                     {[...members].sort((a, b) => (b.isAdmin ? 1 : 0) - (a.isAdmin ? 1 : 0)).map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            member.gender === 'male' ? 'bg-blue-500/20' : 
+                            member.gender === 'female' ? 'bg-pink-500/20' : 'bg-primary/20'
+                          }`}>
                             {member.profileImageUrl ? (
                               <img src={member.profileImageUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
                             ) : (
-                              <Users className="w-3 h-3 text-primary" />
+                              <Users className={`w-3 h-3 ${
+                                member.gender === 'male' ? 'text-blue-500' : 
+                                member.gender === 'female' ? 'text-pink-500' : 'text-primary'
+                              }`} />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -714,14 +720,6 @@ export default function AdminMembers() {
                             </div>
                             <div className="flex items-center gap-1">
                               <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
-                              {member.gender && (
-                                <Badge 
-                                  variant="outline" 
-                                  className={`h-3 px-1 text-[8px] ${member.gender === 'male' ? 'border-blue-400 text-blue-400' : 'border-pink-400 text-pink-400'}`}
-                                >
-                                  {member.gender === 'male' ? '남' : '여'}
-                                </Badge>
-                              )}
                               {member.loginMethod && (
                                 <Badge variant="outline" className="h-3 px-1 text-[8px]">
                                   {member.loginMethod}
