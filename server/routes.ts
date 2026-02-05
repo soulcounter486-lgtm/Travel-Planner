@@ -4867,5 +4867,109 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // === 회원 관리 API ===
+  
+  // 비동기 관리자 권한 확인 헬퍼 함수
+  const isUserAdminAsync = async (userId: string | undefined): Promise<boolean> => {
+    if (!userId) return false;
+    
+    // 환경 변수 기반 체크
+    if (ADMIN_USER_ID) {
+      const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
+      if (adminIds.includes(String(userId))) return true;
+    }
+    
+    // DB 기반 체크
+    const dbUser = await db.select().from(users).where(eq(users.id, String(userId)));
+    if (dbUser.length > 0 && dbUser[0].isAdmin) return true;
+    
+    return false;
+  };
+
+  // 관리자용 회원 목록 조회
+  app.get("/api/admin/users", async (req: any, res) => {
+    try {
+      const oauthUser = req.user as any;
+      let userId = oauthUser?.claims?.sub;
+      
+      if (!userId && req.session?.userId) {
+        userId = req.session.userId;
+      }
+      
+      const isAdmin = await isUserAdminAsync(userId);
+      if (!isAdmin) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const allUsers = await db.select({
+        id: users.id,
+        email: users.email,
+        nickname: users.nickname,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        profileImageUrl: users.profileImageUrl,
+        loginMethod: users.loginMethod,
+        isAdmin: users.isAdmin,
+        createdAt: users.createdAt,
+      }).from(users).orderBy(desc(users.createdAt));
+      
+      res.json(allUsers);
+    } catch (err) {
+      console.error("회원 목록 조회 오류:", err);
+      res.status(500).json({ error: "회원 목록 조회 실패" });
+    }
+  });
+
+  // 관리자 권한 부여/해제
+  app.patch("/api/admin/users/:id/admin", async (req: any, res) => {
+    try {
+      const oauthUser = req.user as any;
+      let currentUserId = oauthUser?.claims?.sub;
+      
+      if (!currentUserId && req.session?.userId) {
+        currentUserId = req.session.userId;
+      }
+      
+      const isAdmin = await isUserAdminAsync(currentUserId);
+      if (!isAdmin) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const targetUserId = req.params.id;
+      const { isAdmin: newIsAdmin } = req.body;
+
+      if (typeof newIsAdmin !== "boolean") {
+        return res.status(400).json({ error: "isAdmin 값이 필요합니다" });
+      }
+
+      // 자기 자신의 관리자 권한은 해제 불가 (안전 장치)
+      if (String(currentUserId) === String(targetUserId) && !newIsAdmin) {
+        return res.status(400).json({ error: "자신의 관리자 권한은 해제할 수 없습니다" });
+      }
+
+      const [updatedUser] = await db.update(users)
+        .set({ isAdmin: newIsAdmin, updatedAt: new Date() })
+        .where(eq(users.id, targetUserId))
+        .returning();
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
+      }
+
+      res.json({ 
+        success: true, 
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          nickname: updatedUser.nickname,
+          isAdmin: updatedUser.isAdmin,
+        }
+      });
+    } catch (err) {
+      console.error("관리자 권한 변경 오류:", err);
+      res.status(500).json({ error: "관리자 권한 변경 실패" });
+    }
+  });
+
   return httpServer;
 }
