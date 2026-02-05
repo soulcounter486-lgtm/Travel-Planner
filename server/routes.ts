@@ -2282,8 +2282,50 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
-  // AI 여행 플랜 생성 API (Gemini 사용 - 무료)
+  // 카테고리명 번역 API (Gemini 사용)
   const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  
+  app.post("/api/translate-category", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text || typeof text !== "string") {
+        return res.status(400).json({ error: "Text is required" });
+      }
+      
+      const prompt = `Translate the following Korean category name to multiple languages. Return ONLY a valid JSON object with these exact keys: en, zh, vi, ru, ja. Each value should be a short category name (1-3 words max).
+
+Korean text: "${text}"
+
+Example response format:
+{"en":"Golf Club","zh":"高尔夫俱乐部","vi":"Câu lạc bộ golf","ru":"Гольф-клуб","ja":"ゴルフクラブ"}`;
+
+      const response = await gemini.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+      
+      const resultText = response.text?.trim() || "";
+      // JSON 추출 (```json ... ``` 형태 처리)
+      let jsonStr = resultText;
+      if (resultText.includes("```")) {
+        const match = resultText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (match) jsonStr = match[1];
+      }
+      
+      try {
+        const translations = JSON.parse(jsonStr);
+        res.json(translations);
+      } catch {
+        console.error("Translation parse error:", resultText);
+        res.status(500).json({ error: "Failed to parse translation" });
+      }
+    } catch (error) {
+      console.error("Translation error:", error);
+      res.status(500).json({ error: "Translation failed" });
+    }
+  });
+
+  // AI 여행 플랜 생성 API (Gemini 사용 - 무료)
 
   const travelPlanRequestSchema = z.object({
     purpose: z.string().min(1),

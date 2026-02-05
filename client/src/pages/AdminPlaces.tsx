@@ -2065,6 +2065,7 @@ interface CategoryFormProps {
 
 function CategoryForm({ category, onSubmit, onCancel, isSubmitting = false }: CategoryFormProps) {
   const { toast } = useToast();
+  const [isTranslating, setIsTranslating] = useState(false);
   const [formData, setFormData] = useState({
     id: category?.id || "",
     labelKo: category?.labelKo || "",
@@ -2079,36 +2080,120 @@ function CategoryForm({ category, onSubmit, onCancel, isSubmitting = false }: Ca
     isAdultOnly: category?.isAdultOnly || false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("CategoryForm handleSubmit called", formData);
-    if (!formData.id) {
-      toast({ title: "ID를 입력해주세요", variant: "destructive" });
+  // 한국어 -> 영문 ID 자동 생성 (간단한 로마자 변환)
+  const generateIdFromKorean = (korean: string): string => {
+    const romanMap: Record<string, string> = {
+      "골프": "golf", "장": "jang", "클럽": "club", "마사지": "massage",
+      "이발소": "barber", "음식": "food", "식당": "restaurant", "카페": "cafe",
+      "커피": "coffee", "관광": "tour", "명소": "spot", "호텔": "hotel",
+      "숙소": "lodging", "쇼핑": "shopping", "병원": "hospital", "약국": "pharmacy",
+      "은행": "bank", "환전": "exchange", "공항": "airport", "택시": "taxi",
+      "버스": "bus", "기차": "train", "바": "bar", "펍": "pub",
+      "노래방": "karaoke", "밤문화": "nightlife", "해변": "beach", "산": "mountain",
+      "공원": "park", "박물관": "museum", "사원": "temple", "교회": "church",
+    };
+    
+    let id = korean.toLowerCase();
+    for (const [ko, en] of Object.entries(romanMap)) {
+      id = id.replace(new RegExp(ko, "g"), en);
+    }
+    // 한글이 남아있으면 제거하고 영문/숫자만 남김
+    id = id.replace(/[^a-z0-9]/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+    return id || "category_" + Date.now();
+  };
+
+  // 자동 번역 함수
+  const handleAutoTranslate = async () => {
+    if (!formData.labelKo) {
+      toast({ title: "한국어 이름을 먼저 입력해주세요", variant: "destructive" });
       return;
     }
+    
+    setIsTranslating(true);
+    try {
+      const res = await fetch("/api/translate-category", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ text: formData.labelKo }),
+      });
+      
+      if (res.ok) {
+        const translations = await res.json();
+        const newId = !category && !formData.id ? generateIdFromKorean(formData.labelKo) : formData.id;
+        setFormData(prev => ({
+          ...prev,
+          id: newId,
+          labelEn: translations.en || prev.labelEn,
+          labelZh: translations.zh || prev.labelZh,
+          labelVi: translations.vi || prev.labelVi,
+          labelRu: translations.ru || prev.labelRu,
+          labelJa: translations.ja || prev.labelJa,
+        }));
+        toast({ title: "번역이 완료되었습니다" });
+      } else {
+        toast({ title: "번역 실패", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "번역 오류", variant: "destructive" });
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formData.labelKo) {
       toast({ title: "한국어 이름을 입력해주세요", variant: "destructive" });
       return;
     }
-    if (!formData.labelEn) {
-      toast({ title: "영어 이름을 입력해주세요", variant: "destructive" });
-      return;
-    }
-    console.log("CategoryForm validation passed, calling onSubmit");
-    onSubmit(formData);
+    
+    // ID 자동 생성 (비어있으면)
+    const finalData = {
+      ...formData,
+      id: formData.id || generateIdFromKorean(formData.labelKo),
+      labelEn: formData.labelEn || formData.labelKo, // 영어 없으면 한국어로
+    };
+    
+    onSubmit(finalData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* 한국어 이름 (필수) + 자동번역 버튼 */}
+      <div>
+        <Label htmlFor="cat-label-ko">카테고리명 (한국어) <span className="text-red-500">*</span></Label>
+        <div className="flex gap-2">
+          <Input
+            id="cat-label-ko"
+            value={formData.labelKo}
+            onChange={(e) => setFormData({ ...formData, labelKo: e.target.value })}
+            placeholder="예: 골프장"
+            className="flex-1"
+            data-testid="input-category-label-ko"
+          />
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={handleAutoTranslate}
+            disabled={isTranslating || !formData.labelKo}
+          >
+            {isTranslating ? <Loader2 className="h-4 w-4 animate-spin" /> : "자동번역"}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">한국어 입력 후 '자동번역' 버튼을 누르면 다른 언어와 ID가 자동 생성됩니다</p>
+      </div>
+      
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="cat-id">ID (영문)</Label>
+          <Label htmlFor="cat-id">ID (자동생성)</Label>
           <Input
             id="cat-id"
             value={formData.id}
             onChange={(e) => setFormData({ ...formData, id: e.target.value.toLowerCase().replace(/\s/g, "_") })}
-            placeholder="attraction"
+            placeholder="자동 생성됨"
             disabled={!!category}
+            className="bg-muted"
             data-testid="input-category-id"
           />
         </div>
@@ -2135,28 +2220,15 @@ function CategoryForm({ category, onSubmit, onCancel, isSubmitting = false }: Ca
       
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="cat-label-ko">한국어 <span className="text-red-500">*</span></Label>
-          <Input
-            id="cat-label-ko"
-            value={formData.labelKo}
-            onChange={(e) => setFormData({ ...formData, labelKo: e.target.value })}
-            placeholder="관광명소"
-            data-testid="input-category-label-ko"
-          />
-        </div>
-        <div>
-          <Label htmlFor="cat-label-en">영어 <span className="text-red-500">*</span></Label>
+          <Label htmlFor="cat-label-en">영어</Label>
           <Input
             id="cat-label-en"
             value={formData.labelEn}
             onChange={(e) => setFormData({ ...formData, labelEn: e.target.value })}
-            placeholder="Attractions"
+            placeholder="자동번역됨"
             data-testid="input-category-label-en"
           />
         </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="cat-label-zh">중국어</Label>
           <Input
