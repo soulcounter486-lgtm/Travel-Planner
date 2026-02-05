@@ -255,6 +255,27 @@ export default function AdminMembers() {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "회원이 삭제되었습니다" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "삭제 실패", description: error.message, variant: "destructive" });
+    },
+  });
+
   const { data: allCoupons = [], isLoading: couponsLoading } = useQuery<Coupon[]>({
     queryKey: ["/api/admin/coupons"],
     enabled: isAdmin,
@@ -669,6 +690,21 @@ export default function AdminMembers() {
                             }}
                           >
                             <Gift className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-[10px] text-destructive hover:text-destructive"
+                            onClick={() => {
+                              if (confirm(`정말 ${member.nickname || member.email} 회원을 삭제하시겠습니까?`)) {
+                                deleteUserMutation.mutate(member.id);
+                              }
+                            }}
+                            disabled={deleteUserMutation.isPending || member.isAdmin || String(member.id) === String(currentUserId)}
+                            title={member.isAdmin ? "관리자는 삭제할 수 없습니다" : String(member.id) === String(currentUserId) ? "자신은 삭제할 수 없습니다" : "회원 삭제"}
+                            data-testid={`delete-user-${member.id}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>

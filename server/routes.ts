@@ -4973,5 +4973,47 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 회원 삭제 (관리자 전용)
+  app.delete("/api/admin/users/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const oauthUser = req.user as any;
+      let currentUserId = oauthUser?.claims?.sub;
+      
+      if (!currentUserId && req.session?.userId) {
+        currentUserId = req.session.userId;
+      }
+      
+      const isAdmin = await isUserAdminAsync(currentUserId);
+      if (!isAdmin) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const targetUserId = req.params.id;
+
+      // 자기 자신은 삭제 불가
+      if (String(currentUserId) === String(targetUserId)) {
+        return res.status(400).json({ error: "자신의 계정은 삭제할 수 없습니다" });
+      }
+
+      // 삭제 대상이 관리자인지 확인
+      const [targetUser] = await db.select().from(users).where(eq(users.id, targetUserId));
+      if (!targetUser) {
+        return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
+      }
+
+      // 관리자 계정은 삭제 불가
+      if (targetUser.isAdmin) {
+        return res.status(400).json({ error: "관리자 계정은 삭제할 수 없습니다. 먼저 관리자 권한을 해제하세요" });
+      }
+
+      await db.delete(users).where(eq(users.id, targetUserId));
+
+      res.json({ success: true, message: "사용자가 삭제되었습니다" });
+    } catch (err) {
+      console.error("회원 삭제 오류:", err);
+      res.status(500).json({ error: "회원 삭제 실패" });
+    }
+  });
+
   return httpServer;
 }
