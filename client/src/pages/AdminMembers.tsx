@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck, Settings, Moon } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck, Settings, Moon, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import {
@@ -57,6 +57,7 @@ interface User {
   loginMethod?: string;
   isAdmin?: boolean;
   canViewNightlife18?: boolean;
+  canViewEco?: boolean;
   createdAt?: string;
 }
 
@@ -271,6 +272,29 @@ export default function AdminMembers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "밤문화18 권한이 변경되었습니다" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "권한 변경 실패", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const toggleEcoMutation = useMutation({
+    mutationFn: async ({ userId, canViewEco }: { userId: string; canViewEco: boolean }) => {
+      const res = await fetch(`/api/admin/users/${userId}/eco`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ canViewEco }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "에코 권한이 변경되었습니다" });
     },
     onError: (error: Error) => {
       toast({ title: "권한 변경 실패", description: error.message, variant: "destructive" });
@@ -737,6 +761,17 @@ export default function AdminMembers() {
                             data-testid={`toggle-nightlife18-${member.id}`}
                           >
                             <Moon className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={member.canViewEco ? "default" : "ghost"}
+                            className={`h-6 px-2 text-[10px] ${member.canViewEco ? "bg-pink-500 hover:bg-pink-600" : ""}`}
+                            onClick={() => toggleEcoMutation.mutate({ userId: member.id, canViewEco: !member.canViewEco })}
+                            disabled={toggleEcoMutation.isPending}
+                            title={member.canViewEco ? "에코 권한 해제" : "에코 권한 부여"}
+                            data-testid={`toggle-eco-${member.id}`}
+                          >
+                            <Sparkles className="w-3 h-3" />
                           </Button>
                           <Button
                             size="sm"

@@ -5064,6 +5064,52 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  // 에코 권한 부여/해제 (관리자 전용)
+  app.patch("/api/admin/users/:id/eco", isAuthenticated, async (req: any, res) => {
+    try {
+      const oauthUser = req.user as any;
+      let currentUserId = oauthUser?.claims?.sub;
+      
+      if (!currentUserId && req.session?.userId) {
+        currentUserId = req.session.userId;
+      }
+      
+      const isAdmin = await isUserAdminAsync(currentUserId);
+      if (!isAdmin) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const targetUserId = req.params.id;
+      const { canViewEco } = req.body;
+
+      if (typeof canViewEco !== "boolean") {
+        return res.status(400).json({ error: "canViewEco 값이 필요합니다" });
+      }
+
+      const [updatedUser] = await db.update(users)
+        .set({ canViewEco, updatedAt: new Date() })
+        .where(eq(users.id, targetUserId))
+        .returning();
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "사용자를 찾을 수 없습니다" });
+      }
+
+      res.json({ 
+        success: true, 
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          nickname: updatedUser.nickname,
+          canViewEco: updatedUser.canViewEco,
+        }
+      });
+    } catch (err) {
+      console.error("에코 권한 변경 오류:", err);
+      res.status(500).json({ error: "에코 권한 변경 실패" });
+    }
+  });
+
   // 회원 삭제 (관리자 전용)
   app.delete("/api/admin/users/:id", isAuthenticated, async (req: any, res) => {
     try {
