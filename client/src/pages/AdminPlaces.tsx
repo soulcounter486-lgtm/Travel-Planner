@@ -2064,6 +2064,7 @@ interface CategoryFormProps {
 }
 
 function CategoryForm({ category, onSubmit, onCancel, isSubmitting = false }: CategoryFormProps) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     id: category?.id || "",
     labelKo: category?.labelKo || "",
@@ -2080,9 +2081,20 @@ function CategoryForm({ category, onSubmit, onCancel, isSubmitting = false }: Ca
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.id || !formData.labelKo || !formData.labelEn) {
+    console.log("CategoryForm handleSubmit called", formData);
+    if (!formData.id) {
+      toast({ title: "ID를 입력해주세요", variant: "destructive" });
       return;
     }
+    if (!formData.labelKo) {
+      toast({ title: "한국어 이름을 입력해주세요", variant: "destructive" });
+      return;
+    }
+    if (!formData.labelEn) {
+      toast({ title: "영어 이름을 입력해주세요", variant: "destructive" });
+      return;
+    }
+    console.log("CategoryForm validation passed, calling onSubmit");
     onSubmit(formData);
   };
 
