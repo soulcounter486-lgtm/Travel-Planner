@@ -2533,7 +2533,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   const ADMIN_USER_ID = process.env.ADMIN_USER_ID || "";
   const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "vungtau1004@daum.net";
   
-  // 관리자 체크 헬퍼 함수
+  // 관리자 체크 헬퍼 함수 (동기적 - 환경변수만 체크)
   const isUserAdmin = (userId: string | undefined, userEmail: string | undefined): boolean => {
     // ADMIN_USER_ID가 쉼표로 구분된 여러 ID일 수 있음
     if (userId && ADMIN_USER_ID) {
@@ -2541,6 +2541,19 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       if (adminIds.includes(String(userId))) return true;
     }
     if (userEmail && userEmail === ADMIN_EMAIL) return true;
+    return false;
+  };
+  
+  // 관리자 체크 헬퍼 함수 (비동기 - DB의 isAdmin 필드도 체크)
+  const isUserAdminWithDb = async (userId: string | undefined, userEmail: string | undefined): Promise<boolean> => {
+    // 먼저 환경변수 체크
+    if (isUserAdmin(userId, userEmail)) return true;
+    
+    // DB의 isAdmin 필드 체크
+    if (userId) {
+      const dbUser = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (dbUser.length > 0 && dbUser[0].isAdmin) return true;
+    }
     return false;
   };
 
@@ -3829,7 +3842,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
       
-      if (!isUserAdmin(userId, userEmail)) {
+      if (!await isUserAdminWithDb(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const data = insertPlaceCategorySchema.parse(req.body);
@@ -3871,7 +3884,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
       
-      if (!isUserAdmin(userId, userEmail)) {
+      if (!await isUserAdminWithDb(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const categoryId = req.params.id;
@@ -3908,7 +3921,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
       
-      if (!isUserAdmin(userId, userEmail)) {
+      if (!await isUserAdminWithDb(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const categoryId = req.params.id;
@@ -3943,7 +3956,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
       
-      if (!isUserAdmin(userId, userEmail)) {
+      if (!await isUserAdminWithDb(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const { categoryIds } = req.body as { categoryIds: string[] };
@@ -3978,7 +3991,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         }
       }
       
-      if (!isUserAdmin(userId, userEmail)) {
+      if (!await isUserAdminWithDb(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       
