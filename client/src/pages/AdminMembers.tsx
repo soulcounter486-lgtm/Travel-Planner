@@ -739,14 +739,24 @@ export default function AdminMembers() {
                           </Button>
                           <Button
                             size="sm"
-                            variant={(member.canViewNightlife18 && member.canViewEco) ? "default" : "ghost"}
-                            className={`h-6 px-2 text-[10px] ${(member.canViewNightlife18 && member.canViewEco) ? "bg-rose-500 hover:bg-rose-600" : ""}`}
+                            variant={
+                              (member.canViewNightlife18 && member.canViewEco) ? "default" : 
+                              (member.gender === 'male' && member.loginMethod === 'kakao') ? "outline" : "ghost"
+                            }
+                            className={`h-6 px-2 text-[10px] ${
+                              (member.canViewNightlife18 && member.canViewEco) ? "bg-rose-500 hover:bg-rose-600" : 
+                              (member.gender === 'male' && member.loginMethod === 'kakao') ? "border-rose-400 text-rose-500" : ""
+                            }`}
                             onClick={() => {
                               const currentEnabled = member.canViewNightlife18 && member.canViewEco;
                               toggleAdultContentMutation.mutate({ userId: member.id, enabled: !currentEnabled });
                             }}
                             disabled={toggleAdultContentMutation.isPending}
-                            title={(member.canViewNightlife18 && member.canViewEco) ? "성인 콘텐츠 권한 해제" : "성인 콘텐츠 권한 부여"}
+                            title={
+                              (member.canViewNightlife18 && member.canViewEco) ? "성인 콘텐츠 권한 해제" : 
+                              (member.gender === 'male' && member.loginMethod === 'kakao') ? "카카오 남성 자동 권한 (클릭하여 수동 권한 부여)" : 
+                              "성인 콘텐츠 권한 부여"
+                            }
                             data-testid={`toggle-adult-${member.id}`}
                           >
                             <Sparkles className="w-3 h-3" />
