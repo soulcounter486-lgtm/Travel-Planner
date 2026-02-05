@@ -4896,6 +4896,8 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         userId = req.session.userId;
       }
       
+      console.log("[DEBUG] /api/admin/users - userId:", userId, "session:", !!req.session?.userId, "user:", !!req.user);
+      
       const isAdmin = await isUserAdminAsync(userId);
       if (!isAdmin) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });

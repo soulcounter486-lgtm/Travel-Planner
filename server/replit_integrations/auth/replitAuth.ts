@@ -153,6 +153,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
   const session = req.session as any;
 
+  console.log("[DEBUG] isAuthenticated - session?.userId:", session?.userId, "req.isAuthenticated():", req.isAuthenticated(), "user?.provider:", user?.provider);
+
   // 1. 세션 기반 이메일 로그인 확인
   if (session?.userId) {
     // 세션에 사용자 ID가 있으면 인증됨 - req.user에도 설정
