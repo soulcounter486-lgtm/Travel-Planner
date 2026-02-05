@@ -349,6 +349,8 @@ export async function registerRoutes(
         lastName: "",
         profileImageUrl: profileImage,
         gender: gender,
+        loginMethod: "kakao",
+        emailVerified: true, // 카카오 로그인은 이메일 인증 완료
       }).onConflictDoUpdate({
         target: users.id,
         set: {
@@ -356,6 +358,7 @@ export async function registerRoutes(
           firstName: nickname,
           profileImageUrl: profileImage,
           gender: gender,
+          loginMethod: "kakao", // 기존 사용자도 loginMethod 업데이트
           updatedAt: new Date(),
         },
       });
