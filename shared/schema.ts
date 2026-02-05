@@ -442,3 +442,17 @@ export const announcements = pgTable("announcements", {
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, createdAt: true, updatedAt: true });
 export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+
+// 관리자 알림 (신규회원, 로그인 등)
+export const adminNotifications = pgTable("admin_notifications", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // "new_member", "login"
+  userId: text("user_id").notNull(), // 알림 대상 사용자 ID
+  userEmail: text("user_email"), // 사용자 이메일
+  userNickname: text("user_nickname"), // 사용자 닉네임
+  message: text("message").notNull(), // 알림 메시지
+  isRead: boolean("is_read").default(false), // 읽음 여부
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type AdminNotification = typeof adminNotifications.$inferSelect;

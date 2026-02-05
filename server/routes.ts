@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -385,6 +385,29 @@ export async function registerRoutes(
           console.error("Welcome coupon issue error:", couponError);
         }
       }
+      
+      // 관리자 알림 생성 (신규회원 또는 로그인)
+      try {
+        if (isNewUser) {
+          await db.insert(adminNotifications).values({
+            type: "new_member",
+            userId: kakaoUserId,
+            userEmail: email,
+            userNickname: nickname,
+            message: `새 회원 가입: ${nickname} (카카오)`,
+          });
+        } else {
+          await db.insert(adminNotifications).values({
+            type: "login",
+            userId: kakaoUserId,
+            userEmail: email,
+            userNickname: nickname,
+            message: `로그인: ${nickname} (카카오)`,
+          });
+        }
+      } catch (notifError) {
+        console.error("Admin notification error:", notifError);
+      }
 
       // 세션에 사용자 정보 저장 (Replit Auth와 호환되는 형식)
       const user = {
@@ -541,6 +564,15 @@ export async function registerRoutes(
         })
         .where(eq(users.id, user.id));
       
+      // 관리자 알림 생성 (신규회원)
+      await db.insert(adminNotifications).values({
+        type: "new_member",
+        userId: user.id,
+        userEmail: user.email,
+        userNickname: user.nickname,
+        message: `새 회원 가입: ${user.nickname || user.email} (이메일)`,
+      });
+      
       // 세션에 사용자 정보 저장 (자동 로그인)
       (req.session as any).userId = user.id;
       (req.session as any).user = {
@@ -692,6 +724,19 @@ export async function registerRoutes(
           console.error("Welcome coupon issue error:", couponError);
           // 쿠폰 발급 실패해도 로그인은 진행
         }
+      }
+      
+      // 관리자 알림 생성 (로그인)
+      try {
+        await db.insert(adminNotifications).values({
+          type: "login",
+          userId: user.id,
+          userEmail: user.email,
+          userNickname: user.nickname,
+          message: `로그인: ${user.nickname || user.email} (이메일)`,
+        });
+      } catch (notifError) {
+        console.error("Admin notification error:", notifError);
       }
       
       // 세션에 사용자 정보 저장
@@ -5012,6 +5057,82 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     } catch (err) {
       console.error("회원 삭제 오류:", err);
       res.status(500).json({ error: "회원 삭제 실패" });
+    }
+  });
+
+  // 관리자 알림 목록 조회
+  app.get("/api/admin/notifications", isAuthenticated, async (req: any, res) => {
+    try {
+      const oauthUser = req.user as any;
+      let currentUserId = oauthUser?.claims?.sub;
+      if (!currentUserId && req.session?.userId) {
+        currentUserId = req.session.userId;
+      }
+
+      const isAdmin = await isUserAdminAsync(currentUserId);
+      if (!isAdmin) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const notifications = await db.select()
+        .from(adminNotifications)
+        .orderBy(desc(adminNotifications.createdAt))
+        .limit(50);
+
+      res.json(notifications);
+    } catch (err) {
+      console.error("알림 목록 조회 오류:", err);
+      res.status(500).json({ error: "알림 목록 조회 실패" });
+    }
+  });
+
+  // 읽지 않은 알림 개수 조회
+  app.get("/api/admin/notifications/unread-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const oauthUser = req.user as any;
+      let currentUserId = oauthUser?.claims?.sub;
+      if (!currentUserId && req.session?.userId) {
+        currentUserId = req.session.userId;
+      }
+
+      const isAdmin = await isUserAdminAsync(currentUserId);
+      if (!isAdmin) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      const result = await db.select({ count: sql<number>`count(*)` })
+        .from(adminNotifications)
+        .where(eq(adminNotifications.isRead, false));
+
+      res.json({ count: Number(result[0]?.count || 0) });
+    } catch (err) {
+      console.error("알림 개수 조회 오류:", err);
+      res.status(500).json({ error: "알림 개수 조회 실패" });
+    }
+  });
+
+  // 알림 읽음 처리
+  app.patch("/api/admin/notifications/mark-read", isAuthenticated, async (req: any, res) => {
+    try {
+      const oauthUser = req.user as any;
+      let currentUserId = oauthUser?.claims?.sub;
+      if (!currentUserId && req.session?.userId) {
+        currentUserId = req.session.userId;
+      }
+
+      const isAdmin = await isUserAdminAsync(currentUserId);
+      if (!isAdmin) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+
+      await db.update(adminNotifications)
+        .set({ isRead: true })
+        .where(eq(adminNotifications.isRead, false));
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("알림 읽음 처리 오류:", err);
+      res.status(500).json({ error: "알림 읽음 처리 실패" });
     }
   });
 

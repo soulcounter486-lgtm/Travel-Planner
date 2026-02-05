@@ -3,7 +3,7 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import type { Express, RequestHandler } from "express";
 import { authStorage } from "../replit_integrations/auth/storage";
 import { db } from "../db";
-import { users, coupons, userCoupons } from "@shared/schema";
+import { users, coupons, userCoupons, adminNotifications } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 export async function setupGoogleAuth(app: Express) {
@@ -81,6 +81,30 @@ export async function setupGoogleAuth(app: Express) {
             } catch (couponError) {
               console.error("Welcome coupon issue error:", couponError);
             }
+          }
+          
+          // 관리자 알림 생성 (신규회원 또는 로그인)
+          try {
+            const nickname = profile.name?.givenName || email || "구글 사용자";
+            if (isNewUser) {
+              await db.insert(adminNotifications).values({
+                type: "new_member",
+                userId: googleUserId,
+                userEmail: email,
+                userNickname: nickname,
+                message: `새 회원 가입: ${nickname} (구글)`,
+              });
+            } else {
+              await db.insert(adminNotifications).values({
+                type: "login",
+                userId: googleUserId,
+                userEmail: email,
+                userNickname: nickname,
+                message: `로그인: ${nickname} (구글)`,
+              });
+            }
+          } catch (notifError) {
+            console.error("Admin notification error:", notifError);
           }
 
           done(null, user);

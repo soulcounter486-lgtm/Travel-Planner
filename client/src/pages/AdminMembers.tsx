@@ -232,6 +232,27 @@ export default function AdminMembers() {
     enabled: isAdmin,
   });
 
+  const { data: unreadCount = 0 } = useQuery<number>({
+    queryKey: ["/api/admin/notifications/unread-count"],
+    enabled: isAdmin,
+    select: (data: any) => data?.count || 0,
+    refetchInterval: 30000,
+  });
+
+  const markNotificationsReadMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/admin/notifications/mark-read", {
+        method: "PATCH",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("알림 읽음 처리 실패");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/notifications/unread-count"] });
+    },
+  });
+
   const toggleAdminMutation = useMutation({
     mutationFn: async ({ userId, isAdmin: newIsAdmin }: { userId: string; isAdmin: boolean }) => {
       const res = await fetch(`/api/admin/users/${userId}/admin`, {
@@ -588,9 +609,22 @@ export default function AdminMembers() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3 h-9 mb-3">
-            <TabsTrigger value="members" className="text-xs px-1">
+            <TabsTrigger 
+              value="members" 
+              className="text-xs px-1 relative"
+              onClick={() => {
+                if (unreadCount > 0) {
+                  markNotificationsReadMutation.mutate();
+                }
+              }}
+            >
               <Users className="w-3 h-3 mr-1" />
               회원
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] min-w-[16px] h-4 rounded-full flex items-center justify-center px-1">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="coupons" className="text-xs px-1">
               <Ticket className="w-3 h-3 mr-1" />
