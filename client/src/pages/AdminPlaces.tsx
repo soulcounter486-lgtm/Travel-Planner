@@ -2240,7 +2240,15 @@ function CategoryForm({ category, onSubmit, onCancel, isSubmitting = false }: Ca
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           취소
         </Button>
-        <Button type="submit" disabled={isSubmitting} data-testid="button-submit-category">
+        <Button 
+          type="button" 
+          disabled={isSubmitting} 
+          data-testid="button-submit-category"
+          onClick={(e) => {
+            e.preventDefault();
+            handleSubmit(e as any);
+          }}
+        >
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           {category ? "수정" : "추가"}
         </Button>
