@@ -9,9 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical, EyeOff } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical, EyeOff, Folder, ChevronUp, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import type { Place } from "@shared/schema";
+import type { Place, PlaceCategory } from "@shared/schema";
 import { placesData, type HardcodedPlace } from "./PlacesGuide";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -106,9 +106,15 @@ export default function AdminPlaces() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingPlace, setEditingPlace] = useState<Place | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"places" | "categories">("places");
 
   const { data: dbPlaces = [], isLoading } = useQuery<Place[]>({
     queryKey: ["/api/admin/places"],
+    enabled: isAdmin,
+  });
+  
+  const { data: dbCategories = [], isLoading: isCategoriesLoading } = useQuery<PlaceCategory[]>({
+    queryKey: ["/api/admin/place-categories"],
     enabled: isAdmin,
   });
   const [, setLocation] = useLocation();
@@ -509,96 +515,131 @@ export default function AdminPlaces() {
           </Link>
           <h1 className="text-2xl font-bold">관광/맛집 관리</h1>
           
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-            <DialogTrigger asChild>
-              <Button className="ml-auto" data-testid="button-add-place">
-                <Plus className="h-4 w-4 mr-2" />
-                새 장소 추가
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>새 장소 추가</DialogTitle>
-              </DialogHeader>
-              <PlaceForm
-                defaultCategory={filterCategory !== "all" ? filterCategory : "attraction"}
-                onSubmit={(data) => createMutation.mutate(data)}
-                isLoading={createMutation.isPending}
-                onCancel={() => setIsAddOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          {activeTab === "places" && (
+            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+              <DialogTrigger asChild>
+                <Button className="ml-auto" data-testid="button-add-place">
+                  <Plus className="h-4 w-4 mr-2" />
+                  새 장소 추가
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>새 장소 추가</DialogTitle>
+                </DialogHeader>
+                <PlaceForm
+                  defaultCategory={filterCategory !== "all" ? filterCategory : "attraction"}
+                  onSubmit={(data) => createMutation.mutate(data)}
+                  isLoading={createMutation.isPending}
+                  onCancel={() => setIsAddOpen(false)}
+                  categories={dbCategories}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
-        {/* 카테고리 탭 - CATEGORY_ORDER 순서대로 */}
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-          {[
-            { value: "all", label: "전체" },
-            ...CATEGORY_ORDER.map(cat => ({
-              value: cat,
-              label: CATEGORY_LABELS[cat] || cat,
-            }))
-          ].map(tab => (
-            <Button
-              key={tab.value}
-              variant={filterCategory === tab.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilterCategory(tab.value)}
-              data-testid={`tab-${tab.value}`}
-            >
-              {tab.label}
-              {tab.value !== "all" && (
-                <span className="ml-1 text-xs opacity-70">
-                  ({unifiedPlaces.filter(p => p.category === tab.value).length})
-                </span>
-              )}
-            </Button>
-          ))}
-        </div>
-        
-        <p className="text-xs text-muted-foreground mb-4">
-          드래그 핸들을 길게 눌러 순서 변경 (DB 저장된 항목만 가능)
-        </p>
-
-        {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-          </div>
-        ) : filteredPlaces.length === 0 ? (
-          <Card className="p-12 text-center">
-            <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">해당 카테고리에 장소가 없습니다</p>
-            <Button onClick={() => setIsAddOpen(true)}>새 장소 추가하기</Button>
-          </Card>
-        ) : (
-          <DndContext 
-            sensors={sensors} 
-            collisionDetection={closestCenter} 
-            onDragEnd={handleDragEnd}
+        {/* 메인 탭: 장소 관리 / 카테고리 관리 */}
+        <div className="flex gap-2 mb-4 border-b pb-2">
+          <Button
+            variant={activeTab === "places" ? "default" : "ghost"}
+            onClick={() => setActiveTab("places")}
+            data-testid="tab-places"
           >
-            <SortableContext items={filteredPlaces.map(p => p.id)} strategy={verticalListSortingStrategy}>
-              <div className="grid gap-3">
-                {filteredPlaces.map((place) => (
-                  <SortablePlaceCard
-                    key={place.id}
-                    place={place}
-                    onEdit={(p) => {
-                      if (p.isHardcoded) {
-                        copyToDb(p);
-                      } else if (p.dbPlace) {
-                        setEditingPlace(p.dbPlace);
-                      }
-                    }}
-                    onDelete={deleteMutation.mutate}
-                    onHide={(p) => hideHardcodedPlace(p as UnifiedPlace)}
-                    editingPlace={editingPlace}
-                    setEditingPlace={setEditingPlace}
-                    updateMutation={updateMutation}
-                  />
-                ))}
+            <MapPin className="h-4 w-4 mr-2" />
+            장소 관리
+          </Button>
+          <Button
+            variant={activeTab === "categories" ? "default" : "ghost"}
+            onClick={() => setActiveTab("categories")}
+            data-testid="tab-categories"
+          >
+            <Folder className="h-4 w-4 mr-2" />
+            카테고리 관리
+          </Button>
+        </div>
+
+        {activeTab === "categories" ? (
+          <CategoryManagement 
+            categories={dbCategories} 
+            isLoading={isCategoriesLoading}
+            queryClient={queryClient}
+            toast={toast}
+          />
+        ) : (
+          <>
+            {/* 카테고리 필터 탭 - DB 카테고리 sortOrder 순서대로 */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              {[
+                { value: "all", label: "전체" },
+                ...[...dbCategories].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999)).map(cat => ({
+                  value: cat.id,
+                  label: cat.labelKo || cat.id,
+                }))
+              ].map(tab => (
+                <Button
+                  key={tab.value}
+                  variant={filterCategory === tab.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFilterCategory(tab.value)}
+                  data-testid={`filter-${tab.value}`}
+                >
+                  {tab.label}
+                  {tab.value !== "all" && (
+                    <span className="ml-1 text-xs opacity-70">
+                      ({unifiedPlaces.filter(p => p.category === tab.value).length})
+                    </span>
+                  )}
+                </Button>
+              ))}
+            </div>
+            
+            <p className="text-xs text-muted-foreground mb-4">
+              드래그 핸들을 길게 눌러 순서 변경 (DB 저장된 항목만 가능)
+            </p>
+
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
               </div>
-            </SortableContext>
-          </DndContext>
+            ) : filteredPlaces.length === 0 ? (
+              <Card className="p-12 text-center">
+                <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">해당 카테고리에 장소가 없습니다</p>
+                <Button onClick={() => setIsAddOpen(true)}>새 장소 추가하기</Button>
+              </Card>
+            ) : (
+              <DndContext 
+                sensors={sensors} 
+                collisionDetection={closestCenter} 
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={filteredPlaces.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                  <div className="grid gap-3">
+                    {filteredPlaces.map((place) => (
+                      <SortablePlaceCard
+                        key={place.id}
+                        place={place}
+                        onEdit={(p) => {
+                          if (p.isHardcoded) {
+                            copyToDb(p);
+                          } else if (p.dbPlace) {
+                            setEditingPlace(p.dbPlace);
+                          }
+                        }}
+                        onDelete={deleteMutation.mutate}
+                        onHide={(p) => hideHardcodedPlace(p as UnifiedPlace)}
+                        editingPlace={editingPlace}
+                        setEditingPlace={setEditingPlace}
+                        updateMutation={updateMutation}
+                        categories={dbCategories}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -627,9 +668,10 @@ interface SortablePlaceCardProps {
   editingPlace: Place | null;
   setEditingPlace: (place: Place | null) => void;
   updateMutation: any;
+  categories?: PlaceCategory[];
 }
 
-function SortablePlaceCard({ place, onEdit, onDelete, onHide, editingPlace, setEditingPlace, updateMutation }: SortablePlaceCardProps) {
+function SortablePlaceCard({ place, onEdit, onDelete, onHide, editingPlace, setEditingPlace, updateMutation, categories = [] }: SortablePlaceCardProps) {
   const {
     attributes,
     listeners,
@@ -814,10 +856,11 @@ interface PlaceFormProps {
   onSubmit: (data: Partial<Place>) => void;
   isLoading: boolean;
   onCancel: () => void;
+  categories?: PlaceCategory[];
 }
 
 
-function PlaceForm({ place, defaultCategory, onSubmit, isLoading, onCancel }: PlaceFormProps) {
+function PlaceForm({ place, defaultCategory, onSubmit, isLoading, onCancel, categories = [] }: PlaceFormProps) {
   const { toast } = useToast();
   
   // 초기 images 배열 생성 - mainImage가 있으면 포함시킴
@@ -1674,6 +1717,520 @@ function PlaceForm({ place, defaultCategory, onSubmit, isLoading, onCancel }: Pl
         <Button type="submit" disabled={isLoading || isUploading} data-testid="button-submit-place">
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           {place ? "수정" : "추가"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// 카테고리 관리 컴포넌트
+interface CategoryManagementProps {
+  categories: PlaceCategory[];
+  isLoading: boolean;
+  queryClient: any;
+  toast: any;
+}
+
+function CategoryManagement({ categories, isLoading, queryClient, toast }: CategoryManagementProps) {
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<PlaceCategory | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
+  
+  // sortOrder로 정렬된 카테고리 목록
+  const sortedCategories = useMemo(() => 
+    [...categories].sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999)),
+    [categories]
+  );
+  
+  // 기본 카테고리 초기화
+  const initCategories = async () => {
+    if (isMutating) return;
+    setIsMutating(true);
+    try {
+      const res = await fetch("/api/admin/place-categories/init", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/place-categories"] });
+      toast({ title: "기본 카테고리가 초기화되었습니다" });
+    } catch (error) {
+      toast({ title: "초기화 실패", variant: "destructive" });
+    } finally {
+      setIsMutating(false);
+    }
+  };
+  
+  // 카테고리 순서 변경
+  const moveCategory = async (categoryId: string, direction: "up" | "down") => {
+    if (isMutating) return;
+    const currentIndex = sortedCategories.findIndex(c => c.id === categoryId);
+    if (currentIndex === -1) return;
+    
+    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex < 0 || newIndex >= sortedCategories.length) return;
+    
+    const newOrder = [...sortedCategories];
+    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
+    
+    setIsMutating(true);
+    try {
+      const res = await fetch("/api/admin/place-categories/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ categoryIds: newOrder.map(c => c.id) }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/place-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/place-categories"] });
+    } catch (error) {
+      toast({ title: "순서 변경 실패", variant: "destructive" });
+    } finally {
+      setIsMutating(false);
+    }
+  };
+  
+  // 카테고리 삭제
+  const deleteCategory = async (categoryId: string) => {
+    if (isMutating) return;
+    setIsMutating(true);
+    try {
+      const res = await fetch(`/api/admin/place-categories/${categoryId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast({ title: err.error || "삭제 실패", variant: "destructive" });
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/place-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/place-categories"] });
+      toast({ title: "카테고리가 삭제되었습니다" });
+    } catch (error) {
+      toast({ title: "삭제 실패", variant: "destructive" });
+    } finally {
+      setIsMutating(false);
+    }
+  };
+  
+  // 카테고리 활성화/비활성화 토글
+  const toggleActive = async (category: PlaceCategory) => {
+    if (isMutating) return;
+    setIsMutating(true);
+    try {
+      const res = await fetch(`/api/admin/place-categories/${category.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isActive: !category.isActive }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/place-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/place-categories"] });
+    } catch (error) {
+      toast({ title: "수정 실패", variant: "destructive" });
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <p className="text-sm text-muted-foreground">
+          카테고리 순서와 표시 여부를 관리할 수 있습니다
+        </p>
+        <div className="flex gap-2">
+          {sortedCategories.length === 0 && (
+            <Button variant="outline" onClick={initCategories} disabled={isMutating} data-testid="button-init-categories">
+              {isMutating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              기본 카테고리 초기화
+            </Button>
+          )}
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-add-category">
+                <Plus className="h-4 w-4 mr-2" />
+                새 카테고리
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>새 카테고리 추가</DialogTitle>
+              </DialogHeader>
+              <CategoryForm
+                isSubmitting={isMutating}
+                onSubmit={async (data) => {
+                  if (isMutating) return;
+                  setIsMutating(true);
+                  try {
+                    const res = await fetch("/api/admin/place-categories", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify(data),
+                    });
+                    if (!res.ok) {
+                      const err = await res.json();
+                      toast({ title: err.error || "추가 실패", variant: "destructive" });
+                      return;
+                    }
+                    queryClient.invalidateQueries({ queryKey: ["/api/admin/place-categories"] });
+                    queryClient.invalidateQueries({ queryKey: ["/api/place-categories"] });
+                    setIsAddOpen(false);
+                    toast({ title: "카테고리가 추가되었습니다" });
+                  } catch (error) {
+                    toast({ title: "추가 실패", variant: "destructive" });
+                  } finally {
+                    setIsMutating(false);
+                  }
+                }}
+                onCancel={() => setIsAddOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+      
+      {sortedCategories.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Folder className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground mb-4">카테고리가 없습니다</p>
+          <Button onClick={initCategories} disabled={isMutating}>
+            {isMutating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            기본 카테고리 초기화
+          </Button>
+        </Card>
+      ) : (
+        <div className="grid gap-2">
+          {sortedCategories.map((category, index) => (
+            <Card 
+              key={category.id} 
+              className={`p-3 ${!category.isActive ? "opacity-50" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={index === 0 || isMutating}
+                    onClick={() => moveCategory(category.id, "up")}
+                    data-testid={`button-move-up-${category.id}`}
+                  >
+                    <ChevronUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    disabled={index === sortedCategories.length - 1 || isMutating}
+                    onClick={() => moveCategory(category.id, "down")}
+                    data-testid={`button-move-down-${category.id}`}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div 
+                  className="w-4 h-4 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: category.color || "#64748b" }}
+                />
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{category.labelKo}</span>
+                    <span className="text-xs text-muted-foreground">({category.id})</span>
+                    {category.isAdultOnly && (
+                      <span className="text-xs bg-red-100 text-red-600 px-1 rounded">18+</span>
+                    )}
+                    {!category.isActive && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-1 rounded">비활성</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {category.labelEn}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-1">
+                  <Switch
+                    checked={category.isActive ?? true}
+                    onCheckedChange={() => toggleActive(category)}
+                    disabled={isMutating}
+                    data-testid={`switch-active-${category.id}`}
+                  />
+                  
+                  <Dialog 
+                    open={editingCategory?.id === category.id} 
+                    onOpenChange={(open) => !open && setEditingCategory(null)}
+                  >
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setEditingCategory(category)}
+                        data-testid={`button-edit-${category.id}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>카테고리 수정</DialogTitle>
+                      </DialogHeader>
+                      <CategoryForm
+                        category={category}
+                        isSubmitting={isMutating}
+                        onSubmit={async (data) => {
+                          if (isMutating) return;
+                          setIsMutating(true);
+                          try {
+                            const res = await fetch(`/api/admin/place-categories/${category.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              credentials: "include",
+                              body: JSON.stringify(data),
+                            });
+                            if (!res.ok) throw new Error("Failed");
+                            queryClient.invalidateQueries({ queryKey: ["/api/admin/place-categories"] });
+                            queryClient.invalidateQueries({ queryKey: ["/api/place-categories"] });
+                            setEditingCategory(null);
+                            toast({ title: "카테고리가 수정되었습니다" });
+                          } catch (error) {
+                            toast({ title: "수정 실패", variant: "destructive" });
+                          } finally {
+                            setIsMutating(false);
+                          }
+                        }}
+                        onCancel={() => setEditingCategory(null)}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        data-testid={`button-delete-${category.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>카테고리 삭제</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          "{category.labelKo}" 카테고리를 삭제하시겠습니까?
+                          이 카테고리에 속한 장소가 있으면 삭제할 수 없습니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>취소</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteCategory(category.id)} disabled={isMutating}>
+                          {isMutating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                          삭제
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 카테고리 폼 컴포넌트
+interface CategoryFormProps {
+  category?: PlaceCategory | null;
+  onSubmit: (data: Partial<PlaceCategory>) => void;
+  onCancel: () => void;
+  isSubmitting?: boolean;
+}
+
+function CategoryForm({ category, onSubmit, onCancel, isSubmitting = false }: CategoryFormProps) {
+  const [formData, setFormData] = useState({
+    id: category?.id || "",
+    labelKo: category?.labelKo || "",
+    labelEn: category?.labelEn || "",
+    labelZh: category?.labelZh || "",
+    labelVi: category?.labelVi || "",
+    labelRu: category?.labelRu || "",
+    labelJa: category?.labelJa || "",
+    color: category?.color || "#64748b",
+    gradient: category?.gradient || "from-gray-600 to-gray-700",
+    icon: category?.icon || "MapPin",
+    isAdultOnly: category?.isAdultOnly || false,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.id || !formData.labelKo || !formData.labelEn) {
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="cat-id">ID (영문)</Label>
+          <Input
+            id="cat-id"
+            value={formData.id}
+            onChange={(e) => setFormData({ ...formData, id: e.target.value.toLowerCase().replace(/\s/g, "_") })}
+            placeholder="attraction"
+            disabled={!!category}
+            data-testid="input-category-id"
+          />
+        </div>
+        <div>
+          <Label htmlFor="cat-color">색상</Label>
+          <div className="flex gap-2">
+            <Input
+              id="cat-color"
+              type="color"
+              value={formData.color}
+              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              className="w-12 h-9 p-1"
+            />
+            <Input
+              value={formData.color}
+              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              placeholder="#64748b"
+              className="flex-1"
+              data-testid="input-category-color"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="cat-label-ko">한국어 <span className="text-red-500">*</span></Label>
+          <Input
+            id="cat-label-ko"
+            value={formData.labelKo}
+            onChange={(e) => setFormData({ ...formData, labelKo: e.target.value })}
+            placeholder="관광명소"
+            data-testid="input-category-label-ko"
+          />
+        </div>
+        <div>
+          <Label htmlFor="cat-label-en">영어 <span className="text-red-500">*</span></Label>
+          <Input
+            id="cat-label-en"
+            value={formData.labelEn}
+            onChange={(e) => setFormData({ ...formData, labelEn: e.target.value })}
+            placeholder="Attractions"
+            data-testid="input-category-label-en"
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="cat-label-zh">중국어</Label>
+          <Input
+            id="cat-label-zh"
+            value={formData.labelZh || ""}
+            onChange={(e) => setFormData({ ...formData, labelZh: e.target.value })}
+            placeholder="景点"
+            data-testid="input-category-label-zh"
+          />
+        </div>
+        <div>
+          <Label htmlFor="cat-label-vi">베트남어</Label>
+          <Input
+            id="cat-label-vi"
+            value={formData.labelVi || ""}
+            onChange={(e) => setFormData({ ...formData, labelVi: e.target.value })}
+            placeholder="Địa điểm du lịch"
+            data-testid="input-category-label-vi"
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="cat-label-ru">러시아어</Label>
+          <Input
+            id="cat-label-ru"
+            value={formData.labelRu || ""}
+            onChange={(e) => setFormData({ ...formData, labelRu: e.target.value })}
+            placeholder="Достопримечательности"
+            data-testid="input-category-label-ru"
+          />
+        </div>
+        <div>
+          <Label htmlFor="cat-label-ja">일본어</Label>
+          <Input
+            id="cat-label-ja"
+            value={formData.labelJa || ""}
+            onChange={(e) => setFormData({ ...formData, labelJa: e.target.value })}
+            placeholder="観光スポット"
+            data-testid="input-category-label-ja"
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="cat-icon">아이콘 (Lucide)</Label>
+          <Input
+            id="cat-icon"
+            value={formData.icon || ""}
+            onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+            placeholder="MapPin, Camera, Utensils..."
+            data-testid="input-category-icon"
+          />
+        </div>
+        <div>
+          <Label htmlFor="cat-gradient">그라데이션 클래스</Label>
+          <Input
+            id="cat-gradient"
+            value={formData.gradient || ""}
+            onChange={(e) => setFormData({ ...formData, gradient: e.target.value })}
+            placeholder="from-blue-500 to-blue-700"
+            data-testid="input-category-gradient"
+          />
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-2 p-3 border rounded-lg bg-red-50 dark:bg-red-900/20">
+        <Switch
+          checked={formData.isAdultOnly}
+          onCheckedChange={(checked) => setFormData({ ...formData, isAdultOnly: checked })}
+          data-testid="switch-adult-only"
+        />
+        <Label className="text-red-600 dark:text-red-400">
+          성인 전용 (카카오 남성 사용자만 접근 가능)
+        </Label>
+      </div>
+      
+      <div className="flex gap-2 justify-end">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          취소
+        </Button>
+        <Button type="submit" disabled={isSubmitting} data-testid="button-submit-category">
+          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+          {category ? "수정" : "추가"}
         </Button>
       </div>
     </form>

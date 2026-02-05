@@ -7,7 +7,7 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { Place as DBPlace } from "@shared/schema";
+import type { Place as DBPlace, PlaceCategory } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1483,6 +1483,41 @@ export default function PlacesGuide() {
   const { data: dbPlaces = [] } = useQuery<DBPlace[]>({
     queryKey: ["/api/places"],
   });
+  
+  // DB에서 카테고리 데이터 가져오기
+  const { data: dbCategories = [] } = useQuery<PlaceCategory[]>({
+    queryKey: ["/api/place-categories"],
+  });
+  
+  // DB 카테고리를 우선 사용하고, 없으면 하드코딩된 categoryLabels 사용
+  const getCategoryLabel = (categoryId: string): string => {
+    // 하드코딩 카테고리ID -> DB 카테고리ID 변환
+    const hardcodedToDbMap: Record<string, string> = {
+      attractions: "attraction",
+      localFood: "local_food",
+      koreanFood: "korean_food",
+      chineseFood: "chinese_food",
+      coffee: "cafe",
+    };
+    const dbCategoryId = hardcodedToDbMap[categoryId] || categoryId;
+    
+    // DB 카테고리에서 찾기
+    const dbCat = dbCategories.find(c => c.id === dbCategoryId);
+    if (dbCat) {
+      switch (language) {
+        case "ko": return dbCat.labelKo || categoryLabels[categoryId]?.ko || categoryId;
+        case "en": return dbCat.labelEn || categoryLabels[categoryId]?.en || categoryId;
+        case "zh": return dbCat.labelZh || categoryLabels[categoryId]?.zh || categoryId;
+        case "vi": return dbCat.labelVi || categoryLabels[categoryId]?.vi || categoryId;
+        case "ru": return dbCat.labelRu || categoryLabels[categoryId]?.ru || categoryId;
+        case "ja": return dbCat.labelJa || categoryLabels[categoryId]?.ja || categoryId;
+        default: return dbCat.labelKo || categoryLabels[categoryId]?.ko || categoryId;
+      }
+    }
+    
+    // 하드코딩된 categoryLabels에서 찾기
+    return categoryLabels[categoryId]?.[language] || categoryLabels[categoryId]?.ko || categoryId;
+  };
 
   // 장소 수정 핸들러
   const handleEditPlace = async (place: Place, categoryId: string) => {
@@ -2123,7 +2158,7 @@ export default function PlacesGuide() {
             if (!category) return null;
             const Icon = category.icon;
             const isExpanded = expandedCategories.has(key);
-            const label = categoryLabels[key]?.[language] || categoryLabels[key]?.ko || key;
+            const label = getCategoryLabel(key);
 
             return (
               <Card key={key} className="overflow-hidden">
