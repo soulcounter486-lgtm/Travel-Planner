@@ -1300,9 +1300,11 @@ function PlaceForm({ place, defaultCategory, onSubmit, isLoading, onCancel, cate
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {CATEGORY_ORDER.map(cat => (
-                <SelectItem key={cat} value={cat}>
-                  {CATEGORY_LABELS[cat] || cat}
+              {[...categories]
+                .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
+                .map(cat => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.labelKo || cat.id}
                 </SelectItem>
               ))}
             </SelectContent>
