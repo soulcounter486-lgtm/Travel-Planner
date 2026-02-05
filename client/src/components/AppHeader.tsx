@@ -103,6 +103,10 @@ export function AppHeader() {
       setRegisterError("비밀번호가 일치하지 않습니다.");
       return;
     }
+    if (!registerData.gender) {
+      setRegisterError("성별을 선택해주세요.");
+      return;
+    }
     
     setRegisterLoading(true);
     setRegisterError("");
