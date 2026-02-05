@@ -4957,6 +4957,8 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         profileImageUrl: users.profileImageUrl,
         loginMethod: users.loginMethod,
         isAdmin: users.isAdmin,
+        canViewNightlife18: users.canViewNightlife18,
+        canViewEco: users.canViewEco,
         createdAt: users.createdAt,
       }).from(users).orderBy(desc(users.createdAt));
       
