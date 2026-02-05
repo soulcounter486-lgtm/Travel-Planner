@@ -411,9 +411,9 @@ export default function MyCoupons() {
           <AlertDialogHeader className="text-center">
             <div className="flex items-center gap-2 mb-2">
               <img 
-                src="/favicon.png" 
+                src="/dokkaebi-logo.png" 
                 alt="붕따우 도깨비" 
-                className="w-10 h-10 object-contain"
+                className="w-10 h-10 object-contain rounded-full"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
               <span className="text-sm font-bold text-primary">붕따우 도깨비</span>
