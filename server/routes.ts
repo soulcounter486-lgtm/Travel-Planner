@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -3709,6 +3709,190 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       res.status(500).json({ error: "Failed to get places" });
     }
   });
+  
+  // ========== 카테고리 관리 API ==========
+  
+  // 모든 카테고리 조회 (공개)
+  app.get("/api/place-categories", async (req, res) => {
+    try {
+      const categories = await db.select()
+        .from(placeCategories)
+        .where(eq(placeCategories.isActive, true))
+        .orderBy(placeCategories.sortOrder);
+      res.json(categories);
+    } catch (error) {
+      console.error("Get categories error:", error);
+      res.status(500).json({ error: "Failed to get categories" });
+    }
+  });
+  
+  // 모든 카테고리 조회 (관리자용 - 비활성화 포함)
+  app.get("/api/admin/place-categories", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const categories = await db.select()
+        .from(placeCategories)
+        .orderBy(placeCategories.sortOrder);
+      res.json(categories);
+    } catch (error) {
+      console.error("Get admin categories error:", error);
+      res.status(500).json({ error: "Failed to get categories" });
+    }
+  });
+  
+  // 카테고리 추가 (관리자만)
+  app.post("/api/admin/place-categories", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const data = insertPlaceCategorySchema.parse(req.body);
+      
+      // 중복 ID 체크
+      const existing = await db.select().from(placeCategories).where(eq(placeCategories.id, data.id)).limit(1);
+      if (existing.length > 0) {
+        return res.status(400).json({ error: "Category ID already exists" });
+      }
+      
+      // 가장 높은 sortOrder 찾기
+      const maxOrder = await db.select({ max: sql<number>`COALESCE(MAX(sort_order), 0)` }).from(placeCategories);
+      const newSortOrder = (maxOrder[0]?.max || 0) + 1;
+      
+      const [category] = await db.insert(placeCategories).values({
+        ...data,
+        sortOrder: data.sortOrder ?? newSortOrder,
+      }).returning();
+      res.json(category);
+    } catch (error) {
+      console.error("Create category error:", error);
+      res.status(500).json({ error: "Failed to create category" });
+    }
+  });
+  
+  // 카테고리 수정 (관리자만)
+  app.patch("/api/admin/place-categories/:id", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const categoryId = req.params.id;
+      const updates = req.body;
+      
+      const [updated] = await db.update(placeCategories)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(placeCategories.id, categoryId))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Update category error:", error);
+      res.status(500).json({ error: "Failed to update category" });
+    }
+  });
+  
+  // 카테고리 삭제 (관리자만)
+  app.delete("/api/admin/place-categories/:id", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const categoryId = req.params.id;
+      
+      // 해당 카테고리에 속한 장소가 있는지 확인
+      const placesInCategory = await db.select().from(places).where(eq(places.category, categoryId)).limit(1);
+      if (placesInCategory.length > 0) {
+        return res.status(400).json({ error: "Cannot delete category with places. Move or delete places first." });
+      }
+      
+      await db.delete(placeCategories).where(eq(placeCategories.id, categoryId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete category error:", error);
+      res.status(500).json({ error: "Failed to delete category" });
+    }
+  });
+  
+  // 카테고리 순서 일괄 업데이트 (관리자만)
+  app.post("/api/admin/place-categories/reorder", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const { categoryIds } = req.body as { categoryIds: string[] };
+      
+      // 각 카테고리의 sortOrder 업데이트
+      for (let i = 0; i < categoryIds.length; i++) {
+        await db.update(placeCategories)
+          .set({ sortOrder: i, updatedAt: new Date() })
+          .where(eq(placeCategories.id, categoryIds[i]));
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Reorder categories error:", error);
+      res.status(500).json({ error: "Failed to reorder categories" });
+    }
+  });
+  
+  // 기본 카테고리 초기화 (관리자만 - 첫 실행 시)
+  app.post("/api/admin/place-categories/init", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!user || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      // 이미 카테고리가 있으면 무시
+      const existing = await db.select().from(placeCategories).limit(1);
+      if (existing.length > 0) {
+        return res.json({ message: "Categories already initialized", count: existing.length });
+      }
+      
+      // 기본 카테고리 추가
+      const defaultCategories = [
+        { id: "attraction", labelKo: "관광명소", labelEn: "Attractions", labelZh: "景点", labelVi: "Địa điểm du lịch", labelRu: "Достопримечательности", labelJa: "観光スポット", color: "#3b82f6", gradient: "from-blue-500 to-blue-700", icon: "Camera", sortOrder: 0 },
+        { id: "services", labelKo: "마사지/이발소", labelEn: "Massage & Barber", labelZh: "按摩/理发", labelVi: "Massage/Cắt tóc", labelRu: "Массаж/Парикмахерская", labelJa: "マッサージ/理髪店", color: "#0ea5e9", gradient: "from-cyan-500 to-cyan-700", icon: "Scissors", sortOrder: 1 },
+        { id: "local_food", labelKo: "현지 음식점", labelEn: "Local Restaurants", labelZh: "当地餐厅", labelVi: "Nhà hàng địa phương", labelRu: "Местные рестораны", labelJa: "ローカルレストラン", color: "#ef4444", gradient: "from-red-500 to-red-700", icon: "Utensils", sortOrder: 2 },
+        { id: "korean_food", labelKo: "한식", labelEn: "Korean Food", labelZh: "韩国料理", labelVi: "Món Hàn Quốc", labelRu: "Корейская еда", labelJa: "韓国料理", color: "#f97316", gradient: "from-orange-500 to-orange-700", icon: "Utensils", sortOrder: 3 },
+        { id: "buffet", labelKo: "뷔페", labelEn: "Buffet", labelZh: "自助餐", labelVi: "Buffet", labelRu: "Буфет", labelJa: "ビュッフェ", color: "#eab308", gradient: "from-yellow-500 to-yellow-700", icon: "Utensils", sortOrder: 4 },
+        { id: "chinese_food", labelKo: "중식", labelEn: "Chinese Food", labelZh: "中餐", labelVi: "Món Trung Quốc", labelRu: "Китайская еда", labelJa: "中華料理", color: "#22c55e", gradient: "from-green-500 to-green-700", icon: "Utensils", sortOrder: 5 },
+        { id: "cafe", labelKo: "커피숍", labelEn: "Coffee Shops", labelZh: "咖啡店", labelVi: "Quán cà phê", labelRu: "Кофейни", labelJa: "カフェ", color: "#6366f1", gradient: "from-indigo-500 to-indigo-700", icon: "Coffee", sortOrder: 6 },
+        { id: "exchange", labelKo: "환전소", labelEn: "Currency Exchange", labelZh: "货币兑换", labelVi: "Đổi tiền", labelRu: "Обмен валюты", labelJa: "両替所", color: "#64748b", gradient: "from-gray-500 to-gray-700", icon: "DollarSign", sortOrder: 7 },
+        { id: "nightlife", labelKo: "밤문화", labelEn: "Nightlife", labelZh: "夜生活", labelVi: "Cuộc sống về đêm", labelRu: "Ночная жизнь", labelJa: "ナイトライフ", color: "#ec4899", gradient: "from-pink-600 to-purple-700", icon: "Music", sortOrder: 8 },
+        { id: "nightlife18", labelKo: "밤문화 18+", labelEn: "Nightlife 18+", labelZh: "夜生活 18+", labelVi: "Cuộc sống về đêm 18+", labelRu: "Ночная жизнь 18+", labelJa: "ナイトライフ 18+", color: "#dc2626", gradient: "from-red-600 to-pink-700", icon: "Music", sortOrder: 9, isAdultOnly: true },
+      ];
+      
+      await db.insert(placeCategories).values(defaultCategories);
+      res.json({ success: true, count: defaultCategories.length });
+    } catch (error) {
+      console.error("Init categories error:", error);
+      res.status(500).json({ error: "Failed to initialize categories" });
+    }
+  });
+  
+  // ========== 장소 관리 API ==========
   
   // 모든 장소 조회 (관리자용 - 비활성화 포함)
   app.get("/api/admin/places", async (req, res) => {
