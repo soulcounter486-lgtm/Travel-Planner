@@ -2789,6 +2789,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     const oauthUser = req.user as any;
     let userId = oauthUser?.claims?.sub;
     let userEmail = oauthUser?.claims?.email || oauthUser?.email;
+    let dbIsAdmin = false;
     
     // 세션 기반 이메일 로그인 사용자
     if (!userId && req.session?.userId) {
@@ -2796,16 +2797,25 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       if (dbUser.length > 0) {
         userId = dbUser[0].id;
         userEmail = dbUser[0].email;
+        dbIsAdmin = dbUser[0].isAdmin ?? false;
+      }
+    } else if (userId) {
+      // OAuth 사용자도 DB에서 is_admin 확인
+      const dbUser = await db.select().from(users).where(eq(users.id, String(userId)));
+      if (dbUser.length > 0) {
+        dbIsAdmin = dbUser[0].isAdmin ?? false;
       }
     }
     
-    const isAdmin = isUserAdmin(userId, userEmail);
+    // 환경 변수 기반 관리자 체크 (폴백) 또는 DB 기반 관리자 체크
+    const envAdmin = isUserAdmin(userId, userEmail);
+    const isAdmin = envAdmin || dbIsAdmin;
     const isLoggedIn = !!(oauthUser || req.session?.userId);
     
     // 관리자 ID 목록 (쉼표로 구분된 ID들을 배열로 분리)
     const adminUserIds: string[] = ADMIN_USER_ID ? ADMIN_USER_ID.split(",").map(id => id.trim()) : [];
     
-    console.log("Admin check - userId:", userId, "userEmail:", userEmail, "ADMIN_USER_ID:", ADMIN_USER_ID, "ADMIN_EMAIL:", ADMIN_EMAIL, "isAdmin:", isAdmin, "adminUserIds:", adminUserIds);
+    console.log("Admin check - userId:", userId, "userEmail:", userEmail, "envAdmin:", envAdmin, "dbIsAdmin:", dbIsAdmin, "isAdmin:", isAdmin);
     res.json({ isAdmin, isLoggedIn, userId, adminUserIds });
   });
 
