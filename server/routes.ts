@@ -3727,12 +3727,22 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
   
   // 모든 카테고리 조회 (관리자용 - 비활성화 포함)
-  app.get("/api/admin/place-categories", async (req, res) => {
+  app.get("/api/admin/place-categories", async (req: any, res) => {
     try {
-      const user = (req as any).user;
-      const userId = user?.claims?.sub;
-      const userEmail = user?.claims?.email || user?.email;
-      if (!user || !isUserAdmin(userId, userEmail)) {
+      const oauthUser = req.user as any;
+      let userId = oauthUser?.claims?.sub;
+      let userEmail = oauthUser?.claims?.email || oauthUser?.email;
+      
+      // 세션 기반 이메일 로그인 사용자
+      if (!userId && req.session?.userId) {
+        const dbUser = await db.select().from(users).where(eq(users.id, req.session.userId));
+        if (dbUser.length > 0) {
+          userId = dbUser[0].id;
+          userEmail = dbUser[0].email;
+        }
+      }
+      
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const categories = await db.select()
@@ -3746,12 +3756,22 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
   
   // 카테고리 추가 (관리자만)
-  app.post("/api/admin/place-categories", async (req, res) => {
+  app.post("/api/admin/place-categories", async (req: any, res) => {
     try {
-      const user = (req as any).user;
-      const userId = user?.claims?.sub;
-      const userEmail = user?.claims?.email || user?.email;
-      if (!user || !isUserAdmin(userId, userEmail)) {
+      const oauthUser = req.user as any;
+      let userId = oauthUser?.claims?.sub;
+      let userEmail = oauthUser?.claims?.email || oauthUser?.email;
+      
+      // 세션 기반 이메일 로그인 사용자
+      if (!userId && req.session?.userId) {
+        const dbUser = await db.select().from(users).where(eq(users.id, req.session.userId));
+        if (dbUser.length > 0) {
+          userId = dbUser[0].id;
+          userEmail = dbUser[0].email;
+        }
+      }
+      
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const data = insertPlaceCategorySchema.parse(req.body);
@@ -3778,12 +3798,22 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
   
   // 카테고리 수정 (관리자만)
-  app.patch("/api/admin/place-categories/:id", async (req, res) => {
+  app.patch("/api/admin/place-categories/:id", async (req: any, res) => {
     try {
-      const user = (req as any).user;
-      const userId = user?.claims?.sub;
-      const userEmail = user?.claims?.email || user?.email;
-      if (!user || !isUserAdmin(userId, userEmail)) {
+      const oauthUser = req.user as any;
+      let userId = oauthUser?.claims?.sub;
+      let userEmail = oauthUser?.claims?.email || oauthUser?.email;
+      
+      // 세션 기반 이메일 로그인 사용자
+      if (!userId && req.session?.userId) {
+        const dbUser = await db.select().from(users).where(eq(users.id, req.session.userId));
+        if (dbUser.length > 0) {
+          userId = dbUser[0].id;
+          userEmail = dbUser[0].email;
+        }
+      }
+      
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const categoryId = req.params.id;
@@ -3805,12 +3835,22 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
   
   // 카테고리 삭제 (관리자만)
-  app.delete("/api/admin/place-categories/:id", async (req, res) => {
+  app.delete("/api/admin/place-categories/:id", async (req: any, res) => {
     try {
-      const user = (req as any).user;
-      const userId = user?.claims?.sub;
-      const userEmail = user?.claims?.email || user?.email;
-      if (!user || !isUserAdmin(userId, userEmail)) {
+      const oauthUser = req.user as any;
+      let userId = oauthUser?.claims?.sub;
+      let userEmail = oauthUser?.claims?.email || oauthUser?.email;
+      
+      // 세션 기반 이메일 로그인 사용자
+      if (!userId && req.session?.userId) {
+        const dbUser = await db.select().from(users).where(eq(users.id, req.session.userId));
+        if (dbUser.length > 0) {
+          userId = dbUser[0].id;
+          userEmail = dbUser[0].email;
+        }
+      }
+      
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const categoryId = req.params.id;
@@ -3830,12 +3870,22 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
   
   // 카테고리 순서 일괄 업데이트 (관리자만)
-  app.post("/api/admin/place-categories/reorder", async (req, res) => {
+  app.post("/api/admin/place-categories/reorder", async (req: any, res) => {
     try {
-      const user = (req as any).user;
-      const userId = user?.claims?.sub;
-      const userEmail = user?.claims?.email || user?.email;
-      if (!user || !isUserAdmin(userId, userEmail)) {
+      const oauthUser = req.user as any;
+      let userId = oauthUser?.claims?.sub;
+      let userEmail = oauthUser?.claims?.email || oauthUser?.email;
+      
+      // 세션 기반 이메일 로그인 사용자
+      if (!userId && req.session?.userId) {
+        const dbUser = await db.select().from(users).where(eq(users.id, req.session.userId));
+        if (dbUser.length > 0) {
+          userId = dbUser[0].id;
+          userEmail = dbUser[0].email;
+        }
+      }
+      
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       const { categoryIds } = req.body as { categoryIds: string[] };
@@ -3855,12 +3905,22 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
   
   // 기본 카테고리 초기화 (관리자만 - 첫 실행 시)
-  app.post("/api/admin/place-categories/init", async (req, res) => {
+  app.post("/api/admin/place-categories/init", async (req: any, res) => {
     try {
-      const user = (req as any).user;
-      const userId = user?.claims?.sub;
-      const userEmail = user?.claims?.email || user?.email;
-      if (!user || !isUserAdmin(userId, userEmail)) {
+      const oauthUser = req.user as any;
+      let userId = oauthUser?.claims?.sub;
+      let userEmail = oauthUser?.claims?.email || oauthUser?.email;
+      
+      // 세션 기반 이메일 로그인 사용자
+      if (!userId && req.session?.userId) {
+        const dbUser = await db.select().from(users).where(eq(users.id, req.session.userId));
+        if (dbUser.length > 0) {
+          userId = dbUser[0].id;
+          userEmail = dbUser[0].email;
+        }
+      }
+      
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
       
