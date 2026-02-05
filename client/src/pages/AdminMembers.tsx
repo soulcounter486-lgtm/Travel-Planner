@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck, Settings, Moon, Sparkles } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck, Settings, Moon, Sparkles, Check } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import {
@@ -760,7 +760,7 @@ export default function AdminMembers() {
                             title={member.canViewNightlife18 ? "밤문화18 권한 해제" : "밤문화18 권한 부여"}
                             data-testid={`toggle-nightlife18-${member.id}`}
                           >
-                            <Moon className={`w-3 h-3 ${member.canViewNightlife18 ? "" : "text-rose-500"}`} />
+                            {member.canViewNightlife18 ? <Check className="w-3 h-3" /> : <Moon className="w-3 h-3 text-rose-500" />}
                           </Button>
                           <Button
                             size="sm"
@@ -771,7 +771,7 @@ export default function AdminMembers() {
                             title={member.canViewEco ? "에코 권한 해제" : "에코 권한 부여"}
                             data-testid={`toggle-eco-${member.id}`}
                           >
-                            <Sparkles className={`w-3 h-3 ${member.canViewEco ? "" : "text-pink-500"}`} />
+                            {member.canViewEco ? <Check className="w-3 h-3" /> : <Sparkles className="w-3 h-3 text-pink-500" />}
                           </Button>
                           <Button
                             size="sm"
