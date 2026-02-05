@@ -696,16 +696,13 @@ export default function AdminMembers() {
                       <div key={member.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            member.gender === 'male' ? 'bg-blue-500/20' : 
-                            member.gender === 'female' ? 'bg-pink-500/20' : 'bg-primary/20'
+                            member.gender === 'male' ? 'bg-blue-500' : 
+                            member.gender === 'female' ? 'bg-pink-500' : 'bg-gray-500'
                           }`}>
                             {member.profileImageUrl ? (
                               <img src={member.profileImageUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
                             ) : (
-                              <Users className={`w-3 h-3 ${
-                                member.gender === 'male' ? 'text-blue-500' : 
-                                member.gender === 'female' ? 'text-pink-500' : 'text-primary'
-                              }`} />
+                              <Users className="w-3 h-3 text-white" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
