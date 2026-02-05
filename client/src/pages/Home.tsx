@@ -2947,16 +2947,71 @@ export default function Home() {
       )}
       
       {/* 회원가입 Dialog */}
-      <Dialog open={registerDialogOpen} onOpenChange={setRegisterDialogOpen}>
+      <Dialog open={registerDialogOpen} onOpenChange={(open) => {
+        setRegisterDialogOpen(open);
+        if (!open) {
+          setAuthScreen('default');
+          setVerificationCode("");
+          setRegisterError("");
+        }
+      }}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>회원가입</DialogTitle>
+            <DialogTitle>{authScreen === 'emailVerification' ? '이메일 인증' : '회원가입'}</DialogTitle>
           </DialogHeader>
           
           {registerError && (
             <p className="text-sm text-red-500 text-center">{registerError}</p>
           )}
           
+          {authScreen === 'emailVerification' ? (
+            <div className="space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  <strong>{verificationEmail}</strong>로 6자리 인증 코드가 발송되었습니다.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="dialog-verify-code">인증 코드 (6자리)</Label>
+                <Input
+                  id="dialog-verify-code"
+                  type="text"
+                  placeholder="123456"
+                  className="text-center tracking-widest font-mono text-lg"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  data-testid="input-dialog-verification-code"
+                />
+              </div>
+              <Button 
+                className="w-full" 
+                onClick={handleVerifyEmail} 
+                disabled={registerLoading || verificationCode.length !== 6}
+                data-testid="button-dialog-verify-email"
+              >
+                {registerLoading ? "인증 중..." : "인증 확인"}
+              </Button>
+              <div className="text-center">
+                <button 
+                  type="button" 
+                  className="text-sm text-muted-foreground underline" 
+                  onClick={handleResendVerification}
+                  disabled={registerLoading}
+                  data-testid="button-dialog-resend-verification"
+                >
+                  인증 코드 다시 받기
+                </button>
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => { setAuthScreen('default'); setVerificationCode(""); setRegisterError(""); }}
+              >
+                ← 회원가입으로 돌아가기
+              </Button>
+            </div>
+          ) : (
           <div className="space-y-4">
             <div>
               <Label htmlFor="dialog-reg-email-home">이메일 *</Label>
@@ -3088,6 +3143,7 @@ export default function Home() {
               </button>
             </p>
           </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
