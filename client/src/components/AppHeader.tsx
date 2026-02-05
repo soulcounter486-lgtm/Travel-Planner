@@ -874,7 +874,7 @@ export function AppHeader() {
                 />
               </div>
               <div>
-                <Label htmlFor="dialog-reg-gender">성별</Label>
+                <Label htmlFor="dialog-reg-gender">성별 <span className="text-red-500">*</span></Label>
                 <Select
                   value={registerData.gender}
                   onValueChange={(value) => setRegisterData({...registerData, gender: value})}
