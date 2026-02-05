@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen, Map, List } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen, Map, List, DollarSign } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
@@ -1609,6 +1609,7 @@ export default function PlacesGuide() {
     // 각 카테고리 처리
     const merged: Record<string, Category> = {};
     
+    // 1. 기존 하드코딩 카테고리 처리
     Object.entries(placesData).forEach(([categoryKey, category]) => {
       const places: Place[] = [];
       
@@ -1649,8 +1650,37 @@ export default function PlacesGuide() {
       };
     });
     
+    // 2. DB에만 존재하는 새로운 카테고리 추가 (하드코딩에 없는 것들)
+    const hardcodedCategoryIds = new Set(Object.keys(placesData));
+    const dbCategoryIds = new Set(Object.values(dbCategoryMap));
+    
+    dbCategories.forEach(dbCat => {
+      // 하드코딩에 매핑되지 않은 새로운 DB 카테고리인지 확인
+      const mappedKey = dbCategoryMap[dbCat.id];
+      if (!mappedKey || !hardcodedCategoryIds.has(mappedKey)) {
+        // 새로운 카테고리 - DB 장소만 가져오기
+        const categoryPlaces = dbPlaces
+          .filter(p => p.category === dbCat.id && p.isActive)
+          .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
+          .map(p => convertDBPlace(p))
+          .filter((p): p is Place => p !== null);
+        
+        // 아이콘 매핑
+        const iconMap: Record<string, any> = {
+          MapPin, Camera, Scissors, Utensils, Coffee, DollarSign, Music, Building2, Sparkles,
+        };
+        
+        merged[dbCat.id] = {
+          id: dbCat.id,
+          icon: iconMap[dbCat.icon || "MapPin"] || MapPin,
+          gradient: dbCat.gradient || "from-gray-500 to-gray-700",
+          places: categoryPlaces,
+        };
+      }
+    });
+    
     return merged;
-  }, [dbPlaces]);
+  }, [dbPlaces, dbCategories]);
 
   // 모든 장소 (지도용) - nightlife18은 권한 필터링
   const allPlaces = useMemo(() => {
