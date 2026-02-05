@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck, Settings, Moon } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import {
@@ -250,6 +250,34 @@ export default function AdminMembers() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/notifications/unread-count"] });
+    },
+  });
+
+  // 사이트 설정 조회
+  const { data: siteSettings = [] } = useQuery<{ key: string; value: string }[]>({
+    queryKey: ["/api/site-settings"],
+    enabled: isAdmin,
+  });
+
+  const nightlife18Enabled = siteSettings.find(s => s.key === "nightlife18_enabled")?.value === "true";
+
+  const updateSettingMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      const res = await fetch("/api/admin/site-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ key, value }),
+      });
+      if (!res.ok) throw new Error("설정 저장 실패");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/site-settings"] });
+      toast({ title: "설정이 저장되었습니다" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "설정 저장 실패", description: error.message, variant: "destructive" });
     },
   });
 
