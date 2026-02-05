@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2 } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import {
@@ -52,7 +52,10 @@ interface User {
   email: string;
   firstName?: string;
   lastName?: string;
+  nickname?: string;
   profileImageUrl?: string;
+  loginMethod?: string;
+  isAdmin?: boolean;
   createdAt?: string;
 }
 
@@ -164,7 +167,7 @@ function SortableAnnouncementItem({
 }
 
 export default function AdminMembers() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, userId: currentUserId } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("members");
@@ -225,8 +228,31 @@ export default function AdminMembers() {
   );
 
   const { data: members = [], isLoading: membersLoading } = useQuery<User[]>({
-    queryKey: ["/api/admin/members"],
+    queryKey: ["/api/admin/users"],
     enabled: isAdmin,
+  });
+
+  const toggleAdminMutation = useMutation({
+    mutationFn: async ({ userId, isAdmin: newIsAdmin }: { userId: string; isAdmin: boolean }) => {
+      const res = await fetch(`/api/admin/users/${userId}/admin`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ isAdmin: newIsAdmin }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "관리자 권한이 변경되었습니다" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "권한 변경 실패", description: error.message, variant: "destructive" });
+    },
   });
 
   const { data: allCoupons = [], isLoading: couponsLoading } = useQuery<Coupon[]>({
@@ -591,11 +617,37 @@ export default function AdminMembers() {
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium truncate">{member.firstName || member.email?.split("@")[0] || "이름없음"}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
+                            <div className="flex items-center gap-1">
+                              <p className="font-medium truncate">{member.nickname || member.firstName || member.email?.split("@")[0] || "이름없음"}</p>
+                              {member.isAdmin && (
+                                <Badge variant="default" className="h-4 px-1 text-[9px] bg-amber-500">
+                                  <ShieldCheck className="w-2 h-2 mr-0.5" />
+                                  관리자
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
+                              {member.loginMethod && (
+                                <Badge variant="outline" className="h-3 px-1 text-[8px]">
+                                  {member.loginMethod}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <div className="flex gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button
+                            size="sm"
+                            variant={member.isAdmin ? "default" : "ghost"}
+                            className={`h-6 px-2 text-[10px] ${member.isAdmin ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+                            onClick={() => toggleAdminMutation.mutate({ userId: member.id, isAdmin: !member.isAdmin })}
+                            disabled={toggleAdminMutation.isPending || String(member.id) === String(currentUserId)}
+                            title={String(member.id) === String(currentUserId) ? "자신의 권한은 변경할 수 없습니다" : "관리자 권한 토글"}
+                            data-testid={`toggle-admin-${member.id}`}
+                          >
+                            {member.isAdmin ? <ShieldCheck className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
+                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"

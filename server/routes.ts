@@ -4887,7 +4887,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   };
 
   // 관리자용 회원 목록 조회
-  app.get("/api/admin/users", async (req: any, res) => {
+  app.get("/api/admin/users", isAuthenticated, async (req: any, res) => {
     try {
       const oauthUser = req.user as any;
       let userId = oauthUser?.claims?.sub;
@@ -4921,7 +4921,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
 
   // 관리자 권한 부여/해제
-  app.patch("/api/admin/users/:id/admin", async (req: any, res) => {
+  app.patch("/api/admin/users/:id/admin", isAuthenticated, async (req: any, res) => {
     try {
       const oauthUser = req.user as any;
       let currentUserId = oauthUser?.claims?.sub;
