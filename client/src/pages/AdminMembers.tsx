@@ -56,6 +56,7 @@ interface User {
   profileImageUrl?: string;
   loginMethod?: string;
   isAdmin?: boolean;
+  gender?: string;
   canViewNightlife18?: boolean;
   canViewEco?: boolean;
   createdAt?: string;
@@ -255,46 +256,28 @@ export default function AdminMembers() {
     },
   });
 
-  const toggleNightlife18Mutation = useMutation({
-    mutationFn: async ({ userId, canViewNightlife18 }: { userId: string; canViewNightlife18: boolean }) => {
-      const res = await fetch(`/api/admin/users/${userId}/nightlife18`, {
+  const toggleAdultContentMutation = useMutation({
+    mutationFn: async ({ userId, enabled }: { userId: string; enabled: boolean }) => {
+      const res1 = await fetch(`/api/admin/users/${userId}/nightlife18`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ canViewNightlife18 }),
+        body: JSON.stringify({ canViewNightlife18: enabled }),
       });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${res.status}`);
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "밤문화18 권한이 변경되었습니다" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "권한 변경 실패", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const toggleEcoMutation = useMutation({
-    mutationFn: async ({ userId, canViewEco }: { userId: string; canViewEco: boolean }) => {
-      const res = await fetch(`/api/admin/users/${userId}/eco`, {
+      const res2 = await fetch(`/api/admin/users/${userId}/eco`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ canViewEco }),
+        body: JSON.stringify({ canViewEco: enabled }),
       });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${res.status}`);
+      if (!res1.ok || !res2.ok) {
+        throw new Error("권한 변경 실패");
       }
-      return res.json();
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "에코 권한이 변경되었습니다" });
+      toast({ title: "성인 콘텐츠 권한이 변경되었습니다" });
     },
     onError: (error: Error) => {
       toast({ title: "권한 변경 실패", description: error.message, variant: "destructive" });
@@ -731,6 +714,14 @@ export default function AdminMembers() {
                             </div>
                             <div className="flex items-center gap-1">
                               <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
+                              {member.gender && (
+                                <Badge 
+                                  variant="outline" 
+                                  className={`h-3 px-1 text-[8px] ${member.gender === 'male' ? 'border-blue-400 text-blue-400' : 'border-pink-400 text-pink-400'}`}
+                                >
+                                  {member.gender === 'male' ? '남' : '여'}
+                                </Badge>
+                              )}
                               {member.loginMethod && (
                                 <Badge variant="outline" className="h-3 px-1 text-[8px]">
                                   {member.loginMethod}
@@ -753,23 +744,15 @@ export default function AdminMembers() {
                           </Button>
                           <Button
                             size="sm"
-                            variant={member.canViewNightlife18 ? "default" : "ghost"}
-                            className={`h-6 px-2 text-[10px] ${member.canViewNightlife18 ? "bg-rose-500 hover:bg-rose-600" : ""}`}
-                            onClick={() => toggleNightlife18Mutation.mutate({ userId: member.id, canViewNightlife18: !member.canViewNightlife18 })}
-                            disabled={toggleNightlife18Mutation.isPending}
-                            title={member.canViewNightlife18 ? "밤문화18 권한 해제" : "밤문화18 권한 부여"}
-                            data-testid={`toggle-nightlife18-${member.id}`}
-                          >
-                            <Moon className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={member.canViewEco ? "default" : "ghost"}
-                            className={`h-6 px-2 text-[10px] ${member.canViewEco ? "bg-pink-500 hover:bg-pink-600" : ""}`}
-                            onClick={() => toggleEcoMutation.mutate({ userId: member.id, canViewEco: !member.canViewEco })}
-                            disabled={toggleEcoMutation.isPending}
-                            title={member.canViewEco ? "에코 권한 해제" : "에코 권한 부여"}
-                            data-testid={`toggle-eco-${member.id}`}
+                            variant={(member.canViewNightlife18 && member.canViewEco) ? "default" : "ghost"}
+                            className={`h-6 px-2 text-[10px] ${(member.canViewNightlife18 && member.canViewEco) ? "bg-rose-500 hover:bg-rose-600" : ""}`}
+                            onClick={() => {
+                              const currentEnabled = member.canViewNightlife18 && member.canViewEco;
+                              toggleAdultContentMutation.mutate({ userId: member.id, enabled: !currentEnabled });
+                            }}
+                            disabled={toggleAdultContentMutation.isPending}
+                            title={(member.canViewNightlife18 && member.canViewEco) ? "성인 콘텐츠 권한 해제" : "성인 콘텐츠 권한 부여"}
+                            data-testid={`toggle-adult-${member.id}`}
                           >
                             <Sparkles className="w-3 h-3" />
                           </Button>
