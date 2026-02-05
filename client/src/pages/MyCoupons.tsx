@@ -409,6 +409,15 @@ export default function MyCoupons() {
       <AlertDialog open={showUseConfirm} onOpenChange={setShowUseConfirm}>
         <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader className="text-center">
+            <div className="flex items-center gap-2 mb-2">
+              <img 
+                src="/favicon.png" 
+                alt="붕따우 도깨비" 
+                className="w-10 h-10 object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+              <span className="text-sm font-bold text-primary">붕따우 도깨비</span>
+            </div>
             <AlertDialogTitle className="text-center">
               쿠폰 사용
               <span className="block text-sm font-normal text-muted-foreground mt-1">Sử dụng phiếu giảm giá</span>
