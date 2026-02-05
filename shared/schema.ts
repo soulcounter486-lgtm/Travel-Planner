@@ -336,6 +336,30 @@ export const insertPlaceSchema = createInsertSchema(places).omit({ id: true, cre
 export type Place = typeof places.$inferSelect;
 export type InsertPlace = z.infer<typeof insertPlaceSchema>;
 
+// 장소 카테고리 테이블 (관리자가 추가/수정/삭제/순서변경 가능)
+export const placeCategories = pgTable("place_categories", {
+  id: text("id").primaryKey(), // 카테고리 ID (예: "attraction", "nightlife18")
+  labelKo: text("label_ko").notNull(), // 한국어 라벨
+  labelEn: text("label_en").notNull(), // 영어 라벨
+  labelZh: text("label_zh"), // 중국어 라벨
+  labelVi: text("label_vi"), // 베트남어 라벨
+  labelRu: text("label_ru"), // 러시아어 라벨
+  labelJa: text("label_ja"), // 일본어 라벨
+  color: text("color").default("#64748b"), // 지도 마커 색상
+  gradient: text("gradient").default("from-gray-600 to-gray-700"), // 그라데이션 클래스
+  icon: text("icon").default("MapPin"), // 아이콘 이름 (Lucide 아이콘)
+  sortOrder: integer("sort_order").default(0), // 정렬 순서
+  isActive: boolean("is_active").default(true), // 활성화 여부
+  isAdultOnly: boolean("is_adult_only").default(false), // 성인 전용 (카카오 남성만)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPlaceCategorySchema = createInsertSchema(placeCategories).omit({ createdAt: true, updatedAt: true });
+
+export type PlaceCategory = typeof placeCategories.$inferSelect;
+export type InsertPlaceCategory = z.infer<typeof insertPlaceCategorySchema>;
+
 // 사이트 설정 (관리자가 수정 가능한 텍스트 등)
 export const siteSettings = pgTable("site_settings", {
   id: serial("id").primaryKey(),
