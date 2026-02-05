@@ -627,7 +627,7 @@ export default function AdminMembers() {
                   <p className="text-muted-foreground text-sm p-2">로딩 중...</p>
                 ) : (
                   <div className="space-y-1 max-h-[60vh] overflow-y-auto">
-                    {members.map((member) => (
+                    {[...members].sort((a, b) => (b.isAdmin ? 1 : 0) - (a.isAdmin ? 1 : 0)).map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
