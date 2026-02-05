@@ -1652,16 +1652,20 @@ export default function PlacesGuide() {
     return merged;
   }, [dbPlaces]);
 
-  // 모든 장소 (지도용)
+  // 모든 장소 (지도용) - nightlife18은 권한 필터링
   const allPlaces = useMemo(() => {
     const places: (Place & { categoryId: string })[] = [];
     Object.entries(mergedPlacesData).forEach(([categoryId, category]) => {
+      // nightlife18 카테고리는 관리자 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
+      if (categoryId === "nightlife18" && !isAdmin && !user?.canViewNightlife18) {
+        return;
+      }
       category.places.forEach(place => {
         places.push({ ...place, categoryId });
       });
     });
     return places;
-  }, [mergedPlacesData]);
+  }, [mergedPlacesData, isAdmin, user?.canViewNightlife18]);
 
   // 지도 초기화
   useEffect(() => {
