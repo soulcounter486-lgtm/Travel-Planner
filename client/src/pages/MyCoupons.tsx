@@ -409,14 +409,14 @@ export default function MyCoupons() {
       <AlertDialog open={showUseConfirm} onOpenChange={setShowUseConfirm}>
         <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader className="text-center">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-3 mb-2">
               <img 
                 src="/dokkaebi-logo.png" 
                 alt="붕따우 도깨비" 
-                className="w-10 h-10 object-contain rounded-full"
+                className="w-20 h-20 object-contain rounded-full"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
-              <span className="text-sm font-bold text-primary">붕따우 도깨비</span>
+              <span className="text-lg font-bold text-primary">붕따우 도깨비</span>
             </div>
             <AlertDialogTitle className="text-center">
               쿠폰 사용
