@@ -4640,8 +4640,18 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       }
 
       const couponId = parseInt(req.params.id);
+      
+      // 날짜 문자열을 Date 객체로 변환
+      const updateData = { ...req.body };
+      if (updateData.validFrom && typeof updateData.validFrom === 'string') {
+        updateData.validFrom = updateData.validFrom ? new Date(updateData.validFrom) : null;
+      }
+      if (updateData.validUntil && typeof updateData.validUntil === 'string') {
+        updateData.validUntil = updateData.validUntil ? new Date(updateData.validUntil) : null;
+      }
+      
       const [updated] = await db.update(coupons)
-        .set(req.body)
+        .set(updateData)
         .where(eq(coupons.id, couponId))
         .returning();
 
