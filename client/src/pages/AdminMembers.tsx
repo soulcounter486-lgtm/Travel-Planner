@@ -56,6 +56,7 @@ interface User {
   profileImageUrl?: string;
   loginMethod?: string;
   isAdmin?: boolean;
+  canViewNightlife18?: boolean;
   createdAt?: string;
 }
 
@@ -253,31 +254,26 @@ export default function AdminMembers() {
     },
   });
 
-  // 사이트 설정 조회
-  const { data: siteSettings = [] } = useQuery<{ key: string; value: string }[]>({
-    queryKey: ["/api/site-settings"],
-    enabled: isAdmin,
-  });
-
-  const nightlife18Enabled = siteSettings.find(s => s.key === "nightlife18_enabled")?.value === "true";
-
-  const updateSettingMutation = useMutation({
-    mutationFn: async ({ key, value }: { key: string; value: string }) => {
-      const res = await fetch("/api/admin/site-settings", {
-        method: "PUT",
+  const toggleNightlife18Mutation = useMutation({
+    mutationFn: async ({ userId, canViewNightlife18 }: { userId: string; canViewNightlife18: boolean }) => {
+      const res = await fetch(`/api/admin/users/${userId}/nightlife18`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ key, value }),
+        body: JSON.stringify({ canViewNightlife18 }),
       });
-      if (!res.ok) throw new Error("설정 저장 실패");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${res.status}`);
+      }
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/site-settings"] });
-      toast({ title: "설정이 저장되었습니다" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "밤문화18 권한이 변경되었습니다" });
     },
     onError: (error: Error) => {
-      toast({ title: "설정 저장 실패", description: error.message, variant: "destructive" });
+      toast({ title: "권한 변경 실패", description: error.message, variant: "destructive" });
     },
   });
 
@@ -730,6 +726,17 @@ export default function AdminMembers() {
                             data-testid={`toggle-admin-${member.id}`}
                           >
                             {member.isAdmin ? <ShieldCheck className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={member.canViewNightlife18 ? "default" : "ghost"}
+                            className={`h-6 px-2 text-[10px] ${member.canViewNightlife18 ? "bg-rose-500 hover:bg-rose-600" : ""}`}
+                            onClick={() => toggleNightlife18Mutation.mutate({ userId: member.id, canViewNightlife18: !member.canViewNightlife18 })}
+                            disabled={toggleNightlife18Mutation.isPending}
+                            title={member.canViewNightlife18 ? "밤문화18 권한 해제" : "밤문화18 권한 부여"}
+                            data-testid={`toggle-nightlife18-${member.id}`}
+                          >
+                            <Moon className="w-3 h-3" />
                           </Button>
                           <Button
                             size="sm"

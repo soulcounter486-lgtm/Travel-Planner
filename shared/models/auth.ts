@@ -31,6 +31,7 @@ export const users = pgTable("users", {
   emailVerificationExpires: timestamp("email_verification_expires"), // 토큰 만료 시간
   welcomeCouponIssued: boolean("welcome_coupon_issued").default(false), // 첫 로그인 쿠폰 발급 여부
   isAdmin: boolean("is_admin").default(false), // 관리자 여부
+  canViewNightlife18: boolean("can_view_nightlife18").default(false), // 밤문화18 탭 표시 여부
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
