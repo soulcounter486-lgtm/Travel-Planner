@@ -1412,13 +1412,12 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   // 예약금 입금 완료된 견적서 목록 (캘린더용) - 관리자 전용
-  app.get("/api/quotes/deposit-paid", async (req, res) => {
+  app.get("/api/quotes/deposit-paid", isAuthenticated, async (req, res) => {
     try {
-      const userId = (req as any).user?.claims?.sub;
-      const adminId = process.env.ADMIN_USER_ID || "";
-      const isAdmin = userId && String(userId) === String(adminId);
-      
-      if (!isAdmin) {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Admin access required" });
       }
       
