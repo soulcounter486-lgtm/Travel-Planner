@@ -1707,11 +1707,11 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* 풀빌라 사진 그리드 (3x3, 총 9개) */}
+                      {/* 풀빌라 사진 그리드 (3x3 보이고 스크롤로 더 보기) */}
                       {villaViewMode === "list" && (
-                      <div className="pb-2">
+                      <div className="max-h-[340px] overflow-y-auto pb-2">
                         <div className="grid grid-cols-3 gap-2">
-                          {filteredVillas.slice(0, 9).map((villa) => (
+                          {filteredVillas.map((villa) => (
                             <div
                               key={villa.id}
                               onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
