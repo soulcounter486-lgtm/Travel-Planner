@@ -15,13 +15,26 @@ interface OgData {
   url: string;
 }
 
-function extractFirstImage(htmlContent: string): string | null {
-  const imgMatch = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return imgMatch ? imgMatch[1] : null;
+function extractFirstImage(content: string): string | null {
+  const mdMatch = content.match(/!\[[^\]]*\]\(([^)]+)\)/);
+  if (mdMatch) return mdMatch[1];
+
+  const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch) return imgMatch[1];
+
+  const urlMatch = content.match(/(https?:\/\/[^\s"'<>]+\/objects\/uploads\/[^\s"'<>]+)/);
+  if (urlMatch) return urlMatch[1];
+
+  return null;
 }
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+function stripContent(content: string): string {
+  let text = content;
+  text = text.replace(/!\[[^\]]*\]\([^)]+\)/g, "");
+  text = text.replace(/<[^>]*>/g, "");
+  text = text.replace(/&nbsp;/g, " ");
+  text = text.replace(/\s+/g, " ");
+  return text.trim();
 }
 
 async function getPostOgData(postId: number): Promise<OgData | null> {
@@ -29,7 +42,7 @@ async function getPostOgData(postId: number): Promise<OgData | null> {
     const [post] = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
     if (!post) return null;
 
-    const contentText = stripHtml(post.content).slice(0, 200);
+    const contentText = stripContent(post.content).slice(0, 200);
     const postImage = post.imageUrl || extractFirstImage(post.content);
     const image = postImage || DEFAULT_OG_IMAGE;
 
