@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, Plus, Pencil, Trash2, Image, Save, X, GripVertical, Upload, Loader2, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import type { Villa, VillaAmenity } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
@@ -229,6 +230,7 @@ export default function AdminVillas() {
                     onEdit={() => setEditingVilla(villa)}
                     onDelete={() => deleteMutation.mutate(villa.id)}
                     onToggleActive={() => updateMutation.mutate({ id: villa.id, data: { isActive: !villa.isActive } })}
+                    onToggleBest={() => updateMutation.mutate({ id: villa.id, data: { isBest: !villa.isBest } })}
                     isEditOpen={editingVilla?.id === villa.id}
                     onEditClose={() => setEditingVilla(null)}
                     onSubmit={(data) => updateMutation.mutate({ id: villa.id, data })}
@@ -250,13 +252,14 @@ interface SortableVillaCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onToggleActive: () => void;
+  onToggleBest: () => void;
   isEditOpen: boolean;
   onEditClose: () => void;
   onSubmit: (data: Partial<Villa>) => void;
   isLoading: boolean;
 }
 
-function SortableVillaCard({ villa, onEdit, onDelete, onToggleActive, isEditOpen, onEditClose, onSubmit, isLoading }: SortableVillaCardProps) {
+function SortableVillaCard({ villa, onEdit, onDelete, onToggleActive, onToggleBest, isEditOpen, onEditClose, onSubmit, isLoading }: SortableVillaCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: villa.id });
   
   const style = {
@@ -292,9 +295,14 @@ function SortableVillaCard({ villa, onEdit, onDelete, onToggleActive, isEditOpen
             </div>
           )}
           
-          {/* 이름 + 룸수 */}
+          {/* 이름 + 룸수 + BEST */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold truncate">{villa.name}</h3>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3 className="font-semibold truncate">{villa.name}</h3>
+              {villa.isBest && (
+                <span className="text-[10px] bg-red-500 text-white font-bold px-1.5 py-0.5 rounded-sm">BEST</span>
+              )}
+            </div>
             {!villa.isActive && (
               <span className="text-xs bg-muted px-2 py-0.5 rounded">비활성</span>
             )}
@@ -302,6 +310,15 @@ function SortableVillaCard({ villa, onEdit, onDelete, onToggleActive, isEditOpen
           
           {/* 버튼 */}
           <div className="flex gap-2 flex-shrink-0 items-center">
+            {/* BEST 뱃지 토글 */}
+            <Button
+              variant={villa.isBest ? "destructive" : "outline"}
+              size="sm"
+              onClick={onToggleBest}
+              data-testid={`button-toggle-best-${villa.id}`}
+            >
+              BEST
+            </Button>
             {/* 활성화/비활성화 토글 */}
             <Switch
               checked={villa.isActive ?? true}

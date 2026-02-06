@@ -1707,11 +1707,11 @@ export default function Home() {
                         </div>
                       )}
                       
-                      {/* 작은 썸네일 그리드 (3열, 최대 2행 보이고 스크롤) */}
+                      {/* 풀빌라 사진 그리드 (3x3, 총 9개) */}
                       {villaViewMode === "list" && (
-                      <div className="max-h-[220px] overflow-y-auto pb-2">
+                      <div className="pb-2">
                         <div className="grid grid-cols-3 gap-2">
-                          {filteredVillas.map((villa) => (
+                          {filteredVillas.slice(0, 9).map((villa) => (
                             <div
                               key={villa.id}
                               onClick={() => setSelectedVillaId(selectedVillaId === villa.id ? null : villa.id)}
@@ -1719,7 +1719,7 @@ export default function Home() {
                                 "relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all aspect-square",
                                 selectedVillaId === villa.id 
                                   ? "border-primary ring-2 ring-primary/30" 
-                                  : "border-slate-200 hover:border-slate-300"
+                                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
                               )}
                               data-testid={`villa-thumb-${villa.id}`}
                             >
@@ -1737,6 +1737,15 @@ export default function Home() {
                               {selectedVillaId === villa.id && (
                                 <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                                   <Check className="h-4 w-4 text-primary" />
+                                </div>
+                              )}
+                              {/* BEST 뱃지 */}
+                              {villa.isBest && (
+                                <div 
+                                  className="absolute top-1 left-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm shadow-md z-10"
+                                  data-testid={`badge-best-villa-${villa.id}`}
+                                >
+                                  BEST
                                 </div>
                               )}
                               {/* 룸 수 표시 */}
