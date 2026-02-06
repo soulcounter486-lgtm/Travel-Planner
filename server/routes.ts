@@ -2666,6 +2666,47 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
+  const ogRefreshCache = new Map<number, number>();
+  app.post("/api/posts/:id/refresh-og", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid post ID" });
+
+      const now = Date.now();
+      const lastRefresh = ogRefreshCache.get(id) || 0;
+      if (now - lastRefresh < 60000) {
+        return res.json({ success: true, cached: true });
+      }
+      ogRefreshCache.set(id, now);
+
+      const postUrl = `https://vungtau.blog/board/${id}`;
+      const kakaoApiKey = process.env.KAKAO_REST_API_KEY;
+
+      if (kakaoApiKey) {
+        try {
+          const kakaoRes = await fetch("https://kapi.kakao.com/v2/util/url/scrape", {
+            method: "POST",
+            headers: {
+              "Authorization": `KakaoAK ${kakaoApiKey}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `target_url=${encodeURIComponent(postUrl)}`,
+          });
+          const kakaoData = await kakaoRes.json();
+          return res.json({ success: kakaoRes.ok, kakao: kakaoData });
+        } catch (kakaoErr) {
+          console.error("Kakao scrape API error:", kakaoErr);
+          return res.json({ success: false, message: "Kakao API call failed" });
+        }
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Refresh OG cache error:", err);
+      res.status(500).json({ message: "Failed to refresh OG cache" });
+    }
+  });
+
   // 게시판 - 게시글 작성 (관리자만)
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {

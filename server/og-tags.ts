@@ -2,10 +2,16 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { posts } from "@shared/schema";
 
+const DEFAULT_OG_IMAGE = "https://vungtau.blog/og-image.png";
+const DEFAULT_OG_IMAGE_WIDTH = 1053;
+const DEFAULT_OG_IMAGE_HEIGHT = 1053;
+
 interface OgData {
   title: string;
   description: string;
   image: string;
+  imageWidth?: number;
+  imageHeight?: number;
   url: string;
 }
 
@@ -24,12 +30,15 @@ async function getPostOgData(postId: number): Promise<OgData | null> {
     if (!post) return null;
 
     const contentText = stripHtml(post.content).slice(0, 200);
-    const image = post.imageUrl || extractFirstImage(post.content) || "https://vungtau.blog/og-image.png";
+    const postImage = post.imageUrl || extractFirstImage(post.content);
+    const image = postImage || DEFAULT_OG_IMAGE;
 
     return {
       title: `${post.title} - 붕따우 도깨비`,
       description: contentText || "베트남 붕따우 여행의 모든것",
       image,
+      imageWidth: postImage ? undefined : DEFAULT_OG_IMAGE_WIDTH,
+      imageHeight: postImage ? undefined : DEFAULT_OG_IMAGE_HEIGHT,
       url: `https://vungtau.blog/board/${post.id}`,
     };
   } catch {
@@ -46,9 +55,15 @@ export function injectOgTags(html: string, og: OgData): string {
     /<meta property="og:description" content="[^"]*"\s*\/?>/,
     `<meta property="og:description" content="${escapeHtml(og.description)}" />`
   );
+  const imageMetaExtra = [];
+  if (og.imageWidth && og.imageHeight) {
+    imageMetaExtra.push(`<meta property="og:image:width" content="${og.imageWidth}" />`);
+    imageMetaExtra.push(`<meta property="og:image:height" content="${og.imageHeight}" />`);
+  }
+
   html = html.replace(
     /<meta property="og:image" content="[^"]*"\s*\/?>/,
-    `<meta property="og:image" content="${escapeHtml(og.image)}" />`
+    `<meta property="og:image" content="${escapeHtml(og.image)}" />\n    ${imageMetaExtra.join("\n    ")}`
   );
   html = html.replace(
     /<meta property="og:url" content="[^"]*"\s*\/?>/,
@@ -74,6 +89,7 @@ export function injectOgTags(html: string, og: OgData): string {
     /<title>[^<]*<\/title>/,
     `<title>${escapeHtml(og.title)}</title>`
   );
+
   return html;
 }
 
@@ -89,3 +105,4 @@ export async function getOgDataForPath(urlPath: string): Promise<OgData | null> 
   }
   return null;
 }
+

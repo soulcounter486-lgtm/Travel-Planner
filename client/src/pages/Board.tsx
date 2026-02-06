@@ -789,6 +789,7 @@ export default function Board() {
                 size="sm"
                 onClick={() => {
                   const postUrl = `${window.location.origin}/board/${selectedPost.id}`;
+                  apiRequest("POST", `/api/posts/${selectedPost.id}/refresh-og`).catch(() => {});
                   if (navigator.share) {
                     navigator.share({
                       title: selectedPost.title,
