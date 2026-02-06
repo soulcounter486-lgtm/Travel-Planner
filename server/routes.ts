@@ -2680,10 +2680,21 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(400).json({ message: "Invalid post data", errors: result.error.errors });
       }
 
+      let authorName = "붕따우 도깨비";
+      const dbUserId = user?.id || (req.session as any)?.userId;
+      if (dbUserId) {
+        const [dbUser] = await db.select().from(users).where(eq(users.id, dbUserId));
+        if (dbUser) {
+          authorName = dbUser.nickname || dbUser.email?.split("@")[0] || "붕따우 도깨비";
+        }
+      } else if (user?.claims?.first_name) {
+        authorName = user.claims.first_name;
+      }
+
       const [newPost] = await db.insert(posts).values({
         ...result.data,
         authorId: userId,
-        authorName: user.claims?.first_name || user.claims?.email || "관리자",
+        authorName,
       }).returning();
 
       // 푸시 알림 발송 (비동기로 처리)
@@ -2700,19 +2711,78 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     }
   });
 
-  // 프로필 이름 변경 시 게시글/댓글 작성자 이름 동기화
+  // 닉네임 변경 API
+  app.patch("/api/user/nickname", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const sessionUserId = user?.id || (req.session as any)?.userId;
+      const oauthUserId = user?.claims?.sub;
+      
+      const { nickname } = req.body;
+      if (!nickname || typeof nickname !== "string" || nickname.trim().length < 1 || nickname.trim().length > 20) {
+        return res.status(400).json({ message: "닉네임은 1~20자 사이여야 합니다." });
+      }
+
+      const trimmedNickname = nickname.trim();
+
+      if (sessionUserId) {
+        const [updated] = await db.update(users)
+          .set({ nickname: trimmedNickname })
+          .where(eq(users.id, sessionUserId))
+          .returning();
+        
+        if (!updated) {
+          return res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
+        }
+
+        if ((req.session as any)?.user) {
+          (req.session as any).user.name = trimmedNickname;
+          req.session.save(() => {});
+        }
+
+        await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${String(sessionUserId)}`);
+        await db.execute(sql`UPDATE comments SET author_name = ${trimmedNickname} WHERE author_id = ${String(sessionUserId)}`);
+
+        res.json({ success: true, nickname: trimmedNickname });
+      } else if (oauthUserId) {
+        const [dbUser] = await db.select().from(users).where(eq(users.id, oauthUserId));
+        if (dbUser) {
+          await db.update(users)
+            .set({ nickname: trimmedNickname })
+            .where(eq(users.id, dbUser.id));
+        }
+          
+        await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${oauthUserId}`);
+        await db.execute(sql`UPDATE comments SET author_name = ${trimmedNickname} WHERE author_id = ${oauthUserId}`);
+
+        res.json({ success: true, nickname: trimmedNickname });
+      } else {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+    } catch (err) {
+      console.error("Update nickname error:", err);
+      res.status(500).json({ message: "닉네임 변경에 실패했습니다." });
+    }
+  });
+
+  // 프로필 이름 변경 시 게시글/댓글 작성자 이름 동기화 (로그인 시 자동 호출)
   app.post("/api/sync-author-name", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = user?.claims?.sub;
-      const newName = user?.claims?.first_name || user?.claims?.email || "사용자";
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       
       if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // 해당 사용자의 모든 게시글 authorName 업데이트
-      await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${userId}`);
+      const [dbUser] = await db.select().from(users).where(eq(users.id, String(userId)));
+      if (!dbUser || !dbUser.nickname) {
+        return res.json({ success: true, newName: null });
+      }
+
+      const newName = dbUser.nickname;
+      await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${String(userId)}`);
+      await db.execute(sql`UPDATE comments SET author_name = ${newName} WHERE author_id = ${String(userId)}`);
 
       res.json({ success: true, newName });
     } catch (err) {

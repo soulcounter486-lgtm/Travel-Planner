@@ -1,14 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { ArrowLeft, LogIn, User, Calendar, UserCircle } from "lucide-react";
+import { ArrowLeft, LogIn, User, Calendar, UserCircle, Pencil, Check, X } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function MyPage() {
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+  const { toast } = useToast();
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newNickname, setNewNickname] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   if (isAuthLoading) {
     return (
@@ -29,7 +36,7 @@ export default function MyPage() {
         <div className="container mx-auto px-4 py-4 max-w-2xl">
           <div className="flex items-center gap-2 mb-4">
             <Link href="/">
-              <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-back-home">
+              <Button variant="ghost" size="icon" data-testid="button-back-home">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
@@ -60,10 +67,46 @@ export default function MyPage() {
   };
 
   const getLoginMethod = () => {
-    if (userData?.kakaoId) return "카카오";
-    if (userData?.googleId) return "Google";
-    if (userData?.email) return "이메일";
-    return "-";
+    if (userData?.loginMethod === "kakao") return "카카오";
+    if (userData?.loginMethod === "google") return "Google";
+    if (userData?.loginMethod === "email") return "이메일";
+    if (userData?.loginMethod === "replit") return "Replit";
+    return "이메일";
+  };
+
+  const handleStartEdit = () => {
+    setNewNickname(getUserDisplayName());
+    setIsEditingName(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setNewNickname("");
+  };
+
+  const handleSaveNickname = async () => {
+    if (!newNickname.trim() || newNickname.trim().length > 20) {
+      toast({ title: "닉네임은 1~20자 사이여야 합니다.", variant: "destructive" });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await apiRequest("PATCH", "/api/user/nickname", { nickname: newNickname.trim() });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: "닉네임이 변경되었습니다." });
+        setIsEditingName(false);
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      } else {
+        toast({ title: data.message || "닉네임 변경에 실패했습니다.", variant: "destructive" });
+      }
+    } catch (err) {
+      toast({ title: "닉네임 변경에 실패했습니다.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -71,7 +114,7 @@ export default function MyPage() {
       <div className="container mx-auto px-4 py-4 max-w-2xl">
         <div className="flex items-center gap-2 mb-4">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="button-back-home">
+            <Button variant="ghost" size="icon" data-testid="button-back-home">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
@@ -91,8 +134,53 @@ export default function MyPage() {
                 <User className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-lg">{getUserDisplayName()}</p>
-                <div className="flex items-center gap-2 mt-1">
+                {isEditingName ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={newNickname}
+                      onChange={(e) => setNewNickname(e.target.value)}
+                      className="h-8 text-sm"
+                      maxLength={20}
+                      placeholder="새 닉네임 입력"
+                      data-testid="input-nickname"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSaveNickname();
+                        if (e.key === "Escape") handleCancelEdit();
+                      }}
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleSaveNickname}
+                      disabled={isSaving}
+                      data-testid="button-save-nickname"
+                    >
+                      <Check className="w-4 h-4 text-green-500" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleCancelEdit}
+                      data-testid="button-cancel-nickname"
+                    >
+                      <X className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-lg" data-testid="text-display-name">{getUserDisplayName()}</p>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleStartEdit}
+                      data-testid="button-edit-nickname"
+                    >
+                      <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                    </Button>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <Badge variant={userData?.isAdmin ? "default" : "secondary"} className="h-5 text-[10px]">
                     {userData?.isAdmin ? "관리자" : "일반회원"}
                   </Badge>
@@ -125,12 +213,6 @@ export default function MyPage() {
                   <span>{format(new Date(userData.createdAt), "yyyy.MM.dd")}</span>
                 </div>
               )}
-            </div>
-
-            <div className="pt-2 text-center">
-              <p className="text-xs text-muted-foreground">
-                회원정보 수정이 필요한 경우 관리자에게 문의해주세요
-              </p>
             </div>
           </CardContent>
         </Card>
