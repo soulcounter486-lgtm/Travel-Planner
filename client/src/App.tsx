@@ -30,6 +30,7 @@ function Router() {
       <Route path="/nearby" component={NearbyPlaces} />
       <Route path="/planner" component={TravelPlanner} />
       <Route path="/chat" component={ChatRoom} />
+      <Route path="/board/:id" component={Board} />
       <Route path="/board" component={Board} />
       <Route path="/diet" component={DietProducts} />
       <Route path="/locations" component={LocationShare} />

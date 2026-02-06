@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useRoute } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,9 @@ import {
   ShoppingBag,
   UserPlus,
   Bell,
-  BellOff
+  BellOff,
+  Share2,
+  Link2
 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { SiInstagram } from "react-icons/si";
@@ -273,6 +275,7 @@ export default function Board() {
   const labels = boardLabels[language] || boardLabels.ko;
   const { toast } = useToast();
   const { isSupported, isSubscribed, isLoading: pushLoading, subscribe, unsubscribe } = usePushNotifications(false, false);
+  const [matchRoute, params] = useRoute("/board/:id");
   
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showNewPostDialog, setShowNewPostDialog] = useState(false);
@@ -286,10 +289,10 @@ export default function Board() {
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
 
-  // 뒤로가기 시 게시판 목록으로 돌아가기
   useEffect(() => {
-    const handlePopState = (e: PopStateEvent) => {
-      if (e.state?.viewingPost === false || !e.state) {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === "/board") {
         setSelectedPost(null);
       }
     };
@@ -299,13 +302,11 @@ export default function Board() {
   }, []);
 
   const handleSelectPost = async (post: Post) => {
-    window.history.pushState({ viewingPost: true, postId: post.id }, "");
+    window.history.replaceState({ viewingPost: true, postId: post.id }, "", `/board/${post.id}`);
     setSelectedPost(post);
     
-    // 조회수 증가
     try {
       await apiRequest("POST", `/api/posts/${post.id}/view`);
-      // 게시글 목록 새로고침 (조회수 반영)
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
     } catch (error) {
       console.error("Failed to increment view count:", error);
@@ -313,7 +314,7 @@ export default function Board() {
   };
 
   const handleBackToList = () => {
-    window.history.pushState({ viewingPost: false }, "");
+    window.history.replaceState({ viewingPost: false }, "", "/board");
     setSelectedPost(null);
   };
 
@@ -407,6 +408,19 @@ export default function Board() {
 
   const isAdmin = adminCheck?.isAdmin || false;
   const isLoggedIn = adminCheck?.isLoggedIn || false;
+
+  useEffect(() => {
+    if (matchRoute && params?.id && posts.length > 0) {
+      const postId = parseInt(params.id);
+      if (selectedPost?.id !== postId) {
+        const post = posts.find((p) => p.id === postId);
+        if (post) {
+          setSelectedPost(post);
+          apiRequest("POST", `/api/posts/${post.id}/view`).catch(() => {});
+        }
+      }
+    }
+  }, [matchRoute, params?.id, posts]);
 
   const { data: postComments = [], isLoading: commentsLoading } = useQuery<Comment[]>({
     queryKey: ["/api/posts", selectedPost?.id, "comments"],
@@ -766,9 +780,34 @@ export default function Board() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Button variant="ghost" onClick={handleBackToList} className="mb-4">
-              ← 목록으로
-            </Button>
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <Button variant="ghost" onClick={handleBackToList} data-testid="button-back-to-list">
+                ← 목록으로
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const postUrl = `${window.location.origin}/board/${selectedPost.id}`;
+                  if (navigator.share) {
+                    navigator.share({
+                      title: selectedPost.title,
+                      url: postUrl,
+                    }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(postUrl).then(() => {
+                      toast({ title: "링크가 복사되었습니다", description: postUrl });
+                    }).catch(() => {
+                      toast({ title: "링크 복사 실패", variant: "destructive" });
+                    });
+                  }
+                }}
+                data-testid="button-share-post"
+              >
+                <Share2 className="w-4 h-4 mr-1" />
+                공유
+              </Button>
+            </div>
             <Card className="overflow-hidden">
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
@@ -1037,6 +1076,23 @@ export default function Board() {
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
                                 {post.createdAt && format(new Date(post.createdAt), "yyyy.MM.dd")}
+                              </span>
+                              <span
+                                className="flex items-center gap-1 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const postUrl = `${window.location.origin}/board/${post.id}`;
+                                  if (navigator.share) {
+                                    navigator.share({ title: post.title, url: postUrl }).catch(() => {});
+                                  } else {
+                                    navigator.clipboard.writeText(postUrl).then(() => {
+                                      toast({ title: "링크가 복사되었습니다" });
+                                    }).catch(() => {});
+                                  }
+                                }}
+                                data-testid={`button-share-post-${post.id}`}
+                              >
+                                <Share2 className="w-3 h-3" />
                               </span>
                               {(post as any).commentCount > 0 && (
                                 <span className="flex items-center gap-1 text-primary">

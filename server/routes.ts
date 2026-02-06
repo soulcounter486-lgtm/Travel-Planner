@@ -345,12 +345,13 @@ export async function registerRoutes(
       await db.insert(users).values({
         id: kakaoUserId,
         email: email,
+        nickname: nickname,
         firstName: nickname,
         lastName: "",
         profileImageUrl: profileImage,
         gender: gender,
         loginMethod: "kakao",
-        emailVerified: true, // 카카오 로그인은 이메일 인증 완료
+        emailVerified: true,
       }).onConflictDoUpdate({
         target: users.id,
         set: {
@@ -358,7 +359,7 @@ export async function registerRoutes(
           firstName: nickname,
           profileImageUrl: profileImage,
           gender: gender,
-          loginMethod: "kakao", // 기존 사용자도 loginMethod 업데이트
+          loginMethod: "kakao",
           updatedAt: new Date(),
         },
       });
@@ -2681,14 +2682,17 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       }
 
       let authorName = "붕따우 도깨비";
-      const dbUserId = user?.id || (req.session as any)?.userId;
-      if (dbUserId) {
-        const [dbUser] = await db.select().from(users).where(eq(users.id, dbUserId));
-        if (dbUser) {
-          authorName = dbUser.nickname || dbUser.email?.split("@")[0] || "붕따우 도깨비";
+      if (userId) {
+        let [dbUser] = await db.select().from(users).where(eq(users.id, String(userId)));
+        if (!dbUser) {
+          const numId = String(userId).replace(/^kakao_/, "");
+          if (numId !== String(userId)) {
+            [dbUser] = await db.select().from(users).where(eq(users.id, numId));
+          }
         }
-      } else if (user?.claims?.first_name) {
-        authorName = user.claims.first_name;
+        if (dbUser) {
+          authorName = dbUser.nickname || dbUser.firstName || dbUser.email?.split("@")[0] || "붕따우 도깨비";
+        }
       }
 
       const [newPost] = await db.insert(posts).values({
@@ -2775,14 +2779,27 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const [dbUser] = await db.select().from(users).where(eq(users.id, String(userId)));
+      let [dbUser] = await db.select().from(users).where(eq(users.id, String(userId)));
+      if (!dbUser) {
+        const numId = String(userId).replace(/^kakao_/, "");
+        if (numId !== String(userId)) {
+          [dbUser] = await db.select().from(users).where(eq(users.id, numId));
+        }
+      }
       if (!dbUser || !dbUser.nickname) {
         return res.json({ success: true, newName: null });
       }
 
       const newName = dbUser.nickname;
-      await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${String(userId)}`);
-      await db.execute(sql`UPDATE comments SET author_name = ${newName} WHERE author_id = ${String(userId)}`);
+      const userIdStr = String(userId);
+      await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${userIdStr}`);
+      await db.execute(sql`UPDATE comments SET author_name = ${newName} WHERE author_id = ${userIdStr}`);
+      
+      const numericId = userIdStr.replace(/^kakao_/, "");
+      if (numericId !== userIdStr) {
+        await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${numericId}`);
+        await db.execute(sql`UPDATE comments SET author_name = ${newName} WHERE author_id = ${numericId}`);
+      }
 
       res.json({ success: true, newName });
     } catch (err) {
