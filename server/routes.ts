@@ -1341,12 +1341,14 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   // 메모 업데이트 (관리자 전용)
-  app.patch("/api/quotes/:id/memo", async (req, res) => {
+  app.patch("/api/quotes/:id/memo", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const userId = (req as any).user?.claims?.sub;
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
       
-      if (userId !== ADMIN_USER_ID) {
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can update memo" });
       }
 
@@ -1362,12 +1364,14 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   // 메모 이미지 업데이트 (관리자 전용)
-  app.patch("/api/quotes/:id/memo-images", async (req, res) => {
+  app.patch("/api/quotes/:id/memo-images", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const userId = (req as any).user?.claims?.sub;
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
       
-      if (userId !== ADMIN_USER_ID) {
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can update memo images" });
       }
 
@@ -1387,12 +1391,14 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   // 견적서 총금액 및 세부내역 업데이트
-  app.patch("/api/quotes/:id/total", async (req, res) => {
+  app.patch("/api/quotes/:id/total", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const userId = (req as any).user?.claims?.sub;
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
       
-      if (userId !== ADMIN_USER_ID) {
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can update total price" });
       }
 
@@ -2663,8 +2669,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = user?.claims?.sub;
-      if (!userId || userId !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can create posts" });
       }
 
@@ -2718,8 +2725,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.patch("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = user?.claims?.sub;
-      if (!userId || userId !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can edit posts" });
       }
 
@@ -2781,8 +2789,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.delete("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = user?.claims?.sub;
-      if (!userId || userId !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can delete posts" });
       }
 
@@ -2802,8 +2811,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.patch("/api/posts/:id/toggle-visibility", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = user?.claims?.sub;
-      if (!userId || userId !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can toggle post visibility" });
       }
 
@@ -2870,8 +2880,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.delete("/api/comments/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = user?.claims?.sub;
-      if (!userId || userId !== ADMIN_USER_ID) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can delete comments" });
       }
 
