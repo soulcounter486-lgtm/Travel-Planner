@@ -2,6 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import fs from "fs";
+import path from "path";
+import { getOgDataForPath, injectOgTags } from "./og-tags";
 
 const app = express();
 const httpServer = createServer(app);
@@ -69,6 +72,29 @@ app.use((req, res, next) => {
 
     res.status(status).json({ message });
     throw err;
+  });
+
+  app.get("/board/:id", async (req, res, next) => {
+    try {
+      const postId = parseInt(req.params.id, 10);
+      if (isNaN(postId)) return next();
+
+      const ogData = await getOgDataForPath(req.path);
+      if (!ogData) return next();
+
+      let htmlPath: string;
+      if (process.env.NODE_ENV === "production") {
+        htmlPath = path.resolve(__dirname, "public", "index.html");
+      } else {
+        htmlPath = path.resolve(import.meta.dirname, "..", "client", "index.html");
+      }
+
+      let html = await fs.promises.readFile(htmlPath, "utf-8");
+      html = injectOgTags(html, ogData);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch {
+      next();
+    }
   });
 
   // importantly only setup vite in development and after
