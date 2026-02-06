@@ -295,6 +295,7 @@ export const villas = pgTable("villas", {
   maxGuests: integer("max_guests").default(10), // 최대 인원
   bedrooms: integer("bedrooms").default(3), // 침실 수
   notes: text("notes"), // 참고사항
+  isBest: boolean("is_best").default(false), // BEST 뱃지 표시 여부
   isActive: boolean("is_active").default(true), // 활성화 여부
   sortOrder: integer("sort_order").default(0), // 정렬 순서
   createdAt: timestamp("created_at").defaultNow(),
