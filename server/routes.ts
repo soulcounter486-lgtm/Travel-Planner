@@ -568,6 +568,30 @@ export async function registerRoutes(
         })
         .where(eq(users.id, user.id));
       
+      // 첫 로그인 환영 쿠폰 발급
+      if (!user.welcomeCouponIssued) {
+        try {
+          const welcomeCoupons = await db.select().from(coupons).where(
+            and(
+              eq(coupons.isWelcomeCoupon, true),
+              eq(coupons.isActive, true)
+            )
+          );
+          
+          for (const coupon of welcomeCoupons) {
+            await db.insert(userCoupons).values({
+              userId: user.id,
+              couponId: coupon.id,
+              isUsed: false,
+            });
+          }
+          
+          await db.update(users).set({ welcomeCouponIssued: true }).where(eq(users.id, user.id));
+        } catch (couponError) {
+          console.error("Welcome coupon issue error (verify-email):", couponError);
+        }
+      }
+      
       // 관리자 알림 생성 (신규회원)
       await db.insert(adminNotifications).values({
         type: "new_member",
