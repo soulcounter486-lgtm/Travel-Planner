@@ -1187,6 +1187,12 @@ export default function Home() {
                         관광지관리
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/settings" className="flex items-center cursor-pointer" data-testid="link-admin-settings">
+                        <Settings className="w-4 h-4 mr-2" />
+                        사이트설정
+                      </Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
