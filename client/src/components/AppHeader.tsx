@@ -320,7 +320,7 @@ export function AppHeader() {
                         <ChevronDown className="w-3 h-3 ml-1" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuContent align="end" className="w-48 max-h-[70vh] overflow-y-auto" side="bottom" avoidCollisions={true} sideOffset={5}>
                       <DropdownMenuItem asChild>
                         <Link href="/admin/members" className="flex items-center cursor-pointer" data-testid="link-admin-members">
                           <Users className="w-4 h-4 mr-2" />
