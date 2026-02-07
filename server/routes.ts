@@ -3690,9 +3690,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   });
 
   // 설정 업데이트 (관리자 전용)
-  app.put("/api/admin/site-settings", async (req, res) => {
+  app.put("/api/admin/site-settings", isAuthenticated, async (req, res) => {
     try {
-      const user = (req as any).user;
+      const user = req.user as any;
       const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       const userEmail = user?.claims?.email || user?.email;
       if (!userId || !isUserAdmin(userId, userEmail)) {
