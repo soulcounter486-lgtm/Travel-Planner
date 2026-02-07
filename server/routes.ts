@@ -3693,9 +3693,9 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
   app.put("/api/admin/site-settings", async (req, res) => {
     try {
       const user = (req as any).user;
-      const userId = user?.claims?.sub;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       const userEmail = user?.claims?.email || user?.email;
-      if (!user || !isUserAdmin(userId, userEmail)) {
+      if (!userId || !isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "관리자 권한이 필요합니다" });
       }
 
