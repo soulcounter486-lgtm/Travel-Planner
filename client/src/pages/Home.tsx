@@ -377,6 +377,8 @@ export default function Home() {
   const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
   const [realVisitorCount, setRealVisitorCount] = useState<number>(0);
   const [realTotalVisitorCount, setRealTotalVisitorCount] = useState<number>(0);
+  const [fakeMemberCount, setFakeMemberCount] = useState<number>(563);
+  const [realMemberCount, setRealMemberCount] = useState<number>(0);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   
@@ -435,7 +437,6 @@ export default function Home() {
   useEffect(() => {
     const hasVisited = sessionStorage.getItem('visitor_counted');
     if (hasVisited) {
-      // 이미 카운트된 경우 GET으로 현재 값만 가져옴
       fetch("/api/visitor-count")
         .then(res => res.json())
         .then(data => {
@@ -446,7 +447,6 @@ export default function Home() {
         })
         .catch(() => {});
     } else {
-      // 처음 방문 시에만 카운트 증가
       apiRequest("POST", "/api/visitor-count/increment")
         .then(res => res.json())
         .then(data => {
@@ -458,6 +458,13 @@ export default function Home() {
         })
         .catch(() => {});
     }
+    fetch("/api/member-count")
+      .then(res => res.json())
+      .then(data => {
+        setFakeMemberCount(data.fakeMemberCount || 563);
+        setRealMemberCount(data.realMemberCount || 0);
+      })
+      .catch(() => {});
   }, []);
 
   // 빌라 선택 이벤트 리스너 (팝업에서 선택하기 버튼 클릭 시)
@@ -2824,8 +2831,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="bg-slate-800 py-1 px-3 flex items-center justify-between">
-          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+        <div className="bg-slate-800 py-1 px-3 flex items-center justify-between gap-1 flex-wrap">
+          <span className="text-[10px] text-slate-400 flex items-center gap-1" data-testid="text-visitor-today">
             <Eye className="w-3 h-3" />
             {language === "ko" ? `오늘 ${visitorCount.toLocaleString()}명` : 
              language === "en" ? `Today ${visitorCount.toLocaleString()}` :
@@ -2834,12 +2841,21 @@ export default function Home() {
              language === "ru" ? `Сегодня ${visitorCount.toLocaleString()}` :
              language === "ja" ? `今日 ${visitorCount.toLocaleString()}人` : `오늘 ${visitorCount.toLocaleString()}명`}
           </span>
+          <span className="text-[10px] text-cyan-400 flex items-center gap-1" data-testid="text-member-count">
+            <Users className="w-3 h-3" />
+            {language === "ko" ? `회원 ${fakeMemberCount.toLocaleString()}명` :
+             language === "en" ? `Members ${fakeMemberCount.toLocaleString()}` :
+             language === "zh" ? `会员 ${fakeMemberCount.toLocaleString()}` :
+             language === "vi" ? `Thành viên ${fakeMemberCount.toLocaleString()}` :
+             language === "ru" ? `Участники ${fakeMemberCount.toLocaleString()}` :
+             language === "ja" ? `会員 ${fakeMemberCount.toLocaleString()}人` : `회원 ${fakeMemberCount.toLocaleString()}명`}
+          </span>
           {isAdmin && (
-            <span className="text-[10px] text-green-400 flex items-center gap-1">
-              실제: {realVisitorCount.toLocaleString()} / {realTotalVisitorCount.toLocaleString()}
+            <span className="text-[10px] text-green-400 flex items-center gap-1" data-testid="text-real-counts">
+              실제: {realVisitorCount.toLocaleString()} / {realTotalVisitorCount.toLocaleString()} | 회원: {realMemberCount.toLocaleString()}명
             </span>
           )}
-          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+          <span className="text-[10px] text-slate-400 flex items-center gap-1" data-testid="text-visitor-total">
             {language === "ko" ? `누적 ${totalVisitorCount.toLocaleString()}명` : 
              language === "en" ? `Total ${totalVisitorCount.toLocaleString()}` :
              language === "zh" ? `累计 ${totalVisitorCount.toLocaleString()}` :

@@ -1507,6 +1507,33 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // Helper function to get random count between 600 and 1000
   const getRandomBaseCount = () => Math.floor(Math.random() * 401) + 600;
 
+  function getFakeMemberCount(): number {
+    const startDate = new Date("2026-02-07");
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return 563;
+    let count = 563;
+    let seed = 20260207;
+    for (let i = 0; i < diffDays; i++) {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      count += (seed % 10) + 1;
+    }
+    return count;
+  }
+
+  app.get("/api/member-count", async (req, res) => {
+    try {
+      const fakeMemberCount = getFakeMemberCount();
+      const realMemberResult = await db.select({ count: sql<number>`count(*)` }).from(users);
+      const realMemberCount = Number(realMemberResult[0]?.count || 0);
+      res.json({ fakeMemberCount, realMemberCount });
+    } catch (err) {
+      console.error("Member count error:", err);
+      res.json({ fakeMemberCount: 563, realMemberCount: 0 });
+    }
+  });
+
   app.get("/api/visitor-count", async (req, res) => {
     try {
       const today = getTodayDateString();
