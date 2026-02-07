@@ -10,6 +10,13 @@ A travel quote calculator application for generating custom trip estimates. The 
 - **빌라 선택 갤러리**: Home 페이지에서 사용자가 빌라 선택 시 해당 빌라의 가격으로 자동 견적 계산
 - **견적 저장**: 저장된 견적에 villaId, villaName 포함
 
+### Admin Site Settings (2026-02-07 추가)
+- **히어로 텍스트 편집**: `/admin/settings` 페이지에서 관리자가 홈 화면 제목, 부제목, 설명 텍스트 수정
+- **SEO 메타태그 편집**: 검색엔진(구글/네이버)에 표시되는 title, description, keywords 수정 가능
+- **동적 SEO 주입**: 서버에서 홈페이지 요청 시 DB 설정값을 HTML meta 태그에 동적 주입 (og-tags.ts, index.ts)
+- **설정 키**: hero_title, hero_subtitle, hero_description, seo_title, seo_description, seo_keywords
+- **API**: GET /api/site-settings, PUT /api/admin/site-settings
+
 ### Email Verification System (2026-02-04 추가)
 - **이메일 인증 필수**: 이메일/비밀번호 회원가입 시 6자리 인증 코드를 이메일로 발송
 - **인증 코드 만료**: 30분 후 자동 만료

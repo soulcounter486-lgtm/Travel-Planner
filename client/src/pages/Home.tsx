@@ -326,6 +326,9 @@ export default function Home() {
   // 기본값 설정
   const villaPriceNote = siteSettingsData["villa_price_note"] || "가격은 방 오픈 갯수와 성수기(6,7,8,9월) 공휴일에 따라 상이 할 수 있습니다.";
   const lowestPriceGuarantee = siteSettingsData["lowest_price_guarantee"] || "최저가 보장! 어플가격이 더 싸다면 링크 보내주시면 더 저렴하게 부킹 해 드립니다.";
+  const heroTitle = siteSettingsData["hero_title"] || t("header.title");
+  const heroSubtitle = siteSettingsData["hero_subtitle"] || (language === "ko" ? "실시간 여행견적" : "Live Travel Quote");
+  const heroDescription = siteSettingsData["hero_description"] || t("header.description");
   const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
   const [amenityFilters, setAmenityFilters] = useState<VillaAmenity[]>([]);
   const [showAmenityFilters, setShowAmenityFilters] = useState(false);
@@ -1461,10 +1464,10 @@ export default function Home() {
             </div>
             <div className="flex-1">
               <h1 className="text-lg sm:text-2xl md:text-3xl font-display font-bold text-primary mb-1 leading-tight">
-                <span className="whitespace-nowrap">{t("header.title")}</span><br />
-                <span className="whitespace-nowrap text-base sm:text-xl md:text-2xl">{language === "ko" ? "실시간 여행견적" : "Live Travel Quote"}</span>
+                <span className="whitespace-nowrap">{heroTitle}</span><br />
+                <span className="whitespace-nowrap text-base sm:text-xl md:text-2xl">{heroSubtitle}</span>
               </h1>
-              <p className="text-sm md:text-base text-muted-foreground font-light leading-relaxed">{t("header.description")}</p>
+              <p className="text-sm md:text-base text-muted-foreground font-light leading-relaxed">{heroDescription}</p>
             </div>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-2 flex items-center gap-2">
@@ -2692,7 +2695,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center text-center mb-10 space-y-2">
             <h2 className="text-2xl font-display font-bold">{t("contact.title")}</h2>
-            <p className="text-slate-400 max-w-lg text-sm">{t("header.description")}</p>
+            <p className="text-slate-400 max-w-lg text-sm">{heroDescription}</p>
           </div>
           
           <div className="bg-slate-800/50 p-6 md:p-8 rounded-2xl border border-slate-700/50 shadow-xl max-w-4xl mx-auto">

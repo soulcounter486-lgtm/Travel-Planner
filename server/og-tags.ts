@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { posts } from "@shared/schema";
+import { posts, siteSettings } from "@shared/schema";
 
 const DEFAULT_OG_IMAGE = "https://vungtau.blog/og-image.png";
 const DEFAULT_OG_IMAGE_WIDTH = 1053;
@@ -117,5 +117,37 @@ export async function getOgDataForPath(urlPath: string): Promise<OgData | null> 
     return getPostOgData(postId);
   }
   return null;
+}
+
+export async function getSeoSettings(): Promise<Record<string, string>> {
+  try {
+    const rows = await db.select().from(siteSettings);
+    const map: Record<string, string> = {};
+    rows.forEach(r => { map[r.key] = r.value; });
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+export function injectSeoMeta(html: string, settings: Record<string, string>): string {
+  const seoTitle = settings["seo_title"];
+  const seoDesc = settings["seo_description"];
+  const seoKeywords = settings["seo_keywords"];
+
+  if (seoTitle) {
+    html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(seoTitle)}</title>`);
+    html = html.replace(/<meta property="og:title" content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${escapeHtml(seoTitle)}" />`);
+    html = html.replace(/<meta name="twitter:title" content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${escapeHtml(seoTitle)}" />`);
+  }
+  if (seoDesc) {
+    html = html.replace(/<meta name="description" content="[^"]*"\s*\/?>/, `<meta name="description" content="${escapeHtml(seoDesc)}" />`);
+    html = html.replace(/<meta property="og:description" content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${escapeHtml(seoDesc)}" />`);
+    html = html.replace(/<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${escapeHtml(seoDesc)}" />`);
+  }
+  if (seoKeywords) {
+    html = html.replace(/<meta name="keywords" content="[^"]*"\s*\/?>/, `<meta name="keywords" content="${escapeHtml(seoKeywords)}" />`);
+  }
+  return html;
 }
 

@@ -62,6 +62,10 @@ export function AppHeader() {
     queryKey: ["/api/exchange-rates"],
   });
 
+  const { data: siteSettingsData } = useQuery<Record<string, string>>({
+    queryKey: ["/api/site-settings"],
+  });
+
   const { data: notifications, refetch: refetchNotifications } = useQuery<Notifications>({
     queryKey: ["/api/my-notifications"],
     queryFn: async () => {
@@ -334,6 +338,13 @@ export function AppHeader() {
                         <Link href="/admin/places" className="flex items-center cursor-pointer" data-testid="link-admin-places">
                           <Settings className="w-4 h-4 mr-2" />
                           관광지관리
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/settings" className="flex items-center cursor-pointer" data-testid="link-admin-settings">
+                          <Settings className="w-4 h-4 mr-2" />
+                          사이트설정
+                          <span className="ml-1 text-[10px] text-muted-foreground">(SEO/텍스트)</span>
                         </Link>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -800,10 +811,10 @@ export function AppHeader() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-sm sm:text-lg font-display font-bold text-primary mb-1 leading-tight">
-              <span className="whitespace-nowrap">{t("header.title")}</span><br />
-              <span className="whitespace-nowrap text-xs sm:text-base">{language === "ko" ? "실시간 여행견적" : "Live Travel Quote"}</span>
+              <span className="whitespace-nowrap">{siteSettingsData?.["hero_title"] || t("header.title")}</span><br />
+              <span className="whitespace-nowrap text-xs sm:text-base">{siteSettingsData?.["hero_subtitle"] || (language === "ko" ? "실시간 여행견적" : "Live Travel Quote")}</span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-muted-foreground font-light leading-relaxed line-clamp-2">{t("header.description")}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground font-light leading-relaxed line-clamp-2">{siteSettingsData?.["hero_description"] || t("header.description")}</p>
           </div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-2 flex items-center gap-2">

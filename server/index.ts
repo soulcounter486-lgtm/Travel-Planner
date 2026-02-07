@@ -4,7 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import fs from "fs";
 import path from "path";
-import { getOgDataForPath, injectOgTags } from "./og-tags";
+import { getOgDataForPath, injectOgTags, getSeoSettings, injectSeoMeta } from "./og-tags";
 
 const app = express();
 const httpServer = createServer(app);
@@ -72,6 +72,27 @@ app.use((req, res, next) => {
 
     res.status(status).json({ message });
     throw err;
+  });
+
+  app.get("/", async (req, res, next) => {
+    try {
+      const seoSettings = await getSeoSettings();
+      const hasSeo = seoSettings["seo_title"] || seoSettings["seo_description"] || seoSettings["seo_keywords"];
+      if (!hasSeo) return next();
+
+      let htmlPath: string;
+      if (process.env.NODE_ENV === "production") {
+        htmlPath = path.resolve(__dirname, "public", "index.html");
+      } else {
+        htmlPath = path.resolve(import.meta.dirname, "..", "client", "index.html");
+      }
+
+      let html = await fs.promises.readFile(htmlPath, "utf-8");
+      html = injectSeoMeta(html, seoSettings);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch {
+      next();
+    }
   });
 
   app.get("/board/:id", async (req, res, next) => {
