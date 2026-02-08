@@ -41,6 +41,7 @@ interface MyCoupon {
   description?: string;
   discountType: string;
   discountValue: number;
+  serviceDescription?: string | null;
   validFrom?: string;
   validUntil?: string;
   placeId?: number;
@@ -302,6 +303,8 @@ export default function MyCoupons() {
                               <p className="text-2xl font-bold text-primary mt-1">
                                 {coupon.discountType === "percent"
                                   ? `${coupon.discountValue}% 할인`
+                                  : coupon.discountType === "service"
+                                  ? (coupon.serviceDescription || "서비스")
                                   : `${coupon.discountValue.toLocaleString()}đ 할인`}
                               </p>
                               {coupon.description && (
@@ -430,11 +433,15 @@ export default function MyCoupons() {
                     <p className="text-2xl font-bold text-center leading-tight">
                       {selectedCoupon?.discountType === "percent"
                         ? `${selectedCoupon?.discountValue}% 할인`
+                        : selectedCoupon?.discountType === "service"
+                        ? (selectedCoupon?.serviceDescription || "서비스")
                         : `${selectedCoupon?.discountValue.toLocaleString()}đ 할인`}
                     </p>
                     <p className="text-xl font-semibold text-primary/80">
                       {selectedCoupon?.discountType === "percent"
                         ? `Giảm ${selectedCoupon?.discountValue}%`
+                        : selectedCoupon?.discountType === "service"
+                        ? (selectedCoupon?.serviceDescription || "Dịch vụ")
                         : `Giảm ${selectedCoupon?.discountValue.toLocaleString()}đ`}
                     </p>
                   </div>

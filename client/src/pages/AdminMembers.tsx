@@ -68,9 +68,11 @@ interface Coupon {
   description?: string;
   discountType: string;
   discountValue: number;
+  serviceDescription?: string | null;
   validFrom?: string;
   validUntil?: string;
   isActive: boolean;
+  isWelcomeCoupon?: boolean;
   createdAt?: string;
   placeId?: number | null;
 }
@@ -191,6 +193,7 @@ export default function AdminMembers() {
     description: "",
     discountType: "percent",
     discountValue: 10,
+    serviceDescription: "",
     validUntil: "",
     placeId: null as number | null,
     isWelcomeCoupon: false,
@@ -204,6 +207,7 @@ export default function AdminMembers() {
     description: "",
     discountType: "percent",
     discountValue: 10,
+    serviceDescription: "",
     validFrom: "",
     validUntil: "",
     placeId: null as number | null,
@@ -450,7 +454,7 @@ export default function AdminMembers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
       setNewCouponOpen(false);
-      setCouponForm({ name: "", description: "", discountType: "percent", discountValue: 10, validUntil: "", placeId: null, isWelcomeCoupon: false });
+      setCouponForm({ name: "", description: "", discountType: "percent", discountValue: 10, serviceDescription: "", validUntil: "", placeId: null, isWelcomeCoupon: false });
       toast({ title: "쿠폰이 생성되었습니다" });
     },
     onError: () => {
@@ -499,6 +503,7 @@ export default function AdminMembers() {
       description: coupon.description || "",
       discountType: coupon.discountType,
       discountValue: coupon.discountValue,
+      serviceDescription: coupon.serviceDescription || "",
       validFrom: coupon.validFrom ? coupon.validFrom.split("T")[0] : "",
       validUntil: coupon.validUntil ? coupon.validUntil.split("T")[0] : "",
       placeId: coupon.placeId || null,
@@ -857,20 +862,37 @@ export default function AdminMembers() {
                             <SelectContent>
                               <SelectItem value="percent">% 할인</SelectItem>
                               <SelectItem value="fixed">금액 할인 (VND)</SelectItem>
+                              <SelectItem value="service">서비스항목</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label className="text-xs">할인값 {couponForm.discountType === 'fixed' && '(VND)'}</Label>
-                          <Input
-                            type="number"
-                            className="h-8 text-sm"
-                            value={couponForm.discountValue || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setCouponForm({ ...couponForm, discountValue: val === '' ? 0 : parseInt(val, 10) || 0 });
-                            }}
-                          />
+                          {couponForm.discountType === 'service' ? (
+                            <>
+                              <Label className="text-xs">서비스 내용</Label>
+                              <Input
+                                type="text"
+                                className="h-8 text-sm"
+                                value={couponForm.serviceDescription}
+                                onChange={(e) => setCouponForm({ ...couponForm, serviceDescription: e.target.value })}
+                                placeholder="예: 공항픽업, 마사지 1회"
+                                data-testid="input-service-description"
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <Label className="text-xs">할인값 {couponForm.discountType === 'fixed' && '(VND)'}</Label>
+                              <Input
+                                type="number"
+                                className="h-8 text-sm"
+                                value={couponForm.discountValue || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setCouponForm({ ...couponForm, discountValue: val === '' ? 0 : parseInt(val, 10) || 0 });
+                                }}
+                              />
+                            </>
+                          )}
                         </div>
                       </div>
                       <div>
@@ -960,7 +982,7 @@ export default function AdminMembers() {
                           <div className="flex items-center gap-1 flex-wrap">
                             <span className="font-medium">{coupon.name}</span>
                             <Badge variant="secondary" className="text-[10px] h-4 px-1">
-                              {coupon.discountType === "percent" ? `${coupon.discountValue}%` : `${coupon.discountValue.toLocaleString()}원`}
+                              {coupon.discountType === "percent" ? `${coupon.discountValue}%` : coupon.discountType === "service" ? (coupon.serviceDescription || "서비스") : `${coupon.discountValue.toLocaleString()}원`}
                             </Badge>
                             {coupon.isWelcomeCoupon && (
                               <Badge variant="default" className="text-[10px] h-4 px-1 bg-green-600">
@@ -1036,23 +1058,40 @@ export default function AdminMembers() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="percent">%</SelectItem>
+                          <SelectItem value="percent">% 할인</SelectItem>
                           <SelectItem value="fixed">금액 할인 (VND)</SelectItem>
+                          <SelectItem value="service">서비스항목</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs">할인값 {editCouponForm.discountType === 'fixed' && '(VND)'}</Label>
-                      <Input
-                        type="number"
-                        className="h-8 text-sm"
-                        value={editCouponForm.discountValue || ''}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setEditCouponForm({ ...editCouponForm, discountValue: val === '' ? 0 : parseInt(val, 10) || 0 });
-                        }}
-                        data-testid="input-edit-discount-value"
-                      />
+                      {editCouponForm.discountType === 'service' ? (
+                        <>
+                          <Label className="text-xs">서비스 내용</Label>
+                          <Input
+                            type="text"
+                            className="h-8 text-sm"
+                            value={editCouponForm.serviceDescription}
+                            onChange={(e) => setEditCouponForm({ ...editCouponForm, serviceDescription: e.target.value })}
+                            placeholder="예: 공항픽업, 마사지 1회"
+                            data-testid="input-edit-service-description"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Label className="text-xs">할인값 {editCouponForm.discountType === 'fixed' && '(VND)'}</Label>
+                          <Input
+                            type="number"
+                            className="h-8 text-sm"
+                            value={editCouponForm.discountValue || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setEditCouponForm({ ...editCouponForm, discountValue: val === '' ? 0 : parseInt(val, 10) || 0 });
+                            }}
+                            data-testid="input-edit-discount-value"
+                          />
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -1364,7 +1403,7 @@ export default function AdminMembers() {
                 <SelectContent>
                   {allCoupons.map((c) => (
                     <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.name} ({c.discountType === "percent" ? `${c.discountValue}%` : `${c.discountValue}원`})
+                      {c.name} ({c.discountType === "percent" ? `${c.discountValue}%` : c.discountType === "service" ? (c.serviceDescription || "서비스") : `${c.discountValue}원`})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1404,7 +1443,7 @@ export default function AdminMembers() {
                 <SelectContent>
                   {allCoupons.map((c) => (
                     <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.name} ({c.discountType === "percent" ? `${c.discountValue}%` : `${c.discountValue}원`})
+                      {c.name} ({c.discountType === "percent" ? `${c.discountValue}%` : c.discountType === "service" ? (c.serviceDescription || "서비스") : `${c.discountValue}원`})
                     </SelectItem>
                   ))}
                 </SelectContent>
