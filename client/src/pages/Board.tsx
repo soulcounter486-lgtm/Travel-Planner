@@ -46,6 +46,7 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
+import { FixedBottomBar } from "@/components/FixedBottomBar";
 import type { Post, Comment } from "@shared/schema";
 
 // 링크 미리보기 컴포넌트
@@ -1132,56 +1133,7 @@ export default function Board() {
         )}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50">
-        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
-          <div className="container mx-auto px-4 py-2">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold text-black whitespace-nowrap">
-                {language === "ko" ? "예약/환전/부동산 문의" : 
-                 language === "en" ? "Reservation / Exchange / Real Estate" :
-                 language === "zh" ? "预约/换汇/房产" :
-                 language === "vi" ? "Đặt chỗ / Đổi tiền / Bất động sản" :
-                 language === "ru" ? "Бронь / Обмен / Недвижимость" :
-                 language === "ja" ? "予約/両替/不動産" : "예약/환전/부동산 문의"}
-              </span>
-              <div className="flex items-center gap-2">
-                <a
-                  href="http://qr.kakao.com/talk/5tbdn6_YLR1F7MHQC58jo_O5Gqo-"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="link-kakao-friend"
-                >
-                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                    <UserPlus className="w-4 h-4" />
-                    {language === "ko" ? "카톡친추" : 
-                     language === "en" ? "Add Friend" :
-                     language === "zh" ? "加好友" :
-                     language === "vi" ? "Kết bạn" :
-                     language === "ru" ? "Добавить" :
-                     language === "ja" ? "友達追加" : "카톡친추"}
-                  </Button>
-                </a>
-                <a
-                  href="http://pf.kakao.com/_TuxoxfG"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="link-kakao-reservation"
-                >
-                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                    <MessageCircle className="w-4 h-4" />
-                    {language === "ko" ? "카톡채널문의" : 
-                     language === "en" ? "Channel" :
-                     language === "zh" ? "频道咨询" :
-                     language === "vi" ? "Kênh" :
-                     language === "ru" ? "Канал" :
-                     language === "ja" ? "チャンネル" : "카톡채널문의"}
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <FixedBottomBar />
     </div>
   );
 }

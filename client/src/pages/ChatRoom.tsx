@@ -31,6 +31,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
+import { FixedBottomBar } from "@/components/FixedBottomBar";
 import type { UserLocation } from "@shared/schema";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -662,6 +663,7 @@ export default function ChatRoom() {
           )}
         </div>
       </main>
+      <FixedBottomBar />
     </div>
   );
 }

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { SiKakaotalk } from "react-icons/si";
 import { AppHeader } from "@/components/AppHeader";
+import { FixedBottomBar } from "@/components/FixedBottomBar";
 import { TabNavigation } from "@/components/TabNavigation";
 import dietCoffeeImg from "@assets/호아캡슐의_사본의_사본의_사본_20251026_153621_0000_1768826502337.png";
 import goDetoxImg from "@assets/Photo_1715141472014_1768826502343.png";
@@ -396,7 +397,7 @@ export default function DietProducts() {
 
         </main>
 
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-20 right-4 z-50">
         <Button 
           onClick={handleInquiry}
           size="sm"
@@ -407,6 +408,7 @@ export default function DietProducts() {
           {labels.inquiry}
         </Button>
       </div>
+      <FixedBottomBar />
     </div>
   );
 }

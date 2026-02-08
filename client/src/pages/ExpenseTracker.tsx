@@ -4,6 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
+import { FixedBottomBar } from "@/components/FixedBottomBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1095,6 +1096,7 @@ export default function ExpenseTracker() {
           </div>
         )}
       </main>
+      <FixedBottomBar />
     </div>
   );
 }

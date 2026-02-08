@@ -25,6 +25,7 @@ function darkenHex(hex: string, amount: number = 30): string {
 }
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
+import { FixedBottomBar } from "@/components/FixedBottomBar";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
 import lighthouseImg from "@assets/736414b25966415e9006dd674ec2aecf_1768452191679.jpeg";
 import warMuseumImg from "@assets/20230318＿130556_1768452191689.jpg";
@@ -1473,11 +1474,6 @@ export default function PlacesGuide() {
   const { user, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [visitorCount, setVisitorCount] = useState<number>(0);
-  const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
-  const [realVisitorCount, setRealVisitorCount] = useState<number>(0);
-  const [realTotalVisitorCount, setRealTotalVisitorCount] = useState<number>(0);
-  
   // 지도 뷰 관련 상태
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -1970,33 +1966,6 @@ export default function PlacesGuide() {
     setPlacesOnMap(placesWithCoords);
   }, [allPlaces, viewMode, selectedPlace, selectedMapCategories]);
 
-  useEffect(() => {
-    const hasVisited = sessionStorage.getItem('visitor_counted');
-    if (hasVisited) {
-      // 이미 카운트된 경우 GET으로 현재 값만 가져옴
-      fetch("/api/visitor-count")
-        .then(res => res.json())
-        .then(data => {
-          setVisitorCount(data.count);
-          setTotalVisitorCount(data.totalCount || 15000);
-          setRealVisitorCount(data.realCount || 0);
-          setRealTotalVisitorCount(data.realTotalCount || 0);
-        })
-        .catch(() => {});
-    } else {
-      // 처음 방문 시에만 카운트 증가
-      apiRequest("POST", "/api/visitor-count/increment")
-        .then(res => res.json())
-        .then(data => {
-          setVisitorCount(data.count);
-          setTotalVisitorCount(data.totalCount || 15000);
-          setRealVisitorCount(data.realCount || 0);
-          setRealTotalVisitorCount(data.realTotalCount || 0);
-          sessionStorage.setItem('visitor_counted', 'true');
-        })
-        .catch(() => {});
-    }
-  }, []);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {
@@ -2336,80 +2305,7 @@ export default function PlacesGuide() {
         <div className="h-20" />
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50">
-        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
-          <div className="container mx-auto px-4 py-2">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-semibold text-black whitespace-nowrap">
-                {language === "ko" ? "예약/환전/부동산 문의" : 
-                 language === "en" ? "Reservation / Exchange / Real Estate" :
-                 language === "zh" ? "预约/换汇/房产" :
-                 language === "vi" ? "Đặt chỗ / Đổi tiền / Bất động sản" :
-                 language === "ru" ? "Бронь / Обмен / Недвижимость" :
-                 language === "ja" ? "予約/両替/不動産" : "예약/환전/부동산 문의"}
-              </span>
-              <div className="flex items-center gap-2">
-                <a
-                  href="http://qr.kakao.com/talk/5tbdn6_YLR1F7MHQC58jo_O5Gqo-"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="link-kakao-friend"
-                >
-                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                    <UserPlus className="w-4 h-4" />
-                    {language === "ko" ? "카톡친추" : 
-                     language === "en" ? "Add Friend" :
-                     language === "zh" ? "加好友" :
-                     language === "vi" ? "Kết bạn" :
-                     language === "ru" ? "Добавить" :
-                     language === "ja" ? "友達追加" : "카톡친추"}
-                  </Button>
-                </a>
-                <a
-                  href="http://pf.kakao.com/_TuxoxfG"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-testid="link-kakao-reservation"
-                >
-                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                    <MessageCircle className="w-4 h-4" />
-                    {language === "ko" ? "카톡채널문의" : 
-                     language === "en" ? "Channel" :
-                     language === "zh" ? "频道咨询" :
-                     language === "vi" ? "Kênh" :
-                     language === "ru" ? "Канал" :
-                     language === "ja" ? "チャンネル" : "카톡채널문의"}
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="bg-slate-800 py-1 px-3 flex items-center justify-between">
-          <span className="text-[10px] text-slate-400 flex items-center gap-1">
-            <Eye className="w-3 h-3" />
-            {language === "ko" ? `오늘 ${visitorCount.toLocaleString()}명` : 
-             language === "en" ? `Today ${visitorCount.toLocaleString()}` :
-             language === "zh" ? `今日 ${visitorCount.toLocaleString()}` :
-             language === "vi" ? `Hôm nay ${visitorCount.toLocaleString()}` :
-             language === "ru" ? `Сегодня ${visitorCount.toLocaleString()}` :
-             language === "ja" ? `今日 ${visitorCount.toLocaleString()}人` : `오늘 ${visitorCount.toLocaleString()}명`}
-          </span>
-          {isAdmin && (
-            <span className="text-[10px] text-green-400 flex items-center gap-1">
-              실제: {realVisitorCount.toLocaleString()} / {realTotalVisitorCount.toLocaleString()}
-            </span>
-          )}
-          <span className="text-[10px] text-slate-400 flex items-center gap-1">
-            {language === "ko" ? `누적 ${totalVisitorCount.toLocaleString()}명` : 
-             language === "en" ? `Total ${totalVisitorCount.toLocaleString()}` :
-             language === "zh" ? `累计 ${totalVisitorCount.toLocaleString()}` :
-             language === "vi" ? `Tổng ${totalVisitorCount.toLocaleString()}` :
-             language === "ru" ? `Всего ${totalVisitorCount.toLocaleString()}` :
-             language === "ja" ? `累計 ${totalVisitorCount.toLocaleString()}人` : `누적 ${totalVisitorCount.toLocaleString()}명`}
-          </span>
-        </div>
-      </div>
+      <FixedBottomBar />
     </div>
   );
 }
