@@ -23,7 +23,6 @@ import AdminChat from "@/pages/AdminChat";
 import MyPage from "@/pages/MyPage";
 import MyCoupons from "@/pages/MyCoupons";
 import NotFound from "@/pages/not-found";
-import { CustomerChatWidget } from "@/components/CustomerChatWidget";
 
 function Router() {
   return (
@@ -59,7 +58,6 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
-          <CustomerChatWidget />
         </TooltipProvider>
       </LanguageProvider>
     </QueryClientProvider>

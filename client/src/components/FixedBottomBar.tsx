@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { UserPlus, MessageCircle, Eye, Users } from "lucide-react";
+import { UserPlus, MessageCircle, Eye, Users, Headphones } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
+import { CustomerChatWindow } from "@/components/CustomerChatWidget";
+import { useToast } from "@/hooks/use-toast";
 
 export function FixedBottomBar() {
   const { language } = useLanguage();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAuthenticated } = useAuth();
+  const { toast } = useToast();
+  const [chatOpen, setChatOpen] = useState(false);
 
   const [visitorCount, setVisitorCount] = useState<number>(0);
   const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
@@ -48,6 +52,18 @@ export function FixedBottomBar() {
       .catch(() => {});
   }, []);
 
+  const handleChatClick = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: language === "ko" ? "로그인 필요" : "Login Required",
+        description: language === "ko" ? "고객센터 문의는 로그인 후 이용 가능합니다." : "Please log in to use customer support.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setChatOpen(true);
+  };
+
   const contactLabel = language === "ko" ? "예약/환전/부동산 문의" : 
     language === "en" ? "Reservation / Exchange / Real Estate" :
     language === "zh" ? "预约/换汇/房产" :
@@ -62,12 +78,19 @@ export function FixedBottomBar() {
     language === "ru" ? "Добавить" :
     language === "ja" ? "友達追加" : "카톡친추";
 
-  const channelLabel = language === "ko" ? "카톡채널문의" : 
+  const channelLabel = language === "ko" ? "채널문의" : 
     language === "en" ? "Channel" :
     language === "zh" ? "频道咨询" :
     language === "vi" ? "Kênh" :
     language === "ru" ? "Канал" :
-    language === "ja" ? "チャンネル" : "카톡채널문의";
+    language === "ja" ? "チャンネル" : "채널문의";
+
+  const chatLabel = language === "ko" ? "고객센터" :
+    language === "en" ? "Support" :
+    language === "zh" ? "客服" :
+    language === "vi" ? "Hỗ trợ" :
+    language === "ru" ? "Поддержка" :
+    language === "ja" ? "サポート" : "고객센터";
 
   const todayLabel = language === "ko" ? `오늘 ${visitorCount.toLocaleString()}명` : 
     language === "en" ? `Today ${visitorCount.toLocaleString()}` :
@@ -91,58 +114,70 @@ export function FixedBottomBar() {
     language === "ja" ? `累計 ${totalVisitorCount.toLocaleString()}人` : `누적 ${totalVisitorCount.toLocaleString()}명`;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
-        <div className="container mx-auto px-4 py-2">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-semibold text-black whitespace-nowrap">
-              {contactLabel}
-            </span>
-            <div className="flex items-center gap-2">
-              <a
-                href="http://qr.kakao.com/talk/5tbdn6_YLR1F7MHQC58jo_O5Gqo-"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-kakao-friend"
-              >
-                <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                  <UserPlus className="w-4 h-4" />
-                  {addFriendLabel}
+    <>
+      {chatOpen && <CustomerChatWindow onClose={() => setChatOpen(false)} />}
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+        <div className="bg-gradient-to-r from-yellow-400 to-amber-500 border-t shadow-lg">
+          <div className="container mx-auto px-2 sm:px-4 py-2">
+            <div className="flex items-center justify-between gap-1 sm:gap-3">
+              <span className="text-xs sm:text-sm font-semibold text-black whitespace-nowrap truncate min-w-0">
+                {contactLabel}
+              </span>
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <a
+                  href="http://qr.kakao.com/talk/5tbdn6_YLR1F7MHQC58jo_O5Gqo-"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="link-kakao-friend"
+                >
+                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1 px-2 sm:px-3 text-xs sm:text-sm">
+                    <UserPlus className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{addFriendLabel}</span>
+                  </Button>
+                </a>
+                <a
+                  href="http://pf.kakao.com/_TuxoxfG"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="link-kakao-reservation"
+                >
+                  <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1 px-2 sm:px-3 text-xs sm:text-sm">
+                    <MessageCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{channelLabel}</span>
+                  </Button>
+                </a>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-1 px-2 sm:px-3 text-xs sm:text-sm"
+                  onClick={handleChatClick}
+                  data-testid="btn-open-chat"
+                >
+                  <Headphones className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="whitespace-nowrap">{chatLabel}</span>
                 </Button>
-              </a>
-              <a
-                href="http://pf.kakao.com/_TuxoxfG"
-                target="_blank"
-                rel="noopener noreferrer"
-                data-testid="link-kakao-reservation"
-              >
-                <Button size="sm" className="bg-black hover:bg-black/90 text-yellow-400 font-bold gap-1.5">
-                  <MessageCircle className="w-4 h-4" />
-                  {channelLabel}
-                </Button>
-              </a>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div className="bg-slate-800 py-1 px-3 flex items-center justify-between gap-1 flex-wrap">
-        <span className="text-[10px] text-slate-400 flex items-center gap-1" data-testid="text-visitor-today">
-          <Eye className="w-3 h-3" />
-          {todayLabel}
-        </span>
-        <span className="text-[10px] text-cyan-400 flex items-center gap-1" data-testid="text-member-count">
-          <Users className="w-3 h-3" />
-          {memberLabel}
-        </span>
-        {isAdmin && (
-          <span className="text-[10px] text-green-400 flex items-center gap-1" data-testid="text-real-counts">
-            실제: {realVisitorCount.toLocaleString()} / {realTotalVisitorCount.toLocaleString()} | 회원: {realMemberCount.toLocaleString()}명
+        <div className="bg-slate-800 py-1 px-3 flex items-center justify-between gap-1 flex-wrap">
+          <span className="text-[10px] text-slate-400 flex items-center gap-1" data-testid="text-visitor-today">
+            <Eye className="w-3 h-3" />
+            {todayLabel}
           </span>
-        )}
-        <span className="text-[10px] text-slate-400 flex items-center gap-1" data-testid="text-visitor-total">
-          {totalLabel}
-        </span>
+          <span className="text-[10px] text-cyan-400 flex items-center gap-1" data-testid="text-member-count">
+            <Users className="w-3 h-3" />
+            {memberLabel}
+          </span>
+          {isAdmin && (
+            <span className="text-[10px] text-green-400 flex items-center gap-1" data-testid="text-real-counts">
+              실제: {realVisitorCount.toLocaleString()} / {realTotalVisitorCount.toLocaleString()} | 회원: {realMemberCount.toLocaleString()}명
+            </span>
+          )}
+          <span className="text-[10px] text-slate-400 flex items-center gap-1" data-testid="text-visitor-total">
+            {totalLabel}
+          </span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
