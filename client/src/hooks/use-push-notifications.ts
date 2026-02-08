@@ -48,7 +48,7 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
           console.error("[PUSH] No VAPID public key!");
           return;
         }
-        console.log("[PUSH] VAPID key received");
+        console.log("[PUSH] VAPID key received:", publicKey.substring(0, 20) + "...");
 
         const registration = await navigator.serviceWorker.ready;
         console.log("[PUSH] Service worker ready");
@@ -56,8 +56,24 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
         let sub = await registration.pushManager.getSubscription();
         console.log("[PUSH] Existing subscription:", sub ? "yes" : "no");
 
+        if (sub) {
+          const existingKey = sub.options?.applicationServerKey;
+          const newKey = urlBase64ToUint8Array(publicKey);
+          let keyMatch = false;
+          if (existingKey) {
+            const existingArr = new Uint8Array(existingKey);
+            keyMatch = existingArr.length === newKey.length && existingArr.every((v, i) => v === newKey[i]);
+          }
+          console.log("[PUSH] VAPID key match:", keyMatch);
+          if (!keyMatch) {
+            console.log("[PUSH] VAPID key mismatch - unsubscribing old subscription");
+            await sub.unsubscribe();
+            sub = null;
+          }
+        }
+
         if (!sub) {
-          console.log("[PUSH] Creating new subscription...");
+          console.log("[PUSH] Creating new subscription with current VAPID key...");
           sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicKey),

@@ -116,22 +116,31 @@ async function sendPushNotifications(title: string, body: string, url: string = 
   try {
     const subscriptions = await db.select().from(pushSubscriptions);
     const payload = JSON.stringify({ title, body, url });
+    console.log(`[PUSH-BROADCAST] 발송 시작 - title: "${title}", 구독자 수: ${subscriptions.length}`);
     
+    let sent = 0;
+    let failed = 0;
     for (const sub of subscriptions) {
       try {
+        console.log(`[PUSH-BROADCAST] 발송 중 - userId: ${sub.userId}, endpoint: ${sub.endpoint.substring(0, 60)}...`);
         await webpush.sendNotification({
           endpoint: sub.endpoint,
           keys: { p256dh: sub.p256dh, auth: sub.auth }
         }, payload);
+        sent++;
+        console.log(`[PUSH-BROADCAST] 발송 성공 - userId: ${sub.userId}`);
       } catch (err: any) {
+        failed++;
+        console.error(`[PUSH-BROADCAST] 발송 실패 - userId: ${sub.userId}, status: ${err.statusCode}, message: ${err.message}`);
         if (err.statusCode === 410 || err.statusCode === 404) {
           await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
+          console.log(`[PUSH-BROADCAST] 만료 구독 삭제 - userId: ${sub.userId}`);
         }
-        console.error("Push notification error:", err);
       }
     }
+    console.log(`[PUSH-BROADCAST] 발송 완료 - 성공: ${sent}, 실패: ${failed}`);
   } catch (err) {
-    console.error("Send push notifications error:", err);
+    console.error("[PUSH-BROADCAST] 전체 오류:", err);
   }
 }
 
