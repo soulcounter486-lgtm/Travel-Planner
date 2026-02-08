@@ -111,7 +111,7 @@ function isVietnamHoliday(date: Date): boolean {
   return VIETNAM_HOLIDAYS.includes(dateStr);
 }
 
-// 푸시 알림 발송 함수
+// 전체 푸시 알림 발송 함수 (게시판 등)
 async function sendPushNotifications(title: string, body: string, url: string = "/board") {
   try {
     const subscriptions = await db.select().from(pushSubscriptions);
@@ -122,25 +122,59 @@ async function sendPushNotifications(title: string, body: string, url: string = 
     let failed = 0;
     for (const sub of subscriptions) {
       try {
-        console.log(`[PUSH-BROADCAST] 발송 중 - userId: ${sub.userId}, endpoint: ${sub.endpoint.substring(0, 60)}...`);
         await webpush.sendNotification({
           endpoint: sub.endpoint,
           keys: { p256dh: sub.p256dh, auth: sub.auth }
         }, payload);
         sent++;
-        console.log(`[PUSH-BROADCAST] 발송 성공 - userId: ${sub.userId}`);
       } catch (err: any) {
         failed++;
-        console.error(`[PUSH-BROADCAST] 발송 실패 - userId: ${sub.userId}, status: ${err.statusCode}, message: ${err.message}`);
         if (err.statusCode === 410 || err.statusCode === 404) {
           await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
-          console.log(`[PUSH-BROADCAST] 만료 구독 삭제 - userId: ${sub.userId}`);
         }
       }
     }
     console.log(`[PUSH-BROADCAST] 발송 완료 - 성공: ${sent}, 실패: ${failed}`);
   } catch (err) {
     console.error("[PUSH-BROADCAST] 전체 오류:", err);
+  }
+}
+
+// 관리자 전용 푸시 알림 발송 함수 (고객 채팅 등)
+async function sendAdminPushNotifications(title: string, body: string, url: string = "/admin/chat") {
+  try {
+    const adminUsers = await db.select({ id: users.id }).from(users).where(eq(users.isAdmin, true));
+    const ADMIN_ID_ENV = process.env.ADMIN_USER_ID || "";
+    const envAdminIds = ADMIN_ID_ENV ? ADMIN_ID_ENV.split(",").map(id => id.trim()) : [];
+    const allAdminIds = Array.from(new Set([...adminUsers.map(u => u.id), ...envAdminIds].filter(Boolean)));
+    
+    const allSubs = await db.select().from(pushSubscriptions);
+    const adminSubs = allSubs.filter(sub => allAdminIds.includes(sub.userId));
+    
+    const payload = JSON.stringify({ title, body, url });
+    console.log(`[PUSH-ADMIN] 발송 시작 - title: "${title}", 전체 구독: ${allSubs.length}, 관리자 구독: ${adminSubs.length}, 관리자 ID: ${[...allAdminIds].join(",")}`);
+    
+    let sent = 0;
+    let failed = 0;
+    for (const sub of adminSubs) {
+      try {
+        await webpush.sendNotification({
+          endpoint: sub.endpoint,
+          keys: { p256dh: sub.p256dh, auth: sub.auth }
+        }, payload);
+        sent++;
+        console.log(`[PUSH-ADMIN] 발송 성공 - userId: ${sub.userId}`);
+      } catch (err: any) {
+        failed++;
+        console.error(`[PUSH-ADMIN] 발송 실패 - userId: ${sub.userId}, status: ${err.statusCode}`);
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
+        }
+      }
+    }
+    console.log(`[PUSH-ADMIN] 발송 완료 - 성공: ${sent}, 실패: ${failed}`);
+  } catch (err) {
+    console.error("[PUSH-ADMIN] 전체 오류:", err);
   }
 }
 
@@ -5987,7 +6021,7 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
       // 관리자에게 푸시 알림 (모든 구독자에게 발송)
       try {
         console.log("[CHAT] 모든 푸시 구독자에게 알림 발송");
-        sendPushNotifications("새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
+        sendAdminPushNotifications("새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
       } catch (pushErr) {
         console.error("[CHAT] 푸시 알림 오류 (채팅방 생성은 성공):", pushErr);
       }
@@ -6094,7 +6128,7 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
           senderName: actualSenderName,
           preview: message.trim().substring(0, 50),
         }));
-        sendPushNotifications("고객 문의", `${actualSenderName}: ${message.trim().substring(0, 50)}`, "/admin/chat");
+        sendAdminPushNotifications("고객 문의", `${actualSenderName}: ${message.trim().substring(0, 50)}`, "/admin/chat");
       }
 
       res.json(saved);
@@ -6259,7 +6293,7 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
 
             const anyAdminOnline = Array.from(supportClients).some(c => c.isAdmin && c.roomId === roomId);
             if (!anyAdminOnline) {
-              sendPushNotifications("고객 문의", `${actualSenderName}: ${message.substring(0, 50)}`, "/admin/chat");
+              sendAdminPushNotifications("고객 문의", `${actualSenderName}: ${message.substring(0, 50)}`, "/admin/chat");
             }
           }
         }
