@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vungtau-dokkaebi-v6';
+const CACHE_NAME = 'vungtau-dokkaebi-v7';
 const APP_SHELL = [
   '/manifest.json',
   '/favicon.png',
@@ -9,10 +9,8 @@ const APP_SHELL = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(APP_SHELL);
-      })
+      .then((cache) => cache.addAll(APP_SHELL))
+      .catch(() => {})
   );
   self.skipWaiting();
 });
@@ -21,69 +19,50 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  const url = new URL(event.request.url);
-  
-  if (event.request.mode === 'navigate') {
+  try {
+    const url = new URL(event.request.url);
+
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/ws/')) {
+      return;
+    }
+
+    if (event.request.mode === 'navigate') {
+      event.respondWith(
+        fetch(event.request).catch(() => caches.match('/') || new Response('Offline', { status: 503 }))
+      );
+      return;
+    }
+
+    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+      event.respondWith(
+        fetch(event.request).catch(() => caches.match(event.request))
+      );
+      return;
+    }
+
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put('/', responseToCache);
-          });
+      caches.match(event.request).then((cached) => {
+        return cached || fetch(event.request).then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
           return response;
-        })
-        .catch(() => {
-          return caches.match('/');
-        })
-    );
-    return;
-  }
-
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  // JS, CSS 파일은 항상 네트워크에서 가져옴 (캐시 안함)
-  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname === '/') {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (!response || response.status !== 200) {
-          return response;
-        }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return response;
+        }).catch(() => cached);
       })
-      .catch(() => {
-        return caches.match(event.request);
-      })
-  );
+    );
+  } catch (e) {
+    return;
+  }
 });
 
 // 푸시 알림 수신
