@@ -2602,7 +2602,7 @@ export default function Home() {
                     <p className="text-sm text-muted-foreground mb-3">{cat.description}</p>
                   )}
                   {cat.imageUrl && (
-                    <img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover rounded-lg mb-3" />
+                    <img src={cat.imageUrl.startsWith("/objects/") || cat.imageUrl.startsWith("/api/") || cat.imageUrl.startsWith("http") ? cat.imageUrl : cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover rounded-lg mb-3" />
                   )}
                   <div className="flex items-center gap-4 mb-3">
                     <div className="flex-1">

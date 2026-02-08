@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Upload, Loader2, ChevronUp, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
-import { useUpload } from "@/hooks/use-upload";
 import type { QuoteCategory } from "@shared/schema";
 import {
   Dialog,
@@ -33,7 +32,7 @@ interface CategoryForm {
   name: string;
   description: string;
   imageUrl: string;
-  pricePerUnit: number;
+  pricePerUnit: string;
   unitLabel: string;
   isActive: boolean;
   sortOrder: number;
@@ -43,7 +42,7 @@ const defaultForm: CategoryForm = {
   name: "",
   description: "",
   imageUrl: "",
-  pricePerUnit: 0,
+  pricePerUnit: "0",
   unitLabel: "인",
   isActive: true,
   sortOrder: 0,
@@ -57,20 +56,11 @@ export default function AdminQuoteCategories() {
   const [editingCategory, setEditingCategory] = useState<QuoteCategory | null>(null);
   const [form, setForm] = useState<CategoryForm>(defaultForm);
 
+  const [isUploading, setIsUploading] = useState(false);
+
   const { data: categories = [], isLoading } = useQuery<QuoteCategory[]>({
     queryKey: ["/api/admin/quote-categories"],
     enabled: isAdmin,
-  });
-
-  const { uploadFile, isUploading } = useUpload({
-    onSuccess: (response) => {
-      const imageUrl = `/api/public-images/${response.objectPath.split("/").pop()}`;
-      setForm(prev => ({ ...prev, imageUrl }));
-      toast({ title: "이미지 업로드 완료" });
-    },
-    onError: () => {
-      toast({ title: "이미지 업로드 실패", variant: "destructive" });
-    },
   });
 
   const createMutation = useMutation({
@@ -79,7 +69,7 @@ export default function AdminQuoteCategories() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, pricePerUnit: Number(data.pricePerUnit) || 0 }),
       });
       if (!res.ok) throw new Error("Failed to create");
       return res.json();
@@ -102,7 +92,7 @@ export default function AdminQuoteCategories() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, pricePerUnit: Number(data.pricePerUnit) || 0 }),
       });
       if (!res.ok) throw new Error("Failed to update");
       return res.json();
@@ -138,10 +128,70 @@ export default function AdminQuoteCategories() {
     },
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async ({ id, direction }: { id: number; direction: "up" | "down" }) => {
+      const sorted = [...categories].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+      const idx = sorted.findIndex(c => c.id === id);
+      if (idx < 0) return;
+      const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= sorted.length) return;
+
+      const currentOrder = sorted[idx].sortOrder || 0;
+      const swapOrder = sorted[swapIdx].sortOrder || 0;
+
+      await Promise.all([
+        fetch(`/api/admin/quote-categories/${sorted[idx].id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ sortOrder: swapOrder }),
+        }),
+        fetch(`/api/admin/quote-categories/${sorted[swapIdx].id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ sortOrder: currentOrder }),
+        }),
+      ]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/quote-categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quote-categories"] });
+    },
+    onError: () => {
+      toast({ title: "순서 변경 실패", variant: "destructive" });
+    },
+  });
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      await uploadFile(file);
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const res = await fetch("/api/upload-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          base64Data: base64,
+          fileName: file.name,
+          contentType: file.type,
+        }),
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setForm(prev => ({ ...prev, imageUrl: data.url }));
+      toast({ title: "이미지 업로드 완료" });
+    } catch {
+      toast({ title: "이미지 업로드 실패", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -151,7 +201,7 @@ export default function AdminQuoteCategories() {
       name: category.name,
       description: category.description || "",
       imageUrl: category.imageUrl || "",
-      pricePerUnit: category.pricePerUnit || 0,
+      pricePerUnit: String(category.pricePerUnit || 0),
       unitLabel: category.unitLabel || "인",
       isActive: category.isActive !== false,
       sortOrder: category.sortOrder || 0,
@@ -175,6 +225,15 @@ export default function AdminQuoteCategories() {
   }
 
   const isDialogOpen = isAddOpen || !!editingCategory;
+  const sortedCategories = [...categories].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+  const getImageSrc = (imageUrl: string) => {
+    if (!imageUrl) return "";
+    if (imageUrl.startsWith("/objects/")) return imageUrl;
+    if (imageUrl.startsWith("/api/")) return imageUrl;
+    if (imageUrl.startsWith("http")) return imageUrl;
+    return imageUrl;
+  };
 
   const formContent = (
     <div className="space-y-4">
@@ -201,10 +260,14 @@ export default function AdminQuoteCategories() {
           <Label>단가 (USD) *</Label>
           <Input
             data-testid="input-category-price"
-            type="number"
-            min={0}
+            type="text"
+            inputMode="numeric"
             value={form.pricePerUnit}
-            onChange={(e) => setForm(prev => ({ ...prev, pricePerUnit: Number(e.target.value) || 0 }))}
+            onChange={(e) => {
+              const val = e.target.value.replace(/[^0-9.]/g, "");
+              setForm(prev => ({ ...prev, pricePerUnit: val }));
+            }}
+            placeholder="0"
           />
         </div>
         <div className="space-y-2">
@@ -216,15 +279,6 @@ export default function AdminQuoteCategories() {
             placeholder="인, 회, 팀, 건"
           />
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label>정렬 순서</Label>
-        <Input
-          data-testid="input-category-sort"
-          type="number"
-          value={form.sortOrder}
-          onChange={(e) => setForm(prev => ({ ...prev, sortOrder: Number(e.target.value) || 0 }))}
-        />
       </div>
       <div className="space-y-2">
         <Label>이미지</Label>
@@ -243,7 +297,7 @@ export default function AdminQuoteCategories() {
           )}
         </div>
         {form.imageUrl && (
-          <img src={form.imageUrl} alt="preview" className="w-full h-32 object-cover rounded-md mt-2" />
+          <img src={getImageSrc(form.imageUrl)} alt="preview" className="w-full h-32 object-cover rounded-md mt-2" />
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -289,12 +343,34 @@ export default function AdminQuoteCategories() {
         </div>
       ) : (
         <div className="space-y-3">
-          {categories.map((category) => (
+          {sortedCategories.map((category, idx) => (
             <Card key={category.id} className={!category.isActive ? "opacity-50" : ""} data-testid={`card-category-${category.id}`}>
               <CardContent className="p-3">
                 <div className="flex items-start gap-3">
+                  <div className="flex flex-col gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={idx === 0 || reorderMutation.isPending}
+                      onClick={() => reorderMutation.mutate({ id: category.id, direction: "up" })}
+                      data-testid={`button-move-up-${category.id}`}
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      disabled={idx === sortedCategories.length - 1 || reorderMutation.isPending}
+                      onClick={() => reorderMutation.mutate({ id: category.id, direction: "down" })}
+                      data-testid={`button-move-down-${category.id}`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </Button>
+                  </div>
                   {category.imageUrl ? (
-                    <img src={category.imageUrl} alt={category.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
+                    <img src={getImageSrc(category.imageUrl)} alt={category.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                   ) : (
                     <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
                       <Plus className="w-6 h-6 text-muted-foreground" />
