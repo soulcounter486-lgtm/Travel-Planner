@@ -44,17 +44,19 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
 
         if (sub) {
           const subJson = sub.toJSON();
+          console.log("[PUSH] Sending subscription to server, endpoint:", subJson.endpoint?.substring(0, 60));
           const res = await fetch("/api/push/subscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
           });
+          const resData = await res.json().catch(() => ({}));
           if (res.ok) {
             setIsSubscribed(true);
-            console.log("Push subscription registered successfully");
+            console.log("[PUSH] Subscription registered OK:", resData);
           } else {
-            console.error("Push subscribe API failed:", res.status);
+            console.error("[PUSH] Subscribe API failed:", res.status, resData);
           }
         }
       } catch (err) {

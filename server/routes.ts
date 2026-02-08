@@ -862,23 +862,24 @@ export async function registerRoutes(
     res.json({ publicKey: vapidPublicKey });
   });
 
-  // 푸시 알림 구독
-  app.post("/api/push/subscribe", isAuthenticated, async (req: any, res) => {
+  // 푸시 알림 구독 - 인증 미들웨어 없이 직접 세션에서 userId 추출
+  app.post("/api/push/subscribe", async (req: any, res) => {
     try {
       const { endpoint, keys } = req.body;
-      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
+      const user = req.user as any;
+      const session = req.session as any;
+      const userId = user?.claims?.sub || user?.id || session?.userId || session?.passport?.user?.claims?.sub;
+      
+      console.log("[PUSH] subscribe attempt - userId:", userId, "hasUser:", !!user, "sessionUserId:", session?.userId, "passportUser:", !!session?.passport?.user, "endpoint:", endpoint?.substring(0, 60));
       
       if (!userId) {
         return res.status(401).json({ error: "로그인이 필요합니다." });
       }
       
-      console.log("Push subscribe attempt - userId:", userId, "endpoint:", endpoint?.substring(0, 60));
-      
       if (!endpoint || !keys?.p256dh || !keys?.auth) {
         return res.status(400).json({ error: "잘못된 구독 정보입니다." });
       }
 
-      // 기존 구독 확인 및 업데이트
       const existing = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.endpoint, endpoint)).limit(1);
       
       if (existing.length > 0) {
@@ -894,10 +895,10 @@ export async function registerRoutes(
         });
       }
 
-      console.log("Push subscription saved for user:", userId);
-      res.json({ success: true });
+      console.log("[PUSH] subscription saved for user:", userId);
+      res.json({ success: true, userId });
     } catch (error) {
-      console.error("Push subscription error:", error);
+      console.error("[PUSH] subscription error:", error);
       res.status(500).json({ error: "구독 저장 실패" });
     }
   });
