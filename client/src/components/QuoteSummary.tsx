@@ -546,6 +546,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                     </div>
                     <p className="text-xs text-muted-foreground italic pl-1">
                       ${cat.pricePerUnit} × {cat.quantity}
+                      {cat.date && <span className="ml-2">({cat.date})</span>}
                     </p>
                   </div>
                   <Separator className="bg-border/50" />

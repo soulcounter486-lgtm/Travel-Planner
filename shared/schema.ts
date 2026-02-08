@@ -129,6 +129,7 @@ export const calculateQuoteSchema = z.object({
     categoryId: z.number(),
     quantity: z.number().min(1).default(1),
     enabled: z.boolean().default(true),
+    date: z.string().optional(),
   })).optional(),
 });
 
@@ -170,6 +171,7 @@ export const quoteBreakdownSchema = z.object({
     pricePerUnit: z.number(),
     quantity: z.number(),
     subtotal: z.number(),
+    date: z.string().optional(),
   })).optional(),
   total: z.number(),
 });
@@ -478,6 +480,7 @@ export const quoteCategories = pgTable("quote_categories", {
   name: text("name").notNull(),
   description: text("description").default(""),
   imageUrl: text("image_url").default(""),
+  images: text("images").array().default([]),
   pricePerUnit: integer("price_per_unit").notNull().default(0),
   unitLabel: text("unit_label").notNull().default("인"),
   isActive: boolean("is_active").default(true),

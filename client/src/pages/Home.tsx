@@ -348,6 +348,10 @@ export default function Home() {
   const selectedVilla = villas.find(v => v.id === selectedVillaId) || null;
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [catGalleryOpen, setCatGalleryOpen] = useState(false);
+  const [catGalleryImages, setCatGalleryImages] = useState<string[]>([]);
+  const [catGalleryIndex, setCatGalleryIndex] = useState(0);
+  const [catGalleryTitle, setCatGalleryTitle] = useState("");
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -2570,7 +2574,24 @@ export default function Home() {
               const customSel = values.customCategories?.find((s: any) => s.categoryId === cat.id);
               const isEnabled = customSel?.enabled || false;
               const quantity = customSel?.quantity || 1;
+              const selectedDate = customSel?.date || "";
               const estimate = isEnabled ? (cat.pricePerUnit || 0) * quantity : 0;
+              const catImages: string[] = (cat.images && Array.isArray(cat.images) && cat.images.length > 0)
+                ? cat.images.filter(Boolean)
+                : (cat.imageUrl ? [cat.imageUrl] : []);
+
+              const updateCustomField = (categoryId: number, updates: Record<string, any>) => {
+                const current = form.getValues("customCategories") || [];
+                const existing = current.findIndex((s: any) => s.categoryId === categoryId);
+                if (existing >= 0) {
+                  const updated = [...current];
+                  updated[existing] = { ...updated[existing], ...updates };
+                  form.setValue("customCategories", updated);
+                } else {
+                  form.setValue("customCategories", [...current, { categoryId, quantity: 1, enabled: true, ...updates }]);
+                }
+              };
+
               return (
                 <SectionCard
                   key={`custom-cat-${cat.id}`}
@@ -2578,58 +2599,63 @@ export default function Home() {
                   icon={ShoppingCart}
                   isEnabled={isEnabled}
                   onToggle={(checked: boolean) => {
-                    const current = form.getValues("customCategories") || [];
-                    const existing = current.findIndex((s: any) => s.categoryId === cat.id);
-                    if (checked) {
-                      if (existing >= 0) {
-                        const updated = [...current];
-                        updated[existing] = { ...updated[existing], enabled: true };
-                        form.setValue("customCategories", updated);
-                      } else {
-                        form.setValue("customCategories", [...current, { categoryId: cat.id, quantity: 1, enabled: true }]);
-                      }
-                    } else {
-                      if (existing >= 0) {
-                        const updated = [...current];
-                        updated[existing] = { ...updated[existing], enabled: false };
-                        form.setValue("customCategories", updated);
-                      }
-                    }
+                    updateCustomField(cat.id, { enabled: checked });
                   }}
                   gradient="from-indigo-500/10"
                 >
                   {cat.description && (
                     <p className="text-sm text-muted-foreground mb-3">{cat.description}</p>
                   )}
-                  {cat.imageUrl && (
-                    <img src={cat.imageUrl.startsWith("/objects/") || cat.imageUrl.startsWith("/api/") || cat.imageUrl.startsWith("http") ? cat.imageUrl : cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover rounded-lg mb-3" />
+                  {catImages.length > 0 && (
+                    <div
+                      className="relative cursor-pointer mb-3 rounded-lg overflow-hidden"
+                      onClick={() => {
+                        setCatGalleryImages(catImages);
+                        setCatGalleryIndex(0);
+                        setCatGalleryTitle(cat.name);
+                        setCatGalleryOpen(true);
+                      }}
+                      data-testid={`button-gallery-${cat.id}`}
+                    >
+                      <img src={catImages[0]} alt={cat.name} className="w-full h-32 object-cover" />
+                      {catImages.length > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs rounded-full px-2 py-0.5 flex items-center gap-1">
+                          <Camera className="w-3 h-3" />
+                          {catImages.length}
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <div className="flex items-center gap-4 mb-3">
-                    <div className="flex-1">
-                      <Label>{language === "ko" ? "수량" : "Qty"} ({cat.unitLabel})</Label>
+                  <div className="space-y-3 mb-3">
+                    <div className="space-y-1">
+                      <Label>{language === "ko" ? "날짜" : "Date"}</Label>
                       <Input
-                        type="number"
-                        min={1}
-                        value={quantity}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 1;
-                          const current = form.getValues("customCategories") || [];
-                          const existing = current.findIndex((s: any) => s.categoryId === cat.id);
-                          if (existing >= 0) {
-                            const updated = [...current];
-                            updated[existing] = { ...updated[existing], quantity: val };
-                            form.setValue("customCategories", updated);
-                          } else {
-                            form.setValue("customCategories", [...current, { categoryId: cat.id, quantity: val, enabled: true }]);
-                          }
-                        }}
-                        className="h-12 rounded-xl mt-1"
-                        data-testid={`input-custom-qty-${cat.id}`}
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => updateCustomField(cat.id, { date: e.target.value })}
+                        className="h-12 rounded-xl"
+                        data-testid={`input-custom-date-${cat.id}`}
                       />
                     </div>
-                    <div className="text-right">
-                      <span className="text-sm text-muted-foreground">{language === "ko" ? "단가" : "Price"}</span>
-                      <div className="text-lg font-bold text-indigo-500">${cat.pricePerUnit}/{cat.unitLabel}</div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <Label>{language === "ko" ? "수량" : "Qty"} ({cat.unitLabel})</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={quantity}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 1;
+                            updateCustomField(cat.id, { quantity: val });
+                          }}
+                          className="h-12 rounded-xl mt-1"
+                          data-testid={`input-custom-qty-${cat.id}`}
+                        />
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm text-muted-foreground">{language === "ko" ? "단가" : "Price"}</span>
+                        <div className="text-lg font-bold text-indigo-500">${cat.pricePerUnit}/{cat.unitLabel}</div>
+                      </div>
                     </div>
                   </div>
                   {isEnabled && estimate > 0 && (
@@ -2640,6 +2666,7 @@ export default function Home() {
                       </div>
                       <div className="flex justify-between text-indigo-300 text-xs">
                         <span>${cat.pricePerUnit} × {quantity}{cat.unitLabel}</span>
+                        {selectedDate && <span>{selectedDate}</span>}
                       </div>
                       {currencyInfo.code !== "USD" && (
                         <div className="flex justify-end pt-1 text-indigo-300 text-xs">
@@ -3079,6 +3106,106 @@ export default function Home() {
         </div>
       )}
       
+      {catGalleryOpen && catGalleryImages.length > 0 && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black flex flex-col"
+          style={{ top: 0, left: 0, right: 0, bottom: 0, position: 'fixed' }}
+        >
+          <div className="flex items-center justify-between p-3 bg-black/90">
+            <div className="text-white text-sm font-medium">
+              {catGalleryTitle} - {catGalleryIndex + 1} / {catGalleryImages.length}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-white/20"
+              onClick={() => setCatGalleryOpen(false)}
+              data-testid="button-close-cat-gallery"
+            >
+              <X className="w-6 h-6" />
+            </Button>
+          </div>
+          <div 
+            className="flex-1 relative flex items-center justify-center overflow-hidden"
+            style={{ minHeight: 0 }}
+            onTouchStart={(e) => {
+              setTouchEnd(null);
+              setTouchStart(e.targetTouches[0].clientX);
+            }}
+            onTouchMove={(e) => {
+              setTouchEnd(e.targetTouches[0].clientX);
+            }}
+            onTouchEnd={() => {
+              if (!touchStart || !touchEnd) return;
+              const distance = touchStart - touchEnd;
+              if (Math.abs(distance) > 50) {
+                if (distance > 0) {
+                  setCatGalleryIndex(prev => prev < catGalleryImages.length - 1 ? prev + 1 : 0);
+                } else {
+                  setCatGalleryIndex(prev => prev > 0 ? prev - 1 : catGalleryImages.length - 1);
+                }
+              }
+              setTouchStart(null);
+              setTouchEnd(null);
+            }}
+          >
+            {catGalleryImages.map((img, idx) => (
+              <img
+                key={idx}
+                src={img}
+                alt={`${catGalleryTitle} - ${idx + 1}`}
+                className="absolute max-w-full max-h-full object-contain select-none transition-opacity duration-300 ease-in-out"
+                style={{ 
+                  maxHeight: '100%', 
+                  maxWidth: '100%',
+                  opacity: idx === catGalleryIndex ? 1 : 0,
+                  pointerEvents: idx === catGalleryIndex ? 'auto' : 'none'
+                }}
+                draggable={false}
+              />
+            ))}
+            {catGalleryImages.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
+                  onClick={() => setCatGalleryIndex(prev => prev > 0 ? prev - 1 : catGalleryImages.length - 1)}
+                  data-testid="button-cat-gallery-prev"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white bg-black/50 hover:bg-black/70 h-12 w-12 rounded-full"
+                  onClick={() => setCatGalleryIndex(prev => prev < catGalleryImages.length - 1 ? prev + 1 : 0)}
+                  data-testid="button-cat-gallery-next"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </Button>
+              </>
+            )}
+          </div>
+          {catGalleryImages.length > 1 && (
+            <div className="flex gap-2 p-3 overflow-x-auto justify-center bg-black/90 flex-shrink-0">
+              {catGalleryImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setCatGalleryIndex(idx)}
+                  className={cn(
+                    "flex-shrink-0 w-14 h-14 rounded-md overflow-hidden cursor-pointer border-2 transition-all",
+                    idx === catGalleryIndex ? "border-primary ring-2 ring-primary/50" : "border-transparent opacity-60 hover:opacity-100"
+                  )}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 회원가입 Dialog */}
       <Dialog open={registerDialogOpen} onOpenChange={(open) => {
         setRegisterDialogOpen(open);

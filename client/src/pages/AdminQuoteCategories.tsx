@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Upload, Loader2, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Save, X, Upload, Loader2, ChevronUp, ChevronDown, ImageIcon } from "lucide-react";
 import { Link } from "wouter";
 import type { QuoteCategory } from "@shared/schema";
 import {
@@ -31,7 +31,7 @@ import {
 interface CategoryForm {
   name: string;
   description: string;
-  imageUrl: string;
+  images: string[];
   pricePerUnit: string;
   unitLabel: string;
   isActive: boolean;
@@ -41,7 +41,7 @@ interface CategoryForm {
 const defaultForm: CategoryForm = {
   name: "",
   description: "",
-  imageUrl: "",
+  images: [],
   pricePerUnit: "0",
   unitLabel: "인",
   isActive: true,
@@ -55,7 +55,6 @@ export default function AdminQuoteCategories() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<QuoteCategory | null>(null);
   const [form, setForm] = useState<CategoryForm>(defaultForm);
-
   const [isUploading, setIsUploading] = useState(false);
 
   const { data: categories = [], isLoading } = useQuery<QuoteCategory[]>({
@@ -69,7 +68,11 @@ export default function AdminQuoteCategories() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ ...data, pricePerUnit: Number(data.pricePerUnit) || 0 }),
+        body: JSON.stringify({
+          ...data,
+          pricePerUnit: Number(data.pricePerUnit) || 0,
+          imageUrl: data.images[0] || "",
+        }),
       });
       if (!res.ok) throw new Error("Failed to create");
       return res.json();
@@ -92,7 +95,11 @@ export default function AdminQuoteCategories() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ ...data, pricePerUnit: Number(data.pricePerUnit) || 0 }),
+        body: JSON.stringify({
+          ...data,
+          pricePerUnit: Number(data.pricePerUnit) || 0,
+          imageUrl: data.images?.[0] || "",
+        }),
       });
       if (!res.ok) throw new Error("Failed to update");
       return res.json();
@@ -164,43 +171,61 @@ export default function AdminQuoteCategories() {
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     setIsUploading(true);
     try {
-      const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const res = await fetch("/api/upload-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          base64Data: base64,
-          fileName: file.name,
-          contentType: file.type,
-        }),
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setForm(prev => ({ ...prev, imageUrl: data.url }));
-      toast({ title: "이미지 업로드 완료" });
+      const uploaded: string[] = [];
+      for (const file of Array.from(files)) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch("/api/upload-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            base64Data: base64,
+            fileName: file.name,
+            contentType: file.type,
+          }),
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        const data = await res.json();
+        uploaded.push(data.url);
+      }
+      setForm(prev => ({ ...prev, images: [...prev.images, ...uploaded] }));
+      toast({ title: `${uploaded.length}개 이미지 업로드 완료` });
     } catch {
       toast({ title: "이미지 업로드 실패", variant: "destructive" });
     } finally {
       setIsUploading(false);
+      e.target.value = "";
     }
+  };
+
+  const removeImage = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
   };
 
   const openEdit = (category: QuoteCategory) => {
     setEditingCategory(category);
+    const imgs: string[] = [];
+    if (category.images && Array.isArray(category.images) && category.images.length > 0) {
+      imgs.push(...category.images.filter(Boolean));
+    } else if (category.imageUrl) {
+      imgs.push(category.imageUrl);
+    }
     setForm({
       name: category.name,
       description: category.description || "",
-      imageUrl: category.imageUrl || "",
+      images: imgs,
       pricePerUnit: String(category.pricePerUnit || 0),
       unitLabel: category.unitLabel || "인",
       isActive: category.isActive !== false,
@@ -227,12 +252,12 @@ export default function AdminQuoteCategories() {
   const isDialogOpen = isAddOpen || !!editingCategory;
   const sortedCategories = [...categories].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-  const getImageSrc = (imageUrl: string) => {
-    if (!imageUrl) return "";
-    if (imageUrl.startsWith("/objects/")) return imageUrl;
-    if (imageUrl.startsWith("/api/")) return imageUrl;
-    if (imageUrl.startsWith("http")) return imageUrl;
-    return imageUrl;
+  const getCategoryImages = (category: QuoteCategory): string[] => {
+    if (category.images && Array.isArray(category.images) && category.images.length > 0) {
+      return category.images.filter(Boolean) as string[];
+    }
+    if (category.imageUrl) return [category.imageUrl];
+    return [];
   };
 
   const formContent = (
@@ -281,23 +306,32 @@ export default function AdminQuoteCategories() {
         </div>
       </div>
       <div className="space-y-2">
-        <Label>이미지</Label>
+        <Label>이미지 ({form.images.length}개)</Label>
         <div className="flex items-center gap-2">
           <label className="cursor-pointer">
-            <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={isUploading} />
+            <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} disabled={isUploading} />
             <Button variant="outline" size="sm" asChild disabled={isUploading} data-testid="button-upload-image">
               <span>{isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                {isUploading ? "업로드 중..." : "이미지 선택"}</span>
+                {isUploading ? "업로드 중..." : "이미지 추가"}</span>
             </Button>
           </label>
-          {form.imageUrl && (
-            <Button variant="ghost" size="icon" onClick={() => setForm(prev => ({ ...prev, imageUrl: "" }))} data-testid="button-remove-image">
-              <X className="w-4 h-4" />
-            </Button>
-          )}
         </div>
-        {form.imageUrl && (
-          <img src={getImageSrc(form.imageUrl)} alt="preview" className="w-full h-32 object-cover rounded-md mt-2" />
+        {form.images.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 mt-2">
+            {form.images.map((img, idx) => (
+              <div key={idx} className="relative group">
+                <img src={img} alt={`image-${idx}`} className="w-full h-20 object-cover rounded-md" />
+                <button
+                  type="button"
+                  onClick={() => removeImage(idx)}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-80 hover:opacity-100"
+                  data-testid={`button-remove-image-${idx}`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
       <div className="flex items-center gap-2">
@@ -343,79 +377,90 @@ export default function AdminQuoteCategories() {
         </div>
       ) : (
         <div className="space-y-3">
-          {sortedCategories.map((category, idx) => (
-            <Card key={category.id} className={!category.isActive ? "opacity-50" : ""} data-testid={`card-category-${category.id}`}>
-              <CardContent className="p-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex flex-col gap-1 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      disabled={idx === 0 || reorderMutation.isPending}
-                      onClick={() => reorderMutation.mutate({ id: category.id, direction: "up" })}
-                      data-testid={`button-move-up-${category.id}`}
-                    >
-                      <ChevronUp className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      disabled={idx === sortedCategories.length - 1 || reorderMutation.isPending}
-                      onClick={() => reorderMutation.mutate({ id: category.id, direction: "down" })}
-                      data-testid={`button-move-down-${category.id}`}
-                    >
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  {category.imageUrl ? (
-                    <img src={getImageSrc(category.imageUrl)} alt={category.name} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
-                  ) : (
-                    <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
-                      <Plus className="w-6 h-6 text-muted-foreground" />
+          {sortedCategories.map((category, idx) => {
+            const catImages = getCategoryImages(category);
+            return (
+              <Card key={category.id} className={!category.isActive ? "opacity-50" : ""} data-testid={`card-category-${category.id}`}>
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-3">
+                    <div className="flex flex-col gap-1 flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={idx === 0 || reorderMutation.isPending}
+                        onClick={() => reorderMutation.mutate({ id: category.id, direction: "up" })}
+                        data-testid={`button-move-up-${category.id}`}
+                      >
+                        <ChevronUp className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        disabled={idx === sortedCategories.length - 1 || reorderMutation.isPending}
+                        onClick={() => reorderMutation.mutate({ id: category.id, direction: "down" })}
+                        data-testid={`button-move-down-${category.id}`}
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm" data-testid={`text-category-name-${category.id}`}>{category.name}</span>
-                      {!category.isActive && <span className="text-[10px] text-red-400 border border-red-400 rounded px-1">비활성</span>}
-                    </div>
-                    {category.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{category.description}</p>
+                    {catImages.length > 0 ? (
+                      <div className="relative w-16 h-16 flex-shrink-0">
+                        <img src={catImages[0]} alt={category.name} className="w-16 h-16 object-cover rounded-md" />
+                        {catImages.length > 1 && (
+                          <div className="absolute bottom-0 right-0 bg-black/70 text-white text-[9px] rounded-tl-md px-1 py-0.5 flex items-center gap-0.5">
+                            <ImageIcon className="w-2.5 h-2.5" />
+                            {catImages.length}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+                        <Plus className="w-6 h-6 text-muted-foreground" />
+                      </div>
                     )}
-                    <p className="text-sm font-medium text-cyan-500 mt-1" data-testid={`text-category-price-${category.id}`}>
-                      ${category.pricePerUnit} / {category.unitLabel}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-sm" data-testid={`text-category-name-${category.id}`}>{category.name}</span>
+                        {!category.isActive && <span className="text-[10px] text-red-400 border border-red-400 rounded px-1">비활성</span>}
+                      </div>
+                      {category.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{category.description}</p>
+                      )}
+                      <p className="text-sm font-medium text-cyan-500 mt-1" data-testid={`text-category-price-${category.id}`}>
+                        ${category.pricePerUnit} / {category.unitLabel}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(category)} data-testid={`button-edit-category-${category.id}`}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" data-testid={`button-delete-category-${category.id}`}>
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>카테고리 삭제</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              "{category.name}" 카테고리를 삭제하시겠습니까?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>취소</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteMutation.mutate(category.id)}>삭제</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(category)} data-testid={`button-edit-category-${category.id}`}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" data-testid={`button-delete-category-${category.id}`}>
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>카테고리 삭제</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            "{category.name}" 카테고리를 삭제하시겠습니까?
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>취소</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteMutation.mutate(category.id)}>삭제</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 

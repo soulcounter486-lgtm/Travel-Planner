@@ -1339,6 +1339,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
                 pricePerUnit: cat.pricePerUnit || 0,
                 quantity,
                 subtotal,
+                date: sel.date || "",
               });
             }
           }
@@ -3980,14 +3981,16 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       if (!userId || !isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ error: "Admin access required" });
       }
-      const { name, description, imageUrl, pricePerUnit, unitLabel, isActive, sortOrder } = req.body;
+      const { name, description, imageUrl, images, pricePerUnit, unitLabel, isActive, sortOrder } = req.body;
       if (!name) {
         return res.status(400).json({ error: "카테고리 이름이 필요합니다" });
       }
+      const imagesList = Array.isArray(images) ? images.filter(Boolean) : [];
       const [newCategory] = await db.insert(quoteCategories).values({
         name,
         description: description || "",
-        imageUrl: imageUrl || "",
+        imageUrl: imageUrl || (imagesList[0] || ""),
+        images: imagesList,
         pricePerUnit: Number(pricePerUnit) || 0,
         unitLabel: unitLabel || "인",
         isActive: isActive !== false,
@@ -4010,18 +4013,25 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         return res.status(403).json({ error: "Admin access required" });
       }
       const id = parseInt(req.params.id);
-      const { name, description, imageUrl, pricePerUnit, unitLabel, isActive, sortOrder } = req.body;
+      const { name, description, imageUrl, images, pricePerUnit, unitLabel, isActive, sortOrder } = req.body;
+      const updateData: any = {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(pricePerUnit !== undefined && { pricePerUnit: Number(pricePerUnit) }),
+        ...(unitLabel !== undefined && { unitLabel }),
+        ...(isActive !== undefined && { isActive }),
+        ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) }),
+        updatedAt: new Date(),
+      };
+      if (images !== undefined) {
+        const imagesList = Array.isArray(images) ? images.filter(Boolean) : [];
+        updateData.images = imagesList;
+        updateData.imageUrl = imageUrl || (imagesList[0] || "");
+      } else if (imageUrl !== undefined) {
+        updateData.imageUrl = imageUrl;
+      }
       const [updated] = await db.update(quoteCategories)
-        .set({
-          ...(name !== undefined && { name }),
-          ...(description !== undefined && { description }),
-          ...(imageUrl !== undefined && { imageUrl }),
-          ...(pricePerUnit !== undefined && { pricePerUnit: Number(pricePerUnit) }),
-          ...(unitLabel !== undefined && { unitLabel }),
-          ...(isActive !== undefined && { isActive }),
-          ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) }),
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(eq(quoteCategories.id, id))
         .returning();
       if (!updated) {
