@@ -2742,26 +2742,46 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
 - 2일 이상 여행이면 서로 다른 카지노를 방문하는 일정도 좋습니다.
 - 카지노 방문 전후로 근처 밤문화(nightlife)도 함께 추천하세요.` : ''}`;
 
-      const response = await gemini.models.generateContent({
-        model: "gemini-2.5-flash",
-        config: {
-          systemInstruction: systemPrompt,
-          responseMimeType: "application/json",
-        },
-        contents: userPrompt,
-      });
+      let response;
+      let retries = 0;
+      const maxRetries = 3;
+      while (retries <= maxRetries) {
+        try {
+          response = await gemini.models.generateContent({
+            model: "gemini-2.5-flash",
+            config: {
+              systemInstruction: systemPrompt,
+              responseMimeType: "application/json",
+            },
+            contents: userPrompt,
+          });
+          break;
+        } catch (apiErr: any) {
+          if (apiErr?.status === 429 && retries < maxRetries) {
+            const retryMatch = JSON.stringify(apiErr).match(/"retryDelay":"(\d+)s"/);
+            const waitSec = retryMatch ? Math.min(parseInt(retryMatch[1]), 30) : 10;
+            console.log(`Gemini rate limit hit, retrying in ${waitSec}s (attempt ${retries + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
+            retries++;
+          } else {
+            throw apiErr;
+          }
+        }
+      }
 
-      const content = response.text;
+      const content = response?.text;
       if (!content) {
         return res.status(500).json({ message: "AI 응답을 받지 못했습니다." });
       }
 
       const travelPlan = JSON.parse(content);
       res.json(travelPlan);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Travel plan error:", err);
       if (err instanceof z.ZodError) {
         res.status(400).json({ message: err.errors[0].message });
+      } else if (err?.status === 429) {
+        res.status(429).json({ message: "AI API 사용 한도를 초과했습니다. 잠시 후(약 1분) 다시 시도해주세요." });
       } else {
         res.status(500).json({ message: "여행 플랜 생성 중 오류가 발생했습니다." });
       }

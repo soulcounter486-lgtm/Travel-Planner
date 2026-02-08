@@ -274,6 +274,14 @@ export default function TravelPlanner() {
       });
       return response.json();
     },
+    onError: (error: any) => {
+      const msg = error?.message || "";
+      if (msg.includes("429") || msg.includes("한도")) {
+        toast({ title: language === "ko" ? "AI API 사용 한도를 초과했습니다. 약 1분 후 다시 시도해주세요." : "AI API rate limit exceeded. Please try again in about 1 minute.", variant: "destructive" });
+      } else {
+        toast({ title: language === "ko" ? "여행 일정 생성에 실패했습니다. 다시 시도해주세요." : "Failed to generate travel plan. Please try again.", variant: "destructive" });
+      }
+    },
     onSuccess: (data) => {
       const normalized: TravelPlan = {
         title: data.title || "",
