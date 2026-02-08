@@ -37,7 +37,14 @@ self.addEventListener('fetch', (event) => {
 
     if (event.request.mode === 'navigate') {
       event.respondWith(
-        fetch(event.request).catch(() => caches.match('/') || new Response('Offline', { status: 503 }))
+        fetch(event.request).catch(() => {
+          return caches.match('/').then((cached) => {
+            return cached || new Response('<html><body><h1>오프라인</h1><p>인터넷 연결을 확인해주세요.</p></body></html>', {
+              status: 503,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            });
+          });
+        })
       );
       return;
     }
