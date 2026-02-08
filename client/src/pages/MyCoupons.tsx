@@ -411,23 +411,25 @@ export default function MyCoupons() {
       </div>
 
       <AlertDialog open={showUseConfirm} onOpenChange={(open) => { setShowUseConfirm(open); if (!open) setShowFinalConfirm(false); }}>
-        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] overflow-y-auto relative p-4 sm:p-6">
-          <button
-            onClick={() => { setShowUseConfirm(false); setShowFinalConfirm(false); }}
-            className="absolute top-3 right-3 p-1 rounded-full hover-elevate z-10"
-            data-testid="button-close-coupon-modal"
-          >
-            <X className="w-5 h-5 text-muted-foreground" />
-          </button>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] overflow-y-auto p-4 sm:p-6">
           <AlertDialogHeader className="text-center">
-            <div className="flex items-center gap-2 mb-1">
-              <img 
-                src="/dokkaebi-logo.png" 
-                alt="붕따우 도깨비" 
-                className="w-12 h-12 object-contain rounded-full"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
-              <span className="text-base font-bold text-primary">붕따우 도깨비</span>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <img 
+                  src="/dokkaebi-logo.png" 
+                  alt="붕따우 도깨비" 
+                  className="w-12 h-12 object-contain rounded-full"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+                <span className="text-base font-bold text-primary">붕따우 도깨비</span>
+              </div>
+              <button
+                onClick={() => { setShowUseConfirm(false); setShowFinalConfirm(false); }}
+                className="p-1 rounded-full hover-elevate"
+                data-testid="button-close-coupon-modal"
+              >
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
             </div>
             <AlertDialogTitle className="text-center">
               쿠폰 사용
