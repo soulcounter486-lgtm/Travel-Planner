@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vungtau-dokkaebi-v8';
+const CACHE_NAME = 'vungtau-dokkaebi-v9';
 const APP_SHELL = [
   '/manifest.json',
   '/favicon.png',
@@ -120,6 +120,19 @@ self.addEventListener('notificationclick', (event) => {
           }
         }
         return clients.openWindow(url);
+      })
+  );
+});
+
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    self.registration.pushManager.subscribe(event.oldSubscription.options)
+      .then((newSub) => {
+        return fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newSub.toJSON())
+        });
       })
   );
 });

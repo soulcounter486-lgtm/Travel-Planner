@@ -9,6 +9,8 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "ko",
+  "gcm_sender_id": "103953800507",
+  "permissions": ["notifications"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
