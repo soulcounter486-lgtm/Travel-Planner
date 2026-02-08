@@ -1118,7 +1118,7 @@ export default function TravelPlanner() {
                     ? (language === "ko" ? "목록으로" : "Back to List")
                     : t("planner.selectPurpose")}
                 </Button>
-                <Link href="/expense">
+                <Link href="/expenses">
                   <Button variant="outline" data-testid="goto-expense-btn">
                     <Wallet className="h-4 w-4 mr-1" />
                     {language === "ko" ? "가계부에 추가" : "Add to Tracker"}
