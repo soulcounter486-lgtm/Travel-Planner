@@ -72,6 +72,7 @@ export default function MyCoupons() {
   const [showUseConfirm, setShowUseConfirm] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [showInlineMap, setShowInlineMap] = useState(false);
+  const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
@@ -409,8 +410,15 @@ export default function MyCoupons() {
         </Tabs>
       </div>
 
-      <AlertDialog open={showUseConfirm} onOpenChange={setShowUseConfirm}>
-        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <AlertDialog open={showUseConfirm} onOpenChange={(open) => { setShowUseConfirm(open); if (!open) setShowFinalConfirm(false); }}>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto relative">
+          <button
+            onClick={() => { setShowUseConfirm(false); setShowFinalConfirm(false); }}
+            className="absolute top-3 right-3 p-1 rounded-full hover-elevate z-10"
+            data-testid="button-close-coupon-modal"
+          >
+            <X className="w-5 h-5 text-muted-foreground" />
+          </button>
           <AlertDialogHeader className="text-center">
             <div className="flex items-center gap-3 mb-2">
               <img 
@@ -453,19 +461,52 @@ export default function MyCoupons() {
                   <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này và nhấn nút sử dụng.</span>
                 </p>
                 <div className="flex flex-col gap-1 mt-2">
-                  <AlertDialogAction
-                    onClick={() => {
-                      if (selectedCoupon && !useCouponMutation.isSuccess) {
-                        useCouponMutation.mutate(selectedCoupon.id);
-                      }
-                    }}
-                    disabled={useCouponMutation.isPending || useCouponMutation.isSuccess}
-                    className={`w-full h-10 text-base font-bold ${useCouponMutation.isSuccess ? "bg-green-600" : "bg-primary"}`}
-                  >
-                    <CheckCircle2 className="w-5 h-5 mr-2" />
-                    {useCouponMutation.isSuccess ? "사용 완료 / Đã sử dụng" : "사용하기 / Sử dụng"}
-                  </AlertDialogAction>
-                  <AlertDialogCancel disabled={useCouponMutation.isSuccess} className="w-full">취소 / Hủy</AlertDialogCancel>
+                  {!showFinalConfirm ? (
+                    <>
+                      <Button
+                        onClick={() => setShowFinalConfirm(true)}
+                        disabled={useCouponMutation.isPending || useCouponMutation.isSuccess}
+                        className={`w-full text-base font-bold ${useCouponMutation.isSuccess ? "bg-green-600" : ""}`}
+                        data-testid="button-use-coupon"
+                      >
+                        <CheckCircle2 className="w-5 h-5 mr-2" />
+                        {useCouponMutation.isSuccess ? "사용 완료 / Đã sử dụng" : "사용하기 / Sử dụng"}
+                      </Button>
+                      <AlertDialogCancel disabled={useCouponMutation.isSuccess} className="w-full">취소 / Hủy</AlertDialogCancel>
+                    </>
+                  ) : (
+                    <div className="border-2 border-destructive/50 rounded-lg p-4 bg-destructive/5 space-y-3">
+                      <p className="text-center font-bold text-destructive">
+                        정말 사용하시겠습니까?<br />
+                        <span className="text-sm text-muted-foreground">Bạn có chắc chắn muốn sử dụng không?</span>
+                      </p>
+                      <p className="text-center text-xs text-muted-foreground">
+                        사용 후 취소 불가 / Không thể hủy sau khi sử dụng
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowFinalConfirm(false)}
+                          className="flex-1"
+                          data-testid="button-cancel-final-confirm"
+                        >
+                          아니오 / Không
+                        </Button>
+                        <AlertDialogAction
+                          onClick={() => {
+                            if (selectedCoupon && !useCouponMutation.isSuccess) {
+                              useCouponMutation.mutate(selectedCoupon.id);
+                            }
+                          }}
+                          disabled={useCouponMutation.isPending}
+                          className="flex-1 bg-destructive text-destructive-foreground"
+                          data-testid="button-confirm-use-coupon"
+                        >
+                          {useCouponMutation.isPending ? "처리 중..." : "네, 사용합니다 / Có"}
+                        </AlertDialogAction>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {selectedCoupon?.placeName && (
                   <div className="bg-muted/50 rounded-lg p-2 space-y-1 mt-2">
