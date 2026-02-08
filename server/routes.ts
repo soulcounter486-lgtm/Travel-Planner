@@ -27,7 +27,9 @@ const vapidSubject = "mailto:admin@vungtau.blog";
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-  console.log("Web Push configured successfully");
+  console.log("Web Push configured - pub:", vapidPublicKey.substring(0, 12) + "...", "priv:", vapidPrivateKey.substring(0, 8) + "...");
+} else {
+  console.log("Web Push NOT configured - pub:", vapidPublicKey ? "set" : "MISSING", "priv:", vapidPrivateKey ? "set" : "MISSING");
 }
 
 // 푸시 알림 전송 함수
@@ -928,13 +930,14 @@ export async function registerRoutes(
         } catch (err: any) {
           failed++;
           lastError = `${err.statusCode}: ${err.message}`;
+          console.error("Push send error:", err.statusCode, err.body || err.message, "endpoint:", sub.endpoint.substring(0, 60));
           if (err.statusCode === 404 || err.statusCode === 410) {
             await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
           }
         }
       }
       
-      res.json({ success: sent > 0, message: sent > 0 ? `${sent}건 발송 완료` : `발송 실패: ${lastError}`, userId, sent, failed, total: subs.length });
+      res.json({ success: sent > 0, message: sent > 0 ? `${sent}건 발송 완료` : `발송 실패: ${lastError}`, userId, sent, failed, total: subs.length, serverPubKey: vapidPublicKey.substring(0, 15) });
     } catch (err) {
       res.status(500).json({ error: "테스트 실패" });
     }
