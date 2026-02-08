@@ -109,7 +109,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown, RefreshCw, Mail, Ticket } from "lucide-react";
+import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown, RefreshCw, Mail, Ticket, ArrowUpDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import type { Villa, VillaAmenity } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
@@ -342,12 +342,22 @@ export default function Home() {
   const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
   const [amenityFilters, setAmenityFilters] = useState<VillaAmenity[]>([]);
   const [showAmenityFilters, setShowAmenityFilters] = useState(false);
+  const [villaSortMode, setVillaSortMode] = useState<"default" | "priceLow" | "priceHigh" | "rooms">("default");
   
-  // 편의사항 필터가 적용된 빌라 목록
-  const filteredVillas = villas.filter(villa => {
-    if (amenityFilters.length === 0) return true;
-    return amenityFilters.every(filter => villa.amenities?.includes(filter));
-  });
+  const filteredVillas = (() => {
+    let list = villas.filter(villa => {
+      if (amenityFilters.length === 0) return true;
+      return amenityFilters.every(filter => villa.amenities?.includes(filter));
+    });
+    if (villaSortMode === "priceLow") {
+      list = [...list].sort((a, b) => (a.weekdayPrice ?? 0) - (b.weekdayPrice ?? 0));
+    } else if (villaSortMode === "priceHigh") {
+      list = [...list].sort((a, b) => (b.weekdayPrice ?? 0) - (a.weekdayPrice ?? 0));
+    } else if (villaSortMode === "rooms") {
+      list = [...list].sort((a, b) => (b.bedrooms ?? 0) - (a.bedrooms ?? 0));
+    }
+    return list;
+  })();
   
   const selectedVilla = villas.find(v => v.id === selectedVillaId) || null;
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -1534,6 +1544,42 @@ export default function Home() {
                         >
                           {language === "ko" ? "필터" : "Filter"}{amenityFilters.length > 0 && `(${amenityFilters.length})`}
                         </button>
+                        {/* 정렬 버튼 */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              className={cn(
+                                "px-1.5 py-1 text-[10px] rounded-lg border transition-colors flex-shrink-0 flex items-center gap-0.5",
+                                villaSortMode !== "default"
+                                  ? "bg-primary text-white border-primary"
+                                  : "bg-muted border-slate-200 hover:bg-muted/80"
+                              )}
+                              data-testid="button-villa-sort"
+                            >
+                              <ArrowUpDown className="h-3 w-3" />
+                              {villaSortMode === "default" ? (language === "ko" ? "정렬" : "Sort")
+                                : villaSortMode === "priceLow" ? (language === "ko" ? "낮은가격" : "Low$")
+                                : villaSortMode === "priceHigh" ? (language === "ko" ? "높은가격" : "High$")
+                                : (language === "ko" ? "룸많은순" : "Rooms")}
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            <DropdownMenuItem onClick={() => setVillaSortMode("default")} data-testid="sort-default">
+                              {language === "ko" ? "기본순" : "Default"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setVillaSortMode("priceLow")} data-testid="sort-price-low">
+                              {language === "ko" ? "가격 낮은순" : "Price: Low to High"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setVillaSortMode("priceHigh")} data-testid="sort-price-high">
+                              {language === "ko" ? "가격 높은순" : "Price: High to Low"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setVillaSortMode("rooms")} data-testid="sort-rooms">
+                              {language === "ko" ? "룸 많은순" : "Rooms: Most First"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                         {isAdmin && (
                           <Link href="/admin/villas" className="flex-shrink-0">
                             <Button variant="ghost" size="sm" className="text-[10px] h-6 px-1.5">
