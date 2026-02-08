@@ -31,6 +31,17 @@ A travel quote calculator application for generating custom trip estimates. The 
 - **API**: POST/GET/DELETE /api/saved-travel-plans (인증 필요)
 - **API 확장**: POST /api/travel-plan에 companion, travelStyle, arrivalTime, villaName, villaLat, villaLng 추가
 
+### Customer Service Chat (2026-02-09 추가)
+- **실시간 1:1 채팅**: WebSocket(/ws/support) 기반 고객-관리자 실시간 채팅
+- **플로팅 위젯**: 모든 페이지 하단에 채팅 버튼, 클릭 시 채팅창 오픈
+- **비로그인 지원**: localStorage visitorId 기반 익명 채팅 가능, 로그인 시 userId 연동
+- **관리자 페이지**: `/admin/chat`에서 모든 채팅방 목록, 선택 후 실시간 답변
+- **푸시 알림**: 새 채팅 요청 시 관리자에게 web-push 알림 발송
+- **읽지 않은 메시지**: unreadByAdmin/unreadByVisitor 카운터로 읽지 않은 메시지 표시
+- **채팅방 관리**: 관리자가 대화 종료(close) 가능
+- **DB 테이블**: customer_chat_rooms, customer_chat_messages
+- **API**: POST /api/customer-chat/room, GET /api/customer-chat/room/:id/messages, GET /api/admin/customer-chat/rooms, PATCH /api/admin/customer-chat/rooms/:id/close
+
 ### Email Verification System (2026-02-04 추가)
 - **이메일 인증 필수**: 이메일/비밀번호 회원가입 시 6자리 인증 코드를 이메일로 발송
 - **인증 코드 만료**: 30분 후 자동 만료

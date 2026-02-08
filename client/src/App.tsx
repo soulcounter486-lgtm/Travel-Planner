@@ -19,9 +19,11 @@ import AdminPlaces from "@/pages/AdminPlaces";
 import AdminMembers from "@/pages/AdminMembers";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminQuoteCategories from "@/pages/AdminQuoteCategories";
+import AdminChat from "@/pages/AdminChat";
 import MyPage from "@/pages/MyPage";
 import MyCoupons from "@/pages/MyCoupons";
 import NotFound from "@/pages/not-found";
+import { CustomerChatWidget } from "@/components/CustomerChatWidget";
 
 function Router() {
   return (
@@ -42,6 +44,7 @@ function Router() {
       <Route path="/admin/members" component={AdminMembers} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/quote-categories" component={AdminQuoteCategories} />
+      <Route path="/admin/chat" component={AdminChat} />
       <Route path="/mypage" component={MyPage} />
       <Route path="/my-coupons" component={MyCoupons} />
       <Route component={NotFound} />
@@ -56,6 +59,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <CustomerChatWidget />
         </TooltipProvider>
       </LanguageProvider>
     </QueryClientProvider>

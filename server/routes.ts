@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans, customerChatRooms, customerChatMessages } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -5853,6 +5853,330 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       console.error("알림 읽음 처리 오류:", err);
       res.status(500).json({ error: "알림 읽음 처리 실패" });
     }
+  });
+
+  // === 고객센터 1:1 실시간 채팅 ===
+
+  // 고객: 내 채팅방 가져오기/생성 (visitorId 기반)
+  app.post("/api/customer-chat/room", async (req, res) => {
+    try {
+      const { visitorId, visitorName } = req.body;
+      if (!visitorId) return res.status(400).json({ error: "visitorId required" });
+
+      const existing = await db.select().from(customerChatRooms)
+        .where(and(eq(customerChatRooms.visitorId, visitorId), eq(customerChatRooms.status, "open")))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.json(existing[0]);
+      }
+
+      const [room] = await db.insert(customerChatRooms).values({
+        visitorId,
+        visitorName: visitorName || "방문자",
+      }).returning();
+
+      // 관리자에게 푸시 알림
+      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
+      for (const admin of adminUsers) {
+        sendPushNotification(admin.id, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
+      }
+      if (ADMIN_USER_ID) {
+        const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
+        for (const adminId of adminIds) {
+          sendPushNotification(adminId, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
+        }
+      }
+
+      res.json(room);
+    } catch (err) {
+      console.error("채팅방 생성 오류:", err);
+      res.status(500).json({ error: "채팅방 생성 실패" });
+    }
+  });
+
+  // 고객: 내 채팅방 메시지 가져오기 (visitorId 검증)
+  app.get("/api/customer-chat/room/:roomId/messages", async (req, res) => {
+    try {
+      const roomId = parseInt(req.params.roomId);
+      const visitorId = req.query.visitorId as string;
+
+      // 관리자인지 확인
+      const user = (req as any).user;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      const adminAccess = isUserAdmin(userId, userEmail);
+
+      if (!adminAccess) {
+        if (!visitorId) return res.status(403).json({ error: "접근 권한 없음" });
+        const [room] = await db.select().from(customerChatRooms)
+          .where(and(eq(customerChatRooms.id, roomId), eq(customerChatRooms.visitorId, visitorId)))
+          .limit(1);
+        if (!room) return res.status(403).json({ error: "접근 권한 없음" });
+      }
+
+      const messages = await db.select().from(customerChatMessages)
+        .where(eq(customerChatMessages.roomId, roomId))
+        .orderBy(customerChatMessages.createdAt);
+      res.json(messages);
+    } catch (err) {
+      res.status(500).json({ error: "메시지 조회 실패" });
+    }
+  });
+
+  // 고객/관리자: 메시지 전송 (REST API)
+  app.post("/api/customer-chat/room/:roomId/messages", async (req: any, res) => {
+    try {
+      const roomId = parseInt(req.params.roomId);
+      const { visitorId, message, senderName } = req.body;
+      if (!message || !message.trim()) return res.status(400).json({ error: "메시지 필요" });
+      if (message.length > 2000) return res.status(400).json({ error: "메시지가 너무 깁니다" });
+
+      const user = req.user;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      const adminAccess = isUserAdmin(userId, userEmail);
+
+      let actualRole: string;
+      let actualSenderId: string;
+      let actualSenderName: string;
+
+      if (adminAccess) {
+        actualRole = "admin";
+        actualSenderId = userId || "admin";
+        actualSenderName = "관리자";
+      } else {
+        if (!visitorId) return res.status(400).json({ error: "visitorId 필요" });
+        const [room] = await db.select().from(customerChatRooms)
+          .where(and(eq(customerChatRooms.id, roomId), eq(customerChatRooms.visitorId, visitorId)))
+          .limit(1);
+        if (!room) return res.status(403).json({ error: "접근 권한 없음" });
+        actualRole = "customer";
+        actualSenderId = visitorId;
+        actualSenderName = senderName || "방문자";
+      }
+
+      const [saved] = await db.insert(customerChatMessages).values({
+        roomId,
+        senderId: actualSenderId,
+        senderRole: actualRole,
+        senderName: actualSenderName,
+        message: message.trim(),
+      }).returning();
+
+      const updateData: any = {
+        lastMessage: message.trim().substring(0, 100),
+        lastMessageAt: new Date(),
+      };
+      if (actualRole === "customer") {
+        updateData.unreadByAdmin = sql`${customerChatRooms.unreadByAdmin} + 1`;
+      } else {
+        updateData.unreadByVisitor = sql`${customerChatRooms.unreadByVisitor} + 1`;
+      }
+      await db.update(customerChatRooms).set(updateData).where(eq(customerChatRooms.id, roomId));
+
+      broadcastToRoom(roomId, JSON.stringify({ type: "new_message", roomId, message: saved }));
+
+      if (actualRole === "customer") {
+        notifyAdmins(JSON.stringify({
+          type: "new_chat_notification",
+          roomId,
+          senderName: actualSenderName,
+          preview: message.trim().substring(0, 50),
+        }));
+        const adminUsersList = await db.select().from(users).where(eq(users.isAdmin, true));
+        for (const admin of adminUsersList) {
+          sendPushNotification(admin.id, "고객 문의", `${actualSenderName}: ${message.trim().substring(0, 50)}`, "/admin/chat");
+        }
+      }
+
+      res.json(saved);
+    } catch (err) {
+      console.error("메시지 전송 오류:", err);
+      res.status(500).json({ error: "메시지 전송 실패" });
+    }
+  });
+
+  // 관리자: 모든 채팅방 목록
+  app.get("/api/admin/customer-chat/rooms", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "관리자 권한 필요" });
+      }
+
+      const rooms = await db.select().from(customerChatRooms).orderBy(desc(customerChatRooms.lastMessageAt));
+      res.json(rooms);
+    } catch (err) {
+      res.status(500).json({ error: "채팅방 목록 조회 실패" });
+    }
+  });
+
+  // 관리자: 채팅방 닫기
+  app.patch("/api/admin/customer-chat/rooms/:roomId/close", isAuthenticated, async (req: any, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "관리자 권한 필요" });
+      }
+
+      const roomId = parseInt(req.params.roomId);
+      await db.update(customerChatRooms).set({ status: "closed" }).where(eq(customerChatRooms.id, roomId));
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "채팅방 닫기 실패" });
+    }
+  });
+
+  // WebSocket: 고객센터 1:1 채팅
+  const supportWss = new WebSocketServer({ server: httpServer, path: "/ws/support" });
+
+  interface SupportClient {
+    ws: WebSocket;
+    visitorId?: string;
+    roomId?: number;
+    isAdmin: boolean;
+    userId?: string;
+  }
+
+  const supportClients = new Set<SupportClient>();
+
+  function broadcastToRoom(roomId: number, message: string, excludeWs?: WebSocket) {
+    supportClients.forEach((client) => {
+      if (client.ws.readyState === WebSocket.OPEN) {
+        if (client.roomId === roomId || client.isAdmin) {
+          if (client.ws !== excludeWs) {
+            client.ws.send(message);
+          }
+        }
+      }
+    });
+  }
+
+  function notifyAdmins(message: string) {
+    supportClients.forEach((client) => {
+      if (client.isAdmin && client.ws.readyState === WebSocket.OPEN) {
+        client.ws.send(message);
+      }
+    });
+  }
+
+  supportWss.on("connection", (ws: WebSocket) => {
+    const client: SupportClient = { ws, isAdmin: false };
+    supportClients.add(client);
+
+    ws.on("message", async (data: Buffer) => {
+      try {
+        const msg = JSON.parse(data.toString());
+
+        if (msg.type === "join_customer") {
+          client.visitorId = msg.visitorId;
+          client.roomId = msg.roomId;
+          client.isAdmin = false;
+          // 방 소유권 검증
+          if (msg.roomId && msg.visitorId) {
+            const [room] = await db.select().from(customerChatRooms)
+              .where(and(eq(customerChatRooms.id, msg.roomId), eq(customerChatRooms.visitorId, msg.visitorId)))
+              .limit(1);
+            if (!room) {
+              ws.send(JSON.stringify({ type: "error", message: "접근 권한 없음" }));
+              client.roomId = undefined;
+              return;
+            }
+          }
+        } else if (msg.type === "join_admin") {
+          // 관리자 검증: userId로 DB에서 isAdmin 확인
+          if (msg.userId) {
+            const adminCheck = await isUserAdminWithDb(msg.userId, undefined);
+            if (adminCheck) {
+              client.isAdmin = true;
+              client.userId = msg.userId;
+              if (msg.roomId) client.roomId = msg.roomId;
+            } else {
+              ws.send(JSON.stringify({ type: "error", message: "관리자 권한 없음" }));
+            }
+          }
+        } else if (msg.type === "admin_focus_room") {
+          if (!client.isAdmin) return;
+          client.roomId = msg.roomId;
+          await db.update(customerChatRooms).set({ unreadByAdmin: 0 }).where(eq(customerChatRooms.id, msg.roomId));
+        } else if (msg.type === "message") {
+          const { roomId, message } = msg;
+          if (!roomId || !message) return;
+
+          // 서버에서 senderRole 강제 설정
+          const actualRole = client.isAdmin ? "admin" : "customer";
+          const actualSenderId = client.isAdmin ? (client.userId || "admin") : (client.visitorId || "unknown");
+          const actualSenderName = client.isAdmin ? "관리자" : (msg.senderName || "방문자");
+
+          // 방 소유권 확인 (고객이면 자기 방만)
+          if (!client.isAdmin && client.roomId !== roomId) return;
+
+          const [saved] = await db.insert(customerChatMessages).values({
+            roomId,
+            senderId: actualSenderId,
+            senderRole: actualRole,
+            senderName: actualSenderName,
+            message,
+          }).returning();
+
+          const updateData: any = {
+            lastMessage: message.substring(0, 100),
+            lastMessageAt: new Date(),
+          };
+          if (actualRole === "customer") {
+            updateData.unreadByAdmin = sql`${customerChatRooms.unreadByAdmin} + 1`;
+          } else {
+            updateData.unreadByVisitor = sql`${customerChatRooms.unreadByVisitor} + 1`;
+          }
+          await db.update(customerChatRooms).set(updateData).where(eq(customerChatRooms.id, roomId));
+
+          const broadcastMsg = JSON.stringify({
+            type: "new_message",
+            roomId,
+            message: saved,
+          });
+
+          broadcastToRoom(roomId, broadcastMsg);
+
+          if (actualRole === "customer") {
+            notifyAdmins(JSON.stringify({
+              type: "new_chat_notification",
+              roomId,
+              senderName: actualSenderName,
+              preview: message.substring(0, 50),
+            }));
+
+            const adminUsersList = await db.select().from(users).where(eq(users.isAdmin, true));
+            for (const admin of adminUsersList) {
+              const isAdminOnline = Array.from(supportClients).some(c => c.isAdmin && c.userId === admin.id && c.roomId === roomId);
+              if (!isAdminOnline) {
+                sendPushNotification(admin.id, "고객 문의", `${actualSenderName}: ${message.substring(0, 50)}`, "/admin/chat");
+              }
+            }
+            if (ADMIN_USER_ID) {
+              const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
+              for (const adminId of adminIds) {
+                const isOnline = Array.from(supportClients).some(c => c.isAdmin && c.userId === adminId && c.roomId === roomId);
+                if (!isOnline) {
+                  sendPushNotification(adminId, "고객 문의", `${actualSenderName}: ${message.substring(0, 50)}`, "/admin/chat");
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Support WS error:", err);
+      }
+    });
+
+    ws.on("close", () => {
+      supportClients.delete(client);
+    });
   });
 
   return httpServer;
