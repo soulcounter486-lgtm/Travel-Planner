@@ -5975,19 +5975,10 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
       }).returning();
       console.log("[CHAT] 새 채팅방 생성 완료:", room.id, "visitorId:", visitorId);
 
-      // 관리자에게 푸시 알림
+      // 관리자에게 푸시 알림 (모든 구독자에게 발송)
       try {
-        const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
-        console.log("[CHAT] 관리자 알림 대상:", adminUsers.length, "명");
-        for (const admin of adminUsers) {
-          sendPushNotification(admin.id, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
-        }
-        if (ADMIN_USER_ID) {
-          const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
-          for (const adminId of adminIds) {
-            sendPushNotification(adminId, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
-          }
-        }
+        console.log("[CHAT] 모든 푸시 구독자에게 알림 발송");
+        sendPushNotifications("새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
       } catch (pushErr) {
         console.error("[CHAT] 푸시 알림 오류 (채팅방 생성은 성공):", pushErr);
       }
@@ -6094,10 +6085,7 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
           senderName: actualSenderName,
           preview: message.trim().substring(0, 50),
         }));
-        const adminUsersList = await db.select().from(users).where(eq(users.isAdmin, true));
-        for (const admin of adminUsersList) {
-          sendPushNotification(admin.id, "고객 문의", `${actualSenderName}: ${message.trim().substring(0, 50)}`, "/admin/chat");
-        }
+        sendPushNotifications("고객 문의", `${actualSenderName}: ${message.trim().substring(0, 50)}`, "/admin/chat");
       }
 
       res.json(saved);
@@ -6260,21 +6248,9 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
               preview: message.substring(0, 50),
             }));
 
-            const adminUsersList = await db.select().from(users).where(eq(users.isAdmin, true));
-            for (const admin of adminUsersList) {
-              const isAdminOnline = Array.from(supportClients).some(c => c.isAdmin && c.userId === admin.id && c.roomId === roomId);
-              if (!isAdminOnline) {
-                sendPushNotification(admin.id, "고객 문의", `${actualSenderName}: ${message.substring(0, 50)}`, "/admin/chat");
-              }
-            }
-            if (ADMIN_USER_ID) {
-              const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
-              for (const adminId of adminIds) {
-                const isOnline = Array.from(supportClients).some(c => c.isAdmin && c.userId === adminId && c.roomId === roomId);
-                if (!isOnline) {
-                  sendPushNotification(adminId, "고객 문의", `${actualSenderName}: ${message.substring(0, 50)}`, "/admin/chat");
-                }
-              }
+            const anyAdminOnline = Array.from(supportClients).some(c => c.isAdmin && c.roomId === roomId);
+            if (!anyAdminOnline) {
+              sendPushNotifications("고객 문의", `${actualSenderName}: ${message.substring(0, 50)}`, "/admin/chat");
             }
           }
         }
