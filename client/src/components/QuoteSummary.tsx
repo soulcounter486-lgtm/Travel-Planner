@@ -530,6 +530,27 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                   <Separator className="bg-border/50" />
                 </motion.div>
               )}
+
+              {(breakdown as any).customCategories && (breakdown as any).customCategories.length > 0 && (breakdown as any).customCategories.map((cat: any) => (
+                <motion.div
+                  key={`custom-summary-${cat.categoryId}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex flex-col gap-1">
+                    <div className="flex justify-between font-semibold text-slate-800">
+                      <span>{cat.name}</span>
+                      <span>${cat.subtotal.toLocaleString()}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground italic pl-1">
+                      ${cat.pricePerUnit} × {cat.quantity}
+                    </p>
+                  </div>
+                  <Separator className="bg-border/50" />
+                </motion.div>
+              ))}
             </AnimatePresence>
 
             <div 

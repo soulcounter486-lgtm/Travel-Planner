@@ -123,6 +123,13 @@ export const calculateQuoteSchema = z.object({
     type: z.enum(["oneway", "roundtrip"]).default("oneway"),
     persons: z.number().min(0).default(0),
   }).optional(),
+
+  // Custom Categories (관리자가 추가한 카테고리)
+  customCategories: z.array(z.object({
+    categoryId: z.number(),
+    quantity: z.number().min(1).default(1),
+    enabled: z.boolean().default(true),
+  })).optional(),
 });
 
 // Output schema for calculation result
@@ -157,6 +164,13 @@ export const quoteBreakdownSchema = z.object({
     price: z.number(),
     description: z.string(),
   }),
+  customCategories: z.array(z.object({
+    categoryId: z.number(),
+    name: z.string(),
+    pricePerUnit: z.number(),
+    quantity: z.number(),
+    subtotal: z.number(),
+  })).optional(),
   total: z.number(),
 });
 
@@ -457,3 +471,21 @@ export const adminNotifications = pgTable("admin_notifications", {
 });
 
 export type AdminNotification = typeof adminNotifications.$inferSelect;
+
+// 견적 커스텀 카테고리 (관리자가 추가하는 관광코스 등)
+export const quoteCategories = pgTable("quote_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").default(""),
+  imageUrl: text("image_url").default(""),
+  pricePerUnit: integer("price_per_unit").notNull().default(0),
+  unitLabel: text("unit_label").notNull().default("인"),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertQuoteCategorySchema = createInsertSchema(quoteCategories).omit({ id: true, createdAt: true, updatedAt: true });
+export type QuoteCategory = typeof quoteCategories.$inferSelect;
+export type InsertQuoteCategory = z.infer<typeof insertQuoteCategorySchema>;

@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -1318,7 +1318,36 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         breakdown.fastTrack.description = `패스트트랙 ${typeDesc} x ${persons}명 ($${pricePerPerson}/인)`;
       }
 
-      breakdown.total = breakdown.villa.price + breakdown.vehicle.price + breakdown.golf.price + breakdown.ecoGirl.price + breakdown.guide.price + breakdown.fastTrack.price;
+      // 7. Custom Categories Calculation
+      const customCategoryItems: { categoryId: number; name: string; pricePerUnit: number; quantity: number; subtotal: number }[] = [];
+      if (input.customCategories && input.customCategories.length > 0) {
+        const enabledSelections = input.customCategories.filter((c: any) => c.enabled !== false);
+        if (enabledSelections.length > 0) {
+          const categoryIds = enabledSelections.map((c: any) => c.categoryId);
+          const categories = await db.select().from(quoteCategories).where(
+            and(eq(quoteCategories.isActive, true))
+          );
+          const categoryMap = new Map(categories.map(c => [c.id, c]));
+          for (const sel of enabledSelections) {
+            const cat = categoryMap.get(sel.categoryId);
+            if (cat) {
+              const quantity = Number(sel.quantity) || 1;
+              const subtotal = (cat.pricePerUnit || 0) * quantity;
+              customCategoryItems.push({
+                categoryId: cat.id,
+                name: cat.name,
+                pricePerUnit: cat.pricePerUnit || 0,
+                quantity,
+                subtotal,
+              });
+            }
+          }
+        }
+      }
+      (breakdown as any).customCategories = customCategoryItems;
+      const customCategoriesTotal = customCategoryItems.reduce((sum, item) => sum + item.subtotal, 0);
+
+      breakdown.total = breakdown.villa.price + breakdown.vehicle.price + breakdown.golf.price + breakdown.ecoGirl.price + breakdown.guide.price + breakdown.fastTrack.price + customCategoriesTotal;
       res.json(breakdown);
     } catch (err) {
       console.error("Calculation route error:", err);
@@ -3907,6 +3936,119 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
     } catch (error) {
       console.error("Update villa order error:", error);
       res.status(500).json({ error: "Failed to update villa order" });
+    }
+  });
+
+  // === 견적 커스텀 카테고리 API ===
+  
+  // 공개 - 활성 카테고리 목록
+  app.get("/api/quote-categories", async (req, res) => {
+    try {
+      const categories = await db.select().from(quoteCategories)
+        .where(eq(quoteCategories.isActive, true))
+        .orderBy(quoteCategories.sortOrder);
+      res.json(categories);
+    } catch (error) {
+      console.error("Get quote categories error:", error);
+      res.status(500).json({ error: "Failed to get categories" });
+    }
+  });
+
+  // 관리자 - 전체 카테고리 목록
+  app.get("/api/admin/quote-categories", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const categories = await db.select().from(quoteCategories).orderBy(quoteCategories.sortOrder);
+      res.json(categories);
+    } catch (error) {
+      console.error("Get admin quote categories error:", error);
+      res.status(500).json({ error: "Failed to get categories" });
+    }
+  });
+
+  // 관리자 - 카테고리 추가
+  app.post("/api/admin/quote-categories", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const { name, description, imageUrl, pricePerUnit, unitLabel, isActive, sortOrder } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: "카테고리 이름이 필요합니다" });
+      }
+      const [newCategory] = await db.insert(quoteCategories).values({
+        name,
+        description: description || "",
+        imageUrl: imageUrl || "",
+        pricePerUnit: Number(pricePerUnit) || 0,
+        unitLabel: unitLabel || "인",
+        isActive: isActive !== false,
+        sortOrder: Number(sortOrder) || 0,
+      }).returning();
+      res.json(newCategory);
+    } catch (error) {
+      console.error("Create quote category error:", error);
+      res.status(500).json({ error: "Failed to create category" });
+    }
+  });
+
+  // 관리자 - 카테고리 수정
+  app.put("/api/admin/quote-categories/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      const { name, description, imageUrl, pricePerUnit, unitLabel, isActive, sortOrder } = req.body;
+      const [updated] = await db.update(quoteCategories)
+        .set({
+          ...(name !== undefined && { name }),
+          ...(description !== undefined && { description }),
+          ...(imageUrl !== undefined && { imageUrl }),
+          ...(pricePerUnit !== undefined && { pricePerUnit: Number(pricePerUnit) }),
+          ...(unitLabel !== undefined && { unitLabel }),
+          ...(isActive !== undefined && { isActive }),
+          ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) }),
+          updatedAt: new Date(),
+        })
+        .where(eq(quoteCategories.id, id))
+        .returning();
+      if (!updated) {
+        return res.status(404).json({ error: "카테고리를 찾을 수 없습니다" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Update quote category error:", error);
+      res.status(500).json({ error: "Failed to update category" });
+    }
+  });
+
+  // 관리자 - 카테고리 삭제
+  app.delete("/api/admin/quote-categories/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      await db.delete(quoteCategories).where(eq(quoteCategories.id, id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete quote category error:", error);
+      res.status(500).json({ error: "Failed to delete category" });
     }
   });
 

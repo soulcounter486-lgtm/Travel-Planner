@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { WeatherWidget } from "@/components/WeatherWidget";
 import { ExchangeRateWidget } from "@/components/ExchangeRateWidget";
 import { useQuery } from "@tanstack/react-query";
-import { LogIn, LogOut, Settings, ChevronDown, Users, RefreshCw, User, UserPlus, Mail, Ticket } from "lucide-react";
+import { LogIn, LogOut, Settings, ChevronDown, Users, RefreshCw, User, UserPlus, Mail, Ticket, List } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -345,6 +345,12 @@ export function AppHeader() {
                           <Settings className="w-4 h-4 mr-2" />
                           사이트설정
                           <span className="ml-1 text-[10px] text-muted-foreground">(SEO/텍스트)</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin/quote-categories" className="flex items-center cursor-pointer" data-testid="link-admin-quote-categories">
+                          <List className="w-4 h-4 mr-2" />
+                          견적카테고리
                         </Link>
                       </DropdownMenuItem>
                     </DropdownMenuContent>

@@ -99,6 +99,7 @@ import {
   Sparkles,
   UserPlus,
   ShoppingBag,
+  ShoppingCart,
   Download,
   Smartphone
 } from "lucide-react";
@@ -321,6 +322,11 @@ export default function Home() {
   // 사이트 설정 조회
   const { data: siteSettingsData = {} } = useQuery<Record<string, string>>({
     queryKey: ["/api/site-settings"],
+  });
+
+  // 커스텀 견적 카테고리 조회
+  const { data: customQuoteCategories = [] } = useQuery<any[]>({
+    queryKey: ["/api/quote-categories"],
   });
   
   // 기본값 설정
@@ -672,6 +678,7 @@ export default function Home() {
       ecoGirl: { enabled: false, selections: [] },
       guide: { enabled: false, days: "" as any, groupSize: 4 },
       fastTrack: { enabled: false, type: "oneway" as const, persons: "" as any },
+      customCategories: [] as any[],
     },
   });
 
@@ -1198,6 +1205,12 @@ export default function Home() {
                       <Link href="/admin/settings" className="flex items-center cursor-pointer" data-testid="link-admin-settings">
                         <Settings className="w-4 h-4 mr-2" />
                         사이트설정
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/quote-categories" className="flex items-center cursor-pointer" data-testid="link-admin-quote-categories">
+                        <List className="w-4 h-4 mr-2" />
+                        견적카테고리
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -2552,6 +2565,92 @@ export default function Home() {
                 )}
               </SectionCard>
             )} />
+
+            {customQuoteCategories.length > 0 && customQuoteCategories.map((cat: any) => {
+              const customSel = values.customCategories?.find((s: any) => s.categoryId === cat.id);
+              const isEnabled = customSel?.enabled || false;
+              const quantity = customSel?.quantity || 1;
+              const estimate = isEnabled ? (cat.pricePerUnit || 0) * quantity : 0;
+              return (
+                <SectionCard
+                  key={`custom-cat-${cat.id}`}
+                  title={cat.name}
+                  icon={ShoppingCart}
+                  isEnabled={isEnabled}
+                  onToggle={(checked: boolean) => {
+                    const current = form.getValues("customCategories") || [];
+                    const existing = current.findIndex((s: any) => s.categoryId === cat.id);
+                    if (checked) {
+                      if (existing >= 0) {
+                        const updated = [...current];
+                        updated[existing] = { ...updated[existing], enabled: true };
+                        form.setValue("customCategories", updated);
+                      } else {
+                        form.setValue("customCategories", [...current, { categoryId: cat.id, quantity: 1, enabled: true }]);
+                      }
+                    } else {
+                      if (existing >= 0) {
+                        const updated = [...current];
+                        updated[existing] = { ...updated[existing], enabled: false };
+                        form.setValue("customCategories", updated);
+                      }
+                    }
+                  }}
+                  gradient="from-indigo-500/10"
+                >
+                  {cat.description && (
+                    <p className="text-sm text-muted-foreground mb-3">{cat.description}</p>
+                  )}
+                  {cat.imageUrl && (
+                    <img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover rounded-lg mb-3" />
+                  )}
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="flex-1">
+                      <Label>{language === "ko" ? "수량" : "Qty"} ({cat.unitLabel})</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={quantity}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 1;
+                          const current = form.getValues("customCategories") || [];
+                          const existing = current.findIndex((s: any) => s.categoryId === cat.id);
+                          if (existing >= 0) {
+                            const updated = [...current];
+                            updated[existing] = { ...updated[existing], quantity: val };
+                            form.setValue("customCategories", updated);
+                          } else {
+                            form.setValue("customCategories", [...current, { categoryId: cat.id, quantity: val, enabled: true }]);
+                          }
+                        }}
+                        className="h-12 rounded-xl mt-1"
+                        data-testid={`input-custom-qty-${cat.id}`}
+                      />
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm text-muted-foreground">{language === "ko" ? "단가" : "Price"}</span>
+                      <div className="text-lg font-bold text-indigo-500">${cat.pricePerUnit}/{cat.unitLabel}</div>
+                    </div>
+                  </div>
+                  {isEnabled && estimate > 0 && (
+                    <div className="bg-indigo-500/10 rounded-xl p-3 text-sm space-y-1">
+                      <div className="flex justify-between font-bold text-indigo-400">
+                        <span>{language === "ko" ? "예상 금액" : "Estimate"}</span>
+                        <span>${estimate.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-indigo-300 text-xs">
+                        <span>${cat.pricePerUnit} × {quantity}{cat.unitLabel}</span>
+                      </div>
+                      {currencyInfo.code !== "USD" && (
+                        <div className="flex justify-end pt-1 text-indigo-300 text-xs">
+                          <span>≈ {currencyInfo.symbol}{(estimate * exchangeRate).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </SectionCard>
+              );
+            })}
 
             {(isAdmin || user?.canViewEco || (user?.gender === 'male' && user?.loginMethod === 'kakao')) && (
               <Controller control={form.control} name="ecoGirl.enabled" render={({ field }) => (
