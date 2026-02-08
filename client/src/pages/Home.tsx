@@ -100,6 +100,7 @@ import {
   UserPlus,
   ShoppingBag,
   ShoppingCart,
+  Ship,
   Download,
   Smartphone,
   Trash2,
@@ -2640,7 +2641,7 @@ export default function Home() {
                 <SectionCard
                   key={`custom-cat-${cat.id}`}
                   title={cat.name}
-                  icon={ShoppingCart}
+                  icon={Ship}
                   isEnabled={isEnabled}
                   onToggle={(checked: boolean) => {
                     const defaultSched: any = { date: "", quantity: 1 };
