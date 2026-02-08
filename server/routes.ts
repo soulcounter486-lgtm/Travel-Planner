@@ -2524,6 +2524,10 @@ Example response format:
       { name: "쩌우득 골프장", nameVi: "Chou Duc Golf", course: "chouduc", note: "도깨비 협력업체, 평일 $80, 주말 $120", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
       { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "도깨비 협력업체, 평일 $150, 주말 $200", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
     ],
+    casino: [
+      { name: "그랜드 호짬 카지노", nameVi: "The Grand Ho Tram Casino", type: "카지노", note: "베트남 최대 규모 카지노, 24시간 운영, 외국인 전용(21세 이상), 라이브 테이블 90대+슬롯 500대, 5성급 리조트 시설", lat: 10.4697, lng: 107.3975 },
+      { name: "호짬 스트립 리조트", nameVi: "The Grand Ho Tram Strip Resort", type: "리조트/카지노", note: "카지노 복합 리조트, 수영장, 스파, 레스토랑, 해변 직접 연결", lat: 10.4700, lng: 107.3980 },
+    ],
   };
 
   app.post("/api/travel-plan", async (req, res) => {
@@ -2607,7 +2611,7 @@ ${languagePrompts[language] || languagePrompts.ko}
           "activity": "활동 내용",
           "place": "장소명 (한국어)",
           "placeVi": "베트남어 장소명",
-          "type": "attraction|restaurant|cafe|massage|golf|beach|club|bar|transfer|shopping",
+          "type": "attraction|restaurant|cafe|massage|golf|beach|club|bar|transfer|shopping|casino",
           "note": "참고사항 (영업시간, 팁 등)",
           "estimatedCost": 1인당 예상 비용(USD, 숫자만),
           "travelTime": "이전 장소에서 이동시간 (예: 차 10분, 도보 5분)",
@@ -2633,6 +2637,7 @@ ${languagePrompts[language] || languagePrompts.ko}
 - 골프 (18홀): $80~200
 - 클럽/바: $10~30
 - 해변 활동: 무료~$5
+- 카지노: $50~500 (최소 베팅 $10~25, 테이블당)
 
 ## 좌표 참고 (붕따우 주요 지점):
 - 붕따우 중심: 10.346, 107.084
@@ -2642,6 +2647,7 @@ ${languagePrompts[language] || languagePrompts.ko}
 - 등대: 10.329, 107.082
 - 붕따우 시장: 10.347, 107.077
 - 놀이동산(Ho May): 10.356, 107.080
+- 호짬(Ho Tram): 10.470, 107.398 (붕따우에서 차로 약 40분)
 각 장소의 lat/lng는 위 좌표 근처에서 적절히 지정하세요.`;
 
       let companionContext = "";
@@ -2706,6 +2712,7 @@ ${JSON.stringify(placesData, null, 2)}
 - services: 마사지/이발소 (Re.en 마사지, 그랜드 마사지 등)
 - nightlife: 밤문화 (88 비어클럽, Revo 클럽 등)
 - golf: 골프장
+- casino: 카지노 (그랜드 호짬 카지노 - 붕따우에서 차로 40분)
 
 ## 일정 작성 규칙:
 1. ⭐ 협력업체 우선 배치: isPartner: true인 장소를 반드시 우선적으로 일정에 포함하세요. 협력업체는 "붕따우 도깨비" 공식 파트너로 할인 혜택이 있습니다.
@@ -2726,7 +2733,13 @@ ${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사�
 ${purposes.includes('gourmet') ? '## 맛집 탐방: localFood, koreanFood, chineseFood, buffet를 골고루 포함하세요.' : ''}
 ${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁에 클럽이나 바 활동을 포함하세요. 다음날 오전 일정은 늦게 시작하세요.' : ''}
 ${purposes.includes('family') ? '## 가족 여행: 놀이동산(Ho May), 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치하세요. 아이가 있으면 이동 최소화.' : ''}
-${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁기념관, 붕따우 등대 등 역사/문화 명소를 우선 배치하세요.' : ''}`;
+${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁기념관, 붕따우 등대 등 역사/문화 명소를 우선 배치하세요.' : ''}
+${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 "그랜드 호짬 카지노"를 반드시 일정에 포함하세요.
+- 호짬은 붕따우에서 차로 약 40분 거리이므로, 카지노 방문일은 하루 일정을 호짬 지역에서 보내도록 구성하세요.
+- 카지노는 24시간 운영이므로 저녁~밤 시간대에 배치하고, 호짬 리조트에서의 휴식/식사도 포함하세요.
+- 외국인 전용(여권 필수, 21세 이상)임을 tips에 안내하세요.
+- 카지노 방문 전후로 호짬 해변, 리조트 스파 등을 함께 즐기는 일정을 추천하세요.
+- 붕따우에서 호짬 이동 시 차량 예약이 필요하므로 vehicleRecommendation에 호짬 이동 관련 안내를 포함하세요.` : ''}`;
 
       const response = await gemini.models.generateContent({
         model: "gemini-2.5-flash",
