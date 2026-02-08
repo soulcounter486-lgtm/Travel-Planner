@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -189,6 +189,8 @@ export default function TravelPlanner() {
   const [showMap, setShowMap] = useState(false);
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
   const [dragState, setDragState] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
+  const [addToExpensePending, setAddToExpensePending] = useState(false);
+  const [, setLocation] = useLocation();
   const planRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -1118,12 +1120,59 @@ export default function TravelPlanner() {
                     ? (language === "ko" ? "목록으로" : "Back to List")
                     : t("planner.selectPurpose")}
                 </Button>
-                <Link href="/expenses">
-                  <Button variant="outline" data-testid="goto-expense-btn">
-                    <Wallet className="h-4 w-4 mr-1" />
-                    {language === "ko" ? "가계부에 추가" : "Add to Tracker"}
-                  </Button>
-                </Link>
+                <Button
+                  variant="outline"
+                  data-testid="goto-expense-btn"
+                  disabled={addToExpensePending}
+                  onClick={async () => {
+                    if (!travelPlan || !user) {
+                      toast({ title: language === "ko" ? "로그인이 필요합니다" : "Login required", variant: "destructive" });
+                      return;
+                    }
+                    setAddToExpensePending(true);
+                    try {
+                      const res = await apiRequest("POST", "/api/expense-groups", {
+                        name: travelPlan.title || (language === "ko" ? "AI 여행 일정" : "AI Travel Plan"),
+                        participants: [user.nickname || user.email || "나"],
+                        budget: travelPlan.totalEstimatedCost || 0,
+                      });
+                      const group = await res.json();
+                      for (const day of travelPlan.days) {
+                        for (const item of day.schedule) {
+                          if (item.estimatedCost && item.estimatedCost > 0) {
+                            const categoryMap: Record<string, string> = {
+                              restaurant: "food", cafe: "food", attraction: "activity",
+                              massage: "activity", golf: "activity", beach: "activity",
+                              club: "activity", bar: "food", casino: "activity",
+                              transfer: "transport", shopping: "shopping",
+                            };
+                            await apiRequest("POST", `/api/expense-groups/${group.id}/expenses`, {
+                              description: `${item.place} (Day ${day.day})`,
+                              amount: item.estimatedCost,
+                              category: categoryMap[item.type] || "other",
+                              paidBy: user.nickname || user.email || "나",
+                              splitAmong: [user.nickname || user.email || "나"],
+                              date: day.date,
+                              memo: item.note || "",
+                            });
+                          }
+                        }
+                      }
+                      queryClient.invalidateQueries({ queryKey: ["/api/expense-groups"] });
+                      toast({ title: language === "ko" ? "가계부에 추가되었습니다!" : "Added to expense tracker!" });
+                      setLocation("/expenses");
+                    } catch (err) {
+                      toast({ title: language === "ko" ? "가계부 추가 실패" : "Failed to add", variant: "destructive" });
+                    } finally {
+                      setAddToExpensePending(false);
+                    }
+                  }}
+                >
+                  <Wallet className="h-4 w-4 mr-1" />
+                  {addToExpensePending
+                    ? (language === "ko" ? "추가 중..." : "Adding...")
+                    : (language === "ko" ? "가계부에 추가" : "Add to Tracker")}
+                </Button>
               </div>
             </motion.div>
           )}
