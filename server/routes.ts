@@ -866,11 +866,13 @@ export async function registerRoutes(
   app.post("/api/push/subscribe", isAuthenticated, async (req: any, res) => {
     try {
       const { endpoint, keys } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       
       if (!userId) {
         return res.status(401).json({ error: "로그인이 필요합니다." });
       }
+      
+      console.log("Push subscribe attempt - userId:", userId, "endpoint:", endpoint?.substring(0, 60));
       
       if (!endpoint || !keys?.p256dh || !keys?.auth) {
         return res.status(400).json({ error: "잘못된 구독 정보입니다." });
@@ -898,6 +900,45 @@ export async function registerRoutes(
       console.error("Push subscription error:", error);
       res.status(500).json({ error: "구독 저장 실패" });
     }
+  });
+
+  app.post("/api/push/test", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "로그인 필요" });
+      
+      const subs = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+      console.log("Push test - userId:", userId, "subscriptions:", subs.length);
+      
+      if (subs.length === 0) {
+        return res.json({ success: false, message: "구독 없음. 알림 권한을 허용하고 다시 로그인해주세요.", userId, subscriptionCount: 0 });
+      }
+      
+      for (const sub of subs) {
+        try {
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            JSON.stringify({ title: "테스트 알림", body: "푸시 알림이 정상 작동합니다!", url: "/" })
+          );
+        } catch (err: any) {
+          if (err.statusCode === 404 || err.statusCode === 410) {
+            await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
+          }
+          return res.json({ success: false, message: `발송 실패: ${err.message}`, statusCode: err.statusCode });
+        }
+      }
+      
+      res.json({ success: true, message: "테스트 알림 발송 완료", userId, subscriptionCount: subs.length });
+    } catch (err) {
+      res.status(500).json({ error: "테스트 실패" });
+    }
+  });
+
+  app.get("/api/push/status", isAuthenticated, async (req: any, res) => {
+    const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
+    if (!userId) return res.status(401).json({ error: "로그인 필요" });
+    const subs = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+    res.json({ userId, subscriptionCount: subs.length, subscriptions: subs.map(s => ({ endpoint: s.endpoint.substring(0, 80), createdAt: s.createdAt })) });
   });
 
   // 푸시 알림 구독 해제

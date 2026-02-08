@@ -21,13 +21,18 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
     checkSubscription();
   }, []);
 
-  // 로그인 시 자동 구독
   useEffect(() => {
     if (autoSubscribe && isLoggedIn && isSupported && !isSubscribed && !autoSubscribeAttempted.current) {
       autoSubscribeAttempted.current = true;
-      // 이미 권한이 granted인 경우에만 자동 구독
       if (Notification.permission === "granted") {
         subscribeAuto();
+      } else if (Notification.permission === "default") {
+        Notification.requestPermission().then((perm) => {
+          setPermission(perm);
+          if (perm === "granted") {
+            subscribeAuto();
+          }
+        });
       }
     }
   }, [autoSubscribe, isLoggedIn, isSupported, isSubscribed]);
