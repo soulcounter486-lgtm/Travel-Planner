@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "wouter";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/lib/i18n";
 import { 
   Utensils, 
@@ -22,25 +23,36 @@ import {
   Lightbulb,
   RefreshCw,
   Loader2,
-  Calculator,
-  Eye,
   Wallet,
   MessageCircle,
   Download,
   Music,
   ExternalLink,
-  FileText,
-  ShoppingBag,
-  UserPlus
+  GripVertical,
+  Plane,
+  Heart,
+  Briefcase,
+  Baby,
+  Car,
+  DollarSign,
+  Sun,
+  CloudRain,
+  Map,
+  ChevronDown,
+  ChevronUp,
+  Navigation
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, addDays } from "date-fns";
+import { format, addDays, getMonth } from "date-fns";
 import type { Locale } from "date-fns";
 import { ko, enUS, zhCN, vi, ru, ja } from "date-fns/locale";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
 import { FixedBottomBar } from "@/components/FixedBottomBar";
+import type { Villa } from "@shared/schema";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 interface ScheduleItem {
   time: string;
@@ -49,6 +61,10 @@ interface ScheduleItem {
   placeVi?: string;
   type: string;
   note?: string;
+  estimatedCost?: number;
+  travelTime?: string;
+  lat?: number;
+  lng?: number;
 }
 
 interface DayPlan {
@@ -63,6 +79,9 @@ interface TravelPlan {
   summary: string;
   days: DayPlan[];
   tips: string[];
+  totalEstimatedCost?: number;
+  vehicleRecommendation?: string;
+  weatherNote?: string;
 }
 
 const purposeOptions = [
@@ -75,6 +94,29 @@ const purposeOptions = [
   { id: "nightlife", icon: Music, gradient: "from-pink-600 to-purple-700" },
 ];
 
+const companionOptions = [
+  { id: "solo", icon: Users, label: { ko: "혼자", en: "Solo", zh: "独自", vi: "Một mình", ru: "Один", ja: "一人" } },
+  { id: "couple", icon: Heart, label: { ko: "커플", en: "Couple", zh: "情侣", vi: "Cặp đôi", ru: "Пара", ja: "カップル" } },
+  { id: "family_kids", icon: Baby, label: { ko: "가족(아이동반)", en: "Family(Kids)", zh: "家庭(带小孩)", vi: "Gia đình(trẻ em)", ru: "Семья(дети)", ja: "家族(子連れ)" } },
+  { id: "family_adults", icon: Users, label: { ko: "가족(성인)", en: "Family(Adults)", zh: "家庭(成人)", vi: "Gia đình(người lớn)", ru: "Семья(взрослые)", ja: "家族(大人)" } },
+  { id: "friends_male", icon: Users, label: { ko: "남성 친구들", en: "Guy Friends", zh: "男性朋友", vi: "Bạn nam", ru: "Друзья(м)", ja: "男友達" } },
+  { id: "friends_female", icon: Users, label: { ko: "여성 친구들", en: "Girl Friends", zh: "女性朋友", vi: "Bạn nữ", ru: "Подруги", ja: "女友達" } },
+  { id: "workshop", icon: Briefcase, label: { ko: "워크샵/단체", en: "Workshop/Group", zh: "研讨会/团体", vi: "Workshop/Nhóm", ru: "Воркшоп", ja: "ワークショップ" } },
+];
+
+const travelStyleOptions = [
+  { id: "packed", icon: Mountain, label: { ko: "빡빡한 관광형", en: "Packed Sightseeing", zh: "紧凑观光型", vi: "Tham quan dày đặc", ru: "Насыщенный", ja: "詰め込み観光" } },
+  { id: "balanced", icon: Sun, label: { ko: "적당한 밸런스", en: "Balanced", zh: "均衡型", vi: "Cân bằng", ru: "Баланс", ja: "バランス型" } },
+  { id: "relaxed", icon: Palmtree, label: { ko: "널널한 휴식형", en: "Relaxed & Easy", zh: "悠闲休息型", vi: "Thư giãn", ru: "Расслабленный", ja: "のんびり休息" } },
+];
+
+const arrivalTimeOptions = [
+  { id: "morning", label: { ko: "오전 도착 (9시 이전)", en: "Morning (<9AM)", zh: "上午到达(<9点)", vi: "Sáng (<9h)", ru: "Утро (<9)", ja: "午前着(<9時)" } },
+  { id: "midday", label: { ko: "낮 도착 (9시~14시)", en: "Midday (9AM~2PM)", zh: "中午到达(9-14点)", vi: "Trưa (9h-14h)", ru: "День (9-14)", ja: "昼着(9-14時)" } },
+  { id: "afternoon", label: { ko: "오후 도착 (14시~18시)", en: "Afternoon (2~6PM)", zh: "下午到达(14-18点)", vi: "Chiều (14h-18h)", ru: "Вечер (14-18)", ja: "午後着(14-18時)" } },
+  { id: "evening", label: { ko: "저녁 도착 (18시 이후)", en: "Evening (>6PM)", zh: "晚上到达(>18点)", vi: "Tối (>18h)", ru: "Вечер (>18)", ja: "夜着(>18時)" } },
+];
+
 const typeIcons: Record<string, React.ElementType> = {
   attraction: MapPin,
   restaurant: Utensils,
@@ -84,6 +126,8 @@ const typeIcons: Record<string, React.ElementType> = {
   beach: Palmtree,
   club: Music,
   bar: Music,
+  transfer: Car,
+  shopping: Wallet,
 };
 
 const typeColors: Record<string, string> = {
@@ -95,43 +139,41 @@ const typeColors: Record<string, string> = {
   beach: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
   club: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",
   bar: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+  transfer: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300",
+  shopping: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
 };
 
 export default function TravelPlanner() {
   const { language, t } = useLanguage();
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
+  const [companion, setCompanion] = useState<string>("");
+  const [travelStyle, setTravelStyle] = useState<string>("balanced");
+  const [arrivalTime, setArrivalTime] = useState<string>("");
+  const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [travelPlan, setTravelPlan] = useState<TravelPlan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
+  const [dragState, setDragState] = useState<{ dayIdx: number; itemIdx: number } | null>(null);
   const planRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+
+  const { data: villas = [] } = useQuery<Villa[]>({
+    queryKey: ["/api/villas"],
+  });
+
+  const activeVillas = villas.filter(v => v.isActive);
 
   const locales: Record<string, Locale> = { ko, en: enUS, zh: zhCN, vi, ru, ja };
   const currentLocale = locales[language] || ko;
 
-  useEffect(() => {
-    if (travelPlan && planRef.current) {
-      const timer = setTimeout(async () => {
-        try {
-          const canvas = await html2canvas(planRef.current!, {
-            backgroundColor: "#ffffff",
-            scale: 2,
-            useCORS: true,
-          });
-          
-          const link = document.createElement("a");
-          link.download = `VungTau_TravelPlan_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
-          link.href = canvas.toDataURL("image/png");
-          link.click();
-        } catch (error) {
-          console.error("Failed to auto-save image:", error);
-        }
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [travelPlan]);
+  const isRainySeason = startDate ? [4, 5, 6, 7, 8, 9].includes(getMonth(startDate)) : false;
 
   const togglePurpose = (purposeId: string) => {
     setSelectedPurposes((prev) =>
@@ -146,16 +188,50 @@ export default function TravelPlanner() {
       if (selectedPurposes.length === 0 || !startDate || !endDate) {
         throw new Error("Please fill all fields");
       }
+      const selectedVilla = activeVillas.find(v => v.id === selectedVillaId);
       const response = await apiRequest("POST", "/api/travel-plan", {
         purpose: selectedPurposes.join(", "),
         startDate: format(startDate, "yyyy-MM-dd"),
         endDate: format(endDate, "yyyy-MM-dd"),
         language,
+        companion,
+        travelStyle,
+        arrivalTime,
+        villaName: selectedVilla?.name || "",
+        villaLat: selectedVilla?.latitude || "",
+        villaLng: selectedVilla?.longitude || "",
       });
       return response.json();
     },
     onSuccess: (data) => {
-      setTravelPlan(data);
+      const normalized: TravelPlan = {
+        title: data.title || "",
+        summary: data.summary || "",
+        totalEstimatedCost: typeof data.totalEstimatedCost === "number" ? data.totalEstimatedCost : 0,
+        vehicleRecommendation: data.vehicleRecommendation || "",
+        weatherNote: data.weatherNote || "",
+        tips: Array.isArray(data.tips) ? data.tips : [],
+        days: Array.isArray(data.days) ? data.days.map((day: any) => ({
+          day: day.day || 1,
+          date: day.date || "",
+          theme: day.theme || "",
+          schedule: Array.isArray(day.schedule) ? day.schedule.map((item: any) => ({
+            time: item.time || "",
+            activity: item.activity || "",
+            place: item.place || "",
+            placeVi: item.placeVi || "",
+            type: item.type || "attraction",
+            note: item.note || "",
+            estimatedCost: typeof item.estimatedCost === "number" ? item.estimatedCost : 0,
+            travelTime: item.travelTime || "",
+            lat: typeof item.lat === "number" ? item.lat : (parseFloat(item.lat) || 0),
+            lng: typeof item.lng === "number" ? item.lng : (parseFloat(item.lng) || 0),
+          })) : [],
+        })) : [],
+      };
+      setTravelPlan(normalized);
+      const allDays = new Set<number>(normalized.days.map((_: any, i: number) => i));
+      setExpandedDays(allDays);
     },
   });
 
@@ -170,7 +246,6 @@ export default function TravelPlanner() {
 
   const handleSaveImage = async () => {
     if (!planRef.current) return;
-    
     setIsSaving(true);
     try {
       const canvas = await html2canvas(planRef.current, {
@@ -178,7 +253,6 @@ export default function TravelPlanner() {
         scale: 2,
         useCORS: true,
       });
-      
       const link = document.createElement("a");
       link.download = `VungTau_TravelPlan_${format(new Date(), "yyyyMMdd_HHmmss")}.png`;
       link.href = canvas.toDataURL("image/png");
@@ -190,12 +264,121 @@ export default function TravelPlanner() {
     }
   };
 
+  const moveScheduleItem = useCallback((dayIdx: number, fromIdx: number, toIdx: number) => {
+    if (!travelPlan) return;
+    const newPlan = { ...travelPlan };
+    const newDays = [...newPlan.days];
+    const newSchedule = [...newDays[dayIdx].schedule];
+    const [moved] = newSchedule.splice(fromIdx, 1);
+    newSchedule.splice(toIdx, 0, moved);
+    newDays[dayIdx] = { ...newDays[dayIdx], schedule: newSchedule };
+    newPlan.days = newDays;
+    setTravelPlan(newPlan);
+  }, [travelPlan]);
+
+  const toggleDayExpanded = (dayIdx: number) => {
+    setExpandedDays(prev => {
+      const next = new Set(prev);
+      if (next.has(dayIdx)) next.delete(dayIdx);
+      else next.add(dayIdx);
+      return next;
+    });
+  };
+
+  const getDayCost = (day: DayPlan) => {
+    return day.schedule.reduce((sum, item) => sum + (item.estimatedCost || 0), 0);
+  };
+
+  const getTotalCost = () => {
+    if (!travelPlan) return 0;
+    return travelPlan.totalEstimatedCost || travelPlan.days.reduce((sum, day) => sum + getDayCost(day), 0);
+  };
+
+  useEffect(() => {
+    if (!showMap || !mapContainerRef.current || !travelPlan) return;
+
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
+
+    const center: [number, number] = [10.346, 107.084];
+    const map = L.map(mapContainerRef.current).setView(center, 13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap",
+    }).addTo(map);
+    mapRef.current = map;
+
+    const allPoints: [number, number][] = [];
+    const colors = ["#3b82f6", "#ef4444", "#22c55e", "#f59e0b", "#8b5cf6", "#ec4899"];
+
+    travelPlan.days.forEach((day, dayIdx) => {
+      const dayPoints: [number, number][] = [];
+      day.schedule.forEach((item) => {
+        if (item.lat && item.lng) {
+          const point: [number, number] = [item.lat, item.lng];
+          dayPoints.push(point);
+          allPoints.push(point);
+
+          const color = colors[dayIdx % colors.length];
+          const sanitize = (s: string) => s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
+          L.circleMarker(point, {
+            radius: 8,
+            fillColor: color,
+            color: "#fff",
+            weight: 2,
+            fillOpacity: 0.9,
+          }).addTo(map).bindPopup(`<b>Day ${day.day}</b><br/>${sanitize(item.time)} ${sanitize(item.activity)}<br/><small>${sanitize(item.place)}</small>`);
+        }
+      });
+
+      if (dayPoints.length > 1) {
+        L.polyline(dayPoints, {
+          color: colors[dayIdx % colors.length],
+          weight: 3,
+          opacity: 0.7,
+          dashArray: "8, 8",
+        }).addTo(map);
+      }
+    });
+
+    const mapVilla = activeVillas.find(v => v.id === selectedVillaId);
+    if (mapVilla?.latitude && mapVilla?.longitude) {
+      const villaPoint: [number, number] = [parseFloat(mapVilla.latitude), parseFloat(mapVilla.longitude)];
+      allPoints.push(villaPoint);
+      const safeName = (mapVilla.name || "").replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] || c));
+      L.marker(villaPoint, {
+        icon: L.divIcon({
+          className: "",
+          html: `<div style="background:#3b82f6;color:white;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:bold;white-space:nowrap;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${safeName}</div>`,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
+        }),
+      }).addTo(map);
+    }
+
+    if (allPoints.length > 0) {
+      map.fitBounds(L.latLngBounds(allPoints), { padding: [30, 30] });
+    }
+
+    setTimeout(() => map.invalidateSize(), 200);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [showMap, travelPlan, selectedVillaId]);
+
+  const lbl = (labels: Record<string, string>) => labels[language] || labels.ko;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
       <AppHeader />
       <TabNavigation language={language} />
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8 pb-40">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/10 to-purple-500/10 px-4 py-2 rounded-full mb-4">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -206,129 +389,267 @@ export default function TravelPlanner() {
         </div>
 
         {!travelPlan && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
-                {t("planner.purpose")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {purposeOptions.map((option) => {
-                  const Icon = option.icon;
-                  const isSelected = selectedPurposes.includes(option.id);
-                  return (
-                    <motion.button
-                      key={option.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => togglePurpose(option.id)}
-                      className={`relative p-4 rounded-xl border-2 transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover-elevate"
-                      }`}
-                      data-testid={`purpose-${option.id}`}
-                    >
-                      <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${option.gradient} flex items-center justify-center mx-auto mb-2`}>
-                        <Icon className="h-6 w-6 text-white" />
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  {t("planner.purpose")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {purposeOptions.map((option) => {
+                    const Icon = option.icon;
+                    const isSelected = selectedPurposes.includes(option.id);
+                    return (
+                      <motion.button
+                        key={option.id}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => togglePurpose(option.id)}
+                        className={`relative p-3 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover-elevate"
+                        }`}
+                        data-testid={`purpose-${option.id}`}
+                      >
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${option.gradient} flex items-center justify-center mx-auto mb-1.5`}>
+                          <Icon className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="text-xs font-medium block whitespace-nowrap">
+                          {t(`planner.purpose.${option.id}`)}
+                        </span>
+                        {isSelected && (
+                          <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">{selectedPurposes.indexOf(option.id) + 1}</span>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">{t("planner.startDate")}</label>
+                    <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                          data-testid="start-date-picker"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {startDate ? format(startDate, "PPP", { locale: currentLocale }) : t("planner.selectDates")}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={startDate}
+                          onSelect={(date) => {
+                            setStartDate(date);
+                            if (date && (!endDate || endDate < date)) {
+                              setEndDate(addDays(date, 2));
+                            }
+                            setStartDateOpen(false);
+                          }}
+                          disabled={(date) => date < new Date()}
+                          locale={currentLocale}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">{t("planner.endDate")}</label>
+                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                          data-testid="end-date-picker"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "PPP", { locale: currentLocale }) : t("planner.selectDates")}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={(date) => {
+                            setEndDate(date);
+                            setEndDateOpen(false);
+                          }}
+                          disabled={(date) => date < (startDate || new Date())}
+                          locale={currentLocale}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {startDate && isRainySeason && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm">
+                    <CloudRain className="h-4 w-4 text-blue-500 shrink-0" />
+                    <span className="text-blue-700 dark:text-blue-300">
+                      {language === "ko" ? "우기(5~10월)입니다. 실내 활동과 마사지/스파를 더 많이 포함합니다." : "Rainy season (May-Oct). More indoor activities & spa will be included."}
+                    </span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="cursor-pointer" onClick={() => setShowAdvanced(!showAdvanced)} data-testid="toggle-advanced">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    {language === "ko" ? "맞춤 설정" : "Personalize"}
+                  </div>
+                  {showAdvanced ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </CardTitle>
+              </CardHeader>
+              <AnimatePresence>
+                {showAdvanced && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <CardContent className="space-y-5 pt-0">
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          {language === "ko" ? "동반자 유형" : "Companion Type"}
+                        </label>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {companionOptions.map((opt) => {
+                            const Icon = opt.icon;
+                            return (
+                              <button
+                                key={opt.id}
+                                onClick={() => setCompanion(companion === opt.id ? "" : opt.id)}
+                                className={`flex items-center gap-1.5 p-2 rounded-lg border-2 text-xs transition-all ${
+                                  companion === opt.id
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border hover-elevate"
+                                }`}
+                                data-testid={`companion-${opt.id}`}
+                              >
+                                <Icon className="h-4 w-4 shrink-0" />
+                                <span className="whitespace-nowrap">{lbl(opt.label)}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <span className="text-sm font-medium block">
-                        {t(`planner.purpose.${option.id}`)}
-                      </span>
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">{selectedPurposes.indexOf(option.id) + 1}</span>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          {language === "ko" ? "여행 스타일" : "Travel Style"}
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {travelStyleOptions.map((opt) => {
+                            const Icon = opt.icon;
+                            return (
+                              <button
+                                key={opt.id}
+                                onClick={() => setTravelStyle(opt.id)}
+                                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 text-xs transition-all ${
+                                  travelStyle === opt.id
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border hover-elevate"
+                                }`}
+                                data-testid={`style-${opt.id}`}
+                              >
+                                <Icon className="h-5 w-5" />
+                                <span className="whitespace-nowrap">{lbl(opt.label)}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          {language === "ko" ? "첫날 도착 시간" : "Arrival Time (Day 1)"}
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {arrivalTimeOptions.map((opt) => (
+                            <button
+                              key={opt.id}
+                              onClick={() => setArrivalTime(arrivalTime === opt.id ? "" : opt.id)}
+                              className={`flex items-center gap-1.5 p-2.5 rounded-lg border-2 text-xs transition-all ${
+                                arrivalTime === opt.id
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover-elevate"
+                              }`}
+                              data-testid={`arrival-${opt.id}`}
+                            >
+                              <Plane className="h-4 w-4 shrink-0" />
+                              <span className="whitespace-nowrap">{lbl(opt.label)}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {activeVillas.length > 0 && (
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            {language === "ko" ? "숙소 (동선 최적화)" : "Accommodation (Route Optimization)"}
+                          </label>
+                          <Select
+                            value={selectedVillaId?.toString() || "none"}
+                            onValueChange={(val) => setSelectedVillaId(val === "none" ? null : parseInt(val))}
+                          >
+                            <SelectTrigger data-testid="select-villa">
+                              <SelectValue placeholder={language === "ko" ? "빌라 선택 (선택사항)" : "Select villa (optional)"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">{language === "ko" ? "선택 안함" : "Not selected"}</SelectItem>
+                              {activeVillas.map((villa) => (
+                                <SelectItem key={villa.id} value={villa.id.toString()}>
+                                  {villa.name} ({villa.bedrooms}{language === "ko" ? "룸" : "R"})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedVillaId && (
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                              <Navigation className="h-3 w-3" />
+                              {language === "ko" ? "숙소 위치 기준으로 가까운 장소를 우선 배치합니다" : "Nearby places prioritized based on villa location"}
+                            </p>
+                          )}
                         </div>
                       )}
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">{t("planner.startDate")}</label>
-                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                        data-testid="start-date-picker"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(startDate, "PPP", { locale: currentLocale }) : t("planner.selectDates")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={(date) => {
-                          setStartDate(date);
-                          if (date && (!endDate || endDate < date)) {
-                            setEndDate(addDays(date, 2));
-                          }
-                          setStartDateOpen(false);
-                        }}
-                        disabled={(date) => date < new Date()}
-                        locale={currentLocale}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">{t("planner.endDate")}</label>
-                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                        data-testid="end-date-picker"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(endDate, "PPP", { locale: currentLocale }) : t("planner.selectDates")}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={(date) => {
-                          setEndDate(date);
-                          setEndDateOpen(false);
-                        }}
-                        disabled={(date) => date < (startDate || new Date())}
-                        locale={currentLocale}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleGenerate}
-                disabled={selectedPurposes.length === 0 || !startDate || !endDate || generatePlanMutation.isPending}
-                data-testid="generate-plan-btn"
-              >
-                {generatePlanMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    {t("planner.generating")}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-5 w-5" />
-                    {t("planner.generate")}
-                  </>
+                    </CardContent>
+                  </motion.div>
                 )}
-              </Button>
-            </CardContent>
-          </Card>
+              </AnimatePresence>
+            </Card>
+
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleGenerate}
+              disabled={selectedPurposes.length === 0 || !startDate || !endDate || generatePlanMutation.isPending}
+              data-testid="generate-plan-btn"
+            >
+              {generatePlanMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  {t("planner.generating")}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  {t("planner.generate")}
+                </>
+              )}
+            </Button>
+          </div>
         )}
 
         <AnimatePresence mode="wait">
@@ -337,147 +658,232 @@ export default function TravelPlanner() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
+              className="space-y-4"
             >
-              <div className="flex justify-end gap-2 mb-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRegenerate}
-                  disabled={generatePlanMutation.isPending}
-                  data-testid="regenerate-btn"
-                >
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={generatePlanMutation.isPending} data-testid="regenerate-btn">
                   <RefreshCw className={`h-4 w-4 mr-1 ${generatePlanMutation.isPending ? 'animate-spin' : ''}`} />
                   {t("planner.regenerate")}
                 </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleSaveImage}
-                  disabled={isSaving}
-                  data-testid="save-image-btn"
-                >
-                  {isSaving ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 mr-1" />
-                  )}
-                  {language === "ko" ? "이미지 저장" : 
-                   language === "en" ? "Save Image" :
-                   language === "zh" ? "保存图片" :
-                   language === "vi" ? "Lưu ảnh" :
-                   language === "ru" ? "Сохранить" :
-                   language === "ja" ? "画像保存" : "이미지 저장"}
+                <Button variant="outline" size="sm" onClick={() => setShowMap(!showMap)} data-testid="toggle-map-btn">
+                  <Map className="h-4 w-4 mr-1" />
+                  {showMap ? (language === "ko" ? "지도 숨기기" : "Hide Map") : (language === "ko" ? "경로 지도" : "Route Map")}
+                </Button>
+                <Button variant="default" size="sm" onClick={handleSaveImage} disabled={isSaving} data-testid="save-image-btn">
+                  {isSaving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+                  {language === "ko" ? "이미지 저장" : "Save Image"}
                 </Button>
               </div>
-              
-              <div ref={planRef} className="space-y-6 bg-white p-4 rounded-lg">
-                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-purple-500/5">
-                  <CardHeader>
-                    <CardTitle className="text-2xl">{travelPlan.title}</CardTitle>
-                    <p className="text-muted-foreground mt-2">{travelPlan.summary}</p>
-                  </CardHeader>
+
+              {showMap && (
+                <Card className="overflow-hidden">
+                  <div ref={mapContainerRef} className="h-[300px] w-full" data-testid="plan-map" />
                 </Card>
+              )}
 
-              {travelPlan.days.map((day, dayIndex) => (
-                <motion.div
-                  key={day.day}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: dayIndex * 0.1 }}
-                >
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg">
-                          {day.day}
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">
-                            {t("planner.day")} {day.day} - {day.theme}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground">{day.date}</p>
-                        </div>
+              {travelPlan.vehicleRecommendation && (
+                <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10">
+                  <CardContent className="py-3 px-4">
+                    <div className="flex items-start gap-3">
+                      <Car className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">{travelPlan.vehicleRecommendation}</p>
+                        <a
+                          href="https://open.kakao.com/o/your-kakao-link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 mt-1.5 text-xs text-blue-600 hover:underline"
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          {language === "ko" ? "카톡으로 차량 예약 문의" : "Book via KakaoTalk"}
+                        </a>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {day.schedule.map((item, itemIndex) => {
-                          const TypeIcon = typeIcons[item.type] || MapPin;
-                          const typeColor = typeColors[item.type] || "bg-gray-100 text-gray-700";
-                          return (
-                            <motion.div
-                              key={itemIndex}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ delay: dayIndex * 0.1 + itemIndex * 0.05 }}
-                              className="flex gap-4 items-start"
-                            >
-                              <div className="flex flex-col items-center">
-                                <Badge variant="outline" className="font-mono text-xs">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {item.time}
-                                </Badge>
-                                {itemIndex < day.schedule.length - 1 && (
-                                  <div className="w-px h-8 bg-border mt-2" />
-                                )}
-                              </div>
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.placeVi || item.place)}+Vung+Tau+Vietnam`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 bg-muted/50 rounded-lg p-3 hover-elevate cursor-pointer transition-all border border-transparent hover:border-primary/30"
-                                data-testid={`schedule-item-${dayIndex}-${itemIndex}`}
-                              >
-                                <div className="flex items-start gap-2 flex-wrap">
-                                  <Badge className={typeColor}>
-                                    <TypeIcon className="h-3 w-3 mr-1" />
-                                    {item.type}
-                                  </Badge>
-                                  <span className="font-medium">{item.activity}</span>
-                                </div>
-                                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {item.place}
-                                  {item.placeVi && <span className="text-xs">({item.placeVi})</span>}
-                                  <ExternalLink className="h-3 w-3 ml-1 text-primary" />
-                                </p>
-                                {item.note && (
-                                  <p className="text-xs text-muted-foreground mt-1 italic">{item.note}</p>
-                                )}
-                              </a>
-                            </motion.div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-
-              {travelPlan.tips && travelPlan.tips.length > 0 && (
-                <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
-                      <Lightbulb className="h-5 w-5" />
-                      {t("planner.tips")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {travelPlan.tips.map((tip, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <span className="text-amber-600 dark:text-amber-400 font-bold">{index + 1}.</span>
-                          <span>{tip}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    </div>
                   </CardContent>
                 </Card>
               )}
+
+              {travelPlan.weatherNote && (
+                <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm">
+                  {isRainySeason ? <CloudRain className="h-4 w-4 text-amber-500 shrink-0" /> : <Sun className="h-4 w-4 text-amber-500 shrink-0" />}
+                  <span className="text-amber-700 dark:text-amber-300">{travelPlan.weatherNote}</span>
+                </div>
+              )}
+
+              <Card className="border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10">
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-green-500" />
+                      <span className="text-sm font-medium">{language === "ko" ? "예상 총 비용" : "Estimated Total Cost"}</span>
+                    </div>
+                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                      ${getTotalCost().toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {language === "ko" ? "* 예상 비용은 참고용이며 실제와 다를 수 있습니다" : "* Estimated costs are for reference only"}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <div ref={planRef} className="space-y-4 bg-white dark:bg-background p-4 rounded-lg">
+                <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-purple-500/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl">{travelPlan.title}</CardTitle>
+                    <p className="text-muted-foreground text-sm mt-1">{travelPlan.summary}</p>
+                  </CardHeader>
+                </Card>
+
+                {travelPlan.days.map((day, dayIndex) => {
+                  const isExpanded = expandedDays.has(dayIndex);
+                  const dayCost = getDayCost(day);
+                  return (
+                    <motion.div
+                      key={day.day}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: dayIndex * 0.05 }}
+                    >
+                      <Card>
+                        <CardHeader
+                          className="pb-2 cursor-pointer"
+                          onClick={() => toggleDayExpanded(dayIndex)}
+                          data-testid={`day-header-${dayIndex}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                                {day.day}
+                              </div>
+                              <div>
+                                <CardTitle className="text-base">
+                                  {t("planner.day")} {day.day} - {day.theme}
+                                </CardTitle>
+                                <p className="text-xs text-muted-foreground">{day.date}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {dayCost > 0 && (
+                                <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-300">
+                                  ${dayCost}
+                                </Badge>
+                              )}
+                              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <CardContent className="pt-0">
+                                <div className="space-y-3">
+                                  {day.schedule.map((item, itemIndex) => {
+                                    const TypeIcon = typeIcons[item.type] || MapPin;
+                                    const typeColor = typeColors[item.type] || "bg-gray-100 text-gray-700";
+                                    return (
+                                      <div
+                                        key={itemIndex}
+                                        className="flex gap-3 items-start group"
+                                        data-testid={`schedule-item-${dayIndex}-${itemIndex}`}
+                                      >
+                                        <div
+                                          className="mt-1 cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                                          draggable
+                                          onDragStart={() => setDragState({ dayIdx: dayIndex, itemIdx: itemIndex })}
+                                          onDragOver={(e) => e.preventDefault()}
+                                          onDrop={() => {
+                                            if (dragState && dragState.dayIdx === dayIndex && dragState.itemIdx !== itemIndex) {
+                                              moveScheduleItem(dayIndex, dragState.itemIdx, itemIndex);
+                                            }
+                                            setDragState(null);
+                                          }}
+                                        >
+                                          <GripVertical className="h-4 w-4" />
+                                        </div>
+                                        <div className="flex flex-col items-center shrink-0">
+                                          <Badge variant="outline" className="font-mono text-[10px] px-1.5">
+                                            <Clock className="h-3 w-3 mr-0.5" />
+                                            {item.time}
+                                          </Badge>
+                                          {item.travelTime && (
+                                            <span className="text-[9px] text-muted-foreground mt-1 flex items-center gap-0.5">
+                                              <Car className="h-2.5 w-2.5" />{item.travelTime}
+                                            </span>
+                                          )}
+                                          {itemIndex < day.schedule.length - 1 && (
+                                            <div className="w-px h-6 bg-border mt-1" />
+                                          )}
+                                        </div>
+                                        <a
+                                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.placeVi || item.place)}+Vung+Tau+Vietnam`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex-1 bg-muted/50 rounded-lg p-2.5 hover-elevate cursor-pointer transition-all border border-transparent hover:border-primary/30"
+                                        >
+                                          <div className="flex items-start gap-1.5 flex-wrap">
+                                            <Badge className={typeColor}>
+                                              <TypeIcon className="h-3 w-3 mr-0.5" />
+                                              {item.type}
+                                            </Badge>
+                                            <span className="font-medium text-sm">{item.activity}</span>
+                                            {item.estimatedCost !== undefined && item.estimatedCost > 0 && (
+                                              <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-300 text-[10px]">
+                                                ${item.estimatedCost}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                            <MapPin className="h-3 w-3 shrink-0" />
+                                            {item.place}
+                                            {item.placeVi && <span className="text-[10px]">({item.placeVi})</span>}
+                                            <ExternalLink className="h-3 w-3 ml-1 text-primary shrink-0" />
+                                          </p>
+                                          {item.note && (
+                                            <p className="text-[11px] text-muted-foreground mt-1 italic">{item.note}</p>
+                                          )}
+                                        </a>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </CardContent>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+
+                {travelPlan.tips && travelPlan.tips.length > 0 && (
+                  <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-300 text-base">
+                        <Lightbulb className="h-5 w-5" />
+                        {t("planner.tips")}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-1.5">
+                        {travelPlan.tips.map((tip, index) => (
+                          <li key={index} className="flex items-start gap-2 text-sm">
+                            <span className="text-amber-600 dark:text-amber-400 font-bold">{index + 1}.</span>
+                            <span>{tip}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-2">
                 <Button
                   variant="outline"
                   onClick={() => setTravelPlan(null)}
@@ -485,6 +891,12 @@ export default function TravelPlanner() {
                 >
                   {t("planner.selectPurpose")}
                 </Button>
+                <Link href="/expense">
+                  <Button variant="outline" data-testid="goto-expense-btn">
+                    <Wallet className="h-4 w-4 mr-1" />
+                    {language === "ko" ? "가계부에 추가" : "Add to Tracker"}
+                  </Button>
+                </Link>
               </div>
             </motion.div>
           )}

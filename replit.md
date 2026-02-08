@@ -17,6 +17,15 @@ A travel quote calculator application for generating custom trip estimates. The 
 - **설정 키**: hero_title, hero_subtitle, hero_description, seo_title, seo_description, seo_keywords
 - **API**: GET /api/site-settings, PUT /api/admin/site-settings
 
+### AI Travel Planner Enhanced (2026-02-08 업그레이드)
+- **초개인화 입력**: 동반자 유형(혼자/커플/가족/친구/워크샵), 여행 스타일(빡빡한/밸런스/휴식), 도착 시간(오전/낮/오후/저녁)
+- **숙소 동선 최적화**: 빌라 선택 시 위치 기반으로 가까운 장소 우선 배치
+- **계절 반영**: 우기(5~10월) 실내 활동 우선, 건기(11~4월) 야외 활동 우선
+- **확장 응답**: 예상 비용(항목별/총합), 이동시간, GPS 좌표, 차량 추천, 날씨 참고
+- **결과 UI**: 드래그앤드롭 일정 편집, Leaflet 경로 지도, 접기/펼치기, 이미지 저장
+- **예약 CTA**: 카톡 차량 예약 링크, 가계부 연동 버튼
+- **API 확장**: POST /api/travel-plan에 companion, travelStyle, arrivalTime, villaName, villaLat, villaLng 추가
+
 ### Email Verification System (2026-02-04 추가)
 - **이메일 인증 필수**: 이메일/비밀번호 회원가입 시 6자리 인증 코드를 이메일로 발송
 - **인증 코드 만료**: 30분 후 자동 만료

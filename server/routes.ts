@@ -2442,6 +2442,12 @@ Example response format:
     startDate: z.string(),
     endDate: z.string(),
     language: z.string().default("ko"),
+    companion: z.string().optional().default(""),
+    travelStyle: z.string().optional().default("balanced"),
+    arrivalTime: z.string().optional().default(""),
+    villaName: z.string().optional().default(""),
+    villaLat: z.string().optional().default(""),
+    villaLng: z.string().optional().default(""),
   });
 
   // 붕따우 관광지 및 맛집 데이터 (PlacesGuide.tsx와 동기화)
@@ -2523,11 +2529,13 @@ Example response format:
   app.post("/api/travel-plan", async (req, res) => {
     try {
       const input = travelPlanRequestSchema.parse(req.body);
-      const { purpose, startDate, endDate, language } = input;
+      const { purpose, startDate, endDate, language, companion, travelStyle, arrivalTime, villaName, villaLat, villaLng } = input;
 
       const start = parseISO(startDate);
       const end = parseISO(endDate);
       const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const startMonth = start.getMonth() + 1;
+      const isRainySeason = startMonth >= 5 && startMonth <= 10;
 
       const purposeDescriptions: Record<string, string> = {
         gourmet: "맛집 탐방과 미식 여행에 중점",
@@ -2537,6 +2545,29 @@ Example response format:
         culture: "문화 유적지와 역사 탐방에 중점",
         family: "가족과 함께 즐길 수 있는 활동에 중점",
         nightlife: "클럽, 바 등 신나는 밤문화 체험에 중점",
+      };
+
+      const companionDescriptions: Record<string, string> = {
+        solo: "혼자 여행하는 1인 여행자",
+        couple: "커플/연인 여행 - 로맨틱한 장소, 분위기 좋은 카페/레스토랑 우선",
+        family_kids: "가족 여행(아이 동반) - 안전하고 아이가 즐길 수 있는 장소 위주, 이동시간 최소화",
+        family_adults: "성인 가족 여행 - 관광명소와 식도락 균형",
+        friends_male: "남성 친구 그룹 - 골프, 맥주, 밤문화, 마사지 등 활동적인 일정",
+        friends_female: "여성 친구 그룹 - 카페, 스파, 포토스팟, 쇼핑 위주",
+        workshop: "워크샵/단체 여행 - 단체로 이동 가능한 장소, 넓은 식당 우선",
+      };
+
+      const styleDescriptions: Record<string, string> = {
+        packed: "빡빡한 관광형 - 하루에 5~7개 일정, 이동이 많아도 최대한 많은 곳 방문",
+        balanced: "밸런스형 - 하루에 4~5개 일정, 관광과 휴식의 적절한 조합",
+        relaxed: "널널한 휴식형 - 하루에 2~3개 일정, 풀빌라에서 충분히 쉬고 여유롭게 이동",
+      };
+
+      const arrivalDescriptions: Record<string, string> = {
+        morning: "첫날 오전 일찍 도착 (9시 이전) - 호치민 공항에서 붕따우까지 약 2~2.5시간 이동, 점심부터 관광 가능",
+        midday: "첫날 낮 도착 (9~14시) - 호치민 공항에서 붕따우까지 약 2~2.5시간 이동, 오후부터 관광 시작",
+        afternoon: "첫날 오후 도착 (14~18시) - 이동 후 붕따우 도착 시 저녁시간, 첫날은 저녁식사와 휴식 위주",
+        evening: "첫날 저녁 도착 (18시 이후) - 첫날은 숙소 체크인과 가벼운 저녁식사만, 본격 관광은 둘째날부터",
       };
 
       const purposes = purpose.split(",").map((p: string) => p.trim());
@@ -2554,13 +2585,16 @@ Example response format:
       };
 
       const systemPrompt = `당신은 베트남 붕따우(Vung Tau) 전문 여행 플래너입니다. 
-사용자의 여행 목적과 일정에 맞춰 최적의 여행 일정을 만들어주세요.
+사용자의 여행 목적, 동반자 유형, 여행 스타일, 도착 시간을 고려하여 최적의 맞춤 여행 일정을 만들어주세요.
 ${languagePrompts[language] || languagePrompts.ko}
 
-응답은 반드시 다음 JSON 형식으로만 반환해주세요:
+## 응답 JSON 형식 (반드시 이 형식만 사용):
 {
-  "title": "여행 제목",
-  "summary": "여행 요약 (2-3문장)",
+  "title": "여행 제목 (동반자/스타일 반영)",
+  "summary": "여행 요약 (3-4문장, 동반자/스타일 반영)",
+  "totalEstimatedCost": 총 예상 비용(USD, 숫자만),
+  "vehicleRecommendation": "차량 추천 메시지 (예: 이 일정은 총 N시간 이동이 필요합니다. X인승 차량 예약을 추천드립니다)",
+  "weatherNote": "날씨 관련 참고사항",
   "days": [
     {
       "day": 1,
@@ -2570,21 +2604,86 @@ ${languagePrompts[language] || languagePrompts.ko}
         {
           "time": "09:00",
           "activity": "활동 내용",
-          "place": "장소명",
+          "place": "장소명 (한국어)",
           "placeVi": "베트남어 장소명",
-          "type": "attraction|restaurant|cafe|massage|golf|beach",
-          "note": "참고사항"
+          "type": "attraction|restaurant|cafe|massage|golf|beach|club|bar|transfer|shopping",
+          "note": "참고사항 (영업시간, 팁 등)",
+          "estimatedCost": 1인당 예상 비용(USD, 숫자만),
+          "travelTime": "이전 장소에서 이동시간 (예: 차 10분, 도보 5분)",
+          "lat": 위도(숫자),
+          "lng": 경도(숫자)
         }
       ]
     }
   ],
-  "tips": ["팁1", "팁2", "팁3"]
-}`;
+  "tips": ["팁1", "팁2", "팁3", "팁4", "팁5"]
+}
+
+## 비용 참고 기준 (1인 기준 USD):
+- 관광명소 입장료: $1~5
+- 현지 식당: $5~15
+- 한식당: $10~20
+- 뷔페: $15~30
+- 카페: $3~5
+- 마사지 (60분): $10~20
+- 스파 (프리미엄): $30~50
+- 골프 (18홀): $80~200
+- 클럽/바: $10~30
+- 해변 활동: 무료~$5
+
+## 좌표 참고 (붕따우 주요 지점):
+- 붕따우 중심: 10.346, 107.084
+- 백비치(Bãi Sau): 10.337, 107.095
+- 프론트비치(Front Beach): 10.340, 107.072
+- 예수상: 10.327, 107.090
+- 등대: 10.329, 107.082
+- 붕따우 시장: 10.347, 107.077
+- 놀이동산(Ho May): 10.356, 107.080
+각 장소의 lat/lng는 위 좌표 근처에서 적절히 지정하세요.`;
+
+      let companionContext = "";
+      if (companion && companionDescriptions[companion]) {
+        companionContext = `\n## 동반자 유형: ${companionDescriptions[companion]}`;
+      }
+
+      let styleContext = "";
+      if (travelStyle && styleDescriptions[travelStyle]) {
+        styleContext = `\n## 여행 스타일: ${styleDescriptions[travelStyle]}`;
+      }
+
+      let arrivalContext = "";
+      if (arrivalTime && arrivalDescriptions[arrivalTime]) {
+        arrivalContext = `\n## 도착 시간: ${arrivalDescriptions[arrivalTime]}
+⚠️ 중요: 첫날 일정은 반드시 도착 시간을 고려하여 현실적으로 배치하세요. 공항에서 붕따우까지 약 2~2.5시간이 소요됩니다.`;
+      }
+
+      let villaContext = "";
+      if (villaName) {
+        villaContext = `\n## 숙소 정보: ${villaName}`;
+        if (villaLat && villaLng) {
+          villaContext += ` (위치: ${villaLat}, ${villaLng})
+⚠️ 동선 최적화: 숙소 위치를 기준으로 가까운 장소부터 배치하세요. 숙소에서 먼 곳은 같은 방향의 일정끼리 묶어주세요.`;
+        }
+      }
+
+      let weatherContext = "";
+      if (isRainySeason) {
+        weatherContext = `\n## 우기 시즌 (5~10월):
+- 오후에 소나기가 올 가능성이 높으므로 오전에 야외 활동을, 오후에는 실내 활동(마사지, 카페, 쇼핑)을 배치하세요.
+- 해변 활동은 오전 시간대에 넣어주세요.
+- weatherNote에 우기 관련 주의사항을 포함하세요.`;
+      } else {
+        weatherContext = `\n## 건기 시즌 (11~4월):
+- 날씨가 좋아 해변 활동과 야외 관광에 최적입니다.
+- 오전/오후 모두 야외 활동이 가능합니다.
+- weatherNote에 건기 시즌의 장점을 포함하세요.`;
+      }
 
       const userPrompt = `붕따우 ${days}일 여행 일정을 만들어주세요.
 
 여행 기간: ${format(start, 'yyyy-MM-dd')} ~ ${format(end, 'yyyy-MM-dd')} (${days}일)
 여행 목적: ${purposeDescription}
+${companionContext}${styleContext}${arrivalContext}${villaContext}${weatherContext}
 
 ## ⚠️ 절대 규칙: 아래 제공된 장소 데이터만 사용하세요!
 이 데이터는 "붕따우 도깨비" 사이트의 관광/맛집 탭에서 검증된 실제 장소 목록입니다.
@@ -2613,12 +2712,15 @@ ${JSON.stringify(placesData, null, 2)}
 5. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함하세요.
 6. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용하세요.
 7. recommended: true 표시된 장소는 특히 추천합니다.
+8. 각 일정마다 estimatedCost(1인 기준 USD), travelTime(이전 장소에서 이동시간), lat/lng 좌표를 반드시 포함하세요.
+9. vehicleRecommendation에 총 이동시간과 추천 차량 종류를 포함하세요.
+10. 마지막 날은 공항 이동시간(붕따우→호치민 약 2~2.5시간)을 고려하여 일정을 짧게 하세요.
 
 ${purposes.includes('golf') ? '## 골프 여행: golf 목록에서 골프장을 선택하여 매일 또는 격일로 라운딩을 포함하세요.' : ''}
-${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함하세요.' : ''}
+${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함하세요. 일정 사이에 숙소 휴식시간을 넉넉히 넣어주세요.' : ''}
 ${purposes.includes('gourmet') ? '## 맛집 탐방: localFood, koreanFood, chineseFood, buffet를 골고루 포함하세요.' : ''}
-${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁에 클럽이나 바 활동을 포함하세요.' : ''}
-${purposes.includes('family') ? '## 가족 여행: 놀이동산(Ho May), 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치하세요.' : ''}
+${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁에 클럽이나 바 활동을 포함하세요. 다음날 오전 일정은 늦게 시작하세요.' : ''}
+${purposes.includes('family') ? '## 가족 여행: 놀이동산(Ho May), 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치하세요. 아이가 있으면 이동 최소화.' : ''}
 ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁기념관, 붕따우 등대 등 역사/문화 명소를 우선 배치하세요.' : ''}`;
 
       const response = await gemini.models.generateContent({
