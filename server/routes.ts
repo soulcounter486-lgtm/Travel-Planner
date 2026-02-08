@@ -111,6 +111,12 @@ function isVietnamHoliday(date: Date): boolean {
   return VIETNAM_HOLIDAYS.includes(dateStr);
 }
 
+const PUSH_OPTIONS = { TTL: 86400, urgency: 'high' as const, headers: { Urgency: 'high' } };
+
+async function sendPushToSubscription(sub: { endpoint: string; p256dh: string; auth: string; userId: string }) {
+  return { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } };
+}
+
 // 전체 푸시 알림 발송 함수 (게시판 등)
 async function sendPushNotifications(title: string, body: string, url: string = "/board") {
   try {
@@ -122,13 +128,15 @@ async function sendPushNotifications(title: string, body: string, url: string = 
     let failed = 0;
     for (const sub of subscriptions) {
       try {
-        await webpush.sendNotification({
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth }
-        }, payload);
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          payload,
+          PUSH_OPTIONS
+        );
         sent++;
       } catch (err: any) {
         failed++;
+        console.error(`[PUSH-BROADCAST] 실패 - userId: ${sub.userId}, status: ${err.statusCode}, body: ${err.body}`);
         if (err.statusCode === 410 || err.statusCode === 404) {
           await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
         }
@@ -152,21 +160,42 @@ async function sendAdminPushNotifications(title: string, body: string, url: stri
     const adminSubs = allSubs.filter(sub => allAdminIds.includes(sub.userId));
     
     const payload = JSON.stringify({ title, body, url });
-    console.log(`[PUSH-ADMIN] 발송 시작 - title: "${title}", 전체 구독: ${allSubs.length}, 관리자 구독: ${adminSubs.length}, 관리자 ID: ${[...allAdminIds].join(",")}`);
+    console.log(`[PUSH-ADMIN] 발송 시작 - title: "${title}", 전체 구독: ${allSubs.length}, 관리자 구독: ${adminSubs.length}, 관리자 ID: ${allAdminIds.join(",")}`);
+    
+    if (adminSubs.length === 0) {
+      console.log(`[PUSH-ADMIN] 관리자 구독 없음! 전체 구독자에게 발송 시도`);
+      for (const sub of allSubs) {
+        try {
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            payload,
+            PUSH_OPTIONS
+          );
+          console.log(`[PUSH-ADMIN] fallback 발송 성공 - userId: ${sub.userId}`);
+        } catch (err: any) {
+          console.error(`[PUSH-ADMIN] fallback 실패 - userId: ${sub.userId}, status: ${err.statusCode}`);
+          if (err.statusCode === 410 || err.statusCode === 404) {
+            await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
+          }
+        }
+      }
+      return;
+    }
     
     let sent = 0;
     let failed = 0;
     for (const sub of adminSubs) {
       try {
-        await webpush.sendNotification({
-          endpoint: sub.endpoint,
-          keys: { p256dh: sub.p256dh, auth: sub.auth }
-        }, payload);
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          payload,
+          PUSH_OPTIONS
+        );
         sent++;
         console.log(`[PUSH-ADMIN] 발송 성공 - userId: ${sub.userId}`);
       } catch (err: any) {
         failed++;
-        console.error(`[PUSH-ADMIN] 발송 실패 - userId: ${sub.userId}, status: ${err.statusCode}`);
+        console.error(`[PUSH-ADMIN] 발송 실패 - userId: ${sub.userId}, status: ${err.statusCode}, body: ${err.body}`);
         if (err.statusCode === 410 || err.statusCode === 404) {
           await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
         }
@@ -967,7 +996,8 @@ export async function registerRoutes(
         try {
           await webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-            JSON.stringify({ title: "테스트 알림", body: "푸시 알림이 정상 작동합니다!", url: "/" })
+            JSON.stringify({ title: "테스트 알림", body: "푸시 알림이 정상 작동합니다!", url: "/" }),
+            PUSH_OPTIONS
           );
           sent++;
         } catch (err: any) {
@@ -1012,24 +1042,20 @@ export async function registerRoutes(
     }
   });
 
-  // 푸시 알림 구독 상태 확인
-  app.get("/api/push/status", isAuthenticated, async (req: any, res) => {
+  app.get("/api/push/debug", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
-      
-      if (!userId) {
-        return res.json({ subscribed: false });
-      }
-
-      const subscriptions = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
-      
-      res.json({ 
-        subscribed: subscriptions.length > 0,
-        count: subscriptions.length
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
+      const allSubs = await db.select().from(pushSubscriptions);
+      const adminUsers = await db.select({ id: users.id, isAdmin: users.isAdmin }).from(users).where(eq(users.isAdmin, true));
+      res.json({
+        currentUserId: userId,
+        totalSubscriptions: allSubs.length,
+        subscriptions: allSubs.map(s => ({ userId: s.userId, endpoint: s.endpoint.substring(0, 80), createdAt: s.createdAt })),
+        adminUsers: adminUsers.map(a => a.id),
+        vapidKey: vapidPublicKey.substring(0, 20) + "..."
       });
     } catch (error) {
-      console.error("Push status error:", error);
-      res.status(500).json({ error: "상태 확인 실패" });
+      res.status(500).json({ error: "디버그 실패" });
     }
   });
 
