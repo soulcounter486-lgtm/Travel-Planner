@@ -130,6 +130,10 @@ export const calculateQuoteSchema = z.object({
     quantity: z.number().min(1).default(1),
     enabled: z.boolean().default(true),
     date: z.string().optional(),
+    schedules: z.array(z.object({
+      date: z.string().default(""),
+      quantity: z.number().min(1).default(1),
+    })).optional(),
   })).optional(),
 });
 
@@ -172,6 +176,10 @@ export const quoteBreakdownSchema = z.object({
     quantity: z.number(),
     subtotal: z.number(),
     date: z.string().optional(),
+    schedules: z.array(z.object({
+      date: z.string().default(""),
+      quantity: z.number().min(1).default(1),
+    })).optional(),
   })).optional(),
   total: z.number(),
 });

@@ -1319,11 +1319,10 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       }
 
       // 7. Custom Categories Calculation
-      const customCategoryItems: { categoryId: number; name: string; pricePerUnit: number; quantity: number; subtotal: number }[] = [];
+      const customCategoryItems: { categoryId: number; name: string; pricePerUnit: number; quantity: number; subtotal: number; schedules?: { date: string; quantity: number }[] }[] = [];
       if (input.customCategories && input.customCategories.length > 0) {
         const enabledSelections = input.customCategories.filter((c: any) => c.enabled !== false);
         if (enabledSelections.length > 0) {
-          const categoryIds = enabledSelections.map((c: any) => c.categoryId);
           const categories = await db.select().from(quoteCategories).where(
             and(eq(quoteCategories.isActive, true))
           );
@@ -1331,15 +1330,18 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
           for (const sel of enabledSelections) {
             const cat = categoryMap.get(sel.categoryId);
             if (cat) {
-              const quantity = Number(sel.quantity) || 1;
-              const subtotal = (cat.pricePerUnit || 0) * quantity;
+              const schedules = Array.isArray(sel.schedules) && sel.schedules.length > 0
+                ? sel.schedules
+                : [{ date: sel.date || "", quantity: Number(sel.quantity) || 1 }];
+              const totalQuantity = schedules.reduce((sum: number, s: any) => sum + (Number(s.quantity) || 1), 0);
+              const subtotal = (cat.pricePerUnit || 0) * totalQuantity;
               customCategoryItems.push({
                 categoryId: cat.id,
                 name: cat.name,
                 pricePerUnit: cat.pricePerUnit || 0,
-                quantity,
+                quantity: totalQuantity,
                 subtotal,
-                date: sel.date || "",
+                schedules: schedules.map((s: any) => ({ date: s.date || "", quantity: Number(s.quantity) || 1 })),
               });
             }
           }

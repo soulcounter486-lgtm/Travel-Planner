@@ -544,10 +544,19 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       <span>{cat.name}</span>
                       <span>${cat.subtotal.toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground italic pl-1">
-                      ${cat.pricePerUnit} × {cat.quantity}
-                      {cat.date && <span className="ml-2">({cat.date})</span>}
-                    </p>
+                    {cat.schedules && cat.schedules.length > 0 ? (
+                      <div className="text-xs text-muted-foreground italic pl-1 space-y-0.5">
+                        {cat.schedules.map((sched: any, idx: number) => (
+                          <div key={idx}>
+                            ${cat.pricePerUnit} × {sched.quantity}{sched.date ? ` (${sched.date})` : ""}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic pl-1">
+                        ${cat.pricePerUnit} × {cat.quantity}
+                      </p>
+                    )}
                   </div>
                   <Separator className="bg-border/50" />
                 </motion.div>
