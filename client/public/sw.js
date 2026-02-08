@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vungtau-dokkaebi-v12';
+const CACHE_NAME = 'vungtau-dokkaebi-v13';
 const APP_SHELL = [
   '/manifest.json',
   '/favicon.png',
@@ -93,7 +93,8 @@ self.addEventListener('push', function(event) {
   var options = {
     body: body,
     icon: '/dokkaebi-logo.png',
-    badge: '/dokkaebi-logo.png',
+    badge: '/icons/icon-96x96.png',
+    image: '/dokkaebi-logo.png',
     vibrate: [200, 100, 200],
     tag: tag,
     renotify: true,
