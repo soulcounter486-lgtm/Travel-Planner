@@ -1691,7 +1691,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 그룹 목록 조회 (로그인한 사용자의 그룹만)
   app.get("/api/expense-groups", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const groups = await db.select().from(expenseGroups)
         .where(eq(expenseGroups.userId, userId))
         .orderBy(desc(expenseGroups.createdAt));
@@ -1705,7 +1705,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 그룹 생성
   app.post("/api/expense-groups", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const input = insertExpenseGroupSchema.parse(req.body);
       const budget = parseInt(req.body.budget) || 0;
       if (budget < 0) {
@@ -1731,7 +1731,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 그룹 예산 수정 (본인 그룹만)
   app.patch("/api/expense-groups/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const id = parseInt(req.params.id);
       
       const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, id), eq(expenseGroups.userId, userId)));
@@ -1756,7 +1756,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 그룹 삭제 (본인 그룹만)
   app.delete("/api/expense-groups/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const id = parseInt(req.params.id);
       
       // 본인 그룹인지 확인
@@ -1777,7 +1777,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 지출 목록 조회 (그룹별, 본인 그룹만)
   app.get("/api/expense-groups/:id/expenses", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const groupId = parseInt(req.params.id);
       
       // 본인 그룹인지 확인
@@ -1797,7 +1797,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 지출 추가 (본인 그룹만)
   app.post("/api/expense-groups/:id/expenses", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const groupId = parseInt(req.params.id);
       
       // 그룹 조회 및 본인 그룹 확인
@@ -1855,7 +1855,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 지출 삭제 (본인 그룹의 지출만)
   app.delete("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const id = parseInt(req.params.id);
       
       // 해당 지출의 그룹이 본인 것인지 확인
@@ -1880,7 +1880,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 지출 수정 (본인 그룹의 지출만)
   app.patch("/api/expenses/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const id = parseInt(req.params.id);
       
       // 해당 지출의 그룹이 본인 것인지 확인
@@ -1936,7 +1936,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   // 정산 계산 (그룹별, 본인 그룹만)
   app.get("/api/expense-groups/:id/settlement", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
       const groupId = parseInt(req.params.id);
       const [group] = await db.select().from(expenseGroups).where(and(eq(expenseGroups.id, groupId), eq(expenseGroups.userId, userId)));
       if (!group) {
