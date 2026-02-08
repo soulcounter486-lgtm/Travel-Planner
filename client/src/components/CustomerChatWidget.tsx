@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { MessageCircle, X, Send, Minimize2 } from "lucide-react";
+import { MessageCircle, X, Send, Minimize2, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,6 +16,7 @@ export function CustomerChatWindow({ onClose }: CustomerChatWindowProps) {
   const [roomId, setRoomId] = useState<number | null>(null);
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -31,7 +32,9 @@ export function CustomerChatWindow({ onClose }: CustomerChatWindowProps) {
 
   const fetchMessages = useCallback(async (rId: number) => {
     try {
-      const res = await fetch(`/api/customer-chat/room/${rId}/messages?visitorId=${encodeURIComponent(visitorId)}`);
+      const res = await fetch(`/api/customer-chat/room/${rId}/messages?visitorId=${encodeURIComponent(visitorId)}`, {
+        credentials: "include",
+      });
       if (!res.ok) return;
       const msgs = await res.json();
       setMessages((prev) => {
@@ -41,31 +44,50 @@ export function CustomerChatWindow({ onClose }: CustomerChatWindowProps) {
     } catch {}
   }, [visitorId]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !visitorId) return;
-    const initRoom = async () => {
-      try {
-        const res = await fetch("/api/customer-chat/room", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ visitorId, visitorName }),
-        });
-        const room = await res.json();
-        setRoomId(room.id);
+  const initRoom = useCallback(async () => {
+    if (!isAuthenticated || !visitorId) {
+      setError("로그인이 필요합니다. 다시 로그인해주세요.");
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/customer-chat/room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ visitorId, visitorName }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        console.error("[CHAT] 채팅방 생성 실패:", res.status, errData);
+        setError("채팅 연결에 실패했습니다. 다시 시도해주세요.");
+        setIsLoading(false);
+        return;
+      }
+      const room = await res.json();
+      setRoomId(room.id);
 
-        const msgRes = await fetch(`/api/customer-chat/room/${room.id}/messages?visitorId=${encodeURIComponent(visitorId)}`);
+      const msgRes = await fetch(`/api/customer-chat/room/${room.id}/messages?visitorId=${encodeURIComponent(visitorId)}`, {
+        credentials: "include",
+      });
+      if (msgRes.ok) {
         const msgs = await msgRes.json();
         setMessages(msgs);
-        scrollToBottom();
-      } catch (err) {
-        console.error("채팅방 생성 오류:", err);
-      } finally {
-        setIsLoading(false);
       }
-    };
-    initRoom();
+      scrollToBottom();
+    } catch (err) {
+      console.error("[CHAT] 채팅방 연결 오류:", err);
+      setError("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsLoading(false);
+    }
   }, [isAuthenticated, visitorId, visitorName, scrollToBottom]);
+
+  useEffect(() => {
+    initRoom();
+  }, [initRoom]);
 
   useEffect(() => {
     if (roomId) {
@@ -107,9 +129,12 @@ export function CustomerChatWindow({ onClose }: CustomerChatWindowProps) {
           return [...prev, saved];
         });
         scrollToBottom();
+      } else {
+        setInput(msgText);
       }
     } catch (err) {
       console.error("메시지 전송 오류:", err);
+      setInput(msgText);
     } finally {
       setIsSending(false);
       inputRef.current?.focus();
@@ -164,7 +189,23 @@ export function CustomerChatWindow({ onClose }: CustomerChatWindowProps) {
               <p>연결 중...</p>
             </div>
           )}
-          {!isLoading && messages.length === 0 && (
+          {error && (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-destructive opacity-70" />
+              <p className="text-sm text-destructive">{error}</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3"
+                onClick={initRoom}
+                data-testid="btn-retry-chat"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                다시 시도
+              </Button>
+            </div>
+          )}
+          {!isLoading && !error && messages.length === 0 && (
             <div className="text-center text-sm text-muted-foreground py-8">
               <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
               <p>안녕하세요! 무엇을 도와드릴까요?</p>
@@ -204,13 +245,14 @@ export function CustomerChatWindow({ onClose }: CustomerChatWindowProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="메시지를 입력하세요..."
-            className="flex-1 h-9 px-3 text-sm border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+            disabled={!roomId || !!error}
+            className="flex-1 h-9 px-3 text-sm border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
             data-testid="input-chat-message"
           />
           <Button
             size="icon"
             onClick={sendMessage}
-            disabled={!input.trim() || isSending}
+            disabled={!input.trim() || isSending || !roomId || !!error}
             data-testid="btn-send-chat"
           >
             <Send className="h-4 w-4" />

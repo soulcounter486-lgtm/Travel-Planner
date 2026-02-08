@@ -5426,9 +5426,18 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
       const unusedCoupons = await db.select().from(userCoupons)
         .where(and(eq(userCoupons.userId, userId), eq(userCoupons.isUsed, false)));
 
+      let unreadChatCount = 0;
+      const userEmail = user.claims?.email || user.email;
+      if (isUserAdmin(userId, userEmail)) {
+        const openRooms = await db.select().from(customerChatRooms)
+          .where(eq(customerChatRooms.status, "open"));
+        unreadChatCount = openRooms.reduce((sum, r) => sum + (r.unreadByAdmin ?? 0), 0);
+      }
+
       res.json({
         unreadMessagesCount: unreadMessages.length,
         unusedCouponsCount: unusedCoupons.length,
+        unreadChatCount,
       });
     } catch (err) {
       console.error("알림 조회 오류:", err);
@@ -5895,13 +5904,18 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
   app.post("/api/customer-chat/room", async (req, res) => {
     try {
       const { visitorId, visitorName } = req.body;
-      if (!visitorId) return res.status(400).json({ error: "visitorId required" });
+      console.log("[CHAT] 채팅방 생성 요청:", { visitorId, visitorName });
+      if (!visitorId) {
+        console.log("[CHAT] visitorId 없음 - 400 반환");
+        return res.status(400).json({ error: "visitorId required" });
+      }
 
       const existing = await db.select().from(customerChatRooms)
         .where(and(eq(customerChatRooms.visitorId, visitorId), eq(customerChatRooms.status, "open")))
         .limit(1);
 
       if (existing.length > 0) {
+        console.log("[CHAT] 기존 채팅방 반환:", existing[0].id);
         return res.json(existing[0]);
       }
 
@@ -5909,22 +5923,28 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
         visitorId,
         visitorName: visitorName || "방문자",
       }).returning();
+      console.log("[CHAT] 새 채팅방 생성 완료:", room.id, "visitorId:", visitorId);
 
       // 관리자에게 푸시 알림
-      const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
-      for (const admin of adminUsers) {
-        sendPushNotification(admin.id, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
-      }
-      if (ADMIN_USER_ID) {
-        const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
-        for (const adminId of adminIds) {
-          sendPushNotification(adminId, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
+      try {
+        const adminUsers = await db.select().from(users).where(eq(users.isAdmin, true));
+        console.log("[CHAT] 관리자 알림 대상:", adminUsers.length, "명");
+        for (const admin of adminUsers) {
+          sendPushNotification(admin.id, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
         }
+        if (ADMIN_USER_ID) {
+          const adminIds = ADMIN_USER_ID.split(",").map(id => id.trim());
+          for (const adminId of adminIds) {
+            sendPushNotification(adminId, "새 채팅 문의", `${visitorName || "방문자"}님이 채팅을 시작했습니다`, "/admin/chat");
+          }
+        }
+      } catch (pushErr) {
+        console.error("[CHAT] 푸시 알림 오류 (채팅방 생성은 성공):", pushErr);
       }
 
       res.json(room);
     } catch (err) {
-      console.error("채팅방 생성 오류:", err);
+      console.error("[CHAT] 채팅방 생성 오류:", err);
       res.status(500).json({ error: "채팅방 생성 실패" });
     }
   });
