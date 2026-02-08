@@ -24,6 +24,7 @@ import AdminQuoteCategories from "@/pages/AdminQuoteCategories";
 import AdminChat from "@/pages/AdminChat";
 import MyPage from "@/pages/MyPage";
 import MyCoupons from "@/pages/MyCoupons";
+import PushDebug from "@/pages/PushDebug";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/admin/chat" component={AdminChat} />
       <Route path="/mypage" component={MyPage} />
       <Route path="/my-coupons" component={MyCoupons} />
+      <Route path="/push-debug" component={PushDebug} />
       <Route component={NotFound} />
     </Switch>
   );

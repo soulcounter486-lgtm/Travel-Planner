@@ -13,38 +13,61 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
     if ("Notification" in window) {
       setPermission(Notification.permission);
     }
+    console.log("[PUSH] Support check - SW:", "serviceWorker" in navigator, "PushManager:", "PushManager" in window, "Permission:", Notification?.permission);
   }, []);
 
   useEffect(() => {
+    console.log("[PUSH] Auto-subscribe check - autoSubscribe:", autoSubscribe, "isLoggedIn:", isLoggedIn, "isSupported:", isSupported, "attempted:", autoSubscribeAttempted.current);
+    
     if (!autoSubscribe || !isLoggedIn || !isSupported || autoSubscribeAttempted.current) return;
     autoSubscribeAttempted.current = true;
 
     const doAutoSubscribe = async () => {
       try {
         let perm = Notification.permission;
+        console.log("[PUSH] Current permission:", perm);
+        
         if (perm === "default") {
           perm = await Notification.requestPermission();
           setPermission(perm);
+          console.log("[PUSH] Permission after request:", perm);
         }
-        if (perm !== "granted") return;
+        if (perm === "denied") {
+          console.log("[PUSH] Permission DENIED - cannot subscribe");
+          return;
+        }
+        if (perm !== "granted") {
+          console.log("[PUSH] Permission not granted:", perm);
+          return;
+        }
 
+        console.log("[PUSH] Fetching VAPID key...");
         const vapidRes = await fetch("/api/push/vapid-public-key");
         const { publicKey } = await vapidRes.json();
-        if (!publicKey) return;
+        if (!publicKey) {
+          console.error("[PUSH] No VAPID public key!");
+          return;
+        }
+        console.log("[PUSH] VAPID key received");
 
         const registration = await navigator.serviceWorker.ready;
+        console.log("[PUSH] Service worker ready");
+        
         let sub = await registration.pushManager.getSubscription();
+        console.log("[PUSH] Existing subscription:", sub ? "yes" : "no");
 
         if (!sub) {
+          console.log("[PUSH] Creating new subscription...");
           sub = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(publicKey),
           });
+          console.log("[PUSH] New subscription created");
         }
 
         if (sub) {
           const subJson = sub.toJSON();
-          console.log("[PUSH] Sending subscription to server, endpoint:", subJson.endpoint?.substring(0, 60));
+          console.log("[PUSH] Sending to server, endpoint:", subJson.endpoint?.substring(0, 80));
           const res = await fetch("/api/push/subscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -54,13 +77,13 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
           const resData = await res.json().catch(() => ({}));
           if (res.ok) {
             setIsSubscribed(true);
-            console.log("[PUSH] Subscription registered OK:", resData);
+            console.log("[PUSH] Server registration OK:", JSON.stringify(resData));
           } else {
-            console.error("[PUSH] Subscribe API failed:", res.status, resData);
+            console.error("[PUSH] Server registration FAILED:", res.status, JSON.stringify(resData));
           }
         }
       } catch (err) {
-        console.error("Auto subscribe error:", err);
+        console.error("[PUSH] Auto subscribe error:", err);
       }
     };
 
