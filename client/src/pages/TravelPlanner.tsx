@@ -860,12 +860,13 @@ export default function TravelPlanner() {
                       <div className="flex-1">
                         <p className="text-sm font-medium text-blue-700 dark:text-blue-300">{travelPlan.vehicleRecommendation}</p>
                         <a
-                          href="https://open.kakao.com/o/your-kakao-link"
+                          href="http://pf.kakao.com/_TuxoxfG"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1.5 text-xs text-blue-600 hover:underline"
+                          className="inline-flex items-center justify-center gap-2 mt-3 w-full px-4 py-3 rounded-lg bg-[#FEE500] text-[#3C1E1E] font-bold text-sm shadow-md hover:brightness-95 transition-all"
+                          data-testid="link-kakao-vehicle-booking"
                         >
-                          <MessageCircle className="h-3 w-3" />
+                          <MessageCircle className="h-5 w-5" />
                           {language === "ko" ? "카톡으로 차량 예약 문의" : "Book via KakaoTalk"}
                         </a>
                       </div>
