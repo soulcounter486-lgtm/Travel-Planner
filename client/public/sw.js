@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vungtau-dokkaebi-v9';
+const CACHE_NAME = 'vungtau-dokkaebi-v10';
 const APP_SHELL = [
   '/manifest.json',
   '/favicon.png',
@@ -72,30 +72,36 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-self.addEventListener('push', (event) => {
-  let title = '붕따우 도깨비';
-  let body = '새로운 알림이 있습니다';
-  let url = '/';
+self.addEventListener('push', function(event) {
+  var title = '붕따우 도깨비';
+  var body = '새로운 알림이 있습니다';
+  var url = '/';
 
-  try {
-    if (event.data) {
-      const data = event.data.json();
+  if (event.data) {
+    try {
+      var data = event.data.json();
       title = data.title || title;
       body = data.body || body;
       url = data.url || url;
+    } catch (e) {
+      body = event.data.text() || body;
     }
-  } catch (e) {
   }
 
-  const options = {
+  var options = {
     body: body,
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
     vibrate: [200, 100, 200],
-    tag: 'vungtau-' + Date.now(),
+    tag: 'vungtau-notify',
     renotify: true,
     requireInteraction: true,
-    data: { url: url }
+    silent: false,
+    data: { url: url },
+    actions: [
+      { action: 'open', title: '열기' },
+      { action: 'close', title: '닫기' }
+    ]
   };
 
   event.waitUntil(
@@ -103,31 +109,32 @@ self.addEventListener('push', (event) => {
   );
 });
 
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', function(event) {
   event.notification.close();
 
   if (event.action === 'close') return;
 
-  const url = event.notification.data?.url || '/';
+  var targetUrl = event.notification.data && event.notification.data.url ? event.notification.data.url : '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((windowClients) => {
-        for (const client of windowClients) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            client.navigate(url);
+      .then(function(windowClients) {
+        for (var i = 0; i < windowClients.length; i++) {
+          var client = windowClients[i];
+          if (client.url.indexOf(self.location.origin) !== -1 && 'focus' in client) {
+            client.navigate(targetUrl);
             return client.focus();
           }
         }
-        return clients.openWindow(url);
+        return clients.openWindow(targetUrl);
       })
   );
 });
 
-self.addEventListener('pushsubscriptionchange', (event) => {
+self.addEventListener('pushsubscriptionchange', function(event) {
   event.waitUntil(
     self.registration.pushManager.subscribe(event.oldSubscription.options)
-      .then((newSub) => {
+      .then(function(newSub) {
         return fetch('/api/push/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
