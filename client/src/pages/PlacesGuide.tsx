@@ -15,6 +15,14 @@ import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen, Map, List, DollarSign } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+function darkenHex(hex: string, amount: number = 30): string {
+  const num = parseInt(hex.replace("#", ""), 16);
+  const r = Math.max(0, (num >> 16) - amount);
+  const g = Math.max(0, ((num >> 8) & 0x00FF) - amount);
+  const b = Math.max(0, (num & 0x0000FF) - amount);
+  return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, "0")}`;
+}
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
@@ -88,6 +96,7 @@ export interface Category {
   id: string;
   icon: React.ElementType;
   gradient: string;
+  colorHex?: string;
   places: HardcodedPlace[];
 }
 
@@ -1650,7 +1659,7 @@ export default function PlacesGuide() {
       
       merged[categoryKey] = {
         ...category,
-        ...(matchingDbCat?.gradient ? { gradient: matchingDbCat.gradient } : {}),
+        ...(matchingDbCat?.color ? { colorHex: matchingDbCat.color } : {}),
         places,
       };
     });
@@ -1679,6 +1688,7 @@ export default function PlacesGuide() {
           id: dbCat.id,
           icon: iconMap[dbCat.icon || "MapPin"] || MapPin,
           gradient: dbCat.gradient || "from-gray-500 to-gray-700",
+          colorHex: dbCat.color || "#64748b",
           places: categoryPlaces,
         };
       }
@@ -2248,7 +2258,19 @@ export default function PlacesGuide() {
             return (
               <Card key={key} className="overflow-hidden">
                 <CardHeader
-                  className={`cursor-pointer bg-gradient-to-r ${category.gradient} text-white py-3 px-4`}
+                  className="cursor-pointer text-white py-3 px-4"
+                  style={{
+                    background: (() => {
+                      const fallbackColors: Record<string, string> = {
+                        attractions: "#3b82f6", localFood: "#ef4444", koreanFood: "#f97316",
+                        buffet: "#eab308", chineseFood: "#22c55e", coffee: "#6366f1",
+                        nightlife: "#ec4899", nightlife18: "#dc2626", spa: "#8b5cf6",
+                        exchange: "#64748b", services: "#0ea5e9",
+                      };
+                      const c = category.colorHex || fallbackColors[key] || "#64748b";
+                      return `linear-gradient(to right, ${c}, ${darkenHex(c, 40)})`;
+                    })(),
+                  }}
                   onClick={() => toggleCategory(key)}
                   data-testid={`category-header-${key}`}
                 >
