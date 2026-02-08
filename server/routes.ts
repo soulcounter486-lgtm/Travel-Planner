@@ -2525,9 +2525,9 @@ Example response format:
       { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "도깨비 협력업체, 평일 $150, 주말 $200", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
     ],
     casino: [
-      { name: "임페리얼 Seaside 클럽", nameVi: "Imperial Seaside Club", type: "카지노", note: "붕따우 해변 카지노 클럽, 외국인 전용(여권 필수, 21세 이상)", lat: 10.343, lng: 107.075 },
-      { name: "Palace 카지노", nameVi: "Palace Casino", type: "카지노", note: "붕따우 프리미엄 카지노, 외국인 전용(여권 필수, 21세 이상), 테이블 게임, 슬롯머신", lat: 10.345, lng: 107.080 },
-      { name: "Monaco Casino", nameVi: "Monaco Casino", type: "카지노", note: "유럽풍 카지노, 외국인 전용(여권 필수, 21세 이상), 다양한 테이블 게임", lat: 10.348, lng: 107.078 },
+      { name: "임페리얼 seaside 클럽", nameVi: "Imperial Seaside Club", type: "카지노", note: "도깨비 협력업체, 첫 방문시 20불 바우처 지급, 외국인 전용(여권 필수, 21세 이상)", lat: 10.344120, lng: 107.095049, isPartner: true, discountText: "붕따우 도깨비 카톡으로 문의 시 20불 바우처 지급 및 차량지원" },
+      { name: "Monaco casino", nameVi: "Monaco Casino", type: "카지노", note: "도깨비 협력업체, 외국인 전용(여권 필수, 21세 이상)", lat: 10.349345, lng: 107.074998, isPartner: true, discountText: "붕따우 도깨비 카톡으로 문의시 50불 바우처 지급" },
+      { name: "Palace 카지노", nameVi: "Palace Casino", type: "카지노", note: "도깨비 협력업체, 외국인 전용(여권 필수, 21세 이상)", lat: 10.342816, lng: 107.075912, isPartner: true, discountText: "붕따우 도깨비 카톡으로 문의 시 차량지원" },
     ],
   };
 
@@ -2713,7 +2713,7 @@ ${JSON.stringify(placesData, null, 2)}
 - services: 마사지/이발소 (Re.en 마사지, 그랜드 마사지 등)
 - nightlife: 밤문화 (88 비어클럽, Revo 클럽 등)
 - golf: 골프장
-- casino: 카지노 (임페리얼 Seaside 클럽, Palace 카지노, Monaco Casino)
+- casino: 카지노 (임페리얼 seaside 클럽, Monaco casino, Palace 카지노 - 모두 도깨비 협력업체)
 
 ## 일정 작성 규칙:
 1. ⭐ 협력업체 우선 배치: isPartner: true인 장소를 반드시 우선적으로 일정에 포함하세요. 협력업체는 "붕따우 도깨비" 공식 파트너로 할인 혜택이 있습니다.
@@ -2736,7 +2736,7 @@ ${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택�
 ${purposes.includes('family') ? '## 가족 여행: 놀이동산(Ho May), 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치하세요. 아이가 있으면 이동 최소화.' : ''}
 ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁기념관, 붕따우 등대 등 역사/문화 명소를 우선 배치하세요.' : ''}
 ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지노를 반드시 1곳 이상 일정에 포함하세요.
-- 임페리얼 Seaside 클럽, Palace 카지노, Monaco Casino 중에서 선택하세요.
+- 임페리얼 seaside 클럽, Monaco casino, Palace 카지노 모두 도깨비 협력업체입니다. 반드시 isPartner: true와 discountText를 포함하세요.
 - 카지노는 저녁~밤 시간대에 배치하세요. 낮에는 관광/식사를 하고 저녁에 카지노를 방문하는 일정이 좋습니다.
 - 외국인 전용(여권 필수, 21세 이상)임을 tips에 반드시 안내하세요.
 - 2일 이상 여행이면 서로 다른 카지노를 방문하는 일정도 좋습니다.
