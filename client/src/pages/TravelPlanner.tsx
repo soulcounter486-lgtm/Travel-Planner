@@ -459,7 +459,7 @@ export default function TravelPlanner() {
       <AppHeader />
       <TabNavigation language={language} />
 
-      <main className="max-w-4xl mx-auto px-4 py-8 pb-40">
+      <main className="max-w-4xl mx-auto px-4 py-8 pb-40 overflow-x-hidden">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/10 to-purple-500/10 px-4 py-2 rounded-full mb-4">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -1002,32 +1002,34 @@ export default function TravelPlanner() {
                                             <div className="w-px h-6 bg-border mt-1" />
                                           )}
                                         </div>
-                                        <div className={`flex-1 rounded-lg p-2.5 transition-all border ${item.isPartner ? "bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700" : "bg-muted/50 border-transparent"}`}>
+                                        <div className={`flex-1 min-w-0 rounded-lg p-2.5 transition-all border ${item.isPartner ? "bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700" : "bg-muted/50 border-transparent"}`}>
                                           <div className="flex items-start gap-1.5 flex-wrap">
                                             {item.isPartner && (
-                                              <Badge className="bg-amber-500 text-white text-[10px] no-default-hover-elevate no-default-active-elevate">
+                                              <Badge className="bg-amber-500 text-white text-[10px] no-default-hover-elevate no-default-active-elevate shrink-0">
                                                 <Star className="h-3 w-3 mr-0.5" />
                                                 {language === "ko" ? "협력업체" : "Partner"}
                                               </Badge>
                                             )}
-                                            <Badge className={typeColor}>
+                                            <Badge className={`${typeColor} shrink-0`}>
                                               <TypeIcon className="h-3 w-3 mr-0.5" />
                                               {item.type}
                                             </Badge>
-                                            <span className="font-medium text-sm">{item.activity}</span>
                                             {item.estimatedCost !== undefined && item.estimatedCost > 0 && (
-                                              <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-300 text-[10px]">
+                                              <Badge variant="outline" className="text-green-600 dark:text-green-400 border-green-300 text-[10px] shrink-0">
                                                 ${item.estimatedCost}
                                               </Badge>
                                             )}
                                           </div>
-                                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                                            <MapPin className="h-3 w-3 shrink-0" />
-                                            {item.place}
-                                            {item.placeVi && <span className="text-[10px]">({item.placeVi})</span>}
+                                          <p className="font-medium text-sm mt-1 break-words">{item.activity}</p>
+                                          <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+                                            <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                                            <span className="break-words min-w-0">
+                                              {item.place}
+                                              {item.placeVi && <span className="text-[10px]"> ({item.placeVi})</span>}
+                                            </span>
                                           </p>
                                           {item.note && (
-                                            <p className="text-[11px] text-muted-foreground mt-1 italic">{item.note}</p>
+                                            <p className="text-[11px] text-muted-foreground mt-1 italic break-words">{item.note}</p>
                                           )}
                                           <div className="mt-2 flex gap-2 flex-wrap">
                                             <a
@@ -1056,9 +1058,9 @@ export default function TravelPlanner() {
                                             )}
                                           </div>
                                           {item.isPartner && item.discountText && (
-                                            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium mt-1.5 flex items-center gap-1">
-                                              <Gift className="h-3 w-3 shrink-0" />
-                                              {item.discountText}
+                                            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium mt-1.5 flex items-start gap-1 break-words">
+                                              <Gift className="h-3 w-3 shrink-0 mt-0.5" />
+                                              <span className="min-w-0">{item.discountText}</span>
                                             </p>
                                           )}
                                         </div>
