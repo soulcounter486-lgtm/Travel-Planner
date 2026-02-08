@@ -168,7 +168,7 @@ export default function AdminChat() {
         </div>
 
         <div className="flex gap-4 h-[calc(100vh-180px)]">
-          <Card className="w-80 flex-shrink-0 flex flex-col overflow-hidden">
+          <Card className={`w-full md:w-80 md:flex-shrink-0 flex flex-col overflow-hidden ${selectedRoomId ? "hidden md:flex" : "flex"}`}>
             <div className="p-3 border-b">
               <h2 className="font-semibold text-sm">
                 대화 목록 ({openRooms.length})
@@ -239,7 +239,7 @@ export default function AdminChat() {
             </div>
           </Card>
 
-          <Card className="flex-1 flex flex-col overflow-hidden">
+          <Card className={`flex-1 flex flex-col overflow-hidden ${!selectedRoomId ? "hidden md:flex" : "flex"}`}>
             {!selectedRoomId ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
@@ -253,8 +253,8 @@ export default function AdminChat() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="md:hidden"
-                    onClick={() => setSelectedRoomId(null)}
+                    onClick={() => { setSelectedRoomId(null); setMessages([]); }}
+                    data-testid="btn-back-to-rooms"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
