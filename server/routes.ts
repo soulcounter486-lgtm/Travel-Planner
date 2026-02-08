@@ -915,21 +915,26 @@ export async function registerRoutes(
         return res.json({ success: false, message: "구독 없음. 알림 권한을 허용하고 다시 로그인해주세요.", userId, subscriptionCount: 0 });
       }
       
+      let sent = 0;
+      let failed = 0;
+      let lastError = "";
       for (const sub of subs) {
         try {
           await webpush.sendNotification(
             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
             JSON.stringify({ title: "테스트 알림", body: "푸시 알림이 정상 작동합니다!", url: "/" })
           );
+          sent++;
         } catch (err: any) {
+          failed++;
+          lastError = `${err.statusCode}: ${err.message}`;
           if (err.statusCode === 404 || err.statusCode === 410) {
             await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
           }
-          return res.json({ success: false, message: `발송 실패: ${err.message}`, statusCode: err.statusCode });
         }
       }
       
-      res.json({ success: true, message: "테스트 알림 발송 완료", userId, subscriptionCount: subs.length });
+      res.json({ success: sent > 0, message: sent > 0 ? `${sent}건 발송 완료` : `발송 실패: ${lastError}`, userId, sent, failed, total: subs.length });
     } catch (err) {
       res.status(500).json({ error: "테스트 실패" });
     }
