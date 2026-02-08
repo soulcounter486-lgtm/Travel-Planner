@@ -932,7 +932,8 @@ export default function Home() {
             : { enabled: false },
           fastTrack: value.fastTrack?.enabled
             ? { enabled: true, type: value.fastTrack.type || "oneway", persons: value.fastTrack.persons || 0 }
-            : { enabled: false }
+            : { enabled: false },
+          customCategories: (value.customCategories || []).filter((c: any) => c && c.enabled),
         };
 
         calculateMutation.mutate(payload, {
@@ -967,7 +968,8 @@ export default function Home() {
           : { enabled: false },
         fastTrack: value.fastTrack?.enabled
           ? { enabled: true, type: value.fastTrack.type || "oneway", persons: value.fastTrack.persons || 0 }
-          : { enabled: false }
+          : { enabled: false },
+        customCategories: (value.customCategories || []).filter((c: any) => c && c.enabled),
       };
       calculateMutation.mutate(payload, {
         onSuccess: (data) => setBreakdown(data),
