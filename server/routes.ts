@@ -2520,9 +2520,9 @@ Example response format:
       { name: "Peace and Love 라이브바", nameVi: "Peace and Love Live Bar", type: "라이브바", note: "금,토 라이브 밴드" },
     ],
     golf: [
-      { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "평일 $90, 주말 $110" },
-      { name: "쩌우득 골프장", nameVi: "Chou Duc Golf", course: "chouduc", note: "평일 $80, 주말 $120" },
-      { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "평일 $150, 주말 $200" },
+      { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "도깨비 협력업체, 평일 $90, 주말 $110", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
+      { name: "쩌우득 골프장", nameVi: "Chou Duc Golf", course: "chouduc", note: "도깨비 협력업체, 평일 $80, 주말 $120", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
+      { name: "호짬 골프장", nameVi: "Ho Tram Golf", course: "hocham", note: "도깨비 협력업체, 평일 $150, 주말 $200", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
     ],
   };
 
@@ -2545,6 +2545,7 @@ Example response format:
         culture: "문화 유적지와 역사 탐방에 중점",
         family: "가족과 함께 즐길 수 있는 활동에 중점",
         nightlife: "클럽, 바 등 신나는 밤문화 체험에 중점",
+        casino: "카지노와 엔터테인먼트에 중점",
       };
 
       const companionDescriptions: Record<string, string> = {

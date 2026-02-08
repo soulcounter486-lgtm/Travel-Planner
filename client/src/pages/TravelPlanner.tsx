@@ -96,6 +96,7 @@ const purposeOptions = [
   { id: "culture", icon: Landmark, gradient: "from-purple-500 to-violet-600" },
   { id: "family", icon: Users, gradient: "from-pink-500 to-rose-500" },
   { id: "nightlife", icon: Music, gradient: "from-pink-600 to-purple-700" },
+  { id: "casino", icon: DollarSign, gradient: "from-yellow-500 to-amber-600" },
 ];
 
 const companionOptions = [
@@ -132,6 +133,7 @@ const typeIcons: Record<string, React.ElementType> = {
   bar: Music,
   transfer: Car,
   shopping: Wallet,
+  casino: DollarSign,
 };
 
 const typeColors: Record<string, string> = {
@@ -145,6 +147,7 @@ const typeColors: Record<string, string> = {
   bar: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
   transfer: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300",
   shopping: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+  casino: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
 };
 
 export default function TravelPlanner() {
@@ -866,28 +869,17 @@ export default function TravelPlanner() {
                                               </Button>
                                             </a>
                                             {item.isPartner && (
-                                              <>
-                                                <a
-                                                  href="http://pf.kakao.com/_TuxoxfG"
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  data-testid={`partner-kakao-link-${dayIndex}-${itemIndex}`}
-                                                >
-                                                  <Button size="sm" variant="default" className="text-xs" data-testid={`btn-partner-kakao-${dayIndex}-${itemIndex}`}>
-                                                    <MessageCircle className="h-3 w-3 mr-1" />
-                                                    {language === "ko" ? "카톡 문의/예약" : "KakaoTalk Inquiry"}
-                                                  </Button>
-                                                </a>
-                                                <a
-                                                  href="/coupons"
-                                                  data-testid={`partner-coupon-link-${dayIndex}-${itemIndex}`}
-                                                >
-                                                  <Button size="sm" variant="secondary" className="text-xs" data-testid={`btn-partner-coupon-${dayIndex}-${itemIndex}`}>
-                                                    <Gift className="h-3 w-3 mr-1" />
-                                                    {language === "ko" ? "쿠폰 받기" : "Get Coupon"}
-                                                  </Button>
-                                                </a>
-                                              </>
+                                              <a
+                                                href="http://pf.kakao.com/_TuxoxfG"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                data-testid={`partner-kakao-link-${dayIndex}-${itemIndex}`}
+                                              >
+                                                <Button size="sm" variant="default" className="text-xs" data-testid={`btn-partner-inquiry-${dayIndex}-${itemIndex}`}>
+                                                  <MessageCircle className="h-3 w-3 mr-1" />
+                                                  {language === "ko" ? "쿠폰,예약/카톡문의" : "Coupon & Booking / KakaoTalk"}
+                                                </Button>
+                                              </a>
                                             )}
                                           </div>
                                           {item.isPartner && item.discountText && (
