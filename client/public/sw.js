@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vungtau-dokkaebi-v7';
+const CACHE_NAME = 'vungtau-dokkaebi-v8';
 const APP_SHELL = [
   '/manifest.json',
   '/favicon.png',
@@ -72,42 +72,44 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// 푸시 알림 수신
 self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  
+  let title = '붕따우 도깨비';
+  let body = '새로운 알림이 있습니다';
+  let url = '/';
+
   try {
-    const data = event.data.json();
-    const options = {
-      body: data.body || '',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/icon-72x72.png',
-      vibrate: [100, 50, 100],
-      data: {
-        url: data.url || '/'
-      },
-      actions: [
-        { action: 'open', title: '열기' },
-        { action: 'close', title: '닫기' }
-      ]
-    };
-    
-    event.waitUntil(
-      self.registration.showNotification(data.title || '붕따우 도깨비', options)
-    );
-  } catch (err) {
-    console.error('Push notification error:', err);
+    if (event.data) {
+      const data = event.data.json();
+      title = data.title || title;
+      body = data.body || body;
+      url = data.url || url;
+    }
+  } catch (e) {
   }
+
+  const options = {
+    body: body,
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    vibrate: [200, 100, 200],
+    tag: 'vungtau-' + Date.now(),
+    renotify: true,
+    requireInteraction: true,
+    data: { url: url }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
 });
 
-// 알림 클릭 처리
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
+
   if (event.action === 'close') return;
-  
+
   const url = event.notification.data?.url || '/';
-  
+
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
