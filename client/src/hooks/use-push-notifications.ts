@@ -8,90 +8,71 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
   const autoSubscribeAttempted = useRef(false);
 
   useEffect(() => {
-    const checkSupport = () => {
-      const supported = "serviceWorker" in navigator && "PushManager" in window;
-      setIsSupported(supported);
-      
-      if ("Notification" in window) {
-        setPermission(Notification.permission);
-      }
-    };
-
-    checkSupport();
-    checkSubscription();
+    const supported = "serviceWorker" in navigator && "PushManager" in window;
+    setIsSupported(supported);
+    if ("Notification" in window) {
+      setPermission(Notification.permission);
+    }
   }, []);
 
   useEffect(() => {
-    if (autoSubscribe && isLoggedIn && isSupported && !isSubscribed && !autoSubscribeAttempted.current) {
-      autoSubscribeAttempted.current = true;
-      if (Notification.permission === "granted") {
-        subscribeAuto();
-      } else if (Notification.permission === "default") {
-        Notification.requestPermission().then((perm) => {
+    if (!autoSubscribe || !isLoggedIn || !isSupported || autoSubscribeAttempted.current) return;
+    autoSubscribeAttempted.current = true;
+
+    const doAutoSubscribe = async () => {
+      try {
+        let perm = Notification.permission;
+        if (perm === "default") {
+          perm = await Notification.requestPermission();
           setPermission(perm);
-          if (perm === "granted") {
-            subscribeAuto();
+        }
+        if (perm !== "granted") return;
+
+        const vapidRes = await fetch("/api/push/vapid-public-key");
+        const { publicKey } = await vapidRes.json();
+        if (!publicKey) return;
+
+        const registration = await navigator.serviceWorker.ready;
+        let sub = await registration.pushManager.getSubscription();
+
+        if (!sub) {
+          sub = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey),
+          });
+        }
+
+        if (sub) {
+          const subJson = sub.toJSON();
+          const res = await fetch("/api/push/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+          });
+          if (res.ok) {
+            setIsSubscribed(true);
+            console.log("Push subscription registered successfully");
+          } else {
+            console.error("Push subscribe API failed:", res.status);
           }
-        });
+        }
+      } catch (err) {
+        console.error("Auto subscribe error:", err);
       }
-    }
-  }, [autoSubscribe, isLoggedIn, isSupported, isSubscribed]);
+    };
 
-  const subscribeAuto = async () => {
-    try {
-      const vapidResponse = await fetch("/api/push/vapid-public-key");
-      const { publicKey } = await vapidResponse.json();
-      
-      if (!publicKey) return;
-
-      const registration = await navigator.serviceWorker.ready;
-      let sub = await registration.pushManager.getSubscription();
-      
-      if (!sub) {
-        sub = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
-        });
-      }
-
-      if (sub) {
-        const subJson = sub.toJSON();
-        await fetch("/api/push/subscribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            endpoint: subJson.endpoint,
-            keys: subJson.keys
-          })
-        });
-        setIsSubscribed(true);
-      }
-    } catch (err) {
-      console.error("Auto subscribe error:", err);
-    }
-  };
-
-  const checkSubscription = async () => {
-    if (!("serviceWorker" in navigator)) return;
-    
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
-    } catch (err) {
-      console.error("Check subscription error:", err);
-    }
-  };
+    doAutoSubscribe();
+  }, [autoSubscribe, isLoggedIn, isSupported]);
 
   const subscribe = useCallback(async () => {
     if (!isSupported) return false;
-    
+
     setIsLoading(true);
     try {
       const permResult = await Notification.requestPermission();
       setPermission(permResult);
-      
+
       if (permResult !== "granted") {
         setIsLoading(false);
         return false;
@@ -99,16 +80,13 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
 
       const vapidResponse = await fetch("/api/push/vapid-public-key");
       const { publicKey } = await vapidResponse.json();
-      
-      if (!publicKey) {
-        throw new Error("VAPID public key not available");
-      }
+
+      if (!publicKey) throw new Error("VAPID public key not available");
 
       const registration = await navigator.serviceWorker.ready;
-      
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
 
       const subJson = subscription.toJSON();
@@ -116,10 +94,7 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          endpoint: subJson.endpoint,
-          keys: subJson.keys
-        })
+        body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
       });
 
       setIsSubscribed(true);
@@ -134,23 +109,22 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
 
   const unsubscribe = useCallback(async () => {
     if (!isSupported) return false;
-    
+
     setIsLoading(true);
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      
+
       if (subscription) {
         await fetch("/api/push/unsubscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ endpoint: subscription.endpoint })
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
         });
-        
         await subscription.unsubscribe();
       }
-      
+
       setIsSubscribed(false);
       setIsLoading(false);
       return true;
@@ -161,28 +135,16 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
     }
   }, [isSupported]);
 
-  return {
-    isSupported,
-    isSubscribed,
-    isLoading,
-    permission,
-    subscribe,
-    unsubscribe
-  };
+  return { isSupported, isSubscribed, isLoading, permission, subscribe, unsubscribe };
 }
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
-  
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-  
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-  
   return outputArray;
 }
