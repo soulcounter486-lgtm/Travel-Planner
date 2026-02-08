@@ -5106,6 +5106,7 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
         description: coupons.description,
         discountType: coupons.discountType,
         discountValue: coupons.discountValue,
+        serviceDescription: coupons.serviceDescription,
         validFrom: coupons.validFrom,
         validUntil: coupons.validUntil,
         placeId: coupons.placeId,
