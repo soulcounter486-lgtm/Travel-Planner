@@ -1141,10 +1141,19 @@ export default function TravelPlanner() {
                     }
                     setAddToExpensePending(true);
                     try {
+                      let usdToVnd = 25500;
+                      try {
+                        const rateRes = await fetch("/api/exchange-rates");
+                        if (rateRes.ok) {
+                          const rateData = await rateRes.json();
+                          if (rateData.rates?.VND) usdToVnd = rateData.rates.VND;
+                        }
+                      } catch {}
+                      const totalBudgetVnd = Math.round((travelPlan.totalEstimatedCost || 0) * usdToVnd);
                       const res = await apiRequest("POST", "/api/expense-groups", {
                         name: travelPlan.title || (language === "ko" ? "AI 여행 일정" : "AI Travel Plan"),
                         participants: [user.nickname || user.email || "나"],
-                        budget: travelPlan.totalEstimatedCost || 0,
+                        budget: totalBudgetVnd,
                       });
                       const group = await res.json();
                       for (const day of travelPlan.days) {
@@ -1156,9 +1165,10 @@ export default function TravelPlanner() {
                               club: "activity", bar: "food", casino: "activity",
                               transfer: "transport", shopping: "shopping",
                             };
+                            const amountVnd = Math.round(item.estimatedCost * usdToVnd);
                             await apiRequest("POST", `/api/expense-groups/${group.id}/expenses`, {
-                              description: `${item.place} (Day ${day.day})`,
-                              amount: item.estimatedCost,
+                              description: `${item.place} (Day ${day.day}) - $${item.estimatedCost}`,
+                              amount: amountVnd,
                               category: categoryMap[item.type] || "other",
                               paidBy: user.nickname || user.email || "나",
                               splitAmong: [user.nickname || user.email || "나"],
@@ -1169,7 +1179,7 @@ export default function TravelPlanner() {
                         }
                       }
                       queryClient.invalidateQueries({ queryKey: ["/api/expense-groups"] });
-                      toast({ title: language === "ko" ? "가계부에 추가되었습니다!" : "Added to expense tracker!" });
+                      toast({ title: language === "ko" ? "가계부에 추가되었습니다! (USD→VND 환율 적용)" : "Added to expense tracker! (USD→VND converted)" });
                       setLocation("/expenses");
                     } catch (err) {
                       toast({ title: language === "ko" ? "가계부 추가 실패" : "Failed to add", variant: "destructive" });
