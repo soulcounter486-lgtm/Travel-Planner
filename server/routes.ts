@@ -5971,6 +5971,13 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
       const messages = await db.select().from(customerChatMessages)
         .where(eq(customerChatMessages.roomId, roomId))
         .orderBy(customerChatMessages.createdAt);
+
+      if (adminAccess) {
+        await db.update(customerChatRooms).set({ unreadByAdmin: 0 }).where(eq(customerChatRooms.id, roomId));
+      } else {
+        await db.update(customerChatRooms).set({ unreadByVisitor: 0 }).where(eq(customerChatRooms.id, roomId));
+      }
+
       res.json(messages);
     } catch (err) {
       res.status(500).json({ error: "메시지 조회 실패" });
