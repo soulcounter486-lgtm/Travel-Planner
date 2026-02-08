@@ -590,8 +590,11 @@ export default function Board() {
       }
     }
 
-    // URL 미리보기 추가 (최대 3개)
-    const uniqueUrls = Array.from(new Set(allUrls)).slice(0, 3);
+    const currentHost = window.location.hostname;
+    const filteredUrls = allUrls.filter(u => {
+      try { return new URL(u).hostname !== currentHost && !u.includes("vungtau.blog"); } catch { return true; }
+    });
+    const uniqueUrls = Array.from(new Set(filteredUrls)).slice(0, 3);
     if (uniqueUrls.length > 0) {
       result.push(
         <div key="link-previews" className="mt-4 space-y-2">
@@ -615,9 +618,13 @@ export default function Board() {
   };
 
   const getFirstUrlFromContent = (content: string): string | null => {
-    const urlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/;
-    const match = content.match(urlRegex);
-    return match ? match[0] : null;
+    const urlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/g;
+    const matches = content.match(urlRegex);
+    if (!matches) return null;
+    const currentHost = window.location.hostname;
+    return matches.find(u => {
+      try { return new URL(u).hostname !== currentHost && !u.includes("vungtau.blog"); } catch { return true; }
+    }) || null;
   };
 
   const handleCreatePost = () => {
