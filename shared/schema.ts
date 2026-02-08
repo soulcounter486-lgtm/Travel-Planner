@@ -235,6 +235,22 @@ export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
 
+// AI 여행 일정 저장
+export const savedTravelPlans = pgTable("saved_travel_plans", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  title: text("title").notNull(),
+  purpose: text("purpose").notNull(),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+  planData: jsonb("plan_data").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertSavedTravelPlanSchema = createInsertSchema(savedTravelPlans).omit({ id: true, createdAt: true });
+export type SavedTravelPlan = typeof savedTravelPlans.$inferSelect;
+export type InsertSavedTravelPlan = z.infer<typeof insertSavedTravelPlanSchema>;
+
 // 인스타그램 동기화 추적
 export const instagramSyncedPosts = pgTable("instagram_synced_posts", {
   id: serial("id").primaryKey(),
