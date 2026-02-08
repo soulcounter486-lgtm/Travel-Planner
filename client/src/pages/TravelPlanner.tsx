@@ -40,7 +40,9 @@ import {
   Map,
   ChevronDown,
   ChevronUp,
-  Navigation
+  Navigation,
+  Gift,
+  Star
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,6 +67,8 @@ interface ScheduleItem {
   travelTime?: string;
   lat?: number;
   lng?: number;
+  isPartner?: boolean;
+  discountText?: string;
 }
 
 interface DayPlan {
@@ -226,6 +230,8 @@ export default function TravelPlanner() {
             travelTime: item.travelTime || "",
             lat: typeof item.lat === "number" ? item.lat : (parseFloat(item.lat) || 0),
             lng: typeof item.lng === "number" ? item.lng : (parseFloat(item.lng) || 0),
+            isPartner: item.isPartner === true,
+            discountText: item.discountText || "",
           })) : [],
         })) : [],
       };
@@ -820,13 +826,14 @@ export default function TravelPlanner() {
                                             <div className="w-px h-6 bg-border mt-1" />
                                           )}
                                         </div>
-                                        <a
-                                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.placeVi || item.place)}+Vung+Tau+Vietnam`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex-1 bg-muted/50 rounded-lg p-2.5 hover-elevate cursor-pointer transition-all border border-transparent hover:border-primary/30"
-                                        >
+                                        <div className={`flex-1 rounded-lg p-2.5 transition-all border ${item.isPartner ? "bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700" : "bg-muted/50 border-transparent"}`}>
                                           <div className="flex items-start gap-1.5 flex-wrap">
+                                            {item.isPartner && (
+                                              <Badge className="bg-amber-500 text-white text-[10px] no-default-hover-elevate no-default-active-elevate">
+                                                <Star className="h-3 w-3 mr-0.5" />
+                                                {language === "ko" ? "협력업체" : "Partner"}
+                                              </Badge>
+                                            )}
                                             <Badge className={typeColor}>
                                               <TypeIcon className="h-3 w-3 mr-0.5" />
                                               {item.type}
@@ -842,12 +849,54 @@ export default function TravelPlanner() {
                                             <MapPin className="h-3 w-3 shrink-0" />
                                             {item.place}
                                             {item.placeVi && <span className="text-[10px]">({item.placeVi})</span>}
-                                            <ExternalLink className="h-3 w-3 ml-1 text-primary shrink-0" />
                                           </p>
                                           {item.note && (
                                             <p className="text-[11px] text-muted-foreground mt-1 italic">{item.note}</p>
                                           )}
-                                        </a>
+                                          <div className="mt-2 flex gap-2 flex-wrap">
+                                            <a
+                                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.placeVi || item.place)}+Vung+Tau+Vietnam`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              data-testid={`map-link-${dayIndex}-${itemIndex}`}
+                                            >
+                                              <Button size="sm" variant="outline" className="text-xs" data-testid={`btn-map-${dayIndex}-${itemIndex}`}>
+                                                <ExternalLink className="h-3 w-3 mr-1" />
+                                                {language === "ko" ? "지도 보기" : "View Map"}
+                                              </Button>
+                                            </a>
+                                            {item.isPartner && (
+                                              <>
+                                                <a
+                                                  href="http://pf.kakao.com/_TuxoxfG"
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  data-testid={`partner-kakao-link-${dayIndex}-${itemIndex}`}
+                                                >
+                                                  <Button size="sm" variant="default" className="text-xs" data-testid={`btn-partner-kakao-${dayIndex}-${itemIndex}`}>
+                                                    <MessageCircle className="h-3 w-3 mr-1" />
+                                                    {language === "ko" ? "카톡 문의/예약" : "KakaoTalk Inquiry"}
+                                                  </Button>
+                                                </a>
+                                                <a
+                                                  href="/coupons"
+                                                  data-testid={`partner-coupon-link-${dayIndex}-${itemIndex}`}
+                                                >
+                                                  <Button size="sm" variant="secondary" className="text-xs" data-testid={`btn-partner-coupon-${dayIndex}-${itemIndex}`}>
+                                                    <Gift className="h-3 w-3 mr-1" />
+                                                    {language === "ko" ? "쿠폰 받기" : "Get Coupon"}
+                                                  </Button>
+                                                </a>
+                                              </>
+                                            )}
+                                          </div>
+                                          {item.isPartner && item.discountText && (
+                                            <p className="text-xs text-amber-700 dark:text-amber-300 font-medium mt-1.5 flex items-center gap-1">
+                                              <Gift className="h-3 w-3 shrink-0" />
+                                              {item.discountText}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
                                     );
                                   })}

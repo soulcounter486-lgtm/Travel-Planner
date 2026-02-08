@@ -2483,7 +2483,7 @@ Example response format:
       { name: "오리국수", type: "오리국수", note: "오후 3시반 오픈" },
     ],
     koreanFood: [
-      { name: "이안 돌판 삼겹살", type: "삼겹살", note: "도깨비 협력식당, 예약 시 10% 할인", recommended: true },
+      { name: "이안 돌판 삼겹살", type: "삼겹살", note: "도깨비 협력식당, 예약 시 10% 할인", recommended: true, isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 10% 할인" },
       { name: "가보정", type: "한식", note: "다양한 한식" },
       { name: "비원식당", type: "한식", note: "한국 음식점" },
       { name: "뚱보집 (포차)", type: "포차", note: "한국식 포차" },
@@ -2505,12 +2505,12 @@ Example response format:
       { name: "Mi Amor Beach", type: "비치카페", note: "해변 카페" },
     ],
     services: [
-      { name: "Re.en 마사지", type: "마사지", note: "도깨비 협력업체" },
-      { name: "그랜드 마사지", type: "마사지", note: "도깨비 협력업체" },
-      { name: "DAY SPA", type: "스파", note: "도깨비 협력업체, 프리미엄 스파" },
+      { name: "Re.en 마사지", type: "마사지", note: "도깨비 협력업체", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
+      { name: "그랜드 마사지", type: "마사지", note: "도깨비 협력업체", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
+      { name: "DAY SPA", type: "스파", note: "도깨비 협력업체, 프리미엄 스파", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
       { name: "김마싸", type: "마사지", note: "한국인 운영" },
       { name: "이발소 Salon Kimha", type: "이발소", note: "한국인 운영" },
-      { name: "Bi Roen 현지 고급 이발소", type: "이발소", note: "도깨비 협력업체, 추천", recommended: true },
+      { name: "Bi Roen 현지 고급 이발소", type: "이발소", note: "도깨비 협력업체, 추천", recommended: true, isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 5% 할인" },
     ],
     nightlife: [
       { name: "88 비어클럽", nameVi: "88 Beer Club", type: "비어클럽", note: "라이브 음악, 야외 분위기" },
@@ -2611,7 +2611,9 @@ ${languagePrompts[language] || languagePrompts.ko}
           "estimatedCost": 1인당 예상 비용(USD, 숫자만),
           "travelTime": "이전 장소에서 이동시간 (예: 차 10분, 도보 5분)",
           "lat": 위도(숫자),
-          "lng": 경도(숫자)
+          "lng": 경도(숫자),
+          "isPartner": true/false (협력업체 여부, 장소 데이터의 isPartner 필드 참조),
+          "discountText": "할인 혜택 텍스트 (협력업체인 경우만, 장소 데이터의 discountText 참조)"
         }
       ]
     }
@@ -2705,16 +2707,18 @@ ${JSON.stringify(placesData, null, 2)}
 - golf: 골프장
 
 ## 일정 작성 규칙:
-1. 관광명소(attractions)에서 priority: 1인 장소를 우선 배치하세요.
-2. 식사 시간에는 localFood, koreanFood, buffet, chineseFood 목록에서 선택하세요.
-3. 카페 휴식은 coffee 목록에서만 선택하세요.
-4. 마사지/스파는 services 목록에서만 선택하세요.
-5. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함하세요.
-6. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용하세요.
-7. recommended: true 표시된 장소는 특히 추천합니다.
-8. 각 일정마다 estimatedCost(1인 기준 USD), travelTime(이전 장소에서 이동시간), lat/lng 좌표를 반드시 포함하세요.
-9. vehicleRecommendation에 총 이동시간과 추천 차량 종류를 포함하세요.
-10. 마지막 날은 공항 이동시간(붕따우→호치민 약 2~2.5시간)을 고려하여 일정을 짧게 하세요.
+1. ⭐ 협력업체 우선 배치: isPartner: true인 장소를 반드시 우선적으로 일정에 포함하세요. 협력업체는 "붕따우 도깨비" 공식 파트너로 할인 혜택이 있습니다.
+2. 협력업체 장소는 일정에 포함할 때 반드시 isPartner: true와 해당 discountText를 응답에 포함하세요.
+3. 관광명소(attractions)에서 priority: 1인 장소를 우선 배치하세요.
+4. 식사 시간에는 localFood, koreanFood, buffet, chineseFood 목록에서 선택하세요. koreanFood의 협력업체(이안 돌판 삼겹살)를 반드시 1회 이상 포함하세요.
+5. 카페 휴식은 coffee 목록에서만 선택하세요.
+6. 마사지/스파는 services 목록에서만 선택하세요. 협력업체(Re.en 마사지, 그랜드 마사지, DAY SPA, Bi Roen)를 우선 선택하세요.
+7. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함하세요.
+8. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용하세요.
+9. recommended: true 표시된 장소는 특히 추천합니다.
+10. 각 일정마다 estimatedCost(1인 기준 USD), travelTime(이전 장소에서 이동시간), lat/lng 좌표를 반드시 포함하세요.
+11. vehicleRecommendation에 총 이동시간과 추천 차량 종류를 포함하세요.
+12. 마지막 날은 공항 이동시간(붕따우→호치민 약 2~2.5시간)을 고려하여 일정을 짧게 하세요.
 
 ${purposes.includes('golf') ? '## 골프 여행: golf 목록에서 골프장을 선택하여 매일 또는 격일로 라운딩을 포함하세요.' : ''}
 ${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함하세요. 일정 사이에 숙소 휴식시간을 넉넉히 넣어주세요.' : ''}
