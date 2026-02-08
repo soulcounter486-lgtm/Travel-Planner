@@ -54,10 +54,10 @@ export function TabNavigation({ language }: TabNavigationProps) {
 
   const tabs = [
     { path: "/", icon: Calculator, label: "calculator", testId: "nav-calculator" },
+    { path: "/planner", icon: Sparkles, label: "planner", testId: "nav-planner" },
     { path: "/guide", icon: MapPin, label: "guide", testId: "nav-guide" },
     { path: "/board", icon: Flag, label: "board", testId: "nav-board" },
     { path: "/diet", icon: ShoppingBag, label: "shop", testId: "nav-shop" },
-    { path: "/planner", icon: Sparkles, label: "planner", testId: "nav-planner" },
     { path: "/chat", icon: MessageCircle, label: "chat", testId: "nav-chat" },
     { path: "/expenses", icon: Wallet, label: "expenses", testId: "nav-expenses" },
   ];
