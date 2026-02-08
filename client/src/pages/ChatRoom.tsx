@@ -32,6 +32,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
 import { FixedBottomBar } from "@/components/FixedBottomBar";
+import { useAuth } from "@/hooks/use-auth";
 import type { UserLocation } from "@shared/schema";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -46,11 +47,7 @@ interface ChatMessage {
 export default function ChatRoom() {
   const { language, t } = useLanguage();
   const queryClient = useQueryClient();
-  
-  const { data: adminCheck } = useQuery<{ isAdmin: boolean; isLoggedIn: boolean }>({
-    queryKey: ["/api/check-admin"],
-  });
-  const isAdmin = adminCheck?.isAdmin || false;
+  const { user, isAuthenticated, isAdmin } = useAuth();
   
   const { data: locations = [] } = useQuery<UserLocation[]>({
     queryKey: ["/api/locations"],
@@ -58,6 +55,7 @@ export default function ChatRoom() {
   });
   
   const [nickname, setNickname] = useState(() => {
+    if (user?.nickname) return user.nickname;
     return localStorage.getItem("chat_nickname") || "";
   });
   const [isJoined, setIsJoined] = useState(false);
@@ -80,15 +78,22 @@ export default function ChatRoom() {
     }
   }, []);
 
-  // Auto-join if nickname is saved
   useEffect(() => {
+    if (user?.nickname && !nickname) {
+      setNickname(user.nickname);
+    }
+  }, [user?.nickname]);
+
+  // Auto-join if nickname is saved and user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
     const savedNick = localStorage.getItem("chat_nickname");
     if (savedNick && !isJoined) {
       savedNicknameRef.current = savedNick;
       setIsJoined(true);
       connectWebSocket(savedNick);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Initialize mini map
   useEffect(() => {
@@ -428,7 +433,33 @@ export default function ChatRoom() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
           <Card className="lg:col-span-3">
             <CardContent className="p-0">
-              {!isJoined ? (
+              {!isAuthenticated ? (
+                <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full max-w-sm space-y-4 text-center"
+                  >
+                    <div className="w-20 h-20 bg-gradient-to-r from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <LogIn className="w-10 h-10 text-white" />
+                    </div>
+                    <h2 className="text-xl font-semibold">
+                      {language === "ko" ? "로그인이 필요합니다" : "Login Required"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {language === "ko" ? "단체 채팅방은 로그인 후 이용 가능합니다." : "Please log in to join the group chat."}
+                    </p>
+                    <Button
+                      onClick={() => window.location.href = "/api/login"}
+                      className="w-full bg-gradient-to-r from-primary to-purple-600"
+                      data-testid="btn-login-for-chat"
+                    >
+                      <LogIn className="w-4 h-4 mr-2" />
+                      {language === "ko" ? "로그인하기" : "Log In"}
+                    </Button>
+                  </motion.div>
+                </div>
+              ) : !isJoined ? (
                 <div className="p-8 flex flex-col items-center justify-center min-h-[400px]">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
