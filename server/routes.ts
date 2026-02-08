@@ -2410,7 +2410,7 @@ Example response format:
 {"en":"Golf Club","zh":"高尔夫俱乐部","vi":"Câu lạc bộ golf","ru":"Гольф-клуб","ja":"ゴルフクラブ"}`;
 
       const response = await gemini.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-2.5-flash-lite",
         contents: prompt,
       });
       
@@ -2748,7 +2748,7 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
       while (retries <= maxRetries) {
         try {
           response = await gemini.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-2.5-flash-lite",
             config: {
               systemInstruction: systemPrompt,
               responseMimeType: "application/json",
