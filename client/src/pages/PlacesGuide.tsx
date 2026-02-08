@@ -1644,8 +1644,13 @@ export default function PlacesGuide() {
         }
       });
       
+      const reverseCategoryMap: Record<string, string> = {};
+      Object.entries(dbCategoryMap).forEach(([dbId, hcKey]) => { reverseCategoryMap[hcKey] = dbId; });
+      const matchingDbCat = dbCategories.find(c => c.id === reverseCategoryMap[categoryKey]);
+      
       merged[categoryKey] = {
         ...category,
+        ...(matchingDbCat?.gradient ? { gradient: matchingDbCat.gradient } : {}),
         places,
       };
     });
@@ -1810,7 +1815,7 @@ export default function PlacesGuide() {
       if (!lat || !lng || isNaN(lat) || isNaN(lng)) return;
       placesWithCoords++;
       
-      const categoryColors: Record<string, string> = {
+      const defaultCategoryColors: Record<string, string> = {
         attractions: "#3b82f6",
         localFood: "#ef4444",
         koreanFood: "#f97316",
@@ -1824,7 +1829,10 @@ export default function PlacesGuide() {
         services: "#0ea5e9",
       };
       
-      const color = categoryColors[place.categoryId] || "#64748b";
+      const reverseMap: Record<string, string> = {};
+      Object.entries(dbCategoryMap).forEach(([dbId, hcKey]) => { reverseMap[hcKey] = dbId; });
+      const dbCatForColor = dbCategories.find(c => c.id === reverseMap[place.categoryId] || c.id === place.categoryId);
+      const color = dbCatForColor?.color || defaultCategoryColors[place.categoryId] || "#64748b";
       
       // 파트너 업체는 더 크고 특별한 마커
       const markerSize = place.isPartner ? 50 : 40;
@@ -2159,17 +2167,32 @@ export default function PlacesGuide() {
                   <span className="text-[10px] font-bold">{language === "ko" ? "도깨비 파트너" : "Dokkaebi Partner"}</span>
                 </button>
                 {[
-                  { id: "attractions", color: "#3b82f6", label: language === "ko" ? "관광명소" : "Attractions" },
-                  { id: "localFood", color: "#ef4444", label: language === "ko" ? "로컬맛집" : "Local Food" },
-                  { id: "koreanFood", color: "#f97316", label: language === "ko" ? "한식" : "Korean" },
-                  { id: "coffee", color: "#6366f1", label: language === "ko" ? "카페" : "Cafe" },
-                  { id: "nightlife", color: "#ec4899", label: language === "ko" ? "유흥" : "Nightlife" },
-                  // nightlife18은 관리자, 카카오 로그인 남성 회원, 또는 canViewNightlife18 권한이 있는 사용자에게만 표시
-                  ...(isAdmin || (user?.gender === 'male' && user?.loginMethod === 'kakao') || user?.canViewNightlife18 ? [{ id: "nightlife18", color: "#dc2626", label: language === "ko" ? "밤문화 18+" : "Nightlife 18+" }] : []),
-                  { id: "spa", color: "#8b5cf6", label: language === "ko" ? "스파" : "Spa" },
-                  { id: "massage", color: "#14b8a6", label: language === "ko" ? "마사지" : "Massage" },
-                  { id: "golf", color: "#22c55e", label: language === "ko" ? "골프" : "Golf" },
-                  { id: "exchange", color: "#eab308", label: language === "ko" ? "환전" : "Exchange" },
+                  ...(() => {
+                    const defaultFilters = [
+                      { id: "attractions", defaultColor: "#3b82f6", dbId: "attraction", label: language === "ko" ? "관광명소" : "Attractions" },
+                      { id: "localFood", defaultColor: "#ef4444", dbId: "local_food", label: language === "ko" ? "로컬맛집" : "Local Food" },
+                      { id: "koreanFood", defaultColor: "#f97316", dbId: "korean_food", label: language === "ko" ? "한식" : "Korean" },
+                      { id: "coffee", defaultColor: "#6366f1", dbId: "cafe", label: language === "ko" ? "카페" : "Cafe" },
+                      { id: "nightlife", defaultColor: "#ec4899", dbId: "nightlife", label: language === "ko" ? "유흥" : "Nightlife" },
+                      ...(isAdmin || (user?.gender === 'male' && user?.loginMethod === 'kakao') || user?.canViewNightlife18 ? [{ id: "nightlife18", defaultColor: "#dc2626", dbId: "nightlife18", label: language === "ko" ? "밤문화 18+" : "Nightlife 18+" }] : []),
+                      { id: "spa", defaultColor: "#8b5cf6", dbId: "spa", label: language === "ko" ? "스파" : "Spa" },
+                      { id: "massage", defaultColor: "#14b8a6", dbId: "services", label: language === "ko" ? "마사지" : "Massage" },
+                      { id: "golf", defaultColor: "#22c55e", dbId: "golfjang", label: language === "ko" ? "골프" : "Golf" },
+                      { id: "exchange", defaultColor: "#eab308", dbId: "exchange", label: language === "ko" ? "환전" : "Exchange" },
+                    ];
+                    const extraDbCats = dbCategories.filter(c => !defaultFilters.some(f => f.dbId === c.id));
+                    const extraFilters = extraDbCats.map(c => ({
+                      id: c.id,
+                      defaultColor: c.color || "#64748b",
+                      dbId: c.id,
+                      label: language === "ko" ? c.labelKo : (c.labelEn || c.labelKo),
+                    }));
+                    return [...defaultFilters, ...extraFilters].map(f => ({
+                      id: f.id,
+                      color: dbCategories.find(c => c.id === f.dbId)?.color || f.defaultColor,
+                      label: f.label,
+                    }));
+                  })(),
                 ].map(item => {
                   const isSelected = selectedMapCategories.has(item.id);
                   return (
