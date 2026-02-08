@@ -521,3 +521,31 @@ export const quoteCategories = pgTable("quote_categories", {
 export const insertQuoteCategorySchema = createInsertSchema(quoteCategories).omit({ id: true, createdAt: true, updatedAt: true });
 export type QuoteCategory = typeof quoteCategories.$inferSelect;
 export type InsertQuoteCategory = z.infer<typeof insertQuoteCategorySchema>;
+
+// 고객센터 채팅방
+export const customerChatRooms = pgTable("customer_chat_rooms", {
+  id: serial("id").primaryKey(),
+  visitorId: text("visitor_id").notNull(),
+  visitorName: text("visitor_name").notNull().default("방문자"),
+  status: text("status").notNull().default("open"),
+  lastMessage: text("last_message"),
+  lastMessageAt: timestamp("last_message_at"),
+  unreadByAdmin: integer("unread_by_admin").default(0),
+  unreadByVisitor: integer("unread_by_visitor").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type CustomerChatRoom = typeof customerChatRooms.$inferSelect;
+
+// 고객센터 채팅 메시지
+export const customerChatMessages = pgTable("customer_chat_messages", {
+  id: serial("id").primaryKey(),
+  roomId: integer("room_id").notNull(),
+  senderId: text("sender_id").notNull(),
+  senderRole: text("sender_role").notNull().default("customer"),
+  senderName: text("sender_name").notNull().default("방문자"),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type CustomerChatMessage = typeof customerChatMessages.$inferSelect;
