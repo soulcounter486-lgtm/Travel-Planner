@@ -5,12 +5,26 @@ import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { CustomerChatWindow } from "@/components/CustomerChatWidget";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 
 export function FixedBottomBar() {
   const { language } = useLanguage();
   const { isAdmin, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [chatOpen, setChatOpen] = useState(false);
+  const [, navigate] = useLocation();
+
+  const { data: notifications } = useQuery<{ unreadMessagesCount: number; unusedCouponsCount: number; unreadChatCount: number }>({
+    queryKey: ["/api/my-notifications"],
+    queryFn: async () => {
+      const res = await fetch("/api/my-notifications", { credentials: "include" });
+      if (!res.ok) return { unreadMessagesCount: 0, unusedCouponsCount: 0, unreadChatCount: 0 };
+      return res.json();
+    },
+    enabled: !!isAuthenticated && !!isAdmin,
+    refetchInterval: 10000,
+  });
 
   const [visitorCount, setVisitorCount] = useState<number>(0);
   const [totalVisitorCount, setTotalVisitorCount] = useState<number>(15000);
@@ -53,6 +67,10 @@ export function FixedBottomBar() {
   }, []);
 
   const handleChatClick = () => {
+    if (isAdmin) {
+      navigate("/admin/chat");
+      return;
+    }
     if (!isAuthenticated) {
       toast({
         title: language === "ko" ? "로그인 필요" : "Login Required",
@@ -146,15 +164,22 @@ export function FixedBottomBar() {
                     <span className="whitespace-nowrap">{channelLabel}</span>
                   </Button>
                 </a>
-                <Button
-                  size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-1 px-2 sm:px-3 text-xs sm:text-sm"
-                  onClick={handleChatClick}
-                  data-testid="btn-open-chat"
-                >
-                  <Headphones className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="whitespace-nowrap">{chatLabel}</span>
-                </Button>
+                <div className="relative">
+                  <Button
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold gap-1 px-2 sm:px-3 text-xs sm:text-sm"
+                    onClick={handleChatClick}
+                    data-testid="btn-open-chat"
+                  >
+                    <Headphones className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{chatLabel}</span>
+                  </Button>
+                  {isAdmin && (notifications?.unreadChatCount ?? 0) > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1" data-testid="badge-unread-chat">
+                      {notifications!.unreadChatCount}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

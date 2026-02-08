@@ -413,7 +413,6 @@ export async function registerRoutes(
         console.error("Admin notification error:", notifError);
       }
 
-      // 세션에 사용자 정보 저장 (Replit Auth와 호환되는 형식)
       const user = {
         claims: {
           sub: kakaoUserId,
@@ -423,7 +422,8 @@ export async function registerRoutes(
           profile_image_url: profileImage,
           gender: gender,
         },
-        expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 1주일
+        provider: "kakao",
+        expires_at: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
       };
 
       (req as any).login(user, (err: any) => {
@@ -5428,7 +5428,7 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
 
       let unreadChatCount = 0;
       const userEmail = user.claims?.email || user.email;
-      if (isUserAdmin(userId, userEmail)) {
+      if (await isUserAdminWithDb(userId, userEmail)) {
         const openRooms = await db.select().from(customerChatRooms)
           .where(eq(customerChatRooms.status, "open"));
         unreadChatCount = openRooms.reduce((sum, r) => sum + (r.unreadByAdmin ?? 0), 0);
@@ -5955,11 +5955,10 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
       const roomId = parseInt(req.params.roomId);
       const visitorId = req.query.visitorId as string;
 
-      // 관리자인지 확인
       const user = (req as any).user;
       const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       const userEmail = user?.claims?.email || user?.email;
-      const adminAccess = isUserAdmin(userId, userEmail);
+      const adminAccess = await isUserAdminWithDb(userId, userEmail);
 
       if (!adminAccess) {
         if (!visitorId) return res.status(403).json({ error: "접근 권한 없음" });
@@ -5989,7 +5988,7 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
       const user = req.user;
       const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       const userEmail = user?.claims?.email || user?.email;
-      const adminAccess = isUserAdmin(userId, userEmail);
+      const adminAccess = await isUserAdminWithDb(userId, userEmail);
 
       let actualRole: string;
       let actualSenderId: string;
@@ -6051,13 +6050,13 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
     }
   });
 
-  // 관리자: 모든 채팅방 목록
   app.get("/api/admin/customer-chat/rooms", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       const userEmail = user?.claims?.email || user?.email;
-      if (!isUserAdmin(userId, userEmail)) {
+      const admin = await isUserAdminWithDb(userId, userEmail);
+      if (!admin) {
         return res.status(403).json({ error: "관리자 권한 필요" });
       }
 
@@ -6068,13 +6067,12 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
     }
   });
 
-  // 관리자: 채팅방 닫기
   app.patch("/api/admin/customer-chat/rooms/:roomId/close", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user as any;
       const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       const userEmail = user?.claims?.email || user?.email;
-      if (!isUserAdmin(userId, userEmail)) {
+      if (!(await isUserAdminWithDb(userId, userEmail))) {
         return res.status(403).json({ error: "관리자 권한 필요" });
       }
 
