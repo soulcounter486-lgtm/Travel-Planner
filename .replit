@@ -46,6 +46,5 @@ integrations = ["javascript_log_in_with_replit:2.0.0", "javascript_openai_ai_int
 
 [userenv.shared]
 ADMIN_USER_ID = "42663365,admin_vungtausaver,kakao_4725775455"
-VAPID_PUBLIC_KEY = "BBr-nefHGQY7zIngAREaqP4Su6ztIdTFxzNTNIJyHSXRLikyHu9kAVbldQVHNGK8_1zumxvusDHE6IVRwZxs9i4"
-VAPID_PRIVATE_KEY = "JJj2zcPFX4M4FCD16Iwx9xU90Muq4oJpajLRc5ehPog"
 VAPID_SUBJECT = "mailto:dokkaebi.vungtau@gmail.com"
+VAPID_PUBLIC_KEY = "BNx5MzVGU3ar-svCs_hUaNuk_6z8ZjM0zYZJLy7Xq0NpI43pwKjWG_9-RbpJZLPwEPuuQdtoQIHIOg0Qx9dSh0Y"
