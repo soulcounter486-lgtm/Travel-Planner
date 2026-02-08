@@ -21,9 +21,9 @@ import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 
 // Web Push 설정
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || "";
-const vapidPrivateKey = process.env.VAPID_PRIV || process.env.VAPID_PRIVATE_KEY || "";
-const vapidSubject = process.env.VAPID_SUBJECT || "mailto:admin@vungtau.blog";
+const vapidPublicKey = process.env.PUSH_PUB || "";
+const vapidPrivateKey = process.env.PUSH_PRIV || "";
+const vapidSubject = "mailto:admin@vungtau.blog";
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
