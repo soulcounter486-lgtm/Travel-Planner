@@ -1016,6 +1016,40 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/push/test-delayed", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
+      if (!userId) return res.status(401).json({ error: "로그인 필요" });
+      const delay = Math.min(parseInt(req.body?.delay) || 30, 120);
+      res.json({ success: true, message: `${delay}초 후 푸시 발송 예약됨. 앱을 닫고 기다려주세요.` });
+      setTimeout(async () => {
+        try {
+          const subs = await db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+          console.log(`[PUSH-DELAYED] ${delay}초 경과, userId: ${userId}, subs: ${subs.length}`);
+          for (const sub of subs) {
+            try {
+              await webpush.sendNotification(
+                { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+                JSON.stringify({ title: "지연 테스트", body: `${delay}초 후 백그라운드 알림 테스트입니다!`, url: "/" }),
+                PUSH_OPTIONS
+              );
+              console.log(`[PUSH-DELAYED] 발송 성공 - ${sub.endpoint.substring(0, 60)}`);
+            } catch (err: any) {
+              console.error(`[PUSH-DELAYED] 발송 실패 - status: ${err.statusCode}`);
+              if (err.statusCode === 410 || err.statusCode === 404) {
+                await db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint));
+              }
+            }
+          }
+        } catch (e) {
+          console.error("[PUSH-DELAYED] 오류:", e);
+        }
+      }, delay * 1000);
+    } catch (err) {
+      res.status(500).json({ error: "예약 실패" });
+    }
+  });
+
   app.get("/api/push/status", isAuthenticated, async (req: any, res) => {
     const userId = req.user?.claims?.sub || req.user?.id || (req.session as any)?.userId;
     if (!userId) return res.status(401).json({ error: "로그인 필요" });

@@ -102,6 +102,22 @@ export default function PushDebug() {
     }
   };
 
+  const sendDelayedPush = async () => {
+    try {
+      log("30초 뒤 푸시 예약 중... 앱을 닫고 기다리세요!");
+      const res = await fetch("/api/push/test-delayed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ delay: 30 }),
+      });
+      const data = await res.json();
+      log("예약: " + JSON.stringify(data));
+    } catch (err: any) {
+      log("예약 error: " + err.message);
+    }
+  };
+
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <Card>
@@ -113,6 +129,7 @@ export default function PushDebug() {
             <Button data-testid="button-check-all" onClick={checkAll} size="sm">Full Check</Button>
             <Button data-testid="button-manual-subscribe" onClick={doManualSubscribe} size="sm" variant="default">Subscribe</Button>
             <Button data-testid="button-test-push" onClick={sendTestPush} size="sm" variant="default">Test Push</Button>
+            <Button data-testid="button-delayed-push" onClick={sendDelayedPush} size="sm" variant="destructive">30s Delayed</Button>
             <Button data-testid="button-clear-logs" onClick={() => setLogs([])} size="sm" variant="outline">Clear</Button>
           </div>
         </CardContent>
