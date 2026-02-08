@@ -34,14 +34,14 @@ export function SectionCard({
         onClick={() => onToggle(!isEnabled)}
       >
         <div className={cn("absolute inset-0 opacity-20 bg-gradient-to-r", gradient)} />
-        <CardTitle className="text-xl flex items-center gap-3 relative z-10">
+        <CardTitle className="text-xl flex items-center gap-3 relative z-10 min-w-0">
           <div className={cn(
-            "p-2.5 rounded-xl transition-colors",
+            "p-2.5 rounded-xl transition-colors shrink-0",
             isEnabled ? "bg-primary text-primary-foreground shadow-md" : "bg-muted text-muted-foreground"
           )}>
             <Icon className="w-5 h-5" />
           </div>
-          {title}
+          <span className="whitespace-nowrap text-base truncate">{title}</span>
         </CardTitle>
         <Switch 
           checked={isEnabled} 
