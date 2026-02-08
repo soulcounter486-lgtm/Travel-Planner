@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 import Home from "@/pages/Home";
 import PlacesGuide from "@/pages/PlacesGuide";
 import ExpenseTracker from "@/pages/ExpenseTracker";
@@ -51,12 +53,19 @@ function Router() {
   );
 }
 
+function PushSubscriptionManager() {
+  const { isAuthenticated } = useAuth();
+  usePushNotifications(true, !!isAuthenticated);
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <TooltipProvider>
           <Toaster />
+          <PushSubscriptionManager />
           <Router />
         </TooltipProvider>
       </LanguageProvider>

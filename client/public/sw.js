@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vungtau-dokkaebi-v5';
+const CACHE_NAME = 'vungtau-dokkaebi-v6';
 const APP_SHELL = [
   '/manifest.json',
   '/favicon.png',

@@ -40,11 +40,17 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
       if (!publicKey) return;
 
       const registration = await navigator.serviceWorker.ready;
-      const existingSub = await registration.pushManager.getSubscription();
+      let sub = await registration.pushManager.getSubscription();
       
-      if (existingSub) {
-        // 이미 구독되어 있으면 서버에 등록만
-        const subJson = existingSub.toJSON();
+      if (!sub) {
+        sub = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        });
+      }
+
+      if (sub) {
+        const subJson = sub.toJSON();
         await fetch("/api/push/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
