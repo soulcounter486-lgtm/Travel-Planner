@@ -411,7 +411,7 @@ export default function MyCoupons() {
       </div>
 
       <AlertDialog open={showUseConfirm} onOpenChange={(open) => { setShowUseConfirm(open); if (!open) setShowFinalConfirm(false); }}>
-        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto relative">
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] overflow-y-auto relative p-4 sm:p-6">
           <button
             onClick={() => { setShowUseConfirm(false); setShowFinalConfirm(false); }}
             className="absolute top-3 right-3 p-1 rounded-full hover-elevate z-10"
@@ -420,14 +420,14 @@ export default function MyCoupons() {
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
           <AlertDialogHeader className="text-center">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 mb-1">
               <img 
                 src="/dokkaebi-logo.png" 
                 alt="붕따우 도깨비" 
-                className="w-20 h-20 object-contain rounded-full"
+                className="w-12 h-12 object-contain rounded-full"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
-              <span className="text-lg font-bold text-primary">붕따우 도깨비</span>
+              <span className="text-base font-bold text-primary">붕따우 도깨비</span>
             </div>
             <AlertDialogTitle className="text-center">
               쿠폰 사용
