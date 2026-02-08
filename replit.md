@@ -24,6 +24,11 @@ A travel quote calculator application for generating custom trip estimates. The 
 - **확장 응답**: 예상 비용(항목별/총합), 이동시간, GPS 좌표, 차량 추천, 날씨 참고
 - **결과 UI**: 드래그앤드롭 일정 편집, Leaflet 경로 지도, 접기/펼치기, 이미지 저장
 - **예약 CTA**: 카톡 차량 예약 링크, 가계부 연동 버튼
+- **여행목적**: 식도락, 힐링, 골프, 관광, 문화, 가족, 야간, 카지노
+- **협력업체 우선배치**: isPartner=true인 장소(식당, 마사지, 골프장 등) AI 일정에 우선 포함, 앰버색 강조+뱃지
+- **일정 저장/불러오기**: 로그인 사용자 일정 DB 저장, 목록 확인, 다시 보기, 삭제 (saved_travel_plans 테이블)
+- **로그인 홍보**: 비로그인 시 "로그인하면 일정 자동 저장" 안내 카드 표시
+- **API**: POST/GET/DELETE /api/saved-travel-plans (인증 필요)
 - **API 확장**: POST /api/travel-plan에 companion, travelStyle, arrivalTime, villaName, villaLat, villaLng 추가
 
 ### Email Verification System (2026-02-04 추가)

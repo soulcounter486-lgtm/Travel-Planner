@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,13 +43,19 @@ import {
   ChevronUp,
   Navigation,
   Gift,
-  Star
+  Star,
+  Save,
+  FolderOpen,
+  Trash2,
+  LogIn,
+  Eye
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, addDays, getMonth } from "date-fns";
 import type { Locale } from "date-fns";
 import { ko, enUS, zhCN, vi, ru, ja } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/AppHeader";
 import { TabNavigation } from "@/components/TabNavigation";
 import { FixedBottomBar } from "@/components/FixedBottomBar";
@@ -150,9 +157,24 @@ const typeColors: Record<string, string> = {
   casino: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
 };
 
+interface SavedPlan {
+  id: number;
+  userId: string;
+  title: string;
+  purpose: string;
+  startDate: string;
+  endDate: string;
+  planData: TravelPlan;
+  createdAt: string;
+}
+
 export default function TravelPlanner() {
   const { language, t } = useLanguage();
+  const { isAuthenticated, user } = useAuth();
+  const { toast } = useToast();
   const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
+  const [viewingSavedPlan, setViewingSavedPlan] = useState<SavedPlan | null>(null);
+  const [showSavedList, setShowSavedList] = useState(false);
   const [companion, setCompanion] = useState<string>("");
   const [travelStyle, setTravelStyle] = useState<string>("balanced");
   const [arrivalTime, setArrivalTime] = useState<string>("");
@@ -176,6 +198,46 @@ export default function TravelPlanner() {
   });
 
   const activeVillas = villas.filter(v => v.isActive);
+
+  const { data: savedPlans = [], isLoading: isLoadingSaved } = useQuery<SavedPlan[]>({
+    queryKey: ["/api/saved-travel-plans"],
+    enabled: isAuthenticated,
+  });
+
+  const savePlanMutation = useMutation({
+    mutationFn: async (plan: TravelPlan) => {
+      const planStartDate = plan.days?.[0]?.date || (startDate ? format(startDate, "yyyy-MM-dd") : "");
+      const planEndDate = plan.days?.[plan.days.length - 1]?.date || (endDate ? format(endDate, "yyyy-MM-dd") : "");
+      const response = await apiRequest("POST", "/api/saved-travel-plans", {
+        title: plan.title || "My Travel Plan",
+        purpose: selectedPurposes.join(", ") || "general",
+        startDate: planStartDate,
+        endDate: planEndDate,
+        planData: plan,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-travel-plans"] });
+      toast({ title: language === "ko" ? "일정이 저장되었습니다!" : "Plan saved!" });
+    },
+    onError: () => {
+      toast({ title: language === "ko" ? "저장에 실패했습니다. 로그인 상태를 확인해주세요." : "Failed to save. Please check your login.", variant: "destructive" });
+    },
+  });
+
+  const deletePlanMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/saved-travel-plans/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-travel-plans"] });
+      toast({ title: language === "ko" ? "일정이 삭제되었습니다." : "Plan deleted." });
+    },
+    onError: () => {
+      toast({ title: language === "ko" ? "삭제에 실패했습니다." : "Failed to delete.", variant: "destructive" });
+    },
+  });
 
   const locales: Record<string, Locale> = { ko, en: enUS, zh: zhCN, vi, ru, ja };
   const currentLocale = locales[language] || ko;
@@ -397,7 +459,107 @@ export default function TravelPlanner() {
           <p className="text-muted-foreground">{t("planner.subtitle")}</p>
         </div>
 
-        {!travelPlan && (
+        {!isAuthenticated && !travelPlan && !viewingSavedPlan && (
+          <Card className="mb-4 border-primary/30 bg-primary/5">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <LogIn className="h-5 w-5 text-primary shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">
+                    {language === "ko"
+                      ? "로그인하면 생성한 여행 일정이 자동 저장되어 언제든 다시 확인할 수 있습니다!"
+                      : "Log in to save your travel plans and access them anytime!"}
+                  </p>
+                </div>
+                <a href="/api/login">
+                  <Button size="sm" data-testid="btn-login-promo">
+                    <LogIn className="h-3 w-3 mr-1" />
+                    {language === "ko" ? "로그인" : "Log In"}
+                  </Button>
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {isAuthenticated && !travelPlan && !viewingSavedPlan && (
+          <div className="mb-4">
+            <Button
+              variant={showSavedList ? "default" : "outline"}
+              onClick={() => setShowSavedList(!showSavedList)}
+              className="mb-3"
+              data-testid="btn-toggle-saved-list"
+            >
+              <FolderOpen className="h-4 w-4 mr-1" />
+              {language === "ko" ? `내 저장 일정 (${savedPlans.length})` : `My Saved Plans (${savedPlans.length})`}
+            </Button>
+
+            {showSavedList && (
+              <div className="space-y-2">
+                {isLoadingSaved && (
+                  <p className="text-sm text-muted-foreground">{language === "ko" ? "불러오는 중..." : "Loading..."}</p>
+                )}
+                {!isLoadingSaved && savedPlans.length === 0 && (
+                  <Card>
+                    <CardContent className="py-6 text-center text-muted-foreground text-sm">
+                      {language === "ko" ? "저장된 일정이 없습니다. 여행 일정을 생성하고 저장해보세요!" : "No saved plans. Generate and save a travel plan!"}
+                    </CardContent>
+                  </Card>
+                )}
+                {savedPlans.map((plan) => (
+                  <Card key={plan.id} className="hover-elevate" data-testid={`saved-plan-${plan.id}`}>
+                    <CardContent className="py-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{plan.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {plan.startDate} ~ {plan.endDate} | {plan.purpose}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(plan.createdAt).toLocaleDateString(language === "ko" ? "ko-KR" : "en-US")}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs"
+                            onClick={() => {
+                              setViewingSavedPlan(plan);
+                              setTravelPlan(plan.planData);
+                              setShowSavedList(false);
+                              const allDays = new Set<number>(plan.planData.days.map((_: any, i: number) => i));
+                              setExpandedDays(allDays);
+                            }}
+                            data-testid={`btn-view-plan-${plan.id}`}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            {language === "ko" ? "보기" : "View"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs text-destructive"
+                            onClick={() => {
+                              if (confirm(language === "ko" ? "이 일정을 삭제하시겠습니까?" : "Delete this plan?")) {
+                                deletePlanMutation.mutate(plan.id);
+                              }
+                            }}
+                            data-testid={`btn-delete-plan-${plan.id}`}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!travelPlan && !viewingSavedPlan && (
           <div className="space-y-4">
             <Card>
               <CardHeader>
@@ -924,13 +1086,36 @@ export default function TravelPlanner() {
                 )}
               </div>
 
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {isAuthenticated && !viewingSavedPlan && (
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      if (travelPlan) savePlanMutation.mutate(travelPlan);
+                    }}
+                    disabled={savePlanMutation.isPending || savePlanMutation.isSuccess}
+                    data-testid="btn-save-plan"
+                  >
+                    <Save className="h-4 w-4 mr-1" />
+                    {savePlanMutation.isPending
+                      ? (language === "ko" ? "저장 중..." : "Saving...")
+                      : savePlanMutation.isSuccess
+                        ? (language === "ko" ? "저장 완료!" : "Saved!")
+                        : (language === "ko" ? "일정 저장" : "Save Plan")}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
-                  onClick={() => setTravelPlan(null)}
+                  onClick={() => {
+                    setTravelPlan(null);
+                    setViewingSavedPlan(null);
+                    savePlanMutation.reset();
+                  }}
                   data-testid="new-plan-btn"
                 >
-                  {t("planner.selectPurpose")}
+                  {viewingSavedPlan
+                    ? (language === "ko" ? "목록으로" : "Back to List")
+                    : t("planner.selectPurpose")}
                 </Button>
                 <Link href="/expense">
                   <Button variant="outline" data-testid="goto-expense-btn">

@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -2751,6 +2751,85 @@ ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁�
       } else {
         res.status(500).json({ message: "여행 플랜 생성 중 오류가 발생했습니다." });
       }
+    }
+  });
+
+  const saveTravelPlanSchema = z.object({
+    title: z.string().min(1).max(500),
+    purpose: z.string().min(1).max(200),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    planData: z.object({
+      title: z.string().optional(),
+      summary: z.string().optional(),
+      days: z.array(z.any()),
+      tips: z.array(z.string()).optional(),
+      totalEstimatedCost: z.number().optional(),
+      vehicleRecommendation: z.string().optional(),
+      weatherNote: z.string().optional(),
+    }),
+  });
+
+  // 여행 일정 저장
+  app.post("/api/saved-travel-plans", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.userId;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const parsed = saveTravelPlanSchema.parse(req.body);
+
+      const [plan] = await db.insert(savedTravelPlans).values({
+        userId,
+        title: parsed.title,
+        purpose: parsed.purpose,
+        startDate: parsed.startDate,
+        endDate: parsed.endDate,
+        planData: parsed.planData,
+      }).returning();
+
+      res.json(plan);
+    } catch (error: any) {
+      if (error?.issues) {
+        return res.status(400).json({ message: error.issues[0].message });
+      }
+      console.error("Error saving travel plan:", error);
+      res.status(500).json({ message: "여행 일정 저장 중 오류가 발생했습니다." });
+    }
+  });
+
+  // 내 저장된 여행 일정 목록
+  app.get("/api/saved-travel-plans", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.userId;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const plans = await db.select().from(savedTravelPlans)
+        .where(eq(savedTravelPlans.userId, userId))
+        .orderBy(desc(savedTravelPlans.createdAt));
+
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching saved travel plans:", error);
+      res.status(500).json({ message: "저장된 일정 목록을 불러오는 중 오류가 발생했습니다." });
+    }
+  });
+
+  // 저장된 여행 일정 삭제
+  app.delete("/api/saved-travel-plans/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.userId;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+      const planId = parseInt(req.params.id);
+      const [deleted] = await db.delete(savedTravelPlans)
+        .where(and(eq(savedTravelPlans.id, planId), eq(savedTravelPlans.userId, userId)))
+        .returning();
+
+      if (!deleted) return res.status(404).json({ message: "일정을 찾을 수 없습니다." });
+      res.json({ message: "삭제되었습니다." });
+    } catch (error) {
+      console.error("Error deleting travel plan:", error);
+      res.status(500).json({ message: "일정 삭제 중 오류가 발생했습니다." });
     }
   });
 
