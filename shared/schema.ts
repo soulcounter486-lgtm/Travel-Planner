@@ -133,6 +133,7 @@ export const calculateQuoteSchema = z.object({
     schedules: z.array(z.object({
       date: z.string().default(""),
       quantity: z.number().min(1).default(1),
+      selectedOption: z.string().optional(),
     })).optional(),
   })).optional(),
 });
@@ -179,6 +180,8 @@ export const quoteBreakdownSchema = z.object({
     schedules: z.array(z.object({
       date: z.string().default(""),
       quantity: z.number().min(1).default(1),
+      selectedOption: z.string().optional(),
+      optionPrice: z.number().optional(),
     })).optional(),
   })).optional(),
   total: z.number(),
@@ -491,6 +494,7 @@ export const quoteCategories = pgTable("quote_categories", {
   images: text("images").array().default([]),
   pricePerUnit: integer("price_per_unit").notNull().default(0),
   unitLabel: text("unit_label").notNull().default("인"),
+  options: text("options").default("[]"),
   isActive: boolean("is_active").default(true),
   sortOrder: integer("sort_order").default(0),
   createdAt: timestamp("created_at").defaultNow(),

@@ -2575,9 +2575,29 @@ export default function Home() {
             {customQuoteCategories.length > 0 && customQuoteCategories.map((cat: any) => {
               const customSel = values.customCategories?.find((s: any) => s.categoryId === cat.id);
               const isEnabled = customSel?.enabled || false;
-              const schedules: Array<{date: string; quantity: number}> = customSel?.schedules || [{ date: "", quantity: 1 }];
-              const totalQuantity = schedules.reduce((sum: number, s: any) => sum + (Number(s.quantity) || 1), 0);
-              const estimate = isEnabled ? (cat.pricePerUnit || 0) * totalQuantity : 0;
+              const schedules: Array<{date: string; quantity: number; selectedOption?: string}> = customSel?.schedules || [{ date: "", quantity: 1 }];
+
+              let catOptions: Array<{name: string; price: number}> = [];
+              try {
+                if (cat.options) {
+                  const parsed = typeof cat.options === "string" ? JSON.parse(cat.options) : cat.options;
+                  if (Array.isArray(parsed) && parsed.length > 0) catOptions = parsed;
+                }
+              } catch {}
+              const hasOptions = catOptions.length > 0;
+
+              const getSchedulePrice = (sched: any) => {
+                if (hasOptions && sched.selectedOption) {
+                  const opt = catOptions.find(o => o.name === sched.selectedOption);
+                  if (opt) return opt.price;
+                }
+                return cat.pricePerUnit || 0;
+              };
+
+              const estimate = isEnabled
+                ? schedules.reduce((sum: number, s: any) => sum + getSchedulePrice(s) * (Number(s.quantity) || 1), 0)
+                : 0;
+
               const catImages: string[] = (cat.images && Array.isArray(cat.images) && cat.images.length > 0)
                 ? cat.images.filter(Boolean)
                 : (cat.imageUrl ? [cat.imageUrl] : []);
@@ -2601,7 +2621,11 @@ export default function Home() {
               };
 
               const addSchedule = () => {
-                updateCustomCategory(cat.id, { schedules: [...schedules, { date: "", quantity: 1 }] });
+                const newSched: any = { date: "", quantity: 1 };
+                if (hasOptions && catOptions.length > 0) {
+                  newSched.selectedOption = catOptions[0].name;
+                }
+                updateCustomCategory(cat.id, { schedules: [...schedules, newSched] });
               };
 
               const removeSchedule = (schedIdx: number) => {
@@ -2617,7 +2641,9 @@ export default function Home() {
                   icon={ShoppingCart}
                   isEnabled={isEnabled}
                   onToggle={(checked: boolean) => {
-                    updateCustomCategory(cat.id, { enabled: checked, schedules: schedules.length > 0 ? schedules : [{ date: "", quantity: 1 }] });
+                    const defaultSched: any = { date: "", quantity: 1 };
+                    if (hasOptions && catOptions.length > 0) defaultSched.selectedOption = catOptions[0].name;
+                    updateCustomCategory(cat.id, { enabled: checked, schedules: schedules.length > 0 ? schedules : [defaultSched] });
                   }}
                   gradient="from-indigo-500/10"
                 >
@@ -2645,47 +2671,80 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="text-right mb-2">
-                    <span className="text-sm text-muted-foreground">{language === "ko" ? "단가" : "Price"}</span>
-                    <div className="text-lg font-bold text-indigo-500">${cat.pricePerUnit}/{cat.unitLabel}</div>
-                  </div>
+                  {!hasOptions && (
+                    <div className="text-right mb-2">
+                      <span className="text-sm text-muted-foreground">{language === "ko" ? "단가" : "Price"}</span>
+                      <div className="text-lg font-bold text-indigo-500">${cat.pricePerUnit}/{cat.unitLabel}</div>
+                    </div>
+                  )}
+                  {hasOptions && (
+                    <div className="mb-2 flex flex-wrap gap-1">
+                      {catOptions.map((opt: any, oi: number) => (
+                        <span key={oi} className="text-xs bg-indigo-500/10 text-indigo-400 rounded-full px-2 py-0.5">
+                          {opt.name}: ${opt.price}/{cat.unitLabel}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="space-y-2 mb-3">
                     {schedules.map((sched: any, schedIdx: number) => (
-                      <div key={schedIdx} className="flex items-end gap-2 p-2 rounded-lg bg-muted/30">
-                        <div className="flex-1 space-y-1">
-                          <Label className="text-xs">{language === "ko" ? "날짜" : "Date"}</Label>
-                          <Input
-                            type="date"
-                            value={sched.date || ""}
-                            onChange={(e) => updateSchedule(schedIdx, "date", e.target.value)}
-                            className="h-10 rounded-lg text-sm"
-                            data-testid={`input-custom-date-${cat.id}-${schedIdx}`}
-                          />
-                        </div>
-                        <div className="w-20 space-y-1">
-                          <Label className="text-xs">{language === "ko" ? "수량" : "Qty"}</Label>
-                          <Input
-                            type="number"
-                            min={1}
-                            value={sched.quantity || 1}
-                            onChange={(e) => updateSchedule(schedIdx, "quantity", parseInt(e.target.value) || 1)}
-                            className="h-10 rounded-lg text-sm"
-                            data-testid={`input-custom-qty-${cat.id}-${schedIdx}`}
-                          />
-                        </div>
-                        {schedules.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-400 hover:text-red-600 h-10 w-10 flex-shrink-0"
-                            onClick={() => removeSchedule(schedIdx)}
-                            data-testid={`button-remove-schedule-${cat.id}-${schedIdx}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                      <div key={schedIdx} className="p-2 rounded-lg bg-muted/30 space-y-2">
+                        {hasOptions && (
+                          <div className="space-y-1">
+                            <Label className="text-xs">{language === "ko" ? "종류" : "Type"}</Label>
+                            <Select
+                              value={sched.selectedOption || ""}
+                              onValueChange={(val) => updateSchedule(schedIdx, "selectedOption", val)}
+                            >
+                              <SelectTrigger className="h-10 rounded-lg text-sm" data-testid={`select-option-${cat.id}-${schedIdx}`}>
+                                <SelectValue placeholder={language === "ko" ? "선택해주세요" : "Select"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {catOptions.map((opt: any, oi: number) => (
+                                  <SelectItem key={oi} value={opt.name} data-testid={`option-item-${cat.id}-${schedIdx}-${oi}`}>
+                                    {opt.name} (${opt.price})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         )}
+                        <div className="flex items-end gap-2">
+                          <div className="flex-1 space-y-1">
+                            <Label className="text-xs">{language === "ko" ? "날짜" : "Date"}</Label>
+                            <Input
+                              type="date"
+                              value={sched.date || ""}
+                              onChange={(e) => updateSchedule(schedIdx, "date", e.target.value)}
+                              className="h-10 rounded-lg text-sm"
+                              data-testid={`input-custom-date-${cat.id}-${schedIdx}`}
+                            />
+                          </div>
+                          <div className="w-20 space-y-1">
+                            <Label className="text-xs">{language === "ko" ? "수량" : "Qty"}</Label>
+                            <Input
+                              type="number"
+                              min={1}
+                              value={sched.quantity || 1}
+                              onChange={(e) => updateSchedule(schedIdx, "quantity", parseInt(e.target.value) || 1)}
+                              className="h-10 rounded-lg text-sm"
+                              data-testid={`input-custom-qty-${cat.id}-${schedIdx}`}
+                            />
+                          </div>
+                          {schedules.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-400 flex-shrink-0"
+                              onClick={() => removeSchedule(schedIdx)}
+                              data-testid={`button-remove-schedule-${cat.id}-${schedIdx}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                     <Button
@@ -2706,12 +2765,18 @@ export default function Home() {
                         <span>{language === "ko" ? "예상 금액" : "Estimate"}</span>
                         <span>${estimate.toLocaleString()}</span>
                       </div>
-                      {schedules.map((sched: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-indigo-300 text-xs">
-                          <span>${cat.pricePerUnit} × {sched.quantity || 1}{cat.unitLabel}</span>
-                          {sched.date && <span>{sched.date}</span>}
-                        </div>
-                      ))}
+                      {schedules.map((sched: any, idx: number) => {
+                        const schedPrice = getSchedulePrice(sched);
+                        return (
+                          <div key={idx} className="flex justify-between text-indigo-300 text-xs">
+                            <span>
+                              {hasOptions && sched.selectedOption ? `${sched.selectedOption} ` : ""}
+                              ${schedPrice} × {sched.quantity || 1}{cat.unitLabel}
+                            </span>
+                            {sched.date && <span>{sched.date}</span>}
+                          </div>
+                        );
+                      })}
                       {currencyInfo.code !== "USD" && (
                         <div className="flex justify-end pt-1 text-indigo-300 text-xs">
                           <span>≈ {currencyInfo.symbol}{(estimate * exchangeRate).toLocaleString()}</span>

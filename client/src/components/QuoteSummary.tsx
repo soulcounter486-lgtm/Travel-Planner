@@ -548,7 +548,9 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       <div className="text-xs text-muted-foreground italic pl-1 space-y-0.5">
                         {cat.schedules.map((sched: any, idx: number) => (
                           <div key={idx}>
-                            ${cat.pricePerUnit} × {sched.quantity}{sched.date ? ` (${sched.date})` : ""}
+                            {sched.selectedOption ? `${sched.selectedOption} ` : ""}
+                            ${sched.optionPrice || cat.pricePerUnit} × {sched.quantity}
+                            {sched.date ? ` (${sched.date})` : ""}
                           </div>
                         ))}
                       </div>

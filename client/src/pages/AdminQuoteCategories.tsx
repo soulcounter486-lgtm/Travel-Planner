@@ -28,12 +28,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+interface CategoryOption {
+  name: string;
+  price: number;
+}
+
 interface CategoryForm {
   name: string;
   description: string;
   images: string[];
   pricePerUnit: string;
   unitLabel: string;
+  options: CategoryOption[];
   isActive: boolean;
   sortOrder: number;
 }
@@ -44,6 +50,7 @@ const defaultForm: CategoryForm = {
   images: [],
   pricePerUnit: "0",
   unitLabel: "인",
+  options: [],
   isActive: true,
   sortOrder: 0,
 };
@@ -72,6 +79,7 @@ export default function AdminQuoteCategories() {
           ...data,
           pricePerUnit: Number(data.pricePerUnit) || 0,
           imageUrl: data.images[0] || "",
+          options: JSON.stringify(data.options || []),
         }),
       });
       if (!res.ok) throw new Error("Failed to create");
@@ -99,6 +107,7 @@ export default function AdminQuoteCategories() {
           ...data,
           pricePerUnit: Number(data.pricePerUnit) || 0,
           imageUrl: data.images?.[0] || "",
+          options: JSON.stringify(data.options || []),
         }),
       });
       if (!res.ok) throw new Error("Failed to update");
@@ -222,12 +231,20 @@ export default function AdminQuoteCategories() {
     } else if (category.imageUrl) {
       imgs.push(category.imageUrl);
     }
+    let parsedOptions: CategoryOption[] = [];
+    try {
+      if (category.options) {
+        const parsed = typeof category.options === "string" ? JSON.parse(category.options) : category.options;
+        if (Array.isArray(parsed)) parsedOptions = parsed;
+      }
+    } catch {}
     setForm({
       name: category.name,
       description: category.description || "",
       images: imgs,
       pricePerUnit: String(category.pricePerUnit || 0),
       unitLabel: category.unitLabel || "인",
+      options: parsedOptions,
       isActive: category.isActive !== false,
       sortOrder: category.sortOrder || 0,
     });
@@ -304,6 +321,66 @@ export default function AdminQuoteCategories() {
             placeholder="인, 회, 팀, 건"
           />
         </div>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>옵션 (선택사항)</Label>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => setForm(prev => ({ ...prev, options: [...prev.options, { name: "", price: 0 }] }))}
+            data-testid="button-add-option"
+          >
+            <Plus className="w-3 h-3 mr-1" /> 옵션 추가
+          </Button>
+        </div>
+        {form.options.length > 0 && (
+          <div className="space-y-2">
+            {form.options.map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <Input
+                  value={opt.name}
+                  onChange={(e) => {
+                    const newOptions = [...form.options];
+                    newOptions[idx] = { ...newOptions[idx], name: e.target.value };
+                    setForm(prev => ({ ...prev, options: newOptions }));
+                  }}
+                  placeholder="옵션명 (예: 소형 보트)"
+                  className="flex-1"
+                  data-testid={`input-option-name-${idx}`}
+                />
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={String(opt.price)}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9.]/g, "");
+                    const newOptions = [...form.options];
+                    newOptions[idx] = { ...newOptions[idx], price: Number(val) || 0 };
+                    setForm(prev => ({ ...prev, options: newOptions }));
+                  }}
+                  placeholder="$"
+                  className="w-20"
+                  data-testid={`input-option-price-${idx}`}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  className="text-red-400 flex-shrink-0"
+                  onClick={() => {
+                    setForm(prev => ({ ...prev, options: prev.options.filter((_, i) => i !== idx) }));
+                  }}
+                  data-testid={`button-remove-option-${idx}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">옵션을 추가하면 사용자가 드롭다운에서 선택하며, 옵션별 가격이 적용됩니다.</p>
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         <Label>이미지 ({form.images.length}개)</Label>
@@ -430,6 +507,13 @@ export default function AdminQuoteCategories() {
                       )}
                       <p className="text-sm font-medium text-cyan-500 mt-1" data-testid={`text-category-price-${category.id}`}>
                         ${category.pricePerUnit} / {category.unitLabel}
+                        {(() => {
+                          try {
+                            const opts = category.options ? (typeof category.options === "string" ? JSON.parse(category.options) : category.options) : [];
+                            if (Array.isArray(opts) && opts.length > 0) return <span className="text-xs text-muted-foreground ml-1">({opts.length}개 옵션)</span>;
+                          } catch {}
+                          return null;
+                        })()}
                       </p>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
