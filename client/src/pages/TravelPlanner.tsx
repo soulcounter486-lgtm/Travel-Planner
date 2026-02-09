@@ -792,7 +792,17 @@ export default function TravelPlanner() {
                               <SelectItem value="none">{language === "ko" ? "선택 안함" : "Not selected"}</SelectItem>
                               {activeVillas.map((villa) => (
                                 <SelectItem key={villa.id} value={villa.id.toString()}>
-                                  {villa.name} ({villa.bedrooms}{language === "ko" ? "룸" : "R"})
+                                  <div className="flex items-center gap-2">
+                                    {villa.mainImage && (
+                                      <img
+                                        src={villa.mainImage}
+                                        alt={villa.name}
+                                        className="w-8 h-8 rounded-md object-cover shrink-0"
+                                        data-testid={`img-villa-thumb-${villa.id}`}
+                                      />
+                                    )}
+                                    <span>{villa.name} ({villa.bedrooms}{language === "ko" ? "룸" : "R"})</span>
+                                  </div>
                                 </SelectItem>
                               ))}
                             </SelectContent>
