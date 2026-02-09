@@ -2688,7 +2688,7 @@ Example response format:
   app.post("/api/travel-plan", async (req, res) => {
     try {
       const input = travelPlanRequestSchema.parse(req.body);
-      const { purpose, startDate, endDate, language, companion, travelStyle, arrivalTime, villaName, villaLat, villaLng } = input;
+      const { purpose, startDate, endDate, language, companion, travelStyle, arrivalTime, villaName, villaLat, villaLng, gender } = input;
 
       const start = parseISO(startDate);
       const end = parseISO(endDate);
@@ -2843,6 +2843,31 @@ ${languagePrompts[language] || languagePrompts.ko}
 - weatherNote에 건기 시즌의 장점을 포함하세요.`;
       }
 
+      let adultPlacesData: any[] = [];
+      let adultContext = "";
+      if (gender === "male") {
+        const nightlife18Places = await db.select().from(places).where(and(eq(places.category, "nightlife18"), eq(places.isActive, true)));
+        if (nightlife18Places.length > 0) {
+          adultPlacesData = nightlife18Places.map(p => ({
+            name: p.name,
+            type: "성인 유흥",
+            note: p.description || "",
+            lat: p.latitude ? parseFloat(p.latitude) : undefined,
+            lng: p.longitude ? parseFloat(p.longitude) : undefined,
+            isPartner: p.isPartner || false,
+            discountText: p.discountText || "",
+          }));
+        }
+        adultContext = `\n## 성인 유흥 (밤문화 18+): 남성 여행자이므로 저녁/밤 시간대에 성인 유흥 장소를 1~2곳 반드시 일정에 포함하세요.
+- nightlife18 목록에서 선택하세요. 협력업체(isPartner: true)를 우선 배치하세요.
+- 가라오케, 성인 마사지 등을 저녁 식사 후 또는 밤 시간대에 배치하세요.
+- 2일 이상 여행이면 매일 다른 장소를 방문하는 일정이 좋습니다.`;
+      }
+
+      const finalPlacesData = gender === "male" && adultPlacesData.length > 0
+        ? { ...placesData, nightlife18: adultPlacesData }
+        : placesData;
+
       const userPrompt = `붕따우 ${days}일 여행 일정을 만들어주세요.
 
 여행 기간: ${format(start, 'yyyy-MM-dd')} ~ ${format(end, 'yyyy-MM-dd')} (${days}일)
@@ -2855,7 +2880,7 @@ ${companionContext}${styleContext}${arrivalContext}${villaContext}${weatherConte
 이 목록에 없는 장소는 절대 추천하지 마세요.
 
 ## 사용 가능한 장소 목록 (이 목록만 사용):
-${JSON.stringify(placesData, null, 2)}
+${JSON.stringify(finalPlacesData, null, 2)}
 
 ## 카테고리별 설명:
 - attractions: 관광명소 (예수상, 등대, 해변, 시장 등)
@@ -2868,6 +2893,7 @@ ${JSON.stringify(placesData, null, 2)}
 - nightlife: 밤문화 (88 비어클럽, Revo 클럽 등)
 - golf: 골프장
 - casino: 카지노 (임페리얼 seaside 클럽, Monaco casino, Palace 카지노 - 모두 도깨비 협력업체)
+${gender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성인 유흥 (가라오케, 성인 마사지 등 - 남성 전용)" : ""}
 
 ## 일정 작성 규칙:
 1. ⭐ 협력업체 우선 배치: isPartner: true인 장소를 반드시 우선적으로 일정에 포함하세요. 협력업체는 "붕따우 도깨비" 공식 파트너로 할인 혜택이 있습니다.
@@ -2894,7 +2920,8 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
 - 카지노는 저녁~밤 시간대에 배치하세요. 낮에는 관광/식사를 하고 저녁에 카지노를 방문하는 일정이 좋습니다.
 - 외국인 전용(여권 필수, 21세 이상)임을 tips에 반드시 안내하세요.
 - 2일 이상 여행이면 서로 다른 카지노를 방문하는 일정도 좋습니다.
-- 카지노 방문 전후로 근처 밤문화(nightlife)도 함께 추천하세요.` : ''}`;
+- 카지노 방문 전후로 근처 밤문화(nightlife)도 함께 추천하세요.` : ''}
+${adultContext}`;
 
       let response;
       let retries = 0;

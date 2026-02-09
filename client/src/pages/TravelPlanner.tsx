@@ -271,6 +271,7 @@ export default function TravelPlanner() {
         villaName: selectedVilla?.name || "",
         villaLat: selectedVilla?.latitude || "",
         villaLng: selectedVilla?.longitude || "",
+        gender: user?.gender || "",
       });
       return response.json();
     },
