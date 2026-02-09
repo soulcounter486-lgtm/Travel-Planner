@@ -702,27 +702,28 @@ export default function AdminMembers() {
                 ) : (
                   <div className="space-y-1 max-h-[60vh] overflow-y-auto">
                     {[...members].sort((a, b) => (b.isAdmin ? 1 : 0) - (a.isAdmin ? 1 : 0)).map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
-                        <div
-                          className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                      <div key={member.id} className="bg-muted/30 rounded-lg text-xs">
+                        <button
+                          type="button"
+                          className="w-full flex items-center gap-2 p-2 pb-1 text-left hover-elevate rounded-t-lg"
                           onClick={() => { setDetailMember(member); setMemberDetailOpen(true); }}
                           data-testid={`member-row-${member.id}`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
                             member.gender === 'male' ? 'bg-blue-500' : 
                             member.gender === 'female' ? 'bg-pink-500' : 'bg-gray-500'
                           }`}>
                             {member.profileImageUrl ? (
-                              <img src={member.profileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
+                              <img src={member.profileImageUrl} alt="" className="w-9 h-9 rounded-full object-cover" />
                             ) : (
-                              <Users className="w-3.5 h-3.5 text-white" />
+                              <Users className="w-4 h-4 text-white" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1 flex-wrap">
-                              <p className="font-semibold text-sm truncate max-w-[120px]" data-testid={`member-name-${member.id}`}>
+                              <span className="font-semibold text-sm truncate max-w-[140px]" data-testid={`member-name-${member.id}`}>
                                 {member.nickname || member.firstName || member.email?.split("@")[0] || "이름없음"}
-                              </p>
+                              </span>
                               {member.isAdmin && (
                                 <Badge variant="default" className="h-4 px-1 text-[9px] bg-amber-500 no-default-hover-elevate no-default-active-elevate">
                                   <ShieldCheck className="w-2 h-2 mr-0.5" />
@@ -742,8 +743,9 @@ export default function AdminMembers() {
                             </div>
                             <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-0.5 flex-shrink-0">
+                          <span className="text-muted-foreground text-[10px] flex-shrink-0">상세보기</span>
+                        </button>
+                        <div className="flex items-center gap-0.5 px-2 pb-1.5 pt-0 justify-end flex-shrink-0">
                           <Button
                             size="icon"
                             variant={member.isAdmin ? "default" : "ghost"}
