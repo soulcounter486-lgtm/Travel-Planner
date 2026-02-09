@@ -2601,6 +2601,7 @@ Example response format:
     villaName: z.string().optional().default(""),
     villaLat: z.string().optional().default(""),
     villaLng: z.string().optional().default(""),
+    gender: z.string().optional().default(""),
   });
 
   // 붕따우 관광지 및 맛집 데이터 (PlacesGuide.tsx와 동기화)
