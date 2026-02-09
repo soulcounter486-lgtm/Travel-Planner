@@ -2688,7 +2688,21 @@ Example response format:
   app.post("/api/travel-plan", async (req, res) => {
     try {
       const input = travelPlanRequestSchema.parse(req.body);
-      const { purpose, startDate, endDate, language, companion, travelStyle, arrivalTime, villaName, villaLat, villaLng, gender } = input;
+      const { purpose, startDate, endDate, language, companion, travelStyle, arrivalTime, villaName, villaLat, villaLng, gender: clientGender } = input;
+
+      let resolvedGender = clientGender || "";
+      const userId = (req as any).user?.claims?.sub || (req.session as any)?.userId;
+      if (userId) {
+        const [dbUser] = await db.select({ gender: users.gender, canViewNightlife18: users.canViewNightlife18, isAdmin: users.isAdmin }).from(users).where(eq(users.id, userId)).limit(1);
+        if (dbUser) {
+          if (dbUser.gender) resolvedGender = dbUser.gender;
+          if (dbUser.canViewNightlife18) resolvedGender = "male";
+          if (dbUser.isAdmin) resolvedGender = "male";
+        }
+        console.log(`[TravelPlan] userId: ${userId}, clientGender: ${clientGender}, dbGender: ${dbUser?.gender}, canView18: ${dbUser?.canViewNightlife18}, isAdmin: ${dbUser?.isAdmin}, resolved: ${resolvedGender}`);
+      } else {
+        console.log(`[TravelPlan] No session user, clientGender: ${clientGender}, resolved: ${resolvedGender}`);
+      }
 
       const start = parseISO(startDate);
       const end = parseISO(endDate);
@@ -2845,7 +2859,7 @@ ${languagePrompts[language] || languagePrompts.ko}
 
       let adultPlacesData: any[] = [];
       let adultContext = "";
-      if (gender === "male") {
+      if (resolvedGender === "male") {
         const nightlife18Places = await db.select().from(places).where(and(eq(places.category, "nightlife18"), eq(places.isActive, true)));
         if (nightlife18Places.length > 0) {
           adultPlacesData = nightlife18Places.map(p => ({
@@ -2864,7 +2878,7 @@ ${languagePrompts[language] || languagePrompts.ko}
 - 2일 이상 여행이면 매일 다른 장소를 방문하는 일정이 좋습니다.`;
       }
 
-      const finalPlacesData = gender === "male" && adultPlacesData.length > 0
+      const finalPlacesData = resolvedGender === "male" && adultPlacesData.length > 0
         ? { ...placesData, nightlife18: adultPlacesData }
         : placesData;
 
@@ -2893,7 +2907,7 @@ ${JSON.stringify(finalPlacesData, null, 2)}
 - nightlife: 밤문화 (88 비어클럽, Revo 클럽 등)
 - golf: 골프장
 - casino: 카지노 (임페리얼 seaside 클럽, Monaco casino, Palace 카지노 - 모두 도깨비 협력업체)
-${gender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성인 유흥 (가라오케, 성인 마사지 등 - 남성 전용)" : ""}
+${resolvedGender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성인 유흥 (가라오케, 성인 마사지 등 - 남성 전용)" : ""}
 
 ## 일정 작성 규칙:
 1. ⭐ 협력업체 우선 배치: isPartner: true인 장소를 반드시 우선적으로 일정에 포함하세요. 협력업체는 "붕따우 도깨비" 공식 파트너로 할인 혜택이 있습니다.
