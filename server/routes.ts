@@ -2860,22 +2860,27 @@ ${languagePrompts[language] || languagePrompts.ko}
       let adultPlacesData: any[] = [];
       let adultContext = "";
       if (resolvedGender === "male") {
-        const nightlife18Places = await db.select().from(places).where(and(eq(places.category, "nightlife18"), eq(places.isActive, true)));
-        if (nightlife18Places.length > 0) {
-          adultPlacesData = nightlife18Places.map(p => ({
-            name: p.name,
-            type: "성인 유흥",
-            note: p.description || "",
-            lat: p.latitude ? parseFloat(p.latitude) : undefined,
-            lng: p.longitude ? parseFloat(p.longitude) : undefined,
-            isPartner: p.isPartner || false,
-            discountText: p.discountText || "",
-          }));
-        }
-        adultContext = `\n## 성인 유흥 (밤문화 18+): 남성 여행자이므로 저녁/밤 시간대에 성인 유흥 장소를 1~2곳 반드시 일정에 포함하세요.
+        try {
+          const nightlife18Places = await db.select().from(places).where(and(eq(places.category, "nightlife18"), eq(places.isActive, true)));
+          console.log(`[TravelPlan] nightlife18 places found: ${nightlife18Places.length}`);
+          if (nightlife18Places.length > 0) {
+            adultPlacesData = nightlife18Places.map(p => ({
+              name: p.name,
+              type: "성인 유흥",
+              note: p.description || "",
+              lat: p.latitude ? parseFloat(p.latitude) : undefined,
+              lng: p.longitude ? parseFloat(p.longitude) : undefined,
+              isPartner: p.isPartner || false,
+              discountText: p.discountText || "",
+            }));
+          }
+          adultContext = `\n## 성인 유흥 (밤문화 18+): 남성 여행자이므로 저녁/밤 시간대에 성인 유흥 장소를 1~2곳 반드시 일정에 포함하세요.
 - nightlife18 목록에서 선택하세요. 협력업체(isPartner: true)를 우선 배치하세요.
 - 가라오케, 성인 마사지 등을 저녁 식사 후 또는 밤 시간대에 배치하세요.
 - 2일 이상 여행이면 매일 다른 장소를 방문하는 일정이 좋습니다.`;
+        } catch (dbErr) {
+          console.error("[TravelPlan] nightlife18 DB query error:", dbErr);
+        }
       }
 
       const finalPlacesData = resolvedGender === "male" && adultPlacesData.length > 0
@@ -2972,13 +2977,15 @@ ${adultContext}`;
       const travelPlan = JSON.parse(content);
       res.json(travelPlan);
     } catch (err: any) {
-      console.error("Travel plan error:", err);
+      console.error("Travel plan error:", err?.message || err, err?.stack);
       if (err instanceof z.ZodError) {
         res.status(400).json({ message: err.errors[0].message });
       } else if (err?.status === 429) {
         res.status(429).json({ message: "AI API 사용 한도를 초과했습니다. 잠시 후(약 1분) 다시 시도해주세요." });
+      } else if (err instanceof SyntaxError) {
+        res.status(500).json({ message: "AI 응답을 파싱하지 못했습니다. 다시 시도해주세요." });
       } else {
-        res.status(500).json({ message: "여행 플랜 생성 중 오류가 발생했습니다." });
+        res.status(500).json({ message: `여행 플랜 생성 중 오류: ${err?.message || "알 수 없는 오류"}. 다시 시도해주세요.` });
       }
     }
   });
