@@ -3359,8 +3359,9 @@ ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지
   app.put("/api/posts/:id", isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
-      const userId = user?.claims?.sub;
-      if (!userId || String(userId) !== String(ADMIN_USER_ID)) {
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Only admin can edit posts" });
       }
 
