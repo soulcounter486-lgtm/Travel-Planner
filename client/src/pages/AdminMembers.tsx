@@ -911,18 +911,38 @@ export default function AdminMembers() {
                     </div>
                     <div className="bg-muted/30 rounded-lg p-3 space-y-2 text-sm">
                       <p className="text-xs font-semibold text-muted-foreground mb-1">권한</p>
-                      <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground flex-shrink-0">관리자</span>
-                        <span className="font-medium">{detailMember.isAdmin ? 'O' : 'X'}</span>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground flex-shrink-0">성인 콘텐츠(19+)</span>
-                        <span className="font-medium">{detailMember.canViewNightlife18 ? 'O' : 'X'}</span>
-                      </div>
-                      <div className="flex justify-between gap-2">
-                        <span className="text-muted-foreground flex-shrink-0">에코 콘텐츠</span>
-                        <span className="font-medium">{detailMember.canViewEco ? 'O' : 'X'}</span>
-                      </div>
+                      {(() => {
+                        const isMaleKakao = detailMember.gender === 'male' && detailMember.loginMethod === 'kakao';
+                        const isAdmin = detailMember.isAdmin;
+                        const effectiveNightlife = detailMember.canViewNightlife18 || isMaleKakao || isAdmin;
+                        const effectiveEco = detailMember.canViewEco || isMaleKakao || isAdmin;
+                        return (
+                          <>
+                            <div className="flex justify-between gap-2">
+                              <span className="text-muted-foreground flex-shrink-0">관리자</span>
+                              <span className={`font-medium ${isAdmin ? 'text-green-500' : ''}`}>{isAdmin ? 'O' : 'X'}</span>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                              <span className="text-muted-foreground flex-shrink-0">성인 콘텐츠(19+)</span>
+                              <div className="flex items-center gap-1">
+                                {effectiveNightlife && !detailMember.canViewNightlife18 && (
+                                  <Badge variant="outline" className="h-4 px-1 text-[8px] no-default-hover-elevate no-default-active-elevate">자동</Badge>
+                                )}
+                                <span className={`font-medium ${effectiveNightlife ? 'text-green-500' : ''}`}>{effectiveNightlife ? 'O' : 'X'}</span>
+                              </div>
+                            </div>
+                            <div className="flex justify-between gap-2">
+                              <span className="text-muted-foreground flex-shrink-0">에코 콘텐츠</span>
+                              <div className="flex items-center gap-1">
+                                {effectiveEco && !detailMember.canViewEco && (
+                                  <Badge variant="outline" className="h-4 px-1 text-[8px] no-default-hover-elevate no-default-active-elevate">자동</Badge>
+                                )}
+                                <span className={`font-medium ${effectiveEco ? 'text-green-500' : ''}`}>{effectiveEco ? 'O' : 'X'}</span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                     <div className="flex gap-2 pt-1">
                       <Button
