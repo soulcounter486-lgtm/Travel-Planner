@@ -12,6 +12,19 @@ export function usePushNotifications(autoSubscribe: boolean = false, isLoggedIn:
     if ("Notification" in window) {
       setPermission(Notification.permission);
     }
+
+    if (supported) {
+      navigator.serviceWorker.ready.then(async (registration) => {
+        try {
+          const sub = await registration.pushManager.getSubscription();
+          if (sub) {
+            setIsSubscribed(true);
+          }
+        } catch (err) {
+          console.error("[PUSH] Check subscription error:", err);
+        }
+      });
+    }
   }, []);
 
   useEffect(() => {
