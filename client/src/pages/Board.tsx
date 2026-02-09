@@ -137,7 +137,7 @@ const boardLabels: Record<string, Record<string, string>> = {
     delete: "삭제",
     edit: "수정",
     save: "저장",
-    addImage: "이미지 첨부",
+    addMedia: "첨부",
     uploading: "업로드 중...",
     admin: "관리자",
     readMore: "자세히 보기",
@@ -160,7 +160,7 @@ const boardLabels: Record<string, Record<string, string>> = {
     delete: "Delete",
     edit: "Edit",
     save: "Save",
-    addImage: "Add Image",
+    addMedia: "Attach",
     uploading: "Uploading...",
     admin: "Admin",
     readMore: "Read More",
@@ -183,7 +183,7 @@ const boardLabels: Record<string, Record<string, string>> = {
     delete: "删除",
     edit: "编辑",
     save: "保存",
-    addImage: "添加图片",
+    addMedia: "附件",
     uploading: "上传中...",
     admin: "管理员",
     readMore: "查看详情",
@@ -206,7 +206,7 @@ const boardLabels: Record<string, Record<string, string>> = {
     delete: "Xóa",
     edit: "Sửa",
     save: "Lưu",
-    addImage: "Thêm ảnh",
+    addMedia: "Đính kèm",
     uploading: "Đang tải...",
     admin: "Quản trị",
     readMore: "Xem thêm",
@@ -229,7 +229,7 @@ const boardLabels: Record<string, Record<string, string>> = {
     delete: "Удалить",
     edit: "Редактировать",
     save: "Сохранить",
-    addImage: "Добавить изображение",
+    addMedia: "Прикрепить",
     uploading: "Загрузка...",
     admin: "Админ",
     readMore: "Подробнее",
@@ -252,7 +252,7 @@ const boardLabels: Record<string, Record<string, string>> = {
     delete: "削除",
     edit: "編集",
     save: "保存",
-    addImage: "画像を追加",
+    addMedia: "添付",
     uploading: "アップロード中...",
     admin: "管理者",
     readMore: "詳細を見る",
@@ -334,19 +334,34 @@ export default function Board() {
     onSuccess: (response) => {
       const editor = editorRef.current;
       if (editor) {
-        const img = document.createElement("img");
-        img.src = response.objectPath;
-        img.alt = "이미지";
-        img.className = "max-w-full rounded-lg my-2 inline-block";
-        img.style.maxHeight = "300px";
+        const isVideo = response.metadata.contentType?.startsWith("video/");
+        let mediaEl: HTMLElement;
+
+        if (isVideo) {
+          const video = document.createElement("video");
+          video.src = response.objectPath;
+          video.controls = true;
+          video.playsInline = true;
+          video.preload = "metadata";
+          video.className = "max-w-full rounded-lg my-2 inline-block";
+          video.style.maxHeight = "400px";
+          mediaEl = video;
+        } else {
+          const img = document.createElement("img");
+          img.src = response.objectPath;
+          img.alt = "이미지";
+          img.className = "max-w-full rounded-lg my-2 inline-block";
+          img.style.maxHeight = "300px";
+          mediaEl = img;
+        }
         
         editor.focus();
         
         if (savedRangeRef.current && editor.contains(savedRangeRef.current.commonAncestorContainer)) {
           const range = savedRangeRef.current;
           range.deleteContents();
-          range.insertNode(img);
-          range.setStartAfter(img);
+          range.insertNode(mediaEl);
+          range.setStartAfter(mediaEl);
           range.collapse(true);
           
           const selection = window.getSelection();
@@ -356,17 +371,17 @@ export default function Board() {
           }
         } else {
           editor.appendChild(document.createElement("br"));
-          editor.appendChild(img);
+          editor.appendChild(mediaEl);
           editor.appendChild(document.createElement("br"));
         }
         
         savedRangeRef.current = null;
         updateContentFromEditor();
       }
-      toast({ title: "이미지가 삽입되었습니다" });
+      toast({ title: response.metadata.contentType?.startsWith("video/") ? "동영상이 삽입되었습니다" : "이미지가 삽입되었습니다" });
     },
     onError: (error) => {
-      toast({ title: "이미지 업로드 실패", variant: "destructive" });
+      toast({ title: "파일 업로드 실패", variant: "destructive" });
     }
   });
 
@@ -374,26 +389,30 @@ export default function Board() {
     const editor = editorRef.current;
     if (!editor) return;
     
-    let content = "";
-    editor.childNodes.forEach((node) => {
+    const processNode = (node: ChildNode): string => {
       if (node.nodeType === Node.TEXT_NODE) {
-        content += node.textContent;
+        return node.textContent || "";
       } else if (node.nodeName === "IMG") {
         const img = node as HTMLImageElement;
-        content += `![이미지](${img.src})`;
+        return `![이미지](${img.src})`;
+      } else if (node.nodeName === "VIDEO") {
+        const video = node as HTMLVideoElement;
+        return `![video](${video.src})`;
       } else if (node.nodeName === "DIV" || node.nodeName === "P" || node.nodeName === "BR") {
-        content += "\n";
+        let text = "\n";
         if (node.childNodes.length > 0) {
           node.childNodes.forEach((child) => {
-            if (child.nodeType === Node.TEXT_NODE) {
-              content += child.textContent;
-            } else if (child.nodeName === "IMG") {
-              const img = child as HTMLImageElement;
-              content += `![이미지](${img.src})`;
-            }
+            text += processNode(child);
           });
         }
+        return text;
       }
+      return "";
+    };
+    
+    let content = "";
+    editor.childNodes.forEach((node) => {
+      content += processNode(node);
     });
     setNewPostContent(content);
   };
@@ -580,14 +599,32 @@ export default function Board() {
           allUrls.push(...urls);
         }
       } else if (i % 3 === 2) {
-        result.push(
-          <img 
-            key={i} 
-            src={parts[i]} 
-            alt={parts[i-1] || "이미지"} 
-            className="w-full max-w-full h-auto rounded-lg my-4 object-contain"
-          />
-        );
+        const alt = parts[i-1] || "";
+        const src = parts[i];
+        const isVideo = alt === "동영상" || alt === "video" || /\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(src);
+        if (isVideo) {
+          result.push(
+            <video
+              key={i}
+              src={src}
+              controls
+              playsInline
+              preload="metadata"
+              className="w-full max-w-full rounded-lg my-4"
+              style={{ maxHeight: "500px" }}
+              data-testid={`video-content-${i}`}
+            />
+          );
+        } else {
+          result.push(
+            <img 
+              key={i} 
+              src={src} 
+              alt={alt || "이미지"} 
+              className="w-full max-w-full h-auto rounded-lg my-4 object-contain"
+            />
+          );
+        }
       }
     }
 
@@ -609,9 +646,17 @@ export default function Board() {
     return result;
   };
 
+  const getFirstMediaFromContent = (content: string): { src: string; isVideo: boolean } | null => {
+    const match = content.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+    if (!match) return null;
+    const alt = match[1];
+    const src = match[2];
+    const isVideo = alt === "동영상" || alt === "video" || /\.(mp4|webm|mov|avi|mkv)(\?|$)/i.test(src);
+    return { src, isVideo };
+  };
   const getFirstImageFromContent = (content: string): string | null => {
-    const match = content.match(/!\[[^\]]*\]\(([^)]+)\)/);
-    return match ? match[1] : null;
+    const media = getFirstMediaFromContent(content);
+    return media ? media.src : null;
   };
 
   const getTextWithoutImages = (content: string): string => {
@@ -745,11 +790,11 @@ export default function Board() {
                       style={{ whiteSpace: "pre-wrap" }}
                     />
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">클릭하고 글을 입력하세요. 이미지는 커서 위치에 바로 삽입됩니다.</p>
+                      <p className="text-xs text-muted-foreground">클릭하고 글을 입력하세요. 이미지/동영상은 커서 위치에 삽입됩니다.</p>
                       <div>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/*,video/*"
                           onChange={handleImageUpload}
                           className="hidden"
                           id="image-upload"
@@ -761,7 +806,7 @@ export default function Board() {
                               {isUploading ? (
                                 <><Loader2 className="w-3.5 h-3.5 animate-spin" /></>
                               ) : (
-                                <><ImagePlus className="w-3.5 h-3.5" />{labels.addImage}</>
+                                <><ImagePlus className="w-3.5 h-3.5" />{labels.addMedia}</>
                               )}
                             </span>
                           </Button>
@@ -1065,13 +1110,27 @@ export default function Board() {
                     >
                       <CardContent className="p-4">
                         <div className="flex gap-4">
-                          {(post.imageUrl || getFirstImageFromContent(post.content)) && (
-                            <img
-                              src={post.imageUrl || getFirstImageFromContent(post.content) || ""}
-                              alt=""
-                              className="w-24 h-24 object-cover rounded-lg shrink-0"
-                            />
-                          )}
+                          {(() => {
+                            const media = getFirstMediaFromContent(post.content);
+                            const imgSrc = post.imageUrl || media?.src;
+                            const isVideo = !post.imageUrl && media?.isVideo;
+                            if (!imgSrc) return null;
+                            if (isVideo) {
+                              return (
+                                <div className="w-24 h-24 rounded-lg shrink-0 relative overflow-hidden bg-muted">
+                                  <video src={imgSrc} preload="metadata" className="w-full h-full object-cover" muted />
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                    <div className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center">
+                                      <div className="w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[10px] border-l-black ml-0.5" />
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <img src={imgSrc} alt="" className="w-24 h-24 object-cover rounded-lg shrink-0" />
+                            );
+                          })()}
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-lg mb-1 line-clamp-2">{post.title}</h3>
                             <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
