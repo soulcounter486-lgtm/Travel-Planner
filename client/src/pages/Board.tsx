@@ -338,14 +338,19 @@ export default function Board() {
         let mediaEl: HTMLElement;
 
         if (isVideo) {
+          const wrapper = document.createElement("div");
+          wrapper.contentEditable = "false";
+          wrapper.className = "my-2";
+          wrapper.setAttribute("data-video-wrapper", "true");
           const video = document.createElement("video");
           video.src = response.objectPath;
           video.controls = true;
           video.playsInline = true;
           video.preload = "metadata";
-          video.className = "max-w-full rounded-lg my-2 inline-block";
+          video.className = "max-w-full rounded-lg";
           video.style.maxHeight = "400px";
-          mediaEl = video;
+          wrapper.appendChild(video);
+          mediaEl = wrapper;
         } else {
           const img = document.createElement("img");
           img.src = response.objectPath;
@@ -354,14 +359,18 @@ export default function Board() {
           img.style.maxHeight = "300px";
           mediaEl = img;
         }
+
+        const afterParagraph = document.createElement("div");
+        afterParagraph.innerHTML = "<br>";
         
         editor.focus();
         
         if (savedRangeRef.current && editor.contains(savedRangeRef.current.commonAncestorContainer)) {
           const range = savedRangeRef.current;
           range.deleteContents();
+          range.insertNode(afterParagraph);
           range.insertNode(mediaEl);
-          range.setStartAfter(mediaEl);
+          range.setStart(afterParagraph, 0);
           range.collapse(true);
           
           const selection = window.getSelection();
@@ -372,7 +381,7 @@ export default function Board() {
         } else {
           editor.appendChild(document.createElement("br"));
           editor.appendChild(mediaEl);
-          editor.appendChild(document.createElement("br"));
+          editor.appendChild(afterParagraph);
         }
         
         savedRangeRef.current = null;
@@ -398,6 +407,10 @@ export default function Board() {
       } else if (node.nodeName === "VIDEO") {
         const video = node as HTMLVideoElement;
         return `![video](${video.src})`;
+      } else if (node instanceof HTMLElement && node.getAttribute("data-video-wrapper") === "true") {
+        const video = node.querySelector("video");
+        if (video) return `\n![video](${video.src})\n`;
+        return "";
       } else if (node.nodeName === "DIV" || node.nodeName === "P" || node.nodeName === "BR") {
         let text = "\n";
         if (node.childNodes.length > 0) {
