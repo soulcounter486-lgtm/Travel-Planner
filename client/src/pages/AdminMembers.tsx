@@ -57,8 +57,10 @@ interface User {
   loginMethod?: string;
   isAdmin?: boolean;
   gender?: string;
+  birthDate?: string;
   canViewNightlife18?: boolean;
   canViewEco?: boolean;
+  emailVerified?: boolean;
   createdAt?: string;
 }
 
@@ -186,6 +188,8 @@ export default function AdminMembers() {
   const [broadcastCouponOpen, setBroadcastCouponOpen] = useState(false);
   const [editAnnouncementOpen, setEditAnnouncementOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [memberDetailOpen, setMemberDetailOpen] = useState(false);
+  const [detailMember, setDetailMember] = useState<User | null>(null);
 
   const [newCouponOpen, setNewCouponOpen] = useState(false);
   const [couponForm, setCouponForm] = useState({
@@ -699,59 +703,68 @@ export default function AdminMembers() {
                   <div className="space-y-1 max-h-[60vh] overflow-y-auto">
                     {[...members].sort((a, b) => (b.isAdmin ? 1 : 0) - (a.isAdmin ? 1 : 0)).map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-xs">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        <div
+                          className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+                          onClick={() => { setDetailMember(member); setMemberDetailOpen(true); }}
+                          data-testid={`member-row-${member.id}`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             member.gender === 'male' ? 'bg-blue-500' : 
                             member.gender === 'female' ? 'bg-pink-500' : 'bg-gray-500'
                           }`}>
                             {member.profileImageUrl ? (
-                              <img src={member.profileImageUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                              <img src={member.profileImageUrl} alt="" className="w-8 h-8 rounded-full object-cover" />
                             ) : (
-                              <Users className="w-3 h-3 text-white" />
+                              <Users className="w-3.5 h-3.5 text-white" />
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1">
-                              <p className="font-medium truncate">{member.nickname || member.firstName || member.email?.split("@")[0] || "이름없음"}</p>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <p className="font-semibold text-sm truncate max-w-[120px]" data-testid={`member-name-${member.id}`}>
+                                {member.nickname || member.firstName || member.email?.split("@")[0] || "이름없음"}
+                              </p>
                               {member.isAdmin && (
-                                <Badge variant="default" className="h-4 px-1 text-[9px] bg-amber-500">
+                                <Badge variant="default" className="h-4 px-1 text-[9px] bg-amber-500 no-default-hover-elevate no-default-active-elevate">
                                   <ShieldCheck className="w-2 h-2 mr-0.5" />
                                   관리자
                                 </Badge>
                               )}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
                               {member.loginMethod && (
-                                <Badge variant="outline" className="h-3 px-1 text-[8px]">
+                                <Badge variant="outline" className="h-4 px-1 text-[8px] no-default-hover-elevate no-default-active-elevate">
                                   {member.loginMethod}
                                 </Badge>
                               )}
+                              {member.gender && (
+                                <Badge variant="secondary" className="h-4 px-1 text-[8px] no-default-hover-elevate no-default-active-elevate">
+                                  {member.gender === 'male' ? '남' : member.gender === 'female' ? '여' : member.gender}
+                                </Badge>
+                              )}
                             </div>
+                            <p className="text-[10px] text-muted-foreground truncate">{member.email}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex items-center gap-0.5 flex-shrink-0">
                           <Button
-                            size="sm"
+                            size="icon"
                             variant={member.isAdmin ? "default" : "ghost"}
-                            className={`h-6 px-2 text-[10px] ${member.isAdmin ? "bg-amber-500 hover:bg-amber-600" : ""}`}
+                            className={member.isAdmin ? "bg-amber-500" : ""}
                             onClick={() => toggleAdminMutation.mutate({ userId: member.id, isAdmin: !member.isAdmin })}
                             disabled={toggleAdminMutation.isPending || String(member.id) === String(currentUserId)}
                             title={String(member.id) === String(currentUserId) ? "자신의 권한은 변경할 수 없습니다" : "관리자 권한 토글"}
                             data-testid={`toggle-admin-${member.id}`}
                           >
-                            {member.isAdmin ? <ShieldCheck className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
+                            {member.isAdmin ? <ShieldCheck className="w-3.5 h-3.5" /> : <Shield className="w-3.5 h-3.5" />}
                           </Button>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant={
                               (member.canViewNightlife18 && member.canViewEco) ? "default" : 
                               (member.gender === 'male' && member.loginMethod === 'kakao') ? "outline" : "ghost"
                             }
-                            className={`h-6 px-2 text-[10px] ${
-                              (member.canViewNightlife18 && member.canViewEco) ? "bg-rose-500 hover:bg-rose-600" : 
+                            className={
+                              (member.canViewNightlife18 && member.canViewEco) ? "bg-rose-500" : 
                               (member.gender === 'male' && member.loginMethod === 'kakao') ? "border-rose-400 text-rose-500" : ""
-                            }`}
+                            }
                             onClick={() => {
                               const currentEnabled = member.canViewNightlife18 && member.canViewEco;
                               toggleAdultContentMutation.mutate({ userId: member.id, enabled: !currentEnabled });
@@ -759,39 +772,39 @@ export default function AdminMembers() {
                             disabled={toggleAdultContentMutation.isPending}
                             title={
                               (member.canViewNightlife18 && member.canViewEco) ? "성인 콘텐츠 권한 해제" : 
-                              (member.gender === 'male' && member.loginMethod === 'kakao') ? "카카오 남성 자동 권한 (클릭하여 수동 권한 부여)" : 
+                              (member.gender === 'male' && member.loginMethod === 'kakao') ? "카카오 남성 자동 권한" : 
                               "성인 콘텐츠 권한 부여"
                             }
                             data-testid={`toggle-adult-${member.id}`}
                           >
-                            <Sparkles className="w-3 h-3" />
+                            <Sparkles className="w-3.5 h-3.5" />
                           </Button>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            className="h-6 px-2 text-[10px]"
                             onClick={() => {
                               setSelectedUser(member);
                               setSendMessageOpen(true);
                             }}
+                            data-testid={`send-message-${member.id}`}
                           >
-                            <MessageSquare className="w-3 h-3" />
+                            <MessageSquare className="w-3.5 h-3.5" />
                           </Button>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            className="h-6 px-2 text-[10px]"
                             onClick={() => {
                               setSelectedUser(member);
                               setSendCouponOpen(true);
                             }}
+                            data-testid={`send-coupon-${member.id}`}
                           >
-                            <Gift className="w-3 h-3" />
+                            <Gift className="w-3.5 h-3.5" />
                           </Button>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            className="h-6 px-2 text-[10px] text-destructive hover:text-destructive"
+                            className="text-destructive"
                             onClick={() => {
                               if (confirm(`정말 ${member.nickname || member.email} 회원을 삭제하시겠습니까?`)) {
                                 deleteUserMutation.mutate(member.id);
@@ -801,7 +814,7 @@ export default function AdminMembers() {
                             title={member.isAdmin ? "관리자는 삭제할 수 없습니다" : String(member.id) === String(currentUserId) ? "자신은 삭제할 수 없습니다" : "회원 삭제"}
                             data-testid={`delete-user-${member.id}`}
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       </div>
@@ -810,6 +823,139 @@ export default function AdminMembers() {
                 )}
               </CardContent>
             </Card>
+
+            <Dialog open={memberDetailOpen} onOpenChange={setMemberDetailOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="text-base flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    회원 상세 정보
+                  </DialogTitle>
+                </DialogHeader>
+                {detailMember && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        detailMember.gender === 'male' ? 'bg-blue-500' : 
+                        detailMember.gender === 'female' ? 'bg-pink-500' : 'bg-gray-500'
+                      }`}>
+                        {detailMember.profileImageUrl ? (
+                          <img src={detailMember.profileImageUrl} alt="" className="w-14 h-14 rounded-full object-cover" />
+                        ) : (
+                          <Users className="w-6 h-6 text-white" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-base" data-testid="detail-member-nickname">
+                          {detailMember.nickname || detailMember.firstName || "이름없음"}
+                        </p>
+                        <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                          {detailMember.isAdmin && (
+                            <Badge variant="default" className="h-4 px-1.5 text-[9px] bg-amber-500 no-default-hover-elevate no-default-active-elevate">
+                              <ShieldCheck className="w-2 h-2 mr-0.5" />
+                              관리자
+                            </Badge>
+                          )}
+                          {detailMember.loginMethod && (
+                            <Badge variant="outline" className="h-4 px-1.5 text-[9px] no-default-hover-elevate no-default-active-elevate">
+                              {detailMember.loginMethod}
+                            </Badge>
+                          )}
+                          {detailMember.canViewNightlife18 && (
+                            <Badge variant="default" className="h-4 px-1.5 text-[9px] bg-rose-500 no-default-hover-elevate no-default-active-elevate">
+                              19+
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-3 space-y-2 text-sm">
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">닉네임</span>
+                        <span className="font-medium text-right truncate" data-testid="detail-nickname-value">{detailMember.nickname || "-"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">이름</span>
+                        <span className="font-medium text-right truncate">{detailMember.firstName || "-"} {detailMember.lastName || ""}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">이메일</span>
+                        <span className="font-medium text-right truncate" data-testid="detail-email-value">{detailMember.email || "-"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">성별</span>
+                        <span className="font-medium">{detailMember.gender === 'male' ? '남성' : detailMember.gender === 'female' ? '여성' : detailMember.gender || '-'}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">생년월일</span>
+                        <span className="font-medium">{detailMember.birthDate || "-"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">로그인 방식</span>
+                        <span className="font-medium">{detailMember.loginMethod || "-"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">이메일 인증</span>
+                        <span className="font-medium">{detailMember.loginMethod === 'email' ? (detailMember.emailVerified ? '완료' : '미인증') : '-'}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">가입일</span>
+                        <span className="font-medium">{detailMember.createdAt ? format(new Date(detailMember.createdAt), "yyyy.MM.dd HH:mm") : "-"}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">회원 ID</span>
+                        <span className="font-medium text-[11px] text-muted-foreground truncate max-w-[180px]">{detailMember.id}</span>
+                      </div>
+                    </div>
+                    <div className="bg-muted/30 rounded-lg p-3 space-y-2 text-sm">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">권한</p>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">관리자</span>
+                        <span className="font-medium">{detailMember.isAdmin ? 'O' : 'X'}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">성인 콘텐츠(19+)</span>
+                        <span className="font-medium">{detailMember.canViewNightlife18 ? 'O' : 'X'}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground flex-shrink-0">에코 콘텐츠</span>
+                        <span className="font-medium">{detailMember.canViewEco ? 'O' : 'X'}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="flex-1"
+                        onClick={() => {
+                          setMemberDetailOpen(false);
+                          setSelectedUser(detailMember);
+                          setSendMessageOpen(true);
+                        }}
+                        data-testid="detail-send-message"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                        쪽지 보내기
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setMemberDetailOpen(false);
+                          setSelectedUser(detailMember);
+                          setSendCouponOpen(true);
+                        }}
+                        data-testid="detail-send-coupon"
+                      >
+                        <Gift className="w-3.5 h-3.5 mr-1" />
+                        쿠폰 발급
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="coupons" className="mt-0">

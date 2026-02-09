@@ -5828,8 +5828,10 @@ ${adultContext}`;
         loginMethod: users.loginMethod,
         isAdmin: users.isAdmin,
         gender: users.gender,
+        birthDate: users.birthDate,
         canViewNightlife18: users.canViewNightlife18,
         canViewEco: users.canViewEco,
+        emailVerified: users.emailVerified,
         createdAt: users.createdAt,
       }).from(users).orderBy(desc(users.createdAt));
       
