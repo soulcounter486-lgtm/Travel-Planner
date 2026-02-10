@@ -629,6 +629,13 @@ export default function Board() {
               className="w-full max-w-full rounded-lg my-4"
               style={{ maxHeight: "500px" }}
               data-testid={`video-content-${i}`}
+              onPlay={(e) => {
+                const v = e.currentTarget;
+                if (v.muted) {
+                  v.muted = false;
+                  v.play().catch(() => { v.muted = true; });
+                }
+              }}
             />
           );
         } else {
