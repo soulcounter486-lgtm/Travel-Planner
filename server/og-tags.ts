@@ -2,9 +2,9 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { posts, siteSettings } from "@shared/schema";
 
-const DEFAULT_OG_IMAGE = "https://vungtau.blog/og-image.png";
-const DEFAULT_OG_IMAGE_WIDTH = 1053;
-const DEFAULT_OG_IMAGE_HEIGHT = 1053;
+const DEFAULT_OG_IMAGE = "https://vungtau.blog/og-image-wide.png";
+const DEFAULT_OG_IMAGE_WIDTH = 1200;
+const DEFAULT_OG_IMAGE_HEIGHT = 675;
 
 interface OgData {
   title: string;
@@ -134,17 +134,10 @@ export function injectOgTags(html: string, og: OgData): string {
     /<meta name="twitter:description" content="[^"]*"\s*\/?>/,
     `<meta name="twitter:description" content="${escapeHtml(og.description)}" />`
   );
-  if (og.video) {
-    html = html.replace(
-      /<meta name="twitter:image" content="[^"]*"\s*\/?>/,
-      `<meta name="twitter:image" content="${escapeHtml(og.image)}" />\n    <meta name="twitter:card" content="player" />\n    <meta name="twitter:player" content="${escapeHtml(og.video)}" />`
-    );
-  } else {
-    html = html.replace(
-      /<meta name="twitter:image" content="[^"]*"\s*\/?>/,
-      `<meta name="twitter:image" content="${escapeHtml(og.image)}" />`
-    );
-  }
+  html = html.replace(
+    /<meta name="twitter:image" content="[^"]*"\s*\/?>/,
+    `<meta name="twitter:image" content="${escapeHtml(og.image)}" />`
+  );
   html = html.replace(
     /<title>[^<]*<\/title>/,
     `<title>${escapeHtml(og.title)}</title>`
