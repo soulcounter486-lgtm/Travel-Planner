@@ -621,8 +621,11 @@ export default function Board() {
               key={i}
               src={src}
               controls
+              autoPlay
+              muted
+              loop
               playsInline
-              preload="metadata"
+              preload="auto"
               className="w-full max-w-full rounded-lg my-4"
               style={{ maxHeight: "500px" }}
               data-testid={`video-content-${i}`}
