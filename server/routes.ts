@@ -13,7 +13,7 @@ import { setupAuth, registerAuthRoutes, isAuthenticated, getSession } from "./re
 import { setupGoogleAuth } from "./auth/googleAuth";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
-import { registerObjectStorageRoutes, objectStorageClient, ObjectStorageService } from "./replit_integrations/object_storage";
+import { registerObjectStorageRoutes, objectStorageClient } from "./replit_integrations/object_storage";
 import webpush from "web-push";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
@@ -3263,18 +3263,22 @@ ${adultContext}`;
     try {
       const tmpDir = os.tmpdir();
       const outPath = path.join(tmpDir, `thumb_${Date.now()}.jpg`);
-      execSync(`ffmpeg -y -i "${videoUrl}" -ss 0.5 -frames:v 1 -q:v 2 "${outPath}"`, { timeout: 15000, stdio: "pipe" });
+      execSync(`ffmpeg -y -i "${videoUrl}" -ss 0.5 -frames:v 1 -update 1 -q:v 2 "${outPath}"`, { timeout: 30000, stdio: "pipe" });
       if (!fs.existsSync(outPath)) return null;
       const imgBuf = fs.readFileSync(outPath);
       fs.unlinkSync(outPath);
-      const objService = new ObjectStorageService();
-      const uploadUrl = await objService.getObjectEntityUploadURL();
-      const putRes = await fetch(uploadUrl, { method: "PUT", body: imgBuf, headers: { "Content-Type": "image/jpeg" } });
-      if (!putRes.ok) return null;
-      const urlPath = new URL(uploadUrl).pathname;
-      const uploadsIdx = urlPath.indexOf("/uploads/");
-      const objectId = uploadsIdx >= 0 ? urlPath.slice(uploadsIdx + "/uploads/".length).split("?")[0] : null;
-      return objectId ? `/objects/uploads/${objectId}` : null;
+      const thumbFile = new File([imgBuf], `thumb_${Date.now()}.jpg`, { type: "image/jpeg" });
+      const metaRes = await fetch("http://localhost:5000/api/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: thumbFile.name, size: imgBuf.length, contentType: "image/jpeg" }),
+      });
+      if (!metaRes.ok) { console.error("Failed to get upload URL"); return null; }
+      const metaData = await metaRes.json() as { uploadURL: string; objectPath: string };
+      const putRes = await fetch(metaData.uploadURL, { method: "PUT", body: imgBuf, headers: { "Content-Type": "image/jpeg" } });
+      if (!putRes.ok) { console.error("Failed to PUT thumbnail"); return null; }
+      console.log("Video thumbnail uploaded:", metaData.objectPath);
+      return metaData.objectPath;
     } catch (err) {
       console.error("Video thumbnail extraction failed:", err);
       return null;

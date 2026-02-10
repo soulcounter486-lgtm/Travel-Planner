@@ -1,6 +1,10 @@
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { posts, siteSettings } from "@shared/schema";
+import { execSync } from "child_process";
+import path from "path";
+import fs from "fs";
+import os from "os";
 
 const DEFAULT_OG_IMAGE = "https://vungtau.blog/og-image-wide.png";
 const DEFAULT_OG_IMAGE_WIDTH = 1200;
@@ -68,14 +72,52 @@ function stripContent(content: string): string {
   return text.trim();
 }
 
+async function generateVideoThumbnail(videoUrl: string, postId: number): Promise<string | null> {
+  try {
+    const tmpDir = os.tmpdir();
+    const outPath = path.join(tmpDir, `thumb_${postId}_${Date.now()}.jpg`);
+    execSync(`ffmpeg -y -i "${videoUrl}" -ss 0.5 -frames:v 1 -update 1 -q:v 2 "${outPath}"`, { timeout: 30000, stdio: "pipe" });
+    if (!fs.existsSync(outPath)) return null;
+    const imgBuf = fs.readFileSync(outPath);
+    fs.unlinkSync(outPath);
+    const metaRes = await fetch("http://localhost:5000/api/uploads/request-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: `thumb_${postId}.jpg`, size: imgBuf.length, contentType: "image/jpeg" }),
+    });
+    if (!metaRes.ok) return null;
+    const metaData = await metaRes.json() as { uploadURL: string; objectPath: string };
+    const putRes = await fetch(metaData.uploadURL, { method: "PUT", body: imgBuf, headers: { "Content-Type": "image/jpeg" } });
+    if (!putRes.ok) return null;
+    await db.update(posts).set({ imageUrl: metaData.objectPath }).where(eq(posts.id, postId));
+    console.log(`Auto-generated thumbnail for post ${postId}:`, metaData.objectPath);
+    return metaData.objectPath;
+  } catch (err) {
+    console.error(`Thumbnail generation failed for post ${postId}:`, err);
+    return null;
+  }
+}
+
 async function getPostOgData(postId: number): Promise<OgData | null> {
   try {
     const [post] = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
     if (!post) return null;
 
     const contentText = stripContent(post.content).slice(0, 200);
-    const postImage = post.imageUrl || extractFirstImage(post.content);
+    let postImage = post.imageUrl || extractFirstImage(post.content);
     const postVideo = extractFirstVideo(post.content);
+
+    if (!postImage && postVideo) {
+      const thumbUrl = await generateVideoThumbnail(postVideo, post.id);
+      if (thumbUrl) {
+        postImage = `https://vungtau.blog${thumbUrl}`;
+      }
+    }
+
+    if (postImage && !postImage.startsWith("http")) {
+      postImage = `https://vungtau.blog${postImage}`;
+    }
+
     const image = postImage || DEFAULT_OG_IMAGE;
 
     return {
