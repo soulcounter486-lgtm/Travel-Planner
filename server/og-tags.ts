@@ -115,15 +115,15 @@ export function injectOgTags(html: string, og: OgData): string {
     /<meta property="og:url" content="[^"]*"\s*\/?>/,
     `<meta property="og:url" content="${escapeHtml(og.url)}" />`
   );
+  html = html.replace(
+    /<meta property="og:type" content="[^"]*"\s*\/?>/,
+    `<meta property="og:type" content="article" />`
+  );
   if (og.video) {
+    const videoMeta = `\n    <meta property="og:video" content="${escapeHtml(og.video)}" />\n    <meta property="og:video:type" content="video/mp4" />\n    <meta property="og:video:width" content="720" />\n    <meta property="og:video:height" content="1280" />`;
     html = html.replace(
-      /<meta property="og:type" content="[^"]*"\s*\/?>/,
-      `<meta property="og:type" content="video.other" />\n    <meta property="og:video" content="${escapeHtml(og.video)}" />\n    <meta property="og:video:type" content="video/mp4" />\n    <meta property="og:video:width" content="720" />\n    <meta property="og:video:height" content="1280" />`
-    );
-  } else {
-    html = html.replace(
-      /<meta property="og:type" content="[^"]*"\s*\/?>/,
-      `<meta property="og:type" content="article" />`
+      /<meta property="og:locale" content="ko_KR"\s*\/?>/,
+      `<meta property="og:locale" content="ko_KR" />${videoMeta}`
     );
   }
   html = html.replace(
