@@ -289,6 +289,7 @@ export default function Board() {
   const [editContent, setEditContent] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
+  const [videoThumbnailUrl, setVideoThumbnailUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -330,6 +331,50 @@ export default function Board() {
     }
   };
 
+  const captureVideoThumbnail = (videoUrl: string): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const video = document.createElement("video");
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.preload = "auto";
+      video.playsInline = true;
+      video.src = videoUrl;
+      video.currentTime = 0.5;
+      const timeout = setTimeout(() => { video.remove(); resolve(null); }, 10000);
+      video.addEventListener("seeked", () => {
+        clearTimeout(timeout);
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth || 1280;
+          canvas.height = video.videoHeight || 720;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => { video.remove(); resolve(blob); }, "image/jpeg", 0.85);
+          } else { video.remove(); resolve(null); }
+        } catch { video.remove(); resolve(null); }
+      }, { once: true });
+      video.addEventListener("error", () => { clearTimeout(timeout); video.remove(); resolve(null); });
+      video.load();
+    });
+  };
+
+  const uploadThumbnailBlob = async (blob: Blob): Promise<string | null> => {
+    try {
+      const file = new File([blob], `thumb_${Date.now()}.jpg`, { type: "image/jpeg" });
+      const res = await fetch("/api/uploads/request-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const putRes = await fetch(data.uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type } });
+      if (!putRes.ok) return null;
+      return data.objectPath;
+    } catch { return null; }
+  };
+
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
       const editor = editorRef.current;
@@ -338,6 +383,12 @@ export default function Board() {
         let mediaEl: HTMLElement;
 
         if (isVideo) {
+          captureVideoThumbnail(response.objectPath).then(async (blob) => {
+            if (blob) {
+              const thumbUrl = await uploadThumbnailBlob(blob);
+              if (thumbUrl) setVideoThumbnailUrl(thumbUrl);
+            }
+          });
           const wrapper = document.createElement("div");
           wrapper.contentEditable = "false";
           wrapper.className = "my-2";
@@ -461,7 +512,7 @@ export default function Board() {
   });
 
   const createPostMutation = useMutation({
-    mutationFn: async (data: { title: string; content: string }) => {
+    mutationFn: async (data: { title: string; content: string; imageUrl?: string }) => {
       const res = await apiRequest("POST", "/api/posts", data);
       return res.json();
     },
@@ -470,6 +521,7 @@ export default function Board() {
       setShowNewPostDialog(false);
       setNewPostTitle("");
       setNewPostContent("");
+      setVideoThumbnailUrl(null);
       if (editorRef.current) {
         editorRef.current.innerHTML = "";
       }
@@ -704,6 +756,7 @@ export default function Board() {
     createPostMutation.mutate({
       title: newPostTitle,
       content: newPostContent,
+      ...(videoThumbnailUrl ? { imageUrl: videoThumbnailUrl } : {}),
     });
   };
 

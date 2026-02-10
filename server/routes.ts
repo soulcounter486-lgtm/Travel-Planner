@@ -13,12 +13,14 @@ import { setupAuth, registerAuthRoutes, isAuthenticated, getSession } from "./re
 import { setupGoogleAuth } from "./auth/googleAuth";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
-import { registerObjectStorageRoutes, objectStorageClient } from "./replit_integrations/object_storage";
+import { registerObjectStorageRoutes, objectStorageClient, ObjectStorageService } from "./replit_integrations/object_storage";
 import webpush from "web-push";
 import crypto from "crypto";
 import * as cheerio from "cheerio";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
+import { execSync } from "child_process";
+import os from "os";
 
 // Web Push 설정
 const vapidPublicKey = process.env.PUSH_PUB || "";
@@ -3193,6 +3195,30 @@ ${adultContext}`;
   });
 
   const ogRefreshCache = new Map<number, number>();
+  app.post("/api/posts/:id/generate-thumbnail", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ message: "Admin only" });
+      }
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      const [post] = await db.select().from(posts).where(eq(posts.id, id));
+      if (!post) return res.status(404).json({ message: "Post not found" });
+      const videoUrl = extractVideoUrlFromContent(post.content);
+      if (!videoUrl) return res.status(400).json({ message: "No video found in post" });
+      const thumbUrl = await extractVideoThumbnail(videoUrl);
+      if (!thumbUrl) return res.status(500).json({ message: "Failed to extract thumbnail" });
+      await db.update(posts).set({ imageUrl: thumbUrl }).where(eq(posts.id, id));
+      res.json({ success: true, imageUrl: thumbUrl });
+    } catch (err) {
+      console.error("Generate thumbnail error:", err);
+      res.status(500).json({ message: "Failed to generate thumbnail" });
+    }
+  });
+
   app.post("/api/posts/:id/refresh-og", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -3233,6 +3259,41 @@ ${adultContext}`;
     }
   });
 
+  async function extractVideoThumbnail(videoUrl: string): Promise<string | null> {
+    try {
+      const tmpDir = os.tmpdir();
+      const outPath = path.join(tmpDir, `thumb_${Date.now()}.jpg`);
+      execSync(`ffmpeg -y -i "${videoUrl}" -ss 0.5 -frames:v 1 -q:v 2 "${outPath}"`, { timeout: 15000, stdio: "pipe" });
+      if (!fs.existsSync(outPath)) return null;
+      const imgBuf = fs.readFileSync(outPath);
+      fs.unlinkSync(outPath);
+      const objService = new ObjectStorageService();
+      const uploadUrl = await objService.getObjectEntityUploadURL();
+      const putRes = await fetch(uploadUrl, { method: "PUT", body: imgBuf, headers: { "Content-Type": "image/jpeg" } });
+      if (!putRes.ok) return null;
+      const urlPath = new URL(uploadUrl).pathname;
+      const uploadsIdx = urlPath.indexOf("/uploads/");
+      const objectId = uploadsIdx >= 0 ? urlPath.slice(uploadsIdx + "/uploads/".length).split("?")[0] : null;
+      return objectId ? `/objects/uploads/${objectId}` : null;
+    } catch (err) {
+      console.error("Video thumbnail extraction failed:", err);
+      return null;
+    }
+  }
+
+  function extractVideoUrlFromContent(content: string): string | null {
+    const mdMatch = content.match(/!\[(동영상|video)\]\(([^)]+)\)/);
+    if (mdMatch) return mdMatch[2];
+    const videoExts = /\.(mp4|webm|mov|avi|mkv)(\?|$)/i;
+    const urlMatch = content.match(/(https?:\/\/[^\s"'<>)]+)/g);
+    if (urlMatch) {
+      for (const u of urlMatch) {
+        if (videoExts.test(u)) return u;
+      }
+    }
+    return null;
+  }
+
   // 게시판 - 게시글 작성 (관리자만)
   app.post("/api/posts", isAuthenticated, async (req, res) => {
     try {
@@ -3262,10 +3323,20 @@ ${adultContext}`;
         }
       }
 
+      let imageUrl = result.data.imageUrl || null;
+      if (!imageUrl) {
+        const videoUrl = extractVideoUrlFromContent(result.data.content);
+        if (videoUrl) {
+          const thumbUrl = await extractVideoThumbnail(videoUrl);
+          if (thumbUrl) imageUrl = thumbUrl;
+        }
+      }
+
       const [newPost] = await db.insert(posts).values({
         ...result.data,
         authorId: userId,
         authorName,
+        ...(imageUrl ? { imageUrl } : {}),
       }).returning();
 
       // 푸시 알림 발송 (비동기로 처리)
