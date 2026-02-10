@@ -25,9 +25,11 @@ function isVideoUrl(url: string): boolean {
 function extractFirstImage(content: string): string | null {
   const mdRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
   let match;
+  const mdUrls = new Set<string>();
   while ((match = mdRegex.exec(content)) !== null) {
     const alt = match[1] || "";
     const src = match[2];
+    mdUrls.add(src);
     if (alt === "동영상" || alt === "video" || isVideoUrl(src)) continue;
     return src;
   }
@@ -35,8 +37,13 @@ function extractFirstImage(content: string): string | null {
   const imgMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
   if (imgMatch && !isVideoUrl(imgMatch[1])) return imgMatch[1];
 
-  const urlMatch = content.match(/(https?:\/\/[^\s"'<>]+\/objects\/uploads\/[^\s"'<>]+)/);
-  if (urlMatch && !isVideoUrl(urlMatch[1])) return urlMatch[1];
+  const urlRegex = /(https?:\/\/[^\s"'<>)]+\/objects\/uploads\/[^\s"'<>)]+)/g;
+  let urlMatch;
+  while ((urlMatch = urlRegex.exec(content)) !== null) {
+    const url = urlMatch[1];
+    if (mdUrls.has(url) || isVideoUrl(url)) continue;
+    return url;
+  }
 
   return null;
 }
