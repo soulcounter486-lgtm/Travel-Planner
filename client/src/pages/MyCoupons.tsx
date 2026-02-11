@@ -462,6 +462,10 @@ export default function MyCoupons() {
                   직원에게 이 화면을 보여주고<br />사용 버튼을 눌러주세요.<br />
                   <span className="text-xs text-muted-foreground">Vui lòng cho nhân viên xem màn hình này và nhấn nút sử dụng.</span>
                 </p>
+                <p className="text-center text-sm font-bold text-amber-500 mt-2">
+                  * 쿠폰 사용전 예약필수 *<br />
+                  <span className="text-xs text-muted-foreground">* Vui lòng đặt chỗ trước khi sử dụng *</span>
+                </p>
                 <div className="flex flex-col gap-1 mt-2">
                   {!showFinalConfirm ? (
                     <>
