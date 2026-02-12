@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { posts, siteSettings } from "@shared/schema";
+import { posts, siteSettings, places } from "@shared/schema";
 import { execSync } from "child_process";
 import path from "path";
 import fs from "fs";
@@ -192,11 +192,57 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+function isAccessibleImagePath(p: string): boolean {
+  if (!p) return false;
+  if (p.startsWith("http")) return true;
+  if (p.startsWith("/@fs/") || p.startsWith("/attached_assets/")) return false;
+  return true;
+}
+
+async function getPlaceOgData(placeName: string): Promise<OgData | null> {
+  try {
+    const [place] = await db.select().from(places).where(eq(places.name, placeName)).limit(1);
+    if (!place) return null;
+    let image: string | null = null;
+    if (place.mainImage && isAccessibleImagePath(place.mainImage)) {
+      image = place.mainImage;
+    } else if (place.images && place.images.length > 0) {
+      const found = place.images.find(img => isAccessibleImagePath(img));
+      if (found) image = found;
+    }
+    if (image && !image.startsWith("http")) {
+      image = `https://vungtau.blog${image}`;
+    }
+    if (!image) image = DEFAULT_OG_IMAGE;
+    const desc = place.description ? stripContent(place.description).slice(0, 200) : "베트남 붕따우 여행 관광명소";
+    return {
+      title: `${place.name} - 붕따우 도깨비`,
+      description: desc,
+      image,
+      imageWidth: image === DEFAULT_OG_IMAGE ? DEFAULT_OG_IMAGE_WIDTH : undefined,
+      imageHeight: image === DEFAULT_OG_IMAGE ? DEFAULT_OG_IMAGE_HEIGHT : undefined,
+      url: `https://vungtau.blog/guide?place=${encodeURIComponent(place.name)}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getOgDataForPath(urlPath: string): Promise<OgData | null> {
   const boardMatch = urlPath.match(/^\/board\/(\d+)/);
   if (boardMatch) {
     const postId = parseInt(boardMatch[1], 10);
     return getPostOgData(postId);
+  }
+  const guideMatch = urlPath.match(/^\/guide/);
+  if (guideMatch) {
+    try {
+      const url = new URL(urlPath, "https://vungtau.blog");
+      const placeName = url.searchParams.get("place");
+      if (placeName) {
+        return getPlaceOgData(decodeURIComponent(placeName));
+      }
+    } catch {}
   }
   return null;
 }

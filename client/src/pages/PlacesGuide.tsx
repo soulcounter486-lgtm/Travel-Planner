@@ -1735,16 +1735,26 @@ export default function PlacesGuide() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const placeName = params.get("place");
-    if (!placeName || allPlaces.length === 0) return;
-    const el = document.getElementById(`place-${encodeURIComponent(placeName)}`);
-    if (el) {
-      setTimeout(() => {
+    if (!placeName || Object.keys(mergedPlacesData).length === 0) return;
+    for (const [catKey, cat] of Object.entries(mergedPlacesData)) {
+      if (cat.places.some(p => p.name === placeName)) {
+        setExpandedCategories(prev => {
+          const next = new Set(prev);
+          next.add(catKey);
+          return next;
+        });
+        break;
+      }
+    }
+    setTimeout(() => {
+      const el = document.getElementById(`place-${encodeURIComponent(placeName)}`);
+      if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add("ring-2", "ring-violet-400");
         setTimeout(() => el.classList.remove("ring-2", "ring-violet-400"), 3000);
-      }, 500);
-    }
-  }, [allPlaces]);
+      }
+    }, 800);
+  }, [mergedPlacesData]);
 
   // 지도 초기화
   useEffect(() => {

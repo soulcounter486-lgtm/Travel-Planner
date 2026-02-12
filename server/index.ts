@@ -118,6 +118,30 @@ app.use((req, res, next) => {
     }
   });
 
+  app.get("/guide", async (req, res, next) => {
+    try {
+      const placeName = req.query.place as string | undefined;
+      if (!placeName) return next();
+
+      const fullUrl = `${req.path}?place=${encodeURIComponent(placeName)}`;
+      const ogData = await getOgDataForPath(fullUrl);
+      if (!ogData) return next();
+
+      let htmlPath: string;
+      if (process.env.NODE_ENV === "production") {
+        htmlPath = path.resolve(__dirname, "public", "index.html");
+      } else {
+        htmlPath = path.resolve(import.meta.dirname, "..", "client", "index.html");
+      }
+
+      let html = await fs.promises.readFile(htmlPath, "utf-8");
+      html = injectOgTags(html, ogData);
+      res.status(200).set({ "Content-Type": "text/html" }).end(html);
+    } catch {
+      next();
+    }
+  });
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
