@@ -38,7 +38,9 @@ import {
   Bell,
   BellOff,
   Share2,
-  Link2
+  Link2,
+  Search,
+  X
 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { SiInstagram } from "react-icons/si";
@@ -280,6 +282,7 @@ export default function Board() {
   
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showNewPostDialog, setShowNewPostDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [newPostTitle, setNewPostTitle] = useState("");
   const [newPostContent, setNewPostContent] = useState("");
   const [commentNickname, setCommentNickname] = useState(() => localStorage.getItem("comment_nickname") || "");
@@ -818,6 +821,28 @@ export default function Board() {
           <p className="text-muted-foreground mt-2">{labels.subtitle}</p>
         </div>
 
+        <div className="mb-4 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="게시글 검색... / Tìm kiếm bài viết..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+            data-testid="input-board-search"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+              onClick={() => setSearchQuery("")}
+              data-testid="button-clear-search"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
         {isAdmin && (
           <div className="mb-6 flex justify-end gap-2">
             <Button 
@@ -1168,10 +1193,26 @@ export default function Board() {
                 <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">{labels.noPosts}</p>
               </Card>
-            ) : (
+            ) : (() => {
+              const q = searchQuery.trim().toLowerCase();
+              const filtered = posts
+                .filter(post => isAdmin || !post.isHidden)
+                .filter(post => {
+                  if (!q) return true;
+                  return post.title.toLowerCase().includes(q) || post.content.toLowerCase().includes(q) || (post.authorName || "").toLowerCase().includes(q);
+                });
+              if (q && filtered.length === 0) {
+                return (
+                  <Card className="p-12 text-center">
+                    <Search className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">검색 결과가 없습니다</p>
+                    <p className="text-xs text-muted-foreground mt-1">Không tìm thấy kết quả</p>
+                  </Card>
+                );
+              }
+              return (
               <AnimatePresence>
-                {posts
-                  .filter(post => isAdmin || !post.isHidden)
+                {filtered
                   .map((post, idx) => (
                   <motion.div
                     key={post.id}
@@ -1263,7 +1304,8 @@ export default function Board() {
                   </motion.div>
                 ))}
               </AnimatePresence>
-            )}
+              );
+            })()}
           </div>
         )}
       </main>
