@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -7,13 +7,14 @@ import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Place as DBPlace, PlaceCategory } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
-import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen, Map, List, DollarSign } from "lucide-react";
+import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen, Map, List, DollarSign, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 function darkenHex(hex: string, amount: number = 30): string {
@@ -826,6 +827,7 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   categoryId: string;
   onEdit: (place: Place, categoryId: string) => void;
 }) {
+  const { toast } = useToast();
   const [showMap, setShowMap] = useState(false);
   const [showDescription, setShowDescription] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -836,6 +838,19 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const cardMapRef = useRef<HTMLDivElement>(null);
   const cardMapInstanceRef = useRef<L.Map | null>(null);
+
+  const placeSlug = encodeURIComponent(place.name);
+  const shareUrl = `${window.location.origin}/guide?place=${placeSlug}`;
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({ title: place.name, text: place.nameVi ? `${place.name} (${place.nameVi})` : place.name, url: shareUrl }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        toast({ title: "링크가 복사되었습니다" });
+      }).catch(() => {});
+    }
+  };
 
   const minSwipeDistance = 50;
 
@@ -1011,7 +1026,7 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+    <Card id={`place-${placeSlug}`} className="overflow-hidden hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">
           {allImages.length > 0 && (
@@ -1170,6 +1185,14 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
               <ExternalLink className="w-3 h-3" />
               Google Maps
             </a>
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1 text-[11px] text-violet-600 dark:text-violet-400 hover:underline"
+              data-testid={`button-share-place-${place.name.replace(/\s/g, "-")}`}
+            >
+              <Share2 className="w-3 h-3" />
+              공유
+            </button>
             {isAdmin && (
               <button
                 onClick={() => onEdit(place, categoryId)}
@@ -1708,6 +1731,20 @@ export default function PlacesGuide() {
     });
     return places;
   }, [mergedPlacesData, isAdmin, user?.gender, user?.canViewNightlife18]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const placeName = params.get("place");
+    if (!placeName || allPlaces.length === 0) return;
+    const el = document.getElementById(`place-${encodeURIComponent(placeName)}`);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-violet-400");
+        setTimeout(() => el.classList.remove("ring-2", "ring-violet-400"), 3000);
+      }, 500);
+    }
+  }, [allPlaces]);
 
   // 지도 초기화
   useEffect(() => {
