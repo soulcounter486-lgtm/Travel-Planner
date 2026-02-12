@@ -840,7 +840,9 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   const cardMapInstanceRef = useRef<L.Map | null>(null);
 
   const placeSlug = encodeURIComponent(place.name);
-  const shareUrl = `${window.location.origin}/guide?place=${placeSlug}`;
+  const shareUrl = place.dbId
+    ? `${window.location.origin}/guide?p=${place.dbId}`
+    : `${window.location.origin}/guide?place=${placeSlug}`;
 
   const handleShare = () => {
     if (navigator.share) {
@@ -1026,7 +1028,7 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
   };
 
   return (
-    <Card id={`place-${placeSlug}`} className="overflow-hidden hover:shadow-lg transition-shadow">
+    <Card id={place.dbId ? `place-id-${place.dbId}` : `place-${placeSlug}`} className="overflow-hidden hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">
           {allImages.length > 0 && (
@@ -1734,10 +1736,16 @@ export default function PlacesGuide() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const placeId = params.get("p");
     const placeName = params.get("place");
-    if (!placeName || Object.keys(mergedPlacesData).length === 0) return;
+    if ((!placeId && !placeName) || Object.keys(mergedPlacesData).length === 0) return;
+    let targetElId = "";
     for (const [catKey, cat] of Object.entries(mergedPlacesData)) {
-      if (cat.places.some(p => p.name === placeName)) {
+      const found = placeId
+        ? cat.places.find(p => p.dbId === Number(placeId))
+        : cat.places.find(p => p.name === placeName);
+      if (found) {
+        targetElId = found.dbId ? `place-id-${found.dbId}` : `place-${encodeURIComponent(found.name)}`;
         setExpandedCategories(prev => {
           const next = new Set(prev);
           next.add(catKey);
@@ -1746,8 +1754,9 @@ export default function PlacesGuide() {
         break;
       }
     }
+    if (!targetElId) return;
     setTimeout(() => {
-      const el = document.getElementById(`place-${encodeURIComponent(placeName)}`);
+      const el = document.getElementById(targetElId);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add("ring-2", "ring-violet-400");

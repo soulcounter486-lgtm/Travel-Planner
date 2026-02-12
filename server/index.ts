@@ -120,10 +120,13 @@ app.use((req, res, next) => {
 
   app.get("/guide", async (req, res, next) => {
     try {
+      const placeId = req.query.p as string | undefined;
       const placeName = req.query.place as string | undefined;
-      if (!placeName) return next();
+      if (!placeId && !placeName) return next();
 
-      const fullUrl = `${req.path}?place=${encodeURIComponent(placeName)}`;
+      const fullUrl = placeId
+        ? `${req.path}?p=${placeId}`
+        : `${req.path}?place=${encodeURIComponent(placeName!)}`;
       const ogData = await getOgDataForPath(fullUrl);
       if (!ogData) return next();
 
