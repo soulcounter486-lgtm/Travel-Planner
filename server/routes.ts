@@ -2669,11 +2669,11 @@ Example response format:
       { name: "Bi Roen 현지 고급 이발소", type: "이발소", note: "도깨비 협력업체, 추천", recommended: true, isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 5% 할인" },
     ],
     nightlife: [
-      { name: "88 비어클럽", nameVi: "88 Beer Club", type: "비어클럽", note: "라이브 음악, 야외 분위기" },
-      { name: "Revo 클럽", nameVi: "Revo Club", type: "나이트클럽", note: "EDM 음악, 현지인 인기" },
-      { name: "Lox 클럽", nameVi: "Lox Night Club", type: "나이트클럽", note: "프리미엄 클럽, VIP 서비스" },
-      { name: "U.S Bar Club", type: "바", note: "아메리칸 스타일, 칵테일" },
-      { name: "Peace and Love 라이브바", nameVi: "Peace and Love Live Bar", type: "라이브바", note: "금,토 라이브 밴드" },
+      { name: "88 비어클럽", nameVi: "88 Beer Club", type: "비어클럽", openingHours: "17:00~02:00", note: "라이브 음악, 야외 분위기" },
+      { name: "Revo 클럽", nameVi: "Revo Club", type: "나이트클럽", openingHours: "20:00~03:00", note: "EDM 음악, 현지인 인기" },
+      { name: "Lox 클럽", nameVi: "Lox Night Club", type: "나이트클럽", openingHours: "20:00~03:00", note: "프리미엄 클럽, VIP 서비스" },
+      { name: "U.S Bar Club", type: "바", openingHours: "18:00~02:00", note: "아메리칸 스타일, 칵테일" },
+      { name: "Peace and Love 라이브바", nameVi: "Peace and Love Live Bar", type: "라이브바", openingHours: "18:00~01:00", note: "금,토 라이브 밴드" },
     ],
     golf: [
       { name: "파라다이스 골프장", nameVi: "Paradise Golf", course: "paradise", note: "도깨비 협력업체, 평일 $90, 주말 $110", isPartner: true, discountText: "붕따우 도깨비 카톡으로 예약 시 할인" },
@@ -2870,6 +2870,7 @@ ${languagePrompts[language] || languagePrompts.ko}
               name: p.name,
               type: "성인 유흥",
               note: p.description || "",
+              openingHours: p.openingHours || "18:00~02:00",
               lat: p.latitude ? parseFloat(p.latitude) : undefined,
               lng: p.longitude ? parseFloat(p.longitude) : undefined,
               isPartner: p.isPartner || false,
@@ -2878,6 +2879,7 @@ ${languagePrompts[language] || languagePrompts.ko}
           }
           adultContext = `\n## 성인 유흥 (밤문화 18+): 남성 여행자이므로 저녁/밤 시간대에 성인 유흥 장소를 1~2곳 반드시 일정에 포함하세요.
 - nightlife18 목록에서 선택하세요. 협력업체(isPartner: true)를 우선 배치하세요.
+- 각 장소의 openingHours(영업시간)를 반드시 확인하고 영업시간 내에만 배치하세요. 영업시간이 없으면 18:00~02:00으로 간주하세요.
 - 가라오케, 성인 마사지 등을 저녁 식사 후 또는 밤 시간대에 배치하세요.
 - 2일 이상 여행이면 매일 다른 장소를 방문하는 일정이 좋습니다.`;
         } catch (dbErr) {
@@ -2911,10 +2913,10 @@ ${JSON.stringify(finalPlacesData, null, 2)}
 - chineseFood: 중식당
 - coffee: 카페 (KATINAT, Highlands Coffee 등)
 - services: 마사지/이발소 (Re.en 마사지, 그랜드 마사지 등)
-- nightlife: 밤문화 (88 비어클럽, Revo 클럽 등)
+- nightlife: 밤문화 (88 비어클럽, Revo 클럽 등) - 각 장소의 openingHours를 반드시 확인하고 영업시간 내에만 배치
 - golf: 골프장
 - casino: 카지노 (임페리얼 seaside 클럽, Monaco casino, Palace 카지노 - 모두 도깨비 협력업체)
-${resolvedGender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성인 유흥 (가라오케, 성인 마사지 등 - 남성 전용)" : ""}
+${resolvedGender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성인 유흥 (가라오케, 성인 마사지 등 - 남성 전용) - 각 장소의 openingHours를 반드시 확인하고 영업시간 내에만 배치" : ""}
 
 ## 일정 작성 규칙:
 1. ⭐ 협력업체 우선 배치: isPartner: true인 장소를 반드시 우선적으로 일정에 포함하세요. 협력업체는 "붕따우 도깨비" 공식 파트너로 할인 혜택이 있습니다.
@@ -2933,7 +2935,7 @@ ${resolvedGender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성�
 ${purposes.includes('golf') ? '## 골프 여행: golf 목록에서 골프장을 선택하여 매일 또는 격일로 라운딩을 포함하세요.' : ''}
 ${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함하세요. 일정 사이에 숙소 휴식시간을 넉넉히 넣어주세요.' : ''}
 ${purposes.includes('gourmet') ? '## 맛집 탐방: localFood, koreanFood, chineseFood, buffet를 골고루 포함하세요.' : ''}
-${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁에 클럽이나 바 활동을 포함하세요. 다음날 오전 일정은 늦게 시작하세요.' : ''}
+${purposes.includes('nightlife') ? '## 밤문화: nightlife 목록에서 선택하여 저녁/밤에 클럽이나 바 활동을 포함하세요. 밤문화 장소는 보통 저녁 7시~새벽 2시에 영업합니다. 반드시 이 시간대에만 배치하세요. 다음날 오전 일정은 늦게 시작하세요.' : ''}
 ${purposes.includes('family') ? '## 가족 여행: 놀이동산(Ho May), 백비치, 프론트비치 등 가족이 함께 즐길 수 있는 장소를 우선 배치하세요. 아이가 있으면 이동 최소화.' : ''}
 ${purposes.includes('culture') ? '## 문화 탐방: 화이트 펠리스, 전쟁기념관, 붕따우 등대 등 역사/문화 명소를 우선 배치하세요.' : ''}
 ${purposes.includes('casino') ? `## 카지노 여행: casino 목록에서 카지노를 반드시 1곳 이상 일정에 포함하세요.

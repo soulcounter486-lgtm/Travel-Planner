@@ -999,21 +999,22 @@ export default function TravelPlanner() {
                                         >
                                           <GripVertical className="h-4 w-4" />
                                         </div>
-                                        <div className="flex flex-col items-center shrink-0">
+                                        <div className="flex flex-col items-center shrink-0 w-[52px]">
                                           <Badge variant="outline" className="font-mono text-[10px] px-1.5">
                                             <Clock className="h-3 w-3 mr-0.5" />
                                             {item.time}
                                           </Badge>
                                           {item.travelTime && (
-                                            <span className="text-[9px] text-muted-foreground mt-1 flex items-center gap-0.5">
-                                              <Car className="h-2.5 w-2.5" />{item.travelTime}
+                                            <span className="text-[9px] text-muted-foreground mt-1 flex flex-col items-center text-center leading-tight">
+                                              <Car className="h-2.5 w-2.5" />
+                                              <span>{item.travelTime}</span>
                                             </span>
                                           )}
                                           {itemIndex < day.schedule.length - 1 && (
                                             <div className="w-px h-6 bg-border mt-1" />
                                           )}
                                         </div>
-                                        <div className={`flex-1 min-w-0 rounded-lg p-2.5 transition-all border ${item.isPartner ? "bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700" : "bg-muted/50 border-transparent"}`}>
+                                        <div className={`flex-1 min-w-0 overflow-hidden rounded-lg p-2.5 transition-all border ${item.isPartner ? "bg-amber-50/80 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700" : "bg-muted/50 border-transparent"}`}>
                                           <div className="flex items-start gap-1.5 flex-wrap">
                                             {item.isPartner && (
                                               <Badge className="bg-amber-500 text-white text-[10px] no-default-hover-elevate no-default-active-elevate shrink-0">
