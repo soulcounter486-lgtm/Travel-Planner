@@ -2887,9 +2887,41 @@ ${languagePrompts[language] || languagePrompts.ko}
         }
       }
 
+      let mergedPlacesData = { ...placesData };
+      try {
+        const allDbPlaces = await db.select().from(places).where(eq(places.isActive, true));
+        const dbByCategory: Record<string, any[]> = {};
+        for (const p of allDbPlaces) {
+          if (p.category === "nightlife18") continue;
+          if (!dbByCategory[p.category]) dbByCategory[p.category] = [];
+          dbByCategory[p.category].push({
+            name: p.name,
+            type: p.tags?.[0] || p.category,
+            note: p.description || "",
+            openingHours: p.openingHours || "",
+            lat: p.latitude ? parseFloat(p.latitude) : undefined,
+            lng: p.longitude ? parseFloat(p.longitude) : undefined,
+            isPartner: p.isPartner || false,
+            discountText: p.discountText || "",
+          });
+        }
+        for (const [cat, dbItems] of Object.entries(dbByCategory)) {
+          const existing = (mergedPlacesData as any)[cat];
+          if (existing && Array.isArray(existing)) {
+            const existingNames = new Set(dbItems.map((d: any) => d.name));
+            const filtered = existing.filter((e: any) => !existingNames.has(e.name));
+            (mergedPlacesData as any)[cat] = [...dbItems, ...filtered];
+          } else {
+            (mergedPlacesData as any)[cat] = dbItems;
+          }
+        }
+      } catch (dbErr) {
+        console.error("[TravelPlan] DB places merge error:", dbErr);
+      }
+
       const finalPlacesData = resolvedGender === "male" && adultPlacesData.length > 0
-        ? { ...placesData, nightlife18: adultPlacesData }
-        : placesData;
+        ? { ...mergedPlacesData, nightlife18: adultPlacesData }
+        : mergedPlacesData;
 
       const userPrompt = `붕따우 ${days}일 여행 일정을 만들어주세요.
 
@@ -2928,9 +2960,10 @@ ${resolvedGender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성�
 7. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함하세요.
 8. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용하세요.
 9. recommended: true 표시된 장소는 특히 추천합니다.
-10. 각 일정마다 estimatedCost(1인 기준 USD), travelTime(이전 장소에서 이동시간), lat/lng 좌표를 반드시 포함하세요.
-11. vehicleRecommendation에 총 이동시간과 추천 차량 종류를 포함하세요.
-12. 마지막 날은 공항 이동시간(붕따우→호치민 약 2~2.5시간)을 고려하여 일정을 짧게 하세요.
+10. ⚠️ 영업시간 필수 확인: 장소에 openingHours가 있으면 반드시 해당 영업시간 내에만 배치하세요. 예를 들어 openingHours가 "21:00~03:00"이면 21:00 이후에만 배치하세요.
+11. 각 일정마다 estimatedCost(1인 기준 USD), travelTime(이전 장소에서 이동시간), lat/lng 좌표를 반드시 포함하세요.
+12. vehicleRecommendation에 총 이동시간과 추천 차량 종류를 포함하세요.
+13. 마지막 날은 공항 이동시간(붕따우→호치민 약 2~2.5시간)을 고려하여 일정을 짧게 하세요.
 
 ${purposes.includes('golf') ? '## 골프 여행: golf 목록에서 골프장을 선택하여 매일 또는 격일로 라운딩을 포함하세요.' : ''}
 ${purposes.includes('relaxing') ? '## 힐링 여행: services 목록의 마사지/스파와 coffee 목록의 카페를 충분히 포함하세요. 일정 사이에 숙소 휴식시간을 넉넉히 넣어주세요.' : ''}
