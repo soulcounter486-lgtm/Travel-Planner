@@ -765,6 +765,7 @@ function SortablePlaceCard({ place, onEdit, onDelete, onHide, editingPlace, setE
                     </DialogHeader>
                     <PlaceForm
                       place={editingPlace}
+                      categories={categories}
                       onSubmit={(data) => updateMutation.mutate({ id: place.dbPlace!.id, data })}
                       isLoading={updateMutation.isPending}
                       onCancel={() => setEditingPlace(null)}
