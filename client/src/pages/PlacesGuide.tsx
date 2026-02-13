@@ -1107,7 +1107,7 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                   {descriptionText}
                 </div>
               </motion.div>
@@ -1425,7 +1425,7 @@ function PlaceCard({ place, language, isAdmin, categoryId, onEdit }: {
               
               {/* 설명 텍스트 */}
               {descriptionText && (
-                <div className="text-center text-white/80 mt-3 text-sm max-w-2xl mx-auto px-4">
+                <div className="text-center text-white/80 mt-3 text-sm max-w-2xl mx-auto px-4 whitespace-pre-line">
                   {descriptionText}
                 </div>
               )}
