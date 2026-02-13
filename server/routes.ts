@@ -2879,7 +2879,8 @@ ${languagePrompts[language] || languagePrompts.ko}
           }
           adultContext = `\n## 성인 유흥 (밤문화 18+): 남성 여행자이므로 저녁/밤 시간대에 성인 유흥 장소를 1~2곳 반드시 일정에 포함하세요.
 - nightlife18 목록에서 선택하세요. 협력업체(isPartner: true)를 우선 배치하세요.
-- 각 장소의 openingHours(영업시간)를 반드시 확인하고 영업시간 내에만 배치하세요. 영업시간이 없으면 18:00~02:00으로 간주하세요.
+- ⚠️⚠️ [절대 규칙] 각 장소의 openingHours를 확인하고, 영업 시작 시간 이후에만 배치하세요! 예: openingHours "18:30~01:00"이면 18:30 이후에만 배치. "20:00~03:00"이면 20:00 이후에만 배치. 낮 시간(오후 3시 등)에 절대 배치하지 마세요!
+- 영업시간이 없으면 20:00~02:00으로 간주하세요.
 - 가라오케, 성인 마사지 등을 저녁 식사 후 또는 밤 시간대에 배치하세요.
 - 2일 이상 여행이면 매일 다른 장소를 방문하는 일정이 좋습니다.`;
         } catch (dbErr) {
@@ -2960,7 +2961,7 @@ ${resolvedGender === "male" && adultPlacesData.length > 0 ? "- nightlife18: 성�
 7. 각 날짜별로 아침, 점심, 오후, 저녁 일정을 포함하세요.
 8. 장소명은 반드시 위 데이터의 name과 nameVi를 정확히 사용하세요.
 9. recommended: true 표시된 장소는 특히 추천합니다.
-10. ⚠️ 영업시간 필수 확인: 장소에 openingHours가 있으면 반드시 해당 영업시간 내에만 배치하세요. 예를 들어 openingHours가 "21:00~03:00"이면 21:00 이후에만 배치하세요.
+10. ⚠️⚠️⚠️ [최우선 규칙] 영업시간 엄격 준수: 모든 장소의 openingHours를 반드시 확인하세요. openingHours가 "18:30~01:00"이면 18:30 이후에만, "21:00~03:00"이면 21:00 이후에만 배치해야 합니다. 영업 시작 시간 이전에 절대 배치하지 마세요! 이 규칙을 위반하면 일정이 무효합니다.
 11. 각 일정마다 estimatedCost(1인 기준 USD), travelTime(이전 장소에서 이동시간), lat/lng 좌표를 반드시 포함하세요.
 12. vehicleRecommendation에 총 이동시간과 추천 차량 종류를 포함하세요.
 13. 마지막 날은 공항 이동시간(붕따우→호치민 약 2~2.5시간)을 고려하여 일정을 짧게 하세요.
@@ -3012,6 +3013,54 @@ ${adultContext}`;
       }
 
       const travelPlan = JSON.parse(content);
+
+      // 서버단 후처리: 영업시간 위반 보정
+      try {
+        const allDbPlacesForCheck = await db.select().from(places).where(eq(places.isActive, true));
+        const hoursMap: Record<string, string> = {};
+        for (const p of allDbPlacesForCheck) {
+          if (p.openingHours) hoursMap[p.name] = p.openingHours;
+        }
+        // 하드코딩 nightlife 영업시간도 추가
+        for (const item of (placesData as any).nightlife || []) {
+          if (item.openingHours) hoursMap[item.name] = item.openingHours;
+        }
+
+        if (travelPlan.days && Array.isArray(travelPlan.days)) {
+          for (const day of travelPlan.days) {
+            if (!day.schedule || !Array.isArray(day.schedule)) continue;
+            for (const sched of day.schedule) {
+              const placeName = sched.place;
+              const hours = hoursMap[placeName];
+              if (!hours || !sched.time) continue;
+              const match = hours.match(/^(\d{1,2}:\d{2})\s*[~\-]\s*(\d{1,2}:\d{2})$/);
+              if (!match) continue;
+              const openTime = match[1];
+              const schedTime = sched.time;
+              const openMinutes = parseInt(openTime.split(":")[0]) * 60 + parseInt(openTime.split(":")[1]);
+              const schedMinutes = parseInt(schedTime.split(":")[0]) * 60 + parseInt(schedTime.split(":")[1]);
+              // 영업 시작이 12시 이후(저녁/밤 장소)이고 일정이 영업 시작 전이면 보정
+              if (openMinutes >= 720 && schedMinutes < openMinutes) {
+                sched.time = openTime;
+                if (sched.note) {
+                  sched.note += ` (영업시간: ${hours})`;
+                } else {
+                  sched.note = `영업시간: ${hours}`;
+                }
+              }
+            }
+            // 시간 보정 후 schedule을 시간순 재정렬
+            day.schedule.sort((a: any, b: any) => {
+              const aMin = parseInt((a.time || "00:00").split(":")[0]) * 60 + parseInt((a.time || "00:00").split(":")[1]);
+              const bMin = parseInt((b.time || "00:00").split(":")[0]) * 60 + parseInt((b.time || "00:00").split(":")[1]);
+              return aMin - bMin;
+            });
+          }
+        }
+      } catch (fixErr) {
+        console.error("[TravelPlan] Opening hours fix error:", fixErr);
+      }
+
       res.json(travelPlan);
     } catch (err: any) {
       console.error("Travel plan error:", err?.message || err, err?.stack);
