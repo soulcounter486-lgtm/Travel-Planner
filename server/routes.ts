@@ -5229,7 +5229,7 @@ ${adultContext}`;
   });
 
   // WebSocket 채팅 서버
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws/chat" });
+  const wss = new WebSocketServer({ noServer: true });
   
   interface ChatUser {
     ws: WebSocket;
@@ -6444,7 +6444,7 @@ ${adultContext}`;
   });
 
   // WebSocket: 고객센터 1:1 채팅
-  const supportWss = new WebSocketServer({ server: httpServer, path: "/ws/support" });
+  const supportWss = new WebSocketServer({ noServer: true });
 
   interface SupportClient {
     ws: WebSocket;
@@ -6576,6 +6576,19 @@ ${adultContext}`;
     ws.on("close", () => {
       supportClients.delete(client);
     });
+  });
+
+  httpServer.on("upgrade", (request, socket, head) => {
+    const pathname = request.url ? new URL(request.url, `http://${request.headers.host}`).pathname : "";
+    if (pathname === "/ws/chat") {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit("connection", ws, request);
+      });
+    } else if (pathname === "/ws/support") {
+      supportWss.handleUpgrade(request, socket, head, (ws) => {
+        supportWss.emit("connection", ws, request);
+      });
+    }
   });
 
   return httpServer;
