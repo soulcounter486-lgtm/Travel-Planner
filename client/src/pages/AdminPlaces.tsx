@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical, EyeOff, Folder, ChevronUp, ChevronDown } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical, EyeOff, Folder, ChevronUp, ChevronDown, LocateFixed } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Place, PlaceCategory } from "@shared/schema";
 import { placesData, type HardcodedPlace } from "./PlacesGuide";
@@ -1534,13 +1534,50 @@ function PlaceForm({ place, defaultCategory, onSubmit, isLoading, onCancel, cate
         
         {showLocationMap && (
           <div className="space-y-2">
-            <div 
-              ref={locationMapRef}
-              className="h-[300px] rounded-lg border border-slate-300 overflow-hidden"
-              data-testid="location-map"
-            />
+            <div className="relative">
+              <div 
+                ref={locationMapRef}
+                className="h-[300px] rounded-lg border border-slate-300 overflow-hidden"
+                data-testid="location-map"
+              />
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="absolute top-2 right-2 z-[1000] gap-1"
+                data-testid="button-my-location"
+                onClick={() => {
+                  if (!navigator.geolocation) {
+                    toast({ title: "이 브라우저에서 위치 서비스를 지원하지 않습니다", variant: "destructive" });
+                    return;
+                  }
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      const { latitude, longitude } = pos.coords;
+                      if (mapInstanceRef.current) {
+                        mapInstanceRef.current.setView([latitude, longitude], 16);
+                        if (markerRef.current) markerRef.current.remove();
+                        markerRef.current = L.marker([latitude, longitude]).addTo(mapInstanceRef.current);
+                        setFormData(prev => ({
+                          ...prev,
+                          latitude: latitude.toFixed(6),
+                          longitude: longitude.toFixed(6),
+                        }));
+                      }
+                    },
+                    (err) => {
+                      toast({ title: "위치를 가져올 수 없습니다. 위치 권한을 확인해주세요.", variant: "destructive" });
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                  );
+                }}
+              >
+                <LocateFixed className="w-3.5 h-3.5" />
+                내 위치
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground text-center">
-              👆 지도를 클릭해서 장소 위치를 선택하세요
+              지도를 클릭해서 장소 위치를 선택하세요
             </p>
           </div>
         )}
