@@ -815,13 +815,13 @@ export function AppHeader() {
               </div>
             </a>
           </div>
-          <a href="/" className="flex-1 min-w-0 cursor-pointer" data-testid="link-home-header">
+          <Link href="/" className="flex-1 min-w-0 cursor-pointer" data-testid="link-home-header">
             <h1 className="text-sm sm:text-lg font-display font-bold text-primary mb-1 leading-tight">
               <span className="whitespace-nowrap">{siteSettingsData?.["hero_title"] || t("header.title")}</span><br />
               <span className="whitespace-nowrap text-xs sm:text-base">{siteSettingsData?.["hero_subtitle"] || (language === "ko" ? "실시간 여행견적" : "Live Travel Quote")}</span>
             </h1>
             <p className="text-[10px] sm:text-xs text-muted-foreground font-light leading-relaxed line-clamp-2">{siteSettingsData?.["hero_description"] || t("header.description")}</p>
-          </a>
+          </Link>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-2 flex items-center gap-2">
           <WeatherWidget language={language} />
