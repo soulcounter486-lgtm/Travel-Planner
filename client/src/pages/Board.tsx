@@ -620,10 +620,12 @@ export default function Board() {
   });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      await uploadFile(file);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    for (let i = 0; i < files.length; i++) {
+      await uploadFile(files[i]);
     }
+    e.target.value = "";
   };
 
   const renderTextWithLinks = (text: string, keyPrefix: string) => {
@@ -896,6 +898,7 @@ export default function Board() {
                         <input
                           type="file"
                           accept="image/*,video/*"
+                          multiple
                           onChange={handleImageUpload}
                           className="hidden"
                           id="image-upload"
