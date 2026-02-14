@@ -337,9 +337,12 @@ export default function ChatRoom() {
   };
 
   const handleSend = () => {
-    if (message.trim() && wsRef.current?.readyState === WebSocket.OPEN) {
+    if (!message.trim()) return;
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "message", message: message.trim() }));
       setMessage("");
+    } else {
+      connectWebSocket();
     }
   };
 
@@ -475,7 +478,7 @@ export default function ChatRoom() {
                     <Input
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
-                      onKeyPress={handleKeyPress}
+                      onKeyDown={handleKeyPress}
                       placeholder={labels.nickname}
                       className="text-center text-lg"
                       maxLength={20}
@@ -558,9 +561,8 @@ export default function ChatRoom() {
                     <Input
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder={labels.placeholder}
-                      disabled={!isConnected}
+                      onKeyDown={handleKeyPress}
+                      placeholder={isConnected ? labels.placeholder : (language === "ko" ? "연결 중..." : "Connecting...")}
                       className="flex-1"
                       data-testid="input-message"
                     />
@@ -568,7 +570,7 @@ export default function ChatRoom() {
                       variant="outline"
                       size="icon"
                       onClick={handleShareLocation}
-                      disabled={!isConnected || isShareingLocation}
+                      disabled={isShareingLocation}
                       title={language === "ko" ? "내 위치 공유" : "Share my location"}
                       data-testid="btn-share-location"
                     >
@@ -590,7 +592,7 @@ export default function ChatRoom() {
                     </Link>
                     <Button
                       onClick={handleSend}
-                      disabled={!message.trim() || !isConnected}
+                      disabled={!message.trim()}
                       data-testid="btn-send-message"
                     >
                       <Send className="w-4 h-4" />
