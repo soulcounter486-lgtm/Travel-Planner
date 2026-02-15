@@ -456,7 +456,7 @@ export default function AdminShopProducts() {
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex items-center gap-2 mb-6">
-          <Link href="/shop">
+          <Link href="/diet">
             <Button variant="ghost" size="icon" data-testid="btn-back">
               <ArrowLeft className="w-5 h-5" />
             </Button>
