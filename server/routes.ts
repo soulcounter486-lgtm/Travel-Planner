@@ -5228,6 +5228,59 @@ ${adultContext}`;
     }
   });
 
+  // === 쇼핑 상품 초기 데이터 ===
+  (async () => {
+    try {
+      const existing = await db.select({ id: shopProducts.id }).from(shopProducts).limit(1);
+      if (existing.length === 0) {
+        await db.insert(shopProducts).values([
+          {
+            name: "다이어트 커피",
+            brand: "Pluscoffee Diet",
+            price: 45000,
+            quantity: "15개 (15일분)",
+            benefits: ["체중 감량 지원", "신진대사 촉진", "자연 디톡스"],
+            ingredients: "녹차, 흰콩, L-카르니틴, DNF-10(효모 추출물), 인스턴트 커피, 코코아 분말, 코코넛 밀크 분말, 덱스트로스, 이눌린 섬유, 비유제품 크리머",
+            usage: "아침식사 전 뜨거운물 50ML와 함께 1포를 물에 타서 섭취",
+            caution: "임산부, 본 제품의 성분에 민감하거나 금기사항이 있는 사람은 사용하지 마십시오.",
+            gradient: "from-amber-500 to-orange-600",
+            isActive: true,
+            sortOrder: 1,
+          },
+          {
+            name: "고디톡스",
+            brand: "Go Detox",
+            price: 38000,
+            quantity: "28알",
+            benefits: ["자연 디톡스", "체중 관리", "피부 개선"],
+            ingredients: "복령 100mg, 연잎 100mg, 가르시니아 캄보지아 80mg, 은행 60mg, 사과식초 추출물 60mg, L-carnitine 40mg, Collagen 20mg",
+            usage: "1일째 아침 공복에 1알, 2일째 아침 공복에 1알, 3일째부터 아침 공복에 2알씩",
+            caution: "하루에 2.5~3리터의 물을 마셔주세요. 음용중에는 각성제 섭취를 자제해 주세요.",
+            gradient: "from-emerald-500 to-teal-600",
+            isActive: true,
+            sortOrder: 2,
+          },
+          {
+            name: "고커피",
+            brand: "MAX HEALTH Go Coffee",
+            price: 40000,
+            quantity: "12포",
+            benefits: ["에너지 증진", "체중 감량", "자연 성분"],
+            ingredients: "비유제품 크리머 분말, 인스턴트 커피, 녹색 영지 추출물 분말, 추출물, 말토덱스트린, 추출물 등",
+            usage: "따뜻하게 마시기: 뜨거운 물 70ML에 커피 1~2포를 녹여 드세요. 시원하게 마시기: 뜨거운 물 70ML에 커피 2팩을 섞어준 후 얼음을 넣어 드세요.",
+            caution: "하루에 2.5~3리터의 물을 마셔주세요. 음용중에는 각성제 섭취를 자제해 주세요.",
+            gradient: "from-gray-700 to-gray-900",
+            isActive: true,
+            sortOrder: 3,
+          },
+        ]);
+        console.log("Shop products: 기본 상품 3개 자동 등록 완료");
+      }
+    } catch (e) {
+      console.error("Shop products seed error:", e);
+    }
+  })();
+
   // === 쇼핑 상품 API ===
   app.get("/api/shop-products", async (req, res) => {
     try {
