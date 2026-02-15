@@ -12,7 +12,6 @@ import {
   LayoutGrid,
   List,
   Loader2,
-  Headphones,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
@@ -180,15 +179,6 @@ export default function DietProducts() {
     window.open(`http://pf.kakao.com/_ttfxcj/chat${msg ? `?message=${encodeURIComponent(msg)}` : ""}`, "_blank");
   };
 
-  const handleCustomerService = () => {
-    const el = document.querySelector('[data-testid="btn-customer-chat"]') as HTMLElement;
-    if (el) {
-      el.click();
-    } else {
-      window.open("http://pf.kakao.com/_ttfxcj/chat", "_blank");
-    }
-  };
-
   const toggleExpand = (id: string | number) => {
     setExpandedId(prev => prev === id ? null : id);
   };
@@ -314,16 +304,6 @@ export default function DietProducts() {
                           <SiKakaotalk className="w-4 h-4 mr-1" />
                           {labels.purchaseInquiry}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={(e) => { e.stopPropagation(); handleCustomerService(); }}
-                          data-testid={`btn-cs-inquiry-${product.id}`}
-                        >
-                          <Headphones className="w-4 h-4 mr-1" />
-                          {labels.customerService}
-                        </Button>
                       </div>
                     </div>
                   )}
@@ -400,15 +380,6 @@ export default function DietProducts() {
                         >
                           <SiKakaotalk className="w-4 h-4 mr-1.5" />
                           {labels.purchaseInquiry}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex-1"
-                          onClick={handleCustomerService}
-                          data-testid={`btn-cs-inquiry-${product.id}`}
-                        >
-                          <Headphones className="w-4 h-4 mr-1.5" />
-                          {labels.customerService}
                         </Button>
                       </div>
                     </div>
