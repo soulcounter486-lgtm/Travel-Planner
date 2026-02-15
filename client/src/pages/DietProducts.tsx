@@ -21,9 +21,6 @@ import { AppHeader } from "@/components/AppHeader";
 import { FixedBottomBar } from "@/components/FixedBottomBar";
 import { TabNavigation } from "@/components/TabNavigation";
 import type { ShopProduct } from "@shared/schema";
-import dietCoffeeImg from "@assets/호아캡슐의_사본의_사본의_사본_20251026_153621_0000_1768826502337.png";
-import goDetoxImg from "@assets/Photo_1715141472014_1768826502343.png";
-import goCoffeeImg from "@assets/Photo_1715141466258_1768837758578.png";
 
 const translations: Record<string, {
   title: string;
@@ -153,47 +150,6 @@ const translations: Record<string, {
   },
 };
 
-const hardcodedProducts = [
-  {
-    id: "diet-coffee",
-    name: "다이어트 커피",
-    brand: "Pluscoffee Diet",
-    image: dietCoffeeImg,
-    price: 45000,
-    quantity: "15개 (15일분)",
-    benefits: ["체중 감량 지원", "신진대사 촉진", "자연 디톡스"],
-    ingredients: "녹차, 흰콩, L-카르니틴, DNF-10(효모 추출물), 인스턴트 커피, 코코아 분말, 코코넛 밀크 분말, 덱스트로스, 이눌린 섬유, 비유제품 크리머",
-    usage: "아침식사 전 뜨거운물 50ML와 함께 1포를 물에 타서 섭취",
-    caution: "임산부, 본 제품의 성분에 민감하거나 금기사항이 있는 사람은 사용하지 마십시오.",
-    gradient: "from-amber-500 to-orange-600",
-  },
-  {
-    id: "go-detox",
-    name: "고디톡스",
-    brand: "Go Detox",
-    image: goDetoxImg,
-    price: 38000,
-    quantity: "28알",
-    benefits: ["자연 디톡스", "체중 관리", "피부 개선"],
-    ingredients: "복령 100mg, 연잎 100mg, 가르시니아 캄보지아 80mg, 은행 60mg, 사과식초 추출물 60mg, L-carnitine 40mg, Collagen 20mg",
-    usage: "1일째 아침 공복에 1알, 2일째 아침 공복에 1알, 3일째부터 아침 공복에 2알씩",
-    caution: "하루에 2.5~3리터의 물을 마셔주세요. 음용중에는 각성제 섭취를 자제해 주세요.",
-    gradient: "from-emerald-500 to-teal-600",
-  },
-  {
-    id: "go-coffee",
-    name: "고커피",
-    brand: "MAX HEALTH Go Coffee",
-    image: goCoffeeImg,
-    price: 40000,
-    quantity: "12포",
-    benefits: ["에너지 증진", "체중 감량", "자연 성분"],
-    ingredients: "비유제품 크리머 분말, 인스턴트 커피, 녹색 영지 추출물 분말, 추출물, 말토덱스트린, 추출물 등",
-    usage: "따뜻하게 마시기: 뜨거운 물 70ML에 커피 1~2포를 녹여 드세요. 시원하게 마시기: 뜨거운 물 70ML에 커피 2팩을 섞어준 후 얼음을 넣어 드세요.",
-    caution: "하루에 2.5~3리터의 물을 마셔주세요. 음용중에는 각성제 섭취를 자제해 주세요.",
-    gradient: "from-gray-700 to-gray-900",
-  },
-];
 
 export default function DietProducts() {
   const { language } = useLanguage();
@@ -205,7 +161,7 @@ export default function DietProducts() {
     queryKey: ["/api/shop-products"],
   });
 
-  const dbMapped = dbProducts.map(p => ({
+  const allProducts = dbProducts.map(p => ({
     id: p.id,
     name: p.name,
     brand: p.brand || "",
@@ -217,13 +173,7 @@ export default function DietProducts() {
     usage: p.usage || "",
     caution: p.caution || "",
     gradient: p.gradient || "from-primary to-purple-600",
-    isDb: true,
   }));
-  const dbNames = new Set(dbMapped.map(p => p.name.toLowerCase().trim()));
-  const filteredHardcoded = hardcodedProducts
-    .filter(p => !dbNames.has(p.name.toLowerCase().trim()))
-    .map(p => ({ ...p, isDb: false }));
-  const allProducts = [...dbMapped, ...filteredHardcoded];
 
   const handleKakaoInquiry = (productName?: string) => {
     const msg = productName ? `${productName} 구매문의` : "";
@@ -283,6 +233,11 @@ export default function DietProducts() {
         {isLoading ? (
           <div className="flex justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : allProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <ShoppingBag className="w-12 h-12 mb-3 opacity-40" />
+            <p className="text-sm">등록된 상품이 없습니다</p>
           </div>
         ) : viewMode === "list" ? (
           <div className="space-y-2">

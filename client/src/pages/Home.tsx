@@ -1195,6 +1195,12 @@ export default function Home() {
                         견적카테고리
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/shop-products" className="flex items-center cursor-pointer" data-testid="link-admin-shop-products">
+                        <ShoppingBag className="w-4 h-4 mr-2" />
+                        상품관리
+                      </Link>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
