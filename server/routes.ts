@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans, customerChatRooms, customerChatMessages } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans, customerChatRooms, customerChatMessages, shopProducts, insertShopProductSchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -5225,6 +5225,66 @@ ${adultContext}`;
     } catch (error) {
       console.error("Delete place error:", error);
       res.status(500).json({ error: "Failed to delete place" });
+    }
+  });
+
+  // === 쇼핑 상품 API ===
+  app.get("/api/shop-products", async (req, res) => {
+    try {
+      const products = await db.select().from(shopProducts)
+        .where(eq(shopProducts.isActive, true))
+        .orderBy(shopProducts.sortOrder);
+      res.json(products);
+    } catch (err) {
+      res.status(500).json({ error: "상품 조회 실패" });
+    }
+  });
+
+  app.get("/api/admin/shop-products", isAuthenticated, async (req, res) => {
+    try {
+      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const products = await db.select().from(shopProducts).orderBy(shopProducts.sortOrder);
+      res.json(products);
+    } catch (err) {
+      res.status(500).json({ error: "상품 조회 실패" });
+    }
+  });
+
+  app.post("/api/admin/shop-products", isAuthenticated, async (req, res) => {
+    try {
+      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const [product] = await db.insert(shopProducts).values({
+        ...req.body,
+        updatedAt: new Date(),
+      }).returning();
+      res.json(product);
+    } catch (err) {
+      res.status(500).json({ error: "상품 추가 실패" });
+    }
+  });
+
+  app.put("/api/admin/shop-products/:id", isAuthenticated, async (req, res) => {
+    try {
+      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const id = parseInt(req.params.id, 10);
+      const [product] = await db.update(shopProducts)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(eq(shopProducts.id, id))
+        .returning();
+      res.json(product);
+    } catch (err) {
+      res.status(500).json({ error: "상품 수정 실패" });
+    }
+  });
+
+  app.delete("/api/admin/shop-products/:id", isAuthenticated, async (req, res) => {
+    try {
+      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const id = parseInt(req.params.id, 10);
+      await db.delete(shopProducts).where(eq(shopProducts.id, id));
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: "상품 삭제 실패" });
     }
   });
 
