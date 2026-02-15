@@ -22,6 +22,7 @@ import AdminMembers from "@/pages/AdminMembers";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminQuoteCategories from "@/pages/AdminQuoteCategories";
 import AdminChat from "@/pages/AdminChat";
+import AdminShopProducts from "@/pages/AdminShopProducts";
 import MyPage from "@/pages/MyPage";
 import MyCoupons from "@/pages/MyCoupons";
 import PushDebug from "@/pages/PushDebug";
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/admin/quote-categories" component={AdminQuoteCategories} />
       <Route path="/admin/chat" component={AdminChat} />
+      <Route path="/admin/shop-products" component={AdminShopProducts} />
       <Route path="/mypage" component={MyPage} />
       <Route path="/my-coupons" component={MyCoupons} />
       <Route path="/push-debug" component={PushDebug} />

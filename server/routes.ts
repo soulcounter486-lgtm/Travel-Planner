@@ -5242,7 +5242,10 @@ ${adultContext}`;
 
   app.get("/api/admin/shop-products", isAuthenticated, async (req, res) => {
     try {
-      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) return res.status(403).json({ error: "관리자 권한 필요" });
       const products = await db.select().from(shopProducts).orderBy(shopProducts.sortOrder);
       res.json(products);
     } catch (err) {
@@ -5252,9 +5255,21 @@ ${adultContext}`;
 
   app.post("/api/admin/shop-products", isAuthenticated, async (req, res) => {
     try {
-      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) return res.status(403).json({ error: "관리자 권한 필요" });
+      const { name, price } = req.body;
+      if (!name || typeof name !== "string" || name.trim().length === 0) {
+        return res.status(400).json({ error: "상품명이 필요합니다" });
+      }
+      if (price === undefined || price === null || isNaN(Number(price)) || Number(price) < 0) {
+        return res.status(400).json({ error: "올바른 가격을 입력하세요" });
+      }
       const [product] = await db.insert(shopProducts).values({
         ...req.body,
+        name: name.trim(),
+        price: Number(price),
         updatedAt: new Date(),
       }).returning();
       res.json(product);
@@ -5265,7 +5280,10 @@ ${adultContext}`;
 
   app.put("/api/admin/shop-products/:id", isAuthenticated, async (req, res) => {
     try {
-      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) return res.status(403).json({ error: "관리자 권한 필요" });
       const id = parseInt(req.params.id, 10);
       const [product] = await db.update(shopProducts)
         .set({ ...req.body, updatedAt: new Date() })
@@ -5279,7 +5297,10 @@ ${adultContext}`;
 
   app.delete("/api/admin/shop-products/:id", isAuthenticated, async (req, res) => {
     try {
-      if (!(req as any).isAdmin) return res.status(403).json({ error: "관리자 권한 필요" });
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) return res.status(403).json({ error: "관리자 권한 필요" });
       const id = parseInt(req.params.id, 10);
       await db.delete(shopProducts).where(eq(shopProducts.id, id));
       res.json({ success: true });
