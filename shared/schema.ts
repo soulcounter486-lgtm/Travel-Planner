@@ -549,3 +549,28 @@ export const customerChatMessages = pgTable("customer_chat_messages", {
 });
 
 export type CustomerChatMessage = typeof customerChatMessages.$inferSelect;
+
+// 쇼핑 상품
+export const shopProducts = pgTable("shop_products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  brand: text("brand").default(""),
+  price: integer("price").notNull().default(0),
+  quantity: text("quantity").default(""),
+  description: text("description").default(""),
+  image: text("image").default(""),
+  images: text("images").array().default([]),
+  benefits: text("benefits").array().default([]),
+  ingredients: text("ingredients").default(""),
+  usage: text("usage").default(""),
+  caution: text("caution").default(""),
+  gradient: text("gradient").default("from-primary to-purple-600"),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertShopProductSchema = createInsertSchema(shopProducts).omit({ id: true, createdAt: true, updatedAt: true });
+export type ShopProduct = typeof shopProducts.$inferSelect;
+export type InsertShopProduct = z.infer<typeof insertShopProductSchema>;
