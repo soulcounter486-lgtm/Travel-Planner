@@ -327,6 +327,7 @@ export function QuoteSummary({ breakdown, isLoading, onSave, isSaving }: QuoteSu
                       {breakdown.villa.details.map((detail, idx) => {
                         const originalPrice = parseVillaPrice(detail);
                         const currentPrice = villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
+                        if (originalPrice === 0 && currentPrice === 0 && !detail.match(/\$/)) return null;
                         const dateMatch = detail.match(/^([^:]+):/);
                         const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
                         
