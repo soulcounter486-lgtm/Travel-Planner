@@ -1376,18 +1376,21 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         {activeSel.date} | {activeSel.hours}{language === "ko" ? "시간" : "h"} | {activeSel.count}{language === "ko" ? "명" : " people"}
                       </div>
                       {activeSel.count > 1 && (
-                        <div className="flex gap-1 flex-wrap items-center">
-                          {Array.from({ length: activeSel.count }, (_, i) => {
-                            const p = persons[i] || { first: null, second: null, third: null };
-                            const pickCount = (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0);
-                            const isActivePerson = activePersonIndex === i;
-                            return (
-                              <Button key={i} variant={isActivePerson ? "default" : "outline"} size="sm" onClick={() => setActivePersonIndex(i)} onDoubleClick={() => { setEditingPersonIdx(i); setEditingPersonName(personNames[i] || defaultPersonLabels[i]); }} data-testid={`eco-pick-person-${i}`}>
-                                {personNames[i] || defaultPersonLabels[i]}
-                                {pickCount > 0 && <span className="ml-1 text-[10px] opacity-70">({pickCount}/3)</span>}
-                              </Button>
-                            );
-                          })}
+                        <div>
+                          <div className="flex gap-1 flex-wrap items-center">
+                            {Array.from({ length: activeSel.count }, (_, i) => {
+                              const p = persons[i] || { first: null, second: null, third: null };
+                              const pickCount = (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0);
+                              const isActivePerson = activePersonIndex === i;
+                              return (
+                                <Button key={i} variant={isActivePerson ? "default" : "outline"} size="sm" onClick={() => setActivePersonIndex(i)} onDoubleClick={() => { setEditingPersonIdx(i); setEditingPersonName(personNames[i] || defaultPersonLabels[i]); }} data-testid={`eco-pick-person-${i}`}>
+                                  {personNames[i] || defaultPersonLabels[i]}
+                                  {pickCount > 0 && <span className="ml-1 text-[10px] opacity-70">({pickCount}/3)</span>}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                          <div className="text-[9px] text-muted-foreground mt-0.5 pl-0.5">{language === "ko" ? "* 이름을 두번 탭하면 수정할 수 있어요" : "* Double-tap a name to edit"}</div>
                         </div>
                       )}
                       {editingPersonIdx !== null && (
