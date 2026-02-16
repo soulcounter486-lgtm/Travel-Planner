@@ -1624,8 +1624,13 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         return res.status(403).json({ message: "Not authorized" });
       }
       const { ecoPicks } = req.body;
-      if (!Array.isArray(ecoPicks) || !ecoPicks.every((v: any) => typeof v === "number")) {
-        return res.status(400).json({ message: "ecoPicks must be an array of numbers" });
+      if (typeof ecoPicks !== "object" || ecoPicks === null || Array.isArray(ecoPicks)) {
+        return res.status(400).json({ message: "ecoPicks must be an object with date keys" });
+      }
+      for (const [key, val] of Object.entries(ecoPicks)) {
+        if (!Array.isArray(val) || !(val as any[]).every((v: any) => typeof v === "number")) {
+          return res.status(400).json({ message: `ecoPicks[${key}] must be an array of numbers` });
+        }
       }
       const quote = await storage.updateQuoteEcoPicks(id, ecoPicks);
       res.json(quote);

@@ -5,7 +5,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2, Heart } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EcoProfile } from "@shared/schema";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuotes } from "@/hooks/use-quotes";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -53,18 +53,65 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [ecoPickOpen, setEcoPickOpen] = useState(false);
-  const [selectedEcoPicks, setSelectedEcoPicks] = useState<number[]>((quote.ecoPicks as number[]) || []);
   const [isSavingEcoPicks, setIsSavingEcoPicks] = useState(false);
 
-  const pickedProfiles = useMemo(() => {
-    if (!selectedEcoPicks.length || !ecoProfiles.length) return [];
-    return selectedEcoPicks.map(id => ecoProfiles.find(p => p.id === id)).filter(Boolean) as EcoProfile[];
-  }, [selectedEcoPicks, ecoProfiles]);
+  const ecoSelections = useMemo(() => {
+    return ((breakdown as any)?.ecoGirl?.selections || []) as Array<{ date: string; hours: string; count: number }>;
+  }, [breakdown]);
 
-  const handleToggleEcoPick = (profileId: number) => {
-    setSelectedEcoPicks(prev =>
-      prev.includes(profileId) ? prev.filter(id => id !== profileId) : [...prev, profileId]
-    );
+  const initEcoPicks = (): Record<string, number[]> => {
+    const raw = quote.ecoPicks as any;
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, number[]>;
+    if (Array.isArray(raw) && raw.length > 0 && ecoSelections.length > 0) {
+      return { [ecoSelections[0].date]: raw as number[] };
+    }
+    return {};
+  };
+  const [selectedEcoPicks, setSelectedEcoPicks] = useState<Record<string, number[]>>(initEcoPicks);
+  const [activePickDate, setActivePickDate] = useState<string>(ecoSelections[0]?.date || "");
+
+  useEffect(() => {
+    if (ecoSelections.length > 0) {
+      const validDates = ecoSelections.map(s => s.date);
+      if (!activePickDate || !validDates.includes(activePickDate)) {
+        setActivePickDate(ecoSelections[0].date);
+      }
+    }
+  }, [ecoSelections]);
+
+  useEffect(() => {
+    const raw = quote.ecoPicks as any;
+    if (Array.isArray(raw) && raw.length > 0 && ecoSelections.length > 0) {
+      setSelectedEcoPicks(prev => {
+        const hasAny = Object.values(prev).some(arr => arr.length > 0);
+        if (!hasAny) return { [ecoSelections[0].date]: raw as number[] };
+        return prev;
+      });
+    }
+  }, [ecoSelections, quote.ecoPicks]);
+
+  const allPickedProfileIds = useMemo(() => {
+    const ids: number[] = [];
+    Object.values(selectedEcoPicks).forEach(arr => ids.push(...arr));
+    return ids;
+  }, [selectedEcoPicks]);
+
+  const pickedProfiles = useMemo(() => {
+    if (!allPickedProfileIds.length || !ecoProfiles.length) return [];
+    return Array.from(new Set(allPickedProfileIds)).map(id => ecoProfiles.find(p => p.id === id)).filter(Boolean) as EcoProfile[];
+  }, [allPickedProfileIds, ecoProfiles]);
+
+  const handleToggleEcoPick = (profileId: number, date: string) => {
+    setSelectedEcoPicks(prev => {
+      const current = prev[date] || [];
+      const sel = ecoSelections.find(s => s.date === date);
+      const maxCount = sel?.count || 1;
+      if (current.includes(profileId)) {
+        return { ...prev, [date]: current.filter(id => id !== profileId) };
+      }
+      if (current.length >= maxCount) return prev;
+      return { ...prev, [date]: [...current, profileId] };
+    });
   };
 
   const handleSaveEcoPicks = async () => {
@@ -892,21 +939,30 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         ))}
                       </div>
                     )}
-                    {pickedProfiles.length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-pink-200/30">
-                        <div className="text-[10px] font-medium text-pink-500 mb-1">
-                          {language === "ko" ? `에코픽 (${pickedProfiles.length}명)` : `Eco Pick (${pickedProfiles.length})`}
-                        </div>
-                        <div className="flex gap-2 flex-wrap">
-                          {pickedProfiles.map(profile => (
-                            <div key={profile.id} className="relative w-14 h-14 rounded-lg overflow-hidden border border-pink-300/50">
-                              <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
-                              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center py-0.5 truncate">
-                                {profile.name}
+                    {Object.keys(selectedEcoPicks).some(d => (selectedEcoPicks[d] || []).length > 0) && (
+                      <div className="mt-2 pt-2 border-t border-pink-200/30 space-y-2">
+                        {ecoSelections.map(sel => {
+                          const datePicks = selectedEcoPicks[sel.date] || [];
+                          if (datePicks.length === 0) return null;
+                          const dateProfiles = datePicks.map(id => ecoProfiles.find(p => p.id === id)).filter(Boolean) as EcoProfile[];
+                          return (
+                            <div key={sel.date}>
+                              <div className="text-[10px] font-medium text-pink-500 mb-1">
+                                {sel.date.slice(5)} ({datePicks.length}/{sel.count}{language === "ko" ? "명" : ""})
+                              </div>
+                              <div className="flex gap-2 flex-wrap">
+                                {dateProfiles.map(profile => (
+                                  <div key={profile.id} className="relative w-14 h-14 rounded-lg overflow-hidden border border-pink-300/50">
+                                    <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center py-0.5 truncate">
+                                      {profile.name}
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1030,7 +1086,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={ecoPickOpen} onOpenChange={setEcoPickOpen}>
+      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open && ecoSelections.length > 0) setActivePickDate(ecoSelections[0].date); }}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1038,45 +1094,86 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               {language === "ko" ? "에코 픽하기" : "Eco Pick"}
             </DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-3 gap-3 mt-2">
-            {ecoProfiles.map(profile => {
-              const isSelected = selectedEcoPicks.includes(profile.id);
-              return (
-                <div
-                  key={profile.id}
-                  className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-pink-500 ring-2 ring-pink-300" : "border-slate-200 dark:border-slate-600"}`}
-                  onClick={() => handleToggleEcoPick(profile.id)}
-                  data-testid={`eco-pick-profile-${profile.id}`}
-                >
-                  <div className="aspect-[3/4] relative">
-                    <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
-                    {isSelected && (
-                      <div className="absolute top-1 right-1 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
-                        <Check className="w-4 h-4 text-white" />
+          {ecoSelections.length === 0 ? (
+            <div className="text-center text-sm text-muted-foreground py-8">
+              {language === "ko" ? "에코 일정이 없습니다" : "No eco schedule"}
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-1 flex-wrap mt-2">
+                {ecoSelections.map(sel => {
+                  const picked = (selectedEcoPicks[sel.date] || []).length;
+                  const isActive = activePickDate === sel.date;
+                  return (
+                    <Button
+                      key={sel.date}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setActivePickDate(sel.date)}
+                      data-testid={`eco-pick-tab-${sel.date}`}
+                    >
+                      <span>{sel.date.slice(5)}</span>
+                      <span className="ml-1 text-[10px] opacity-70">({picked}/{sel.count})</span>
+                    </Button>
+                  );
+                })}
+              </div>
+              {(() => {
+                const activeSel = ecoSelections.find(s => s.date === activePickDate);
+                if (!activeSel) return null;
+                const currentPicks = selectedEcoPicks[activePickDate] || [];
+                return (
+                  <div className="mt-3">
+                    <div className="text-xs text-muted-foreground mb-2">
+                      {language === "ko"
+                        ? `${activeSel.date} | ${activeSel.hours}시간 | ${currentPicks.length}/${activeSel.count}명 선택`
+                        : `${activeSel.date} | ${activeSel.hours}h | ${currentPicks.length}/${activeSel.count} selected`}
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      {ecoProfiles.map(profile => {
+                        const isSelected = currentPicks.includes(profile.id);
+                        const isFull = currentPicks.length >= activeSel.count && !isSelected;
+                        return (
+                          <div
+                            key={profile.id}
+                            className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-pink-500 ring-2 ring-pink-300" : isFull ? "border-slate-200 dark:border-slate-600 opacity-40" : "border-slate-200 dark:border-slate-600"}`}
+                            onClick={() => handleToggleEcoPick(profile.id, activePickDate)}
+                            data-testid={`eco-pick-profile-${profile.id}`}
+                          >
+                            <div className="aspect-[3/4] relative">
+                              <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
+                              {isSelected && (
+                                <div className="absolute top-1 right-1 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                                  <Check className="w-4 h-4 text-white" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="p-1 text-center">
+                              <span className="text-xs font-medium truncate block">{profile.name}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {ecoProfiles.length === 0 && (
+                      <div className="text-center text-sm text-muted-foreground py-8">
+                        {language === "ko" ? "등록된 에코 프로필이 없습니다" : "No eco profiles available"}
                       </div>
                     )}
                   </div>
-                  <div className="p-1 text-center">
-                    <span className="text-xs font-medium truncate block">{profile.name}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {ecoProfiles.length === 0 && (
-            <div className="text-center text-sm text-muted-foreground py-8">
-              {language === "ko" ? "등록된 에코 프로필이 없습니다" : "No eco profiles available"}
-            </div>
+                );
+              })()}
+            </>
           )}
           <div className="flex justify-between items-center mt-4 pt-3 border-t">
             <span className="text-sm text-muted-foreground">
-              {language === "ko" ? `${selectedEcoPicks.length}명 선택됨` : `${selectedEcoPicks.length} selected`}
+              {language === "ko" ? `총 ${allPickedProfileIds.length}명 선택됨` : `${allPickedProfileIds.length} total selected`}
             </span>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setEcoPickOpen(false)}>
                 {language === "ko" ? "취소" : "Cancel"}
               </Button>
-              <Button size="sm" onClick={handleSaveEcoPicks} disabled={isSavingEcoPicks} className="bg-pink-500 hover:bg-pink-600 text-white" data-testid={`button-save-eco-picks-${quote.id}`}>
+              <Button size="sm" onClick={handleSaveEcoPicks} disabled={isSavingEcoPicks} data-testid={`button-save-eco-picks-${quote.id}`}>
                 {isSavingEcoPicks ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
                 {language === "ko" ? "저장" : "Save"}
               </Button>
