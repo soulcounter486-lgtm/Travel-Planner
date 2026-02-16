@@ -2180,7 +2180,7 @@ export default function Home() {
                       </div>
                       <div className="text-xs text-blue-100 space-y-0.5">
                         {loadedQuoteId && breakdown?.villa?.details && breakdown.villa.details.length > 0 ? (
-                          breakdown.villa.details.map((d: string, i: number) => {
+                          breakdown.villa.details.filter((d: string) => d.includes(": $")).map((d: string, i: number) => {
                             const parts = d.split(": $");
                             return (
                               <div key={i} className="flex justify-between">
