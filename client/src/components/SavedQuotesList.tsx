@@ -69,7 +69,13 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const priorityLabels = language === "ko" ? ["1지망", "2지망", "3지망"] : ["1st", "2nd", "3rd"];
   const priorityKeys: Array<keyof PersonPick> = ["first", "second", "third"];
   const priorityColors = ["bg-pink-500", "bg-orange-400", "bg-blue-400"];
-  const personLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const defaultPersonLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const [personNames, setPersonNames] = useState<string[]>(() => {
+    const saved = (quote.ecoPicks as any)?.personNames;
+    return Array.isArray(saved) ? saved : [...defaultPersonLabels];
+  });
+  const [editingPersonIdx, setEditingPersonIdx] = useState<number | null>(null);
+  const [editingPersonName, setEditingPersonName] = useState("");
 
   const isMaleUser = userGender === "male";
 
@@ -286,6 +292,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       await apiRequest("PATCH", `/api/quotes/${quote.id}/eco-schedule`, {
         ecoSelections: editableEcoSelections.map(s => ({ date: s.date, hours: s.hours, count: s.count })),
         ecoPicks: selectedEcoPicks,
+        personNames: personNames,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       setEcoPickOpen(false);
@@ -1275,7 +1282,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); } }}>
+      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); setEditingPersonIdx(null); const savedNames = (quote.ecoPicks as any)?.personNames; setPersonNames(Array.isArray(savedNames) ? savedNames : [...defaultPersonLabels]); } }}>
         <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0">
           <div className="flex-shrink-0 px-4 pt-3 pb-0">
             <DialogHeader>
@@ -1362,18 +1369,25 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         {activeSel.date} | {activeSel.hours}{language === "ko" ? "시간" : "h"} | {activeSel.count}{language === "ko" ? "명" : " people"}
                       </div>
                       {activeSel.count > 1 && (
-                        <div className="flex gap-1 flex-wrap">
+                        <div className="flex gap-1 flex-wrap items-center">
                           {Array.from({ length: activeSel.count }, (_, i) => {
                             const p = persons[i] || { first: null, second: null, third: null };
                             const pickCount = (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0);
                             const isActivePerson = activePersonIndex === i;
                             return (
-                              <Button key={i} variant={isActivePerson ? "default" : "outline"} size="sm" onClick={() => setActivePersonIndex(i)} data-testid={`eco-pick-person-${i}`}>
-                                {personLabels[i]}
+                              <Button key={i} variant={isActivePerson ? "default" : "outline"} size="sm" onClick={() => setActivePersonIndex(i)} onDoubleClick={() => { setEditingPersonIdx(i); setEditingPersonName(personNames[i] || defaultPersonLabels[i]); }} data-testid={`eco-pick-person-${i}`}>
+                                {personNames[i] || defaultPersonLabels[i]}
                                 {pickCount > 0 && <span className="ml-1 text-[10px] opacity-70">({pickCount}/3)</span>}
                               </Button>
                             );
                           })}
+                        </div>
+                      )}
+                      {editingPersonIdx !== null && (
+                        <div className="flex gap-1 items-center">
+                          <Input value={editingPersonName} onChange={(e) => setEditingPersonName(e.target.value)} className="h-7 text-xs flex-1" maxLength={10} autoFocus onKeyDown={(e) => { if (e.key === "Enter") { setPersonNames(prev => { const n = [...prev]; n[editingPersonIdx] = editingPersonName.trim() || defaultPersonLabels[editingPersonIdx]; return n; }); setEditingPersonIdx(null); } }} data-testid="input-person-name" />
+                          <Button variant="default" size="sm" className="h-7 text-xs" onClick={() => { setPersonNames(prev => { const n = [...prev]; n[editingPersonIdx] = editingPersonName.trim() || defaultPersonLabels[editingPersonIdx]; return n; }); setEditingPersonIdx(null); }} data-testid="button-confirm-person-name"><Check className="w-3 h-3" /></Button>
+                          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setEditingPersonIdx(null)} data-testid="button-cancel-person-name"><X className="w-3 h-3" /></Button>
                         </div>
                       )}
                       <div className="flex gap-1 flex-wrap">

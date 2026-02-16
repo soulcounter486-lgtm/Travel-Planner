@@ -1659,7 +1659,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       if (targetQuote.userId !== userId && !isUserAdmin(userId, userEmail)) {
         return res.status(403).json({ message: "Not authorized" });
       }
-      const { ecoSelections, ecoPicks } = req.body;
+      const { ecoSelections, ecoPicks, personNames } = req.body;
       if (!Array.isArray(ecoSelections)) {
         return res.status(400).json({ message: "ecoSelections must be an array" });
       }
@@ -1723,8 +1723,12 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       };
       const newTotal = (newBreakdown.villa?.price || 0) + (newBreakdown.vehicle?.price || 0) + (newBreakdown.golf?.price || 0) + ecoTotalPrice + (newBreakdown.guide?.price || 0) + (newBreakdown.fastTrack?.price || 0) + ((newBreakdown.customCategories || []) as any[]).reduce((sum: number, c: any) => sum + (c.price || 0), 0);
       await storage.updateQuoteTotalAndBreakdown(id, newTotal, newBreakdown);
-      if (ecoPicks) {
-        await storage.updateQuoteEcoPicks(id, ecoPicks);
+      if (ecoPicks || personNames) {
+        const picksData = ecoPicks || {};
+        if (Array.isArray(personNames)) {
+          (picksData as any).personNames = personNames;
+        }
+        await storage.updateQuoteEcoPicks(id, picksData);
       }
       const updatedQuote = (await storage.getAllQuotes()).find(q => q.id === id);
       res.json(updatedQuote);
