@@ -1277,15 +1277,20 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0">
           <div className="flex-shrink-0 px-4 pt-3 pb-0">
             <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
+              <DialogTitle className="flex items-center justify-between gap-2 pr-6">
                 <span className="flex items-center gap-2">
                   <Heart className="w-5 h-5 text-pink-500" />
                   {language === "ko" ? "에코 픽하기" : "Eco Pick"}
                 </span>
-                <Button size="sm" onClick={handleSaveEcoPicks} disabled={isSavingEcoPicks} data-testid={`button-save-eco-picks-top-${quote.id}`}>
-                  {isSavingEcoPicks ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
-                  {language === "ko" ? "저장" : "Save"}
-                </Button>
+                <div className="flex gap-1.5">
+                  <Button variant="outline" size="sm" onClick={() => setEcoPickOpen(false)} data-testid="button-eco-pick-cancel-top">
+                    {language === "ko" ? "취소" : "Cancel"}
+                  </Button>
+                  <Button size="sm" onClick={handleSaveEcoPicks} disabled={isSavingEcoPicks} data-testid={`button-save-eco-picks-top-${quote.id}`}>
+                    {isSavingEcoPicks ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
+                    {language === "ko" ? "저장" : "Save"}
+                  </Button>
+                </div>
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-3 mt-3">
@@ -1441,20 +1446,6 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               </div>
             </div>
           )}
-          <div className="flex-shrink-0 flex justify-between items-center px-4 py-2 border-t">
-            <span className="text-xs text-muted-foreground">
-              {language === "ko" ? `총 ${allPickedProfileIds.length}명 선택됨` : `${allPickedProfileIds.length} total selected`}
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setEcoPickOpen(false)}>
-                {language === "ko" ? "취소" : "Cancel"}
-              </Button>
-              <Button size="sm" onClick={handleSaveEcoPicks} disabled={isSavingEcoPicks} data-testid={`button-save-eco-picks-${quote.id}`}>
-                {isSavingEcoPicks ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
-                {language === "ko" ? "저장" : "Save"}
-              </Button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
       {previewImage && ReactDOM.createPortal(
