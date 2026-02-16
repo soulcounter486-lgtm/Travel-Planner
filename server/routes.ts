@@ -1608,6 +1608,32 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  // 에코픽 업데이트 (본인 견적서 또는 관리자만)
+  app.patch("/api/quotes/:id/eco-picks", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      const allQuotes = await storage.getAllQuotes();
+      const targetQuote = allQuotes.find(q => q.id === id);
+      if (!targetQuote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      if (targetQuote.userId !== userId && !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const { ecoPicks } = req.body;
+      if (!Array.isArray(ecoPicks) || !ecoPicks.every((v: any) => typeof v === "number")) {
+        return res.status(400).json({ message: "ecoPicks must be an array of numbers" });
+      }
+      const quote = await storage.updateQuoteEcoPicks(id, ecoPicks);
+      res.json(quote);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // 메모 업데이트 (관리자 전용)
   app.patch("/api/quotes/:id/memo", isAuthenticated, async (req, res) => {
     try {

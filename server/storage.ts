@@ -13,6 +13,7 @@ export interface IStorage {
   deleteQuote(id: number, userId?: string): Promise<void>;
   deleteQuoteAdmin(id: number): Promise<void>;
   updateQuoteDepositStatus(id: number, depositPaid: boolean): Promise<Quote | null>;
+  updateQuoteEcoPicks(id: number, ecoPicks: number[]): Promise<Quote | null>;
   getDepositPaidQuotes(): Promise<Quote[]>;
 }
 
@@ -69,6 +70,11 @@ export class DatabaseStorage implements IStorage {
       updateData.depositAmount = depositAmount;
     }
     const [quote] = await db.update(quotes).set(updateData).where(eq(quotes.id, id)).returning();
+    return quote || null;
+  }
+
+  async updateQuoteEcoPicks(id: number, ecoPicks: number[]): Promise<Quote | null> {
+    const [quote] = await db.update(quotes).set({ ecoPicks }).where(eq(quotes.id, id)).returning();
     return quote || null;
   }
 

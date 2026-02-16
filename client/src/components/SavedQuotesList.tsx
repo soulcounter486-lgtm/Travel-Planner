@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2, Heart } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { EcoProfile } from "@shared/schema";
 import { useState, useRef, useMemo } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuotes } from "@/hooks/use-quotes";
@@ -23,13 +25,14 @@ interface QuoteItemProps {
   isAdmin: boolean;
   onToggleDeposit: (id: number, depositPaid: boolean) => void;
   onLoad?: (quote: Quote) => void;
+  ecoProfiles?: EcoProfile[];
 }
 
 interface SavedQuotesListProps {
   onLoad?: (quote: Quote) => void;
 }
 
-function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit, onLoad }: QuoteItemProps) {
+function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit, onLoad, ecoProfiles = [] }: QuoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [depositPaid, setDepositPaid] = useState(quote.depositPaid || false);
@@ -49,6 +52,33 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const [ecoPickOpen, setEcoPickOpen] = useState(false);
+  const [selectedEcoPicks, setSelectedEcoPicks] = useState<number[]>((quote.ecoPicks as number[]) || []);
+  const [isSavingEcoPicks, setIsSavingEcoPicks] = useState(false);
+
+  const pickedProfiles = useMemo(() => {
+    if (!selectedEcoPicks.length || !ecoProfiles.length) return [];
+    return selectedEcoPicks.map(id => ecoProfiles.find(p => p.id === id)).filter(Boolean) as EcoProfile[];
+  }, [selectedEcoPicks, ecoProfiles]);
+
+  const handleToggleEcoPick = (profileId: number) => {
+    setSelectedEcoPicks(prev =>
+      prev.includes(profileId) ? prev.filter(id => id !== profileId) : [...prev, profileId]
+    );
+  };
+
+  const handleSaveEcoPicks = async () => {
+    setIsSavingEcoPicks(true);
+    try {
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/eco-picks`, { ecoPicks: selectedEcoPicks });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      setEcoPickOpen(false);
+    } catch (error) {
+      console.error("Failed to save eco picks:", error);
+    } finally {
+      setIsSavingEcoPicks(false);
+    }
+  };
 
   const parsePrice = (detail: string): number => {
     const match = detail.match(/\$(\d+)/);
@@ -834,8 +864,22 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
 
                 {breakdown?.ecoGirl?.price > 0 && (
                   <div className="space-y-1">
-                    <div className="flex justify-between font-semibold text-sm text-slate-800">
-                      <span>{language === "ko" ? "에코" : "Eco"}</span>
+                    <div className="flex justify-between items-center font-semibold text-sm text-slate-800">
+                      <div className="flex items-center gap-2">
+                        <span>{language === "ko" ? "에코" : "Eco"}</span>
+                        {depositPaid && ecoProfiles.length > 0 && !isCapturing && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[10px] px-2 text-pink-500 border-pink-300"
+                            onClick={(e) => { e.stopPropagation(); setEcoPickOpen(true); }}
+                            data-testid={`button-eco-pick-${quote.id}`}
+                          >
+                            <Heart className="w-3 h-3 mr-1" />
+                            {language === "ko" ? "픽하기" : "Pick"}
+                          </Button>
+                        )}
+                      </div>
                       <span>${breakdown.ecoGirl.price.toLocaleString()}</span>
                     </div>
                     {breakdown.ecoGirl.details && breakdown.ecoGirl.details.length > 0 && (
@@ -846,6 +890,23 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                             <span>{detail}</span>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    {pickedProfiles.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-pink-200/30">
+                        <div className="text-[10px] font-medium text-pink-500 mb-1">
+                          {language === "ko" ? `에코픽 (${pickedProfiles.length}명)` : `Eco Pick (${pickedProfiles.length})`}
+                        </div>
+                        <div className="flex gap-2 flex-wrap">
+                          {pickedProfiles.map(profile => (
+                            <div key={profile.id} className="relative w-14 h-14 rounded-lg overflow-hidden border border-pink-300/50">
+                              <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
+                              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center py-0.5 truncate">
+                                {profile.name}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -968,6 +1029,61 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           </div>
         </CollapsibleContent>
       </Collapsible>
+
+      <Dialog open={ecoPickOpen} onOpenChange={setEcoPickOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Heart className="w-5 h-5 text-pink-500" />
+              {language === "ko" ? "에코 픽하기" : "Eco Pick"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-3 mt-2">
+            {ecoProfiles.map(profile => {
+              const isSelected = selectedEcoPicks.includes(profile.id);
+              return (
+                <div
+                  key={profile.id}
+                  className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-pink-500 ring-2 ring-pink-300" : "border-slate-200 dark:border-slate-600"}`}
+                  onClick={() => handleToggleEcoPick(profile.id)}
+                  data-testid={`eco-pick-profile-${profile.id}`}
+                >
+                  <div className="aspect-[3/4] relative">
+                    <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
+                    {isSelected && (
+                      <div className="absolute top-1 right-1 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-1 text-center">
+                    <span className="text-xs font-medium truncate block">{profile.name}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {ecoProfiles.length === 0 && (
+            <div className="text-center text-sm text-muted-foreground py-8">
+              {language === "ko" ? "등록된 에코 프로필이 없습니다" : "No eco profiles available"}
+            </div>
+          )}
+          <div className="flex justify-between items-center mt-4 pt-3 border-t">
+            <span className="text-sm text-muted-foreground">
+              {language === "ko" ? `${selectedEcoPicks.length}명 선택됨` : `${selectedEcoPicks.length} selected`}
+            </span>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setEcoPickOpen(false)}>
+                {language === "ko" ? "취소" : "Cancel"}
+              </Button>
+              <Button size="sm" onClick={handleSaveEcoPicks} disabled={isSavingEcoPicks} className="bg-pink-500 hover:bg-pink-600 text-white" data-testid={`button-save-eco-picks-${quote.id}`}>
+                {isSavingEcoPicks ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
+                {language === "ko" ? "저장" : "Save"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -988,6 +1104,10 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   const { data: exchangeRatesData } = useQuery<{ rates: Record<string, number>; timestamp: number }>({
     queryKey: ["/api/exchange-rates"],
     staleTime: 12 * 60 * 60 * 1000,
+  });
+
+  const { data: ecoProfilesData } = useQuery<EcoProfile[]>({
+    queryKey: ["/api/eco-profiles"],
   });
 
   const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
@@ -1083,6 +1203,7 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                         isAdmin={isAdmin}
                         onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
                         onLoad={onLoad}
+                        ecoProfiles={ecoProfilesData || []}
                       />
                     ))}
                   </div>
@@ -1109,6 +1230,7 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                         isAdmin={isAdmin}
                         onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
                         onLoad={onLoad}
+                        ecoProfiles={ecoProfilesData || []}
                       />
                     ))}
                   </div>
@@ -1127,6 +1249,7 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                   isAdmin={isAdmin}
                   onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
                   onLoad={onLoad}
+                  ecoProfiles={ecoProfilesData || []}
                 />
               ))
             )}
