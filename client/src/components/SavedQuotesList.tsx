@@ -1,4 +1,3 @@
-import ReactDOM from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1284,7 +1283,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       </Collapsible>
 
       <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); setEditingPersonIdx(null); const savedNames = (quote.ecoPicks as any)?.personNames; setPersonNames(Array.isArray(savedNames) ? savedNames : [...defaultPersonLabels]); } }}>
-        <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0" onInteractOutside={(e) => { if (previewImage) e.preventDefault(); }} onPointerDownOutside={(e) => { if (previewImage) e.preventDefault(); }}>
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0">
           <div className="flex-shrink-0 px-4 pt-3 pb-0">
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between gap-2 pr-6">
@@ -1463,42 +1462,31 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               </div>
             </div>
           )}
+          {previewImage && (
+            <div
+              data-testid="eco-preview-overlay"
+              style={{ position: "fixed", inset: 0, zIndex: 2147483647, background: "rgba(0,0,0,0.95)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}
+              onClick={(e) => { e.stopPropagation(); closePreview(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <img
+                src={previewImage}
+                alt="preview"
+                style={{ maxWidth: "92vw", maxHeight: "72vh", objectFit: "contain", borderRadius: 8, pointerEvents: "none", userSelect: "none" }}
+                draggable={false}
+              />
+              <button
+                type="button"
+                data-testid="eco-preview-close"
+                style={{ color: "white", background: "rgba(255,255,255,0.3)", border: "2px solid rgba(255,255,255,0.6)", borderRadius: "50%", width: 60, height: 60, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+                onClick={(e) => { e.stopPropagation(); closePreview(); }}
+              >
+                {"\u2715"}
+              </button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-      {previewImage && ReactDOM.createPortal(
-        <div
-          data-testid="eco-preview-overlay"
-          style={{ position: "fixed", inset: 0, zIndex: 2147483647, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, touchAction: "none", WebkitTapHighlightColor: "transparent", isolation: "isolate" }}
-          onMouseDown={e => { e.stopPropagation(); e.preventDefault(); }}
-          onMouseUp={e => { e.stopPropagation(); e.preventDefault(); }}
-          onPointerDown={e => { e.stopPropagation(); e.preventDefault(); }}
-          onPointerUp={e => { e.stopPropagation(); e.preventDefault(); }}
-          onTouchStart={e => e.stopPropagation()}
-          onTouchMove={e => { e.stopPropagation(); e.preventDefault(); }}
-          onTouchEnd={e => { e.stopPropagation(); e.preventDefault(); }}
-          onClick={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
-        >
-          <img
-            src={previewImage}
-            alt="preview"
-            style={{ maxWidth: "90vw", maxHeight: "70vh", objectFit: "contain", borderRadius: 8, pointerEvents: "none", userSelect: "none" }}
-            draggable={false}
-          />
-          <button
-            type="button"
-            data-testid="eco-preview-close"
-            style={{ color: "white", background: "rgba(255,255,255,0.3)", border: "2px solid rgba(255,255,255,0.5)", borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, cursor: "pointer", userSelect: "none", WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
-            onTouchStart={e => e.stopPropagation()}
-            onTouchEnd={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
-            onClick={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
-            onPointerDown={e => { e.stopPropagation(); e.preventDefault(); }}
-            onPointerUp={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
-          >
-            {"\u2715"}
-          </button>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
