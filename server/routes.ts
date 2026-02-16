@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans, customerChatRooms, customerChatMessages, shopProducts, insertShopProductSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans, customerChatRooms, customerChatMessages, shopProducts, insertShopProductSchema, ecoProfiles, insertEcoProfileSchema } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -1455,6 +1455,12 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         breakdown.ecoGirl.price = totalEcoPrice;
         breakdown.ecoGirl.details = ecoDetails;
         breakdown.ecoGirl.description = `${input.ecoGirl.selections.length}일`;
+        breakdown.ecoGirl.selections = input.ecoGirl.selections.map(s => ({
+          date: s.date,
+          hours: (s as any).hours || "12",
+          count: Number(s.count) || 1,
+          picks: (s as any).picks || [],
+        }));
       }
 
       // 5. Guide Calculation
@@ -4413,6 +4419,96 @@ ${adultContext}`;
     } catch (error) {
       console.error("Update site setting error:", error);
       res.status(500).json({ error: "Failed to update site setting" });
+    }
+  });
+
+  // 에코 프로필 목록 조회 (활성화된 것만)
+  app.get("/api/eco-profiles", async (req, res) => {
+    try {
+      const profiles = await db.select().from(ecoProfiles).where(eq(ecoProfiles.isActive, true)).orderBy(ecoProfiles.sortOrder);
+      res.json(profiles);
+    } catch (error) {
+      console.error("Get eco profiles error:", error);
+      res.status(500).json({ error: "Failed to get eco profiles" });
+    }
+  });
+
+  // 에코 프로필 전체 조회 (관리자용)
+  app.get("/api/admin/eco-profiles", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+      const profiles = await db.select().from(ecoProfiles).orderBy(ecoProfiles.sortOrder);
+      res.json(profiles);
+    } catch (error) {
+      console.error("Get admin eco profiles error:", error);
+      res.status(500).json({ error: "Failed to get eco profiles" });
+    }
+  });
+
+  // 에코 프로필 추가 (관리자)
+  app.post("/api/admin/eco-profiles", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+      const { name, imageUrl } = req.body;
+      const maxSort = await db.select({ max: sql<number>`COALESCE(MAX(${ecoProfiles.sortOrder}), 0)` }).from(ecoProfiles);
+      const nextSort = (maxSort[0]?.max || 0) + 1;
+      const [profile] = await db.insert(ecoProfiles).values({ name: name || "", imageUrl: imageUrl || "", sortOrder: nextSort }).returning();
+      res.json(profile);
+    } catch (error) {
+      console.error("Create eco profile error:", error);
+      res.status(500).json({ error: "Failed to create eco profile" });
+    }
+  });
+
+  // 에코 프로필 수정 (관리자)
+  app.put("/api/admin/eco-profiles/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+      const id = parseInt(req.params.id);
+      const { name, imageUrl, isActive, sortOrder } = req.body;
+      const updates: any = {};
+      if (name !== undefined) updates.name = name;
+      if (imageUrl !== undefined) updates.imageUrl = imageUrl;
+      if (isActive !== undefined) updates.isActive = isActive;
+      if (sortOrder !== undefined) updates.sortOrder = sortOrder;
+      const [updated] = await db.update(ecoProfiles).set(updates).where(eq(ecoProfiles.id, id)).returning();
+      res.json(updated);
+    } catch (error) {
+      console.error("Update eco profile error:", error);
+      res.status(500).json({ error: "Failed to update eco profile" });
+    }
+  });
+
+  // 에코 프로필 삭제 (관리자)
+  app.delete("/api/admin/eco-profiles/:id", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!userId || !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ error: "관리자 권한이 필요합니다" });
+      }
+      const id = parseInt(req.params.id);
+      await db.delete(ecoProfiles).where(eq(ecoProfiles.id, id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete eco profile error:", error);
+      res.status(500).json({ error: "Failed to delete eco profile" });
     }
   });
 

@@ -111,7 +111,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown, RefreshCw, Mail, Ticket, ArrowUpDown } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import type { Villa, VillaAmenity } from "@shared/schema";
+import type { Villa, VillaAmenity, EcoProfile } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -331,6 +331,11 @@ export default function Home() {
   // 커스텀 견적 카테고리 조회
   const { data: customQuoteCategories = [] } = useQuery<any[]>({
     queryKey: ["/api/quote-categories"],
+  });
+
+  // 에코 프로필 조회
+  const { data: ecoProfilesList = [] } = useQuery<EcoProfile[]>({
+    queryKey: ["/api/eco-profiles"],
   });
   
   // 기본값 설정
@@ -861,7 +866,7 @@ export default function Home() {
     const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
     const newSelections = [
       ...currentSelections,
-      { date: format(nextDate, "yyyy-MM-dd"), count: 1, hours: "12" as const }
+      { date: format(nextDate, "yyyy-MM-dd"), count: 1, hours: "12" as const, picks: [] }
     ];
     form.setValue("ecoGirl.selections", [...newSelections], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
@@ -2821,7 +2826,7 @@ export default function Home() {
                 >
                   {ecoImageUrl && (
                     <div className="mb-4 rounded-xl overflow-hidden">
-                      <img src={ecoImageUrl} alt="에코" className="w-full h-40 object-cover" />
+                      <img src={ecoImageUrl} alt="에코" className="w-full h-40 object-cover" data-testid="img-eco-banner" />
                     </div>
                   )}
                   {ecoDescriptionText && (
@@ -2837,71 +2842,100 @@ export default function Home() {
                       <span className="text-xs text-pink-400 dark:text-pink-500">{language === "ko" ? "22시간 기준, 12~10시" : "22h, 12:00-10:00"}</span>
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    {values.ecoGirl?.selections?.map((selection, index) => (
-                      <div key={`eco-day-${index}`} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 relative group shadow-sm items-end">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "날짜" : "Date"}</Label>
-                          <Controller 
-                            control={form.control} 
-                            name={`ecoGirl.selections.${index}.date`} 
-                            render={({ field }) => (
-                              <Input type="date" {...field} className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" />
-                            )} 
-                          />
+                  <div className="space-y-6">
+                    {values.ecoGirl?.selections?.map((selection, index) => {
+                      const currentPicks = selection.picks || [];
+                      const getRankForProfile = (profileId: number) => {
+                        const pick = currentPicks.find(p => p.profileId === profileId);
+                        return pick ? pick.rank : 0;
+                      };
+                      const handlePickProfile = (profileId: number) => {
+                        const existing = currentPicks.find(p => p.profileId === profileId);
+                        let newPicks;
+                        if (existing) {
+                          newPicks = currentPicks.filter(p => p.profileId !== profileId);
+                          const removedRank = existing.rank;
+                          newPicks = newPicks.map(p => p.rank > removedRank ? { ...p, rank: p.rank - 1 } : p);
+                        } else {
+                          const nextRank = currentPicks.length + 1;
+                          if (nextRank > 3) return;
+                          newPicks = [...currentPicks, { profileId, rank: nextRank }];
+                        }
+                        const sels = form.getValues("ecoGirl.selections") || [];
+                        const updated = [...sels];
+                        updated[index] = { ...updated[index], picks: newPicks };
+                        form.setValue("ecoGirl.selections", updated, { shouldDirty: true });
+                      };
+                      return (
+                        <div key={`eco-day-${index}`} className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-pink-600 dark:text-pink-400">{language === "ko" ? `${index + 1}일차` : `Day ${index + 1}`}</span>
+                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500" onClick={() => handleRemoveEcoDay(index)} type="button" data-testid={`button-remove-eco-day-${index}`}>
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "날짜" : "Date"}</Label>
+                              <Controller control={form.control} name={`ecoGirl.selections.${index}.date`} render={({ field: f }) => (
+                                <Input type="date" {...f} className="h-9 rounded-lg text-xs border-slate-200" data-testid={`input-eco-date-${index}`} />
+                              )} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "시간" : "Hours"}</Label>
+                              <Controller control={form.control} name={`ecoGirl.selections.${index}.hours`} render={({ field: f }) => (
+                                <Select value={f.value || "12"} onValueChange={f.onChange}>
+                                  <SelectTrigger className="h-9 rounded-lg text-xs border-slate-200" data-testid={`select-eco-hours-${index}`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="12">{`12h ($${ecoPrice12})`}</SelectItem>
+                                    <SelectItem value="22">{`22h ($${ecoPrice22})`}</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              )} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "인원" : "Count"}</Label>
+                              <Controller control={form.control} name={`ecoGirl.selections.${index}.count`} render={({ field: f }) => (
+                                <Input type="number" min="1" {...f} value={f.value ?? ""} onChange={(e) => { const val = e.target.value; f.onChange(val === "" ? "" : parseInt(val)); }} className="h-9 rounded-lg text-xs border-slate-200" data-testid={`input-eco-count-${index}`} />
+                              )} />
+                            </div>
+                          </div>
+                          {ecoProfilesList.length > 0 && (
+                            <div className="space-y-2">
+                              <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "선택 (1지망~3지망)" : "Pick (1st~3rd)"}</Label>
+                              <div className="grid grid-cols-4 gap-2">
+                                {ecoProfilesList.map((profile) => {
+                                  const rank = getRankForProfile(profile.id);
+                                  const rankLabels = ["", "1", "2", "3"];
+                                  const rankColors = ["", "bg-pink-500", "bg-orange-500", "bg-yellow-500"];
+                                  return (
+                                    <div key={profile.id} className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${rank > 0 ? "border-pink-500 ring-2 ring-pink-500/30" : "border-transparent hover:border-slate-300"}`} onClick={() => handlePickProfile(profile.id)} data-testid={`eco-pick-${index}-${profile.id}`}>
+                                      {profile.imageUrl ? (
+                                        <img src={profile.imageUrl} alt={profile.name || ""} className="w-full aspect-square object-cover" />
+                                      ) : (
+                                        <div className="w-full aspect-square bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                          <Users className="w-6 h-6 text-slate-400" />
+                                        </div>
+                                      )}
+                                      {profile.name && (
+                                        <div className="text-center py-0.5 text-xs truncate bg-white/90 dark:bg-slate-800/90">{profile.name}</div>
+                                      )}
+                                      {rank > 0 && (
+                                        <div className={`absolute top-1 right-1 w-5 h-5 rounded-full ${rankColors[rank]} text-white text-xs font-bold flex items-center justify-center shadow`}>
+                                          {rankLabels[rank]}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "시간" : "Hours"}</Label>
-                          <Controller 
-                            control={form.control} 
-                            name={`ecoGirl.selections.${index}.hours`} 
-                            render={({ field }) => (
-                              <Select value={field.value || "12"} onValueChange={field.onChange}>
-                                <SelectTrigger className="h-10 rounded-lg text-sm border-slate-200" data-testid={`select-eco-hours-${index}`}>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="12">{language === "ko" ? `12시간 ($${ecoPrice12})` : `12h ($${ecoPrice12})`}</SelectItem>
-                                  <SelectItem value="22">{language === "ko" ? `22시간 ($${ecoPrice22})` : `22h ($${ecoPrice22})`}</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )} 
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "인원수" : "Count"}</Label>
-                          <Controller 
-                            control={form.control} 
-                            name={`ecoGirl.selections.${index}.count`} 
-                            render={({ field }) => (
-                              <Input 
-                                type="number" 
-                                min="1" 
-                                {...field} 
-                                value={field.value ?? ""} 
-                                onChange={(e) => { 
-                                  const val = e.target.value; 
-                                  field.onChange(val === "" ? "" : parseInt(val)); 
-                                }} 
-                                className="h-10 rounded-lg text-sm border-slate-200 focus:ring-primary/20" 
-                                data-testid={`input-eco-count-${index}`}
-                              />
-                            )} 
-                          />
-                        </div>
-                        <div className="flex justify-end">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 h-10 w-10 rounded-lg" 
-                            onClick={() => handleRemoveEcoDay(index)} 
-                            type="button"
-                          >
-                            <div className="w-4 h-0.5 bg-current rounded-full" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <Button 
                       variant="outline" 
                       className="w-full h-12 rounded-xl border-dashed border-2 border-pink-300 dark:border-pink-700 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-950/30" 
@@ -2915,7 +2949,7 @@ export default function Home() {
                   {ecoGirlEstimate.price > 0 && (
                     <div className="mt-4 bg-gradient-to-r from-pink-600 to-pink-500 text-white p-4 rounded-xl shadow-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">{language === "ko" ? "예상 금액" : language === "en" ? "Estimated Price" : language === "zh" ? "预估价格" : language === "vi" ? "Giá dự kiến" : language === "ru" ? "Ориентировочная цена" : language === "ja" ? "見積もり金額" : "예상 금액"}</span>
+                        <span className="font-semibold">{language === "ko" ? "예상 금액" : "Estimated Price"}</span>
                         <div className="text-right">
                           <span className="text-2xl font-bold">${ecoGirlEstimate.price}</span>
                           {currencyInfo.code !== "USD" && (

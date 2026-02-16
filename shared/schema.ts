@@ -104,9 +104,13 @@ export const calculateQuoteSchema = z.object({
   ecoGirl: z.object({
     enabled: z.boolean(),
     selections: z.array(z.object({
-      date: z.string(), // YYYY-MM-DD
+      date: z.string(),
       count: z.number().min(1).default(1),
-      hours: z.enum(["12", "22"]).default("12"), // 12시간 or 22시간
+      hours: z.enum(["12", "22"]).default("12"),
+      picks: z.array(z.object({
+        profileId: z.number(),
+        rank: z.number().min(1).max(3),
+      })).optional(),
     })).optional(),
   }).optional(),
 
@@ -574,3 +578,16 @@ export const shopProducts = pgTable("shop_products", {
 export const insertShopProductSchema = createInsertSchema(shopProducts).omit({ id: true, createdAt: true, updatedAt: true });
 export type ShopProduct = typeof shopProducts.$inferSelect;
 export type InsertShopProduct = z.infer<typeof insertShopProductSchema>;
+
+export const ecoProfiles = pgTable("eco_profiles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().default(""),
+  imageUrl: text("image_url").notNull().default(""),
+  isActive: boolean("is_active").default(true),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertEcoProfileSchema = createInsertSchema(ecoProfiles).omit({ id: true, createdAt: true });
+export type EcoProfile = typeof ecoProfiles.$inferSelect;
+export type InsertEcoProfile = z.infer<typeof insertEcoProfileSchema>;
