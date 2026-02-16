@@ -1272,150 +1272,171 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       </Collapsible>
 
       <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); } }}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-pink-500" />
-              {language === "ko" ? "에코 픽하기" : "Eco Pick"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold">{language === "ko" ? "에코 일정" : "Eco Schedule"}</span>
-              <Button variant="outline" size="sm" onClick={handleAddEcoSelection} data-testid="button-add-eco-schedule">
-                <Plus className="w-3 h-3 mr-1" />
-                {language === "ko" ? "일정 추가" : "Add"}
-              </Button>
-            </div>
-            {editableEcoSelections.length === 0 && (
-              <div className="text-center text-sm text-muted-foreground py-4">
-                {language === "ko" ? "일정 추가를 눌러 에코 일정을 추가하세요" : "Click Add to create an eco schedule"}
+        <DialogContent className="max-w-md max-h-[80vh] flex flex-col overflow-hidden p-0">
+          <div className="flex-shrink-0 p-4 pb-0">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-pink-500" />
+                  {language === "ko" ? "에코 픽하기" : "Eco Pick"}
+                </span>
+                <Button size="sm" onClick={handleSaveEcoPicks} disabled={isSavingEcoPicks} data-testid={`button-save-eco-picks-top-${quote.id}`}>
+                  {isSavingEcoPicks ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Check className="w-4 h-4 mr-1" />}
+                  {language === "ko" ? "저장" : "Save"}
+                </Button>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 mt-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold">{language === "ko" ? "에코 일정" : "Eco Schedule"}</span>
+                <Button variant="outline" size="sm" onClick={handleAddEcoSelection} data-testid="button-add-eco-schedule">
+                  <Plus className="w-3 h-3 mr-1" />
+                  {language === "ko" ? "일정 추가" : "Add"}
+                </Button>
               </div>
-            )}
-            {editableEcoSelections.map((sel, idx) => (
-              <div key={`${sel.date}-${idx}`} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                <Input type="date" value={sel.date} onChange={(e) => handleUpdateEcoSelection(sel.date, "date", e.target.value)} className="flex-1 text-xs h-8" data-testid={`eco-schedule-date-${idx}`} />
-                <Select value={sel.hours} onValueChange={(v) => handleUpdateEcoSelection(sel.date, "hours", v)}>
-                  <SelectTrigger className="w-20 h-8 text-xs" data-testid={`eco-schedule-hours-${idx}`}><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="12">12h</SelectItem>
-                    <SelectItem value="22">22h</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="flex items-center gap-1">
-                  <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", Math.max(1, sel.count - 1))} data-testid={`eco-schedule-count-minus-${idx}`}><Minus className="w-3 h-3" /></Button>
-                  <span className="text-xs w-4 text-center">{sel.count}</span>
-                  <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", sel.count + 1)} data-testid={`eco-schedule-count-plus-${idx}`}><Plus className="w-3 h-3" /></Button>
+              {editableEcoSelections.length === 0 && (
+                <div className="text-center text-sm text-muted-foreground py-4">
+                  {language === "ko" ? "일정 추가를 눌러 에코 일정을 추가하세요" : "Click Add to create an eco schedule"}
                 </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => handleRemoveEcoSelection(sel.date)} data-testid={`eco-schedule-remove-${idx}`}><Trash2 className="w-3 h-3" /></Button>
-              </div>
-            ))}
-            {editableEcoSelections.length > 0 && (
-              <div className="text-right text-sm font-semibold text-pink-500">
-                {language === "ko" ? "에코 합계" : "Eco Total"}: ${ecoTotalPrice.toLocaleString()}
-              </div>
-            )}
+              )}
+              {editableEcoSelections.map((sel, idx) => (
+                <div key={`${sel.date}-${idx}`} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <Input type="date" value={sel.date} onChange={(e) => handleUpdateEcoSelection(sel.date, "date", e.target.value)} className="flex-1 text-xs h-8" data-testid={`eco-schedule-date-${idx}`} />
+                  <Select value={sel.hours} onValueChange={(v) => handleUpdateEcoSelection(sel.date, "hours", v)}>
+                    <SelectTrigger className="w-20 h-8 text-xs" data-testid={`eco-schedule-hours-${idx}`}><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="12">12h</SelectItem>
+                      <SelectItem value="22">22h</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", Math.max(1, sel.count - 1))} data-testid={`eco-schedule-count-minus-${idx}`}><Minus className="w-3 h-3" /></Button>
+                    <span className="text-xs w-4 text-center">{sel.count}</span>
+                    <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", sel.count + 1)} data-testid={`eco-schedule-count-plus-${idx}`}><Plus className="w-3 h-3" /></Button>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => handleRemoveEcoSelection(sel.date)} data-testid={`eco-schedule-remove-${idx}`}><Trash2 className="w-3 h-3" /></Button>
+                </div>
+              ))}
+              {editableEcoSelections.length > 0 && (
+                <div className="text-right text-sm font-semibold text-pink-500">
+                  {language === "ko" ? "에코 합계" : "Eco Total"}: ${ecoTotalPrice.toLocaleString()}
+                </div>
+              )}
+            </div>
           </div>
           {editableEcoSelections.length > 0 && (
-            <>
-              <div className="border-t pt-3 mt-2" />
-              <div className="flex gap-1 flex-wrap">
-                {ecoSelections.map(sel => {
-                  const persons = ensurePersonSlots(selectedEcoPicks, sel.date, sel.count);
-                  const totalPicked = persons.reduce((sum, p) => sum + (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0), 0);
-                  const isActive = activePickDate === sel.date;
+            <div className="flex flex-col flex-1 min-h-0 border-t mt-2">
+              <div className="flex-shrink-0 px-4 pt-3 pb-2 space-y-2">
+                <div className="flex gap-1 flex-wrap">
+                  {ecoSelections.map(sel => {
+                    const persons = ensurePersonSlots(selectedEcoPicks, sel.date, sel.count);
+                    const totalPicked = persons.reduce((sum, p) => sum + (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0), 0);
+                    const isActive = activePickDate === sel.date;
+                    return (
+                      <Button key={sel.date} variant={isActive ? "default" : "outline"} size="sm" onClick={() => { setActivePickDate(sel.date); setActivePersonIndex(0); }} data-testid={`eco-pick-tab-${sel.date}`}>
+                        <span>{sel.date.slice(5)}</span>
+                        {totalPicked > 0 && <span className="ml-1 text-[10px] opacity-70">({totalPicked})</span>}
+                      </Button>
+                    );
+                  })}
+                </div>
+                {(() => {
+                  const activeSel = ecoSelections.find(s => s.date === activePickDate);
+                  if (!activeSel) return null;
+                  const persons = ensurePersonSlots(selectedEcoPicks, activePickDate, activeSel.count);
+                  const currentPerson = persons[activePersonIndex] || { first: null, second: null, third: null };
                   return (
-                    <Button key={sel.date} variant={isActive ? "default" : "outline"} size="sm" onClick={() => { setActivePickDate(sel.date); setActivePersonIndex(0); }} data-testid={`eco-pick-tab-${sel.date}`}>
-                      <span>{sel.date.slice(5)}</span>
-                      {totalPicked > 0 && <span className="ml-1 text-[10px] opacity-70">({totalPicked})</span>}
-                    </Button>
-                  );
-                })}
-              </div>
-              {(() => {
-                const activeSel = ecoSelections.find(s => s.date === activePickDate);
-                if (!activeSel) return null;
-                const persons = ensurePersonSlots(selectedEcoPicks, activePickDate, activeSel.count);
-                const currentPerson = persons[activePersonIndex] || { first: null, second: null, third: null };
-                return (
-                  <div className="space-y-3">
-                    <div className="text-xs text-muted-foreground">
-                      {activeSel.date} | {activeSel.hours}{language === "ko" ? "시간" : "h"} | {activeSel.count}{language === "ko" ? "명" : " people"}
-                    </div>
-                    {activeSel.count > 1 && (
+                    <>
+                      <div className="text-xs text-muted-foreground">
+                        {activeSel.date} | {activeSel.hours}{language === "ko" ? "시간" : "h"} | {activeSel.count}{language === "ko" ? "명" : " people"}
+                      </div>
+                      {activeSel.count > 1 && (
+                        <div className="flex gap-1 flex-wrap">
+                          {Array.from({ length: activeSel.count }, (_, i) => {
+                            const p = persons[i] || { first: null, second: null, third: null };
+                            const pickCount = (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0);
+                            const isActivePerson = activePersonIndex === i;
+                            return (
+                              <Button key={i} variant={isActivePerson ? "default" : "outline"} size="sm" onClick={() => setActivePersonIndex(i)} data-testid={`eco-pick-person-${i}`}>
+                                {personLabels[i]}
+                                {pickCount > 0 && <span className="ml-1 text-[10px] opacity-70">({pickCount}/3)</span>}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      )}
                       <div className="flex gap-1 flex-wrap">
-                        {Array.from({ length: activeSel.count }, (_, i) => {
-                          const p = persons[i] || { first: null, second: null, third: null };
-                          const pickCount = (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0);
-                          const isActivePerson = activePersonIndex === i;
+                        {priorityKeys.map((pk, i) => {
+                          const selectedId = currentPerson[pk];
+                          const profile = selectedId ? ecoProfiles.find(p => p.id === selectedId) : null;
                           return (
-                            <Button key={i} variant={isActivePerson ? "default" : "outline"} size="sm" onClick={() => setActivePersonIndex(i)} data-testid={`eco-pick-person-${i}`}>
-                              {personLabels[i]}
-                              {pickCount > 0 && <span className="ml-1 text-[10px] opacity-70">({pickCount}/3)</span>}
-                            </Button>
+                            <Badge key={pk} variant={selectedId ? "default" : "outline"} className={`text-xs ${selectedId ? priorityColors[i] + " text-white border-transparent" : ""}`}>
+                              <span className={`w-2 h-2 rounded-full ${priorityColors[i]} mr-1 inline-block`} />
+                              {priorityLabels[i]}: {profile ? profile.name : "-"}
+                            </Badge>
                           );
                         })}
                       </div>
-                    )}
-                    <div className="flex gap-1 flex-wrap">
-                      {priorityKeys.map((pk, i) => {
-                        const selectedId = currentPerson[pk];
-                        const profile = selectedId ? ecoProfiles.find(p => p.id === selectedId) : null;
-                        return (
-                          <Badge key={pk} variant={selectedId ? "default" : "outline"} className={`text-xs ${selectedId ? priorityColors[i] + " text-white border-transparent" : ""}`}>
-                            <span className={`w-2 h-2 rounded-full ${priorityColors[i]} mr-1 inline-block`} />
-                            {priorityLabels[i]}: {profile ? profile.name : "-"}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {ecoProfiles.map(profile => {
-                        const selectedPriority = priorityKeys.find(pk => currentPerson[pk] === profile.id);
-                        const isSelectedByOther = persons.some((p, idx) => idx !== activePersonIndex && (p.first === profile.id || p.second === profile.id || p.third === profile.id));
-                        return (
-                          <div key={profile.id} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedPriority ? "border-pink-500 ring-2 ring-pink-300" : isSelectedByOther ? "border-slate-200 dark:border-slate-600 opacity-30" : "border-slate-200 dark:border-slate-600"}`} data-testid={`eco-pick-profile-${profile.id}`}>
-                            <div className="aspect-[3/4] relative">
-                              <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
-                              {selectedPriority && (
-                                <div className={`absolute top-1 right-1 w-6 h-6 ${priorityColors[priorityKeys.indexOf(selectedPriority)]} rounded-full flex items-center justify-center`}>
-                                  <Check className="w-4 h-4 text-white" />
+                    </>
+                  );
+                })()}
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 pb-4">
+                {(() => {
+                  const activeSel = ecoSelections.find(s => s.date === activePickDate);
+                  if (!activeSel) return null;
+                  const persons = ensurePersonSlots(selectedEcoPicks, activePickDate, activeSel.count);
+                  const currentPerson = persons[activePersonIndex] || { first: null, second: null, third: null };
+                  return (
+                    <>
+                      <div className="grid grid-cols-3 gap-3">
+                        {ecoProfiles.map(profile => {
+                          const selectedPriority = priorityKeys.find(pk => currentPerson[pk] === profile.id);
+                          const isSelectedByOther = persons.some((p, idx) => idx !== activePersonIndex && (p.first === profile.id || p.second === profile.id || p.third === profile.id));
+                          return (
+                            <div key={profile.id} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedPriority ? "border-pink-500 ring-2 ring-pink-300" : isSelectedByOther ? "border-slate-200 dark:border-slate-600 opacity-30" : "border-slate-200 dark:border-slate-600"}`} data-testid={`eco-pick-profile-${profile.id}`}>
+                              <div className="aspect-[3/4] relative">
+                                <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                {selectedPriority && (
+                                  <div className={`absolute top-1 right-1 w-6 h-6 ${priorityColors[priorityKeys.indexOf(selectedPriority)]} rounded-full flex items-center justify-center`}>
+                                    <Check className="w-4 h-4 text-white" />
+                                  </div>
+                                )}
+                                {isSelectedByOther && (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">{language === "ko" ? "다른 인원 선택됨" : "Taken"}</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="p-1 space-y-0.5">
+                                <span className="text-xs font-medium truncate block text-center">{profile.name}</span>
+                                <div className="flex gap-0.5 justify-center">
+                                  {priorityKeys.map((pk, i) => {
+                                    const isThisPri = currentPerson[pk] === profile.id;
+                                    return (
+                                      <button key={pk} className={`w-6 h-5 rounded text-[9px] font-bold transition-all ${isThisPri ? priorityColors[i] + " text-white" : "bg-muted text-muted-foreground"}`} onClick={(e) => { e.stopPropagation(); handleToggleEcoPick(profile.id, activePickDate, activePersonIndex, pk); }} data-testid={`eco-pick-${profile.id}-${pk}`}>
+                                        {(i + 1)}
+                                      </button>
+                                    );
+                                  })}
                                 </div>
-                              )}
-                              {isSelectedByOther && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">{language === "ko" ? "다른 인원 선택됨" : "Taken"}</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="p-1 space-y-0.5">
-                              <span className="text-xs font-medium truncate block text-center">{profile.name}</span>
-                              <div className="flex gap-0.5 justify-center">
-                                {priorityKeys.map((pk, i) => {
-                                  const isThisPri = currentPerson[pk] === profile.id;
-                                  return (
-                                    <button key={pk} className={`w-6 h-5 rounded text-[9px] font-bold transition-all ${isThisPri ? priorityColors[i] + " text-white" : "bg-muted text-muted-foreground"}`} onClick={(e) => { e.stopPropagation(); handleToggleEcoPick(profile.id, activePickDate, activePersonIndex, pk); }} data-testid={`eco-pick-${profile.id}-${pk}`}>
-                                      {(i + 1)}
-                                    </button>
-                                  );
-                                })}
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {ecoProfiles.length === 0 && (
-                      <div className="text-center text-sm text-muted-foreground py-8">
-                        {language === "ko" ? "등록된 에코 프로필이 없습니다" : "No eco profiles available"}
+                          );
+                        })}
                       </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </>
+                      {ecoProfiles.length === 0 && (
+                        <div className="text-center text-sm text-muted-foreground py-8">
+                          {language === "ko" ? "등록된 에코 프로필이 없습니다" : "No eco profiles available"}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
           )}
-          <div className="flex justify-between items-center mt-4 pt-3 border-t">
+          <div className="flex-shrink-0 flex justify-between items-center px-4 py-3 border-t">
             <span className="text-sm text-muted-foreground">
               {language === "ko" ? `총 ${allPickedProfileIds.length}명 선택됨` : `${allPickedProfileIds.length} total selected`}
             </span>
