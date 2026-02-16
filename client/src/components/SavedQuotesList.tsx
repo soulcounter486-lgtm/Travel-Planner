@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,70 +19,6 @@ import { format } from "date-fns";
 import { type QuoteBreakdown, type Quote } from "@shared/schema";
 import html2canvas from "html2canvas";
 import logoImage from "@assets/BackgroundEraser_20240323_103507859_1768997960669.png";
-
-function EcoPreviewOverlay({ src, onClose }: { src: string | null; onClose: () => void }) {
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    if (!src) return;
-
-    let closed = false;
-    const doClose = () => {
-      if (closed) return;
-      closed = true;
-      overlay.style.pointerEvents = "none";
-      setTimeout(() => {
-        if (document.body.contains(overlay)) document.body.removeChild(overlay);
-        onCloseRef.current();
-      }, 80);
-    };
-
-    const overlay = document.createElement("div");
-    overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;cursor:pointer;";
-
-    const img = document.createElement("img");
-    img.src = src;
-    img.style.cssText = "max-width:90vw;max-height:70vh;object-fit:contain;border-radius:8px;pointer-events:none;user-select:none;";
-    img.draggable = false;
-
-    const closeBtn = document.createElement("button");
-    closeBtn.type = "button";
-    closeBtn.textContent = "\u2715";
-    closeBtn.style.cssText = "color:white;background:rgba(255,255,255,0.3);border:2px solid rgba(255,255,255,0.5);border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;outline:none;touch-action:manipulation;";
-
-    overlay.appendChild(img);
-    overlay.appendChild(closeBtn);
-
-    closeBtn.ontouchstart = (e) => { e.stopPropagation(); };
-    closeBtn.ontouchend = (e) => { e.preventDefault(); e.stopPropagation(); doClose(); };
-    closeBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); doClose(); };
-
-    overlay.ontouchstart = (e) => { e.stopPropagation(); };
-    overlay.ontouchend = (e) => { e.preventDefault(); e.stopPropagation(); doClose(); };
-    overlay.onclick = (e) => { e.stopPropagation(); doClose(); };
-
-    const guard = (e: Event) => {
-      if (!closed && document.body.contains(overlay)) {
-        const target = e.target as Node;
-        if (overlay.contains(target)) {
-          e.stopImmediatePropagation();
-        }
-      }
-    };
-    const events = ["mousedown", "mouseup", "pointerdown", "pointerup"] as const;
-    events.forEach(ev => document.addEventListener(ev, guard, true));
-
-    document.body.appendChild(overlay);
-
-    return () => {
-      events.forEach(ev => document.removeEventListener(ev, guard, true));
-      if (document.body.contains(overlay)) document.body.removeChild(overlay);
-    };
-  }, [src]);
-
-  return null;
-}
 
 interface QuoteItemProps {
   quote: Quote;
@@ -1347,7 +1284,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       </Collapsible>
 
       <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); setEditingPersonIdx(null); const savedNames = (quote.ecoPicks as any)?.personNames; setPersonNames(Array.isArray(savedNames) ? savedNames : [...defaultPersonLabels]); } }}>
-        <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0" onInteractOutside={(e) => { if (previewImage) e.preventDefault(); }} onPointerDownOutside={(e) => { if (previewImage) e.preventDefault(); }}>
           <div className="flex-shrink-0 px-4 pt-3 pb-0">
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between gap-2 pr-6">
@@ -1528,7 +1465,40 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           )}
         </DialogContent>
       </Dialog>
-      <EcoPreviewOverlay src={previewImage} onClose={closePreview} />
+      {previewImage && ReactDOM.createPortal(
+        <div
+          data-testid="eco-preview-overlay"
+          style={{ position: "fixed", inset: 0, zIndex: 2147483647, background: "rgba(0,0,0,0.92)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20, touchAction: "none", WebkitTapHighlightColor: "transparent", isolation: "isolate" }}
+          onMouseDown={e => { e.stopPropagation(); e.preventDefault(); }}
+          onMouseUp={e => { e.stopPropagation(); e.preventDefault(); }}
+          onPointerDown={e => { e.stopPropagation(); e.preventDefault(); }}
+          onPointerUp={e => { e.stopPropagation(); e.preventDefault(); }}
+          onTouchStart={e => e.stopPropagation()}
+          onTouchMove={e => { e.stopPropagation(); e.preventDefault(); }}
+          onTouchEnd={e => { e.stopPropagation(); e.preventDefault(); }}
+          onClick={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
+        >
+          <img
+            src={previewImage}
+            alt="preview"
+            style={{ maxWidth: "90vw", maxHeight: "70vh", objectFit: "contain", borderRadius: 8, pointerEvents: "none", userSelect: "none" }}
+            draggable={false}
+          />
+          <button
+            type="button"
+            data-testid="eco-preview-close"
+            style={{ color: "white", background: "rgba(255,255,255,0.3)", border: "2px solid rgba(255,255,255,0.5)", borderRadius: "50%", width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, cursor: "pointer", userSelect: "none", WebkitTapHighlightColor: "transparent", outline: "none", touchAction: "manipulation" }}
+            onTouchStart={e => e.stopPropagation()}
+            onTouchEnd={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
+            onClick={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
+            onPointerDown={e => { e.stopPropagation(); e.preventDefault(); }}
+            onPointerUp={e => { e.stopPropagation(); e.preventDefault(); closePreview(); }}
+          >
+            {"\u2715"}
+          </button>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
