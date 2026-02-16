@@ -1628,8 +1628,14 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         return res.status(400).json({ message: "ecoPicks must be an object with date keys" });
       }
       for (const [key, val] of Object.entries(ecoPicks)) {
-        if (!Array.isArray(val) || !(val as any[]).every((v: any) => typeof v === "number")) {
-          return res.status(400).json({ message: `ecoPicks[${key}] must be an array of numbers` });
+        const v = val as any;
+        if (typeof v !== "object" || v === null || Array.isArray(v)) {
+          return res.status(400).json({ message: `ecoPicks[${key}] must have first/second/third arrays` });
+        }
+        for (const priority of ["first", "second", "third"]) {
+          if (v[priority] && (!Array.isArray(v[priority]) || !v[priority].every((id: any) => typeof id === "number"))) {
+            return res.status(400).json({ message: `ecoPicks[${key}].${priority} must be an array of numbers` });
+          }
         }
       }
       const quote = await storage.updateQuoteEcoPicks(id, ecoPicks);

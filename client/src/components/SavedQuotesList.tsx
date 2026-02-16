@@ -55,20 +55,38 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [ecoPickOpen, setEcoPickOpen] = useState(false);
   const [isSavingEcoPicks, setIsSavingEcoPicks] = useState(false);
 
+  type PriorityPicks = { first: number[]; second: number[]; third: number[] };
+  type EcoPicksMap = Record<string, PriorityPicks>;
+  const priorityLabels = language === "ko" ? ["1지망", "2지망", "3지망"] : ["1st", "2nd", "3rd"];
+  const priorityKeys: Array<keyof PriorityPicks> = ["first", "second", "third"];
+  const priorityColors = ["bg-pink-500", "bg-orange-400", "bg-blue-400"];
+
   const ecoSelections = useMemo(() => {
     return ((breakdown as any)?.ecoGirl?.selections || []) as Array<{ date: string; hours: string; count: number }>;
   }, [breakdown]);
 
-  const initEcoPicks = (): Record<string, number[]> => {
+  const initEcoPicks = (): EcoPicksMap => {
     const raw = quote.ecoPicks as any;
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) return raw as Record<string, number[]>;
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      const result: EcoPicksMap = {};
+      for (const [date, val] of Object.entries(raw)) {
+        const v = val as any;
+        if (v && typeof v === "object" && !Array.isArray(v) && (v.first || v.second || v.third)) {
+          result[date] = { first: v.first || [], second: v.second || [], third: v.third || [] };
+        } else if (Array.isArray(v)) {
+          result[date] = { first: v as number[], second: [], third: [] };
+        }
+      }
+      return result;
+    }
     if (Array.isArray(raw) && raw.length > 0 && ecoSelections.length > 0) {
-      return { [ecoSelections[0].date]: raw as number[] };
+      return { [ecoSelections[0].date]: { first: raw as number[], second: [], third: [] } };
     }
     return {};
   };
-  const [selectedEcoPicks, setSelectedEcoPicks] = useState<Record<string, number[]>>(initEcoPicks);
+  const [selectedEcoPicks, setSelectedEcoPicks] = useState<EcoPicksMap>(initEcoPicks);
   const [activePickDate, setActivePickDate] = useState<string>(ecoSelections[0]?.date || "");
+  const [activePickPriority, setActivePickPriority] = useState<keyof PriorityPicks>("first");
 
   useEffect(() => {
     if (ecoSelections.length > 0) {
@@ -81,36 +99,52 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
 
   useEffect(() => {
     const raw = quote.ecoPicks as any;
-    if (Array.isArray(raw) && raw.length > 0 && ecoSelections.length > 0) {
-      setSelectedEcoPicks(prev => {
-        const hasAny = Object.values(prev).some(arr => arr.length > 0);
-        if (!hasAny) return { [ecoSelections[0].date]: raw as number[] };
-        return prev;
-      });
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      const migrated: EcoPicksMap = {};
+      let needsMigration = false;
+      for (const [date, val] of Object.entries(raw)) {
+        const v = val as any;
+        if (Array.isArray(v)) {
+          migrated[date] = { first: v as number[], second: [], third: [] };
+          needsMigration = true;
+        }
+      }
+      if (needsMigration) {
+        setSelectedEcoPicks(prev => {
+          const hasAny = Object.values(prev).some(p => p.first?.length > 0 || p.second?.length > 0 || p.third?.length > 0);
+          if (!hasAny) return { ...prev, ...migrated };
+          return prev;
+        });
+      }
     }
-  }, [ecoSelections, quote.ecoPicks]);
+  }, [quote.ecoPicks]);
 
   const allPickedProfileIds = useMemo(() => {
     const ids: number[] = [];
-    Object.values(selectedEcoPicks).forEach(arr => ids.push(...arr));
+    Object.values(selectedEcoPicks).forEach(p => {
+      ids.push(...(p.first || []), ...(p.second || []), ...(p.third || []));
+    });
     return ids;
   }, [selectedEcoPicks]);
 
-  const pickedProfiles = useMemo(() => {
-    if (!allPickedProfileIds.length || !ecoProfiles.length) return [];
-    return Array.from(new Set(allPickedProfileIds)).map(id => ecoProfiles.find(p => p.id === id)).filter(Boolean) as EcoProfile[];
-  }, [allPickedProfileIds, ecoProfiles]);
-
-  const handleToggleEcoPick = (profileId: number, date: string) => {
+  const handleToggleEcoPick = (profileId: number, date: string, priority: keyof PriorityPicks) => {
     setSelectedEcoPicks(prev => {
-      const current = prev[date] || [];
+      const current = prev[date] || { first: [], second: [], third: [] };
+      const arr = current[priority] || [];
       const sel = ecoSelections.find(s => s.date === date);
       const maxCount = sel?.count || 1;
-      if (current.includes(profileId)) {
-        return { ...prev, [date]: current.filter(id => id !== profileId) };
+      if (arr.includes(profileId)) {
+        return { ...prev, [date]: { ...current, [priority]: arr.filter(id => id !== profileId) } };
       }
-      if (current.length >= maxCount) return prev;
-      return { ...prev, [date]: [...current, profileId] };
+      if (arr.length >= maxCount) return prev;
+      const updated = { ...current };
+      for (const pk of priorityKeys) {
+        if (pk !== priority && (updated[pk] || []).includes(profileId)) {
+          updated[pk] = updated[pk].filter(id => id !== profileId);
+        }
+      }
+      updated[priority] = [...(updated[priority] || []), profileId];
+      return { ...prev, [date]: updated };
     });
   };
 
@@ -939,27 +973,42 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         ))}
                       </div>
                     )}
-                    {Object.keys(selectedEcoPicks).some(d => (selectedEcoPicks[d] || []).length > 0) && (
+                    {Object.keys(selectedEcoPicks).some(d => {
+                      const p = selectedEcoPicks[d];
+                      return p && ((p.first?.length || 0) + (p.second?.length || 0) + (p.third?.length || 0)) > 0;
+                    }) && (
                       <div className="mt-2 pt-2 border-t border-pink-200/30 space-y-2">
                         {ecoSelections.map(sel => {
-                          const datePicks = selectedEcoPicks[sel.date] || [];
-                          if (datePicks.length === 0) return null;
-                          const dateProfiles = datePicks.map(id => ecoProfiles.find(p => p.id === id)).filter(Boolean) as EcoProfile[];
+                          const dp = selectedEcoPicks[sel.date];
+                          if (!dp) return null;
+                          const hasAny = (dp.first?.length || 0) + (dp.second?.length || 0) + (dp.third?.length || 0) > 0;
+                          if (!hasAny) return null;
                           return (
                             <div key={sel.date}>
-                              <div className="text-[10px] font-medium text-pink-500 mb-1">
-                                {sel.date.slice(5)} ({datePicks.length}/{sel.count}{language === "ko" ? "명" : ""})
-                              </div>
-                              <div className="flex gap-2 flex-wrap">
-                                {dateProfiles.map(profile => (
-                                  <div key={profile.id} className="relative w-14 h-14 rounded-lg overflow-hidden border border-pink-300/50">
-                                    <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
-                                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center py-0.5 truncate">
-                                      {profile.name}
+                              <div className="text-[10px] font-semibold text-muted-foreground mb-1">{sel.date.slice(5)}</div>
+                              {priorityKeys.map((pk, i) => {
+                                const arr = dp[pk] || [];
+                                if (arr.length === 0) return null;
+                                const profiles = arr.map(id => ecoProfiles.find(p => p.id === id)).filter(Boolean) as EcoProfile[];
+                                return (
+                                  <div key={pk} className="mb-1">
+                                    <div className="flex items-center gap-1 mb-0.5">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${priorityColors[i]}`} />
+                                      <span className="text-[9px] font-medium text-muted-foreground">{priorityLabels[i]}</span>
+                                    </div>
+                                    <div className="flex gap-1.5 flex-wrap pl-2">
+                                      {profiles.map(profile => (
+                                        <div key={profile.id} className="relative w-12 h-12 rounded-lg overflow-hidden border border-pink-300/50">
+                                          <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[7px] text-white text-center py-0.5 truncate">
+                                            {profile.name}
+                                          </div>
+                                        </div>
+                                      ))}
                                     </div>
                                   </div>
-                                ))}
-                              </div>
+                                );
+                              })}
                             </div>
                           );
                         })}
@@ -1086,7 +1135,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open && ecoSelections.length > 0) setActivePickDate(ecoSelections[0].date); }}>
+      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open && ecoSelections.length > 0) { setActivePickDate(ecoSelections[0].date); setActivePickPriority("first"); } }}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1102,18 +1151,13 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
             <>
               <div className="flex gap-1 flex-wrap mt-2">
                 {ecoSelections.map(sel => {
-                  const picked = (selectedEcoPicks[sel.date] || []).length;
+                  const dp = selectedEcoPicks[sel.date] || { first: [], second: [], third: [] };
+                  const totalPicked = dp.first.length + dp.second.length + dp.third.length;
                   const isActive = activePickDate === sel.date;
                   return (
-                    <Button
-                      key={sel.date}
-                      variant={isActive ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActivePickDate(sel.date)}
-                      data-testid={`eco-pick-tab-${sel.date}`}
-                    >
+                    <Button key={sel.date} variant={isActive ? "default" : "outline"} size="sm" onClick={() => setActivePickDate(sel.date)} data-testid={`eco-pick-tab-${sel.date}`}>
                       <span>{sel.date.slice(5)}</span>
-                      <span className="ml-1 text-[10px] opacity-70">({picked}/{sel.count})</span>
+                      {totalPicked > 0 && <span className="ml-1 text-[10px] opacity-70">({totalPicked})</span>}
                     </Button>
                   );
                 })}
@@ -1121,30 +1165,42 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               {(() => {
                 const activeSel = ecoSelections.find(s => s.date === activePickDate);
                 if (!activeSel) return null;
-                const currentPicks = selectedEcoPicks[activePickDate] || [];
+                const datePicks = selectedEcoPicks[activePickDate] || { first: [], second: [], third: [] };
+                const currentArr = datePicks[activePickPriority] || [];
                 return (
-                  <div className="mt-3">
-                    <div className="text-xs text-muted-foreground mb-2">
-                      {language === "ko"
-                        ? `${activeSel.date} | ${activeSel.hours}시간 | ${currentPicks.length}/${activeSel.count}명 선택`
-                        : `${activeSel.date} | ${activeSel.hours}h | ${currentPicks.length}/${activeSel.count} selected`}
+                  <div className="mt-3 space-y-3">
+                    <div className="text-xs text-muted-foreground">
+                      {activeSel.date} | {activeSel.hours}{language === "ko" ? "시간" : "h"} | {activeSel.count}{language === "ko" ? "명" : " people"}
+                    </div>
+                    <div className="flex gap-1">
+                      {priorityKeys.map((pk, i) => {
+                        const arr = datePicks[pk] || [];
+                        const isActive = activePickPriority === pk;
+                        return (
+                          <Button key={pk} variant={isActive ? "default" : "outline"} size="sm" onClick={() => setActivePickPriority(pk)} data-testid={`eco-pick-priority-${pk}`}>
+                            <span className={`w-2 h-2 rounded-full ${priorityColors[i]} mr-1`} />
+                            {priorityLabels[i]} ({arr.length}/{activeSel.count})
+                          </Button>
+                        );
+                      })}
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       {ecoProfiles.map(profile => {
-                        const isSelected = currentPicks.includes(profile.id);
-                        const isFull = currentPicks.length >= activeSel.count && !isSelected;
+                        const isSelected = currentArr.includes(profile.id);
+                        const isFull = currentArr.length >= activeSel.count && !isSelected;
+                        const otherPriority = priorityKeys.filter(pk => pk !== activePickPriority).find(pk => (datePicks[pk] || []).includes(profile.id));
                         return (
-                          <div
-                            key={profile.id}
-                            className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-pink-500 ring-2 ring-pink-300" : isFull ? "border-slate-200 dark:border-slate-600 opacity-40" : "border-slate-200 dark:border-slate-600"}`}
-                            onClick={() => handleToggleEcoPick(profile.id, activePickDate)}
-                            data-testid={`eco-pick-profile-${profile.id}`}
-                          >
+                          <div key={profile.id} className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-pink-500 ring-2 ring-pink-300" : isFull ? "border-slate-200 dark:border-slate-600 opacity-40" : "border-slate-200 dark:border-slate-600"}`} onClick={() => handleToggleEcoPick(profile.id, activePickDate, activePickPriority)} data-testid={`eco-pick-profile-${profile.id}`}>
                             <div className="aspect-[3/4] relative">
                               <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
                               {isSelected && (
-                                <div className="absolute top-1 right-1 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                                <div className={`absolute top-1 right-1 w-6 h-6 ${priorityColors[priorityKeys.indexOf(activePickPriority)]} rounded-full flex items-center justify-center`}>
                                   <Check className="w-4 h-4 text-white" />
+                                </div>
+                              )}
+                              {otherPriority && !isSelected && (
+                                <div className={`absolute top-1 left-1 ${priorityColors[priorityKeys.indexOf(otherPriority)]} rounded-full px-1.5 py-0.5`}>
+                                  <span className="text-[8px] text-white font-bold">{priorityLabels[priorityKeys.indexOf(otherPriority)]}</span>
                                 </div>
                               )}
                             </div>

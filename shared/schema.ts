@@ -21,7 +21,7 @@ export const quotes = pgTable("quotes", {
   checkOutDate: text("check_out_date"), // 체크아웃 날짜 (YYYY-MM-DD)
   memo: text("memo").default(""), // 메모
   memoImages: jsonb("memo_images").$type<string[]>().default([]), // 메모 이미지 URL 배열
-  ecoPicks: jsonb("eco_picks").$type<Record<string, number[]>>().default({}), // 날짜별 에코프로필 ID 배열 { "2026-02-20": [1,2], "2026-02-21": [3] }
+  ecoPicks: jsonb("eco_picks").$type<Record<string, { first: number[]; second: number[]; third: number[] }>>().default({}), // 날짜별 1/2/3지망 에코프로필 { "2026-02-20": { first: [1,2], second: [3,4], third: [5,6] } }
   createdAt: timestamp("created_at").defaultNow(),
 });
 
