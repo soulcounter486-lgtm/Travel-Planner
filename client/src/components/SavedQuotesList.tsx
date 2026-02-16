@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1273,8 +1274,8 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       </Collapsible>
 
       <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); } }}>
-        <DialogContent className="max-w-md max-h-[80vh] flex flex-col overflow-hidden p-0">
-          <div className="flex-shrink-0 p-4 pb-0">
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0">
+          <div className="flex-shrink-0 px-4 pt-3 pb-0">
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
@@ -1300,7 +1301,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   {language === "ko" ? "일정 추가를 눌러 에코 일정을 추가하세요" : "Click Add to create an eco schedule"}
                 </div>
               )}
-              <div className={editableEcoSelections.length > 2 ? "max-h-[96px] overflow-y-auto space-y-2 pr-1" : "space-y-2"}>
+              <div className={editableEcoSelections.length > 2 ? "max-h-[88px] overflow-y-auto space-y-1.5 pr-1" : "space-y-1.5"}>
                 {editableEcoSelections.map((sel, idx) => (
                   <div key={`${sel.date}-${idx}`} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
                     <Input type="date" value={sel.date} onChange={(e) => handleUpdateEcoSelection(sel.date, "date", e.target.value)} className="flex-1 text-xs h-8" data-testid={`eco-schedule-date-${idx}`} />
@@ -1440,8 +1441,8 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               </div>
             </div>
           )}
-          <div className="flex-shrink-0 flex justify-between items-center px-4 py-3 border-t">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex-shrink-0 flex justify-between items-center px-4 py-2 border-t">
+            <span className="text-xs text-muted-foreground">
               {language === "ko" ? `총 ${allPickedProfileIds.length}명 선택됨` : `${allPickedProfileIds.length} total selected`}
             </span>
             <div className="flex gap-2">
