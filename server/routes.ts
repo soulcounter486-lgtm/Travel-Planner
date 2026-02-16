@@ -1645,6 +1645,91 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  app.patch("/api/quotes/:id/eco-schedule", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      const allQuotes = await storage.getAllQuotes();
+      const targetQuote = allQuotes.find(q => q.id === id);
+      if (!targetQuote) {
+        return res.status(404).json({ message: "Quote not found" });
+      }
+      if (targetQuote.userId !== userId && !isUserAdmin(userId, userEmail)) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const { ecoSelections, ecoPicks } = req.body;
+      if (!Array.isArray(ecoSelections)) {
+        return res.status(400).json({ message: "ecoSelections must be an array" });
+      }
+      const dateSet = new Set<string>();
+      for (const sel of ecoSelections) {
+        if (!sel.date || !sel.hours || typeof sel.count !== "number" || sel.count < 1) {
+          return res.status(400).json({ message: "Each selection must have date, hours, count >= 1" });
+        }
+        if (!["12", "22"].includes(String(sel.hours))) {
+          return res.status(400).json({ message: "hours must be 12 or 22" });
+        }
+        if (dateSet.has(sel.date)) {
+          return res.status(400).json({ message: `Duplicate date: ${sel.date}` });
+        }
+        dateSet.add(sel.date);
+      }
+      if (ecoPicks) {
+        if (typeof ecoPicks !== "object" || ecoPicks === null || Array.isArray(ecoPicks)) {
+          return res.status(400).json({ message: "ecoPicks must be an object" });
+        }
+        for (const [key, val] of Object.entries(ecoPicks)) {
+          const v = val as any;
+          if (typeof v !== "object" || v === null || Array.isArray(v)) {
+            return res.status(400).json({ message: `ecoPicks[${key}] must have first/second/third` });
+          }
+          for (const priority of ["first", "second", "third"]) {
+            if (v[priority] && (!Array.isArray(v[priority]) || !v[priority].every((pid: any) => typeof pid === "number"))) {
+              return res.status(400).json({ message: `ecoPicks[${key}].${priority} must be number array` });
+            }
+          }
+        }
+      }
+      const ecoSettings = await db.select().from(siteSettings).where(
+        sql`${siteSettings.key} IN ('eco_price_12', 'eco_price_22')`
+      );
+      const ecoSettingsMap: Record<string, string> = {};
+      ecoSettings.forEach(s => { ecoSettingsMap[s.key] = s.value; });
+      const ecoPriceMap: Record<string, number> = {
+        "12": Number(ecoSettingsMap["eco_price_12"]) || 220,
+        "22": Number(ecoSettingsMap["eco_price_22"]) || 380,
+      };
+      let ecoTotalPrice = 0;
+      const ecoDetails: string[] = [];
+      for (const sel of ecoSelections) {
+        const rate = ecoPriceMap[String(sel.hours)] || ecoPriceMap["12"];
+        const subtotal = rate * sel.count;
+        ecoTotalPrice += subtotal;
+        ecoDetails.push(`${sel.date}: ${sel.hours}시간 x ${sel.count}명 x $${rate} = $${subtotal}`);
+      }
+      const existingBreakdown = targetQuote.breakdown as any || {};
+      const newBreakdown = { ...existingBreakdown };
+      newBreakdown.ecoGirl = {
+        price: ecoTotalPrice,
+        description: `${ecoSelections.length}일`,
+        details: ecoDetails,
+        selections: ecoSelections.map((s: any) => ({ date: s.date, hours: String(s.hours), count: s.count })),
+      };
+      const newTotal = (newBreakdown.villa?.price || 0) + (newBreakdown.vehicle?.price || 0) + (newBreakdown.golf?.price || 0) + ecoTotalPrice + (newBreakdown.guide?.price || 0) + (newBreakdown.fastTrack?.price || 0) + ((newBreakdown.customCategories || []) as any[]).reduce((sum: number, c: any) => sum + (c.price || 0), 0);
+      await storage.updateQuoteTotalAndBreakdown(id, newTotal, newBreakdown);
+      if (ecoPicks) {
+        await storage.updateQuoteEcoPicks(id, ecoPicks);
+      }
+      const updatedQuote = (await storage.getAllQuotes()).find(q => q.id === id);
+      res.json(updatedQuote);
+    } catch (err) {
+      console.error("Eco schedule update error:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // 메모 업데이트 (관리자 전용)
   app.patch("/api/quotes/:id/memo", isAuthenticated, async (req, res) => {
     try {

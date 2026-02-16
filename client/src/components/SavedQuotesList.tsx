@@ -2,7 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2, Heart } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2, Heart, Plus, Minus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EcoProfile } from "@shared/schema";
 import { useState, useRef, useMemo, useEffect } from "react";
@@ -26,13 +29,15 @@ interface QuoteItemProps {
   onToggleDeposit: (id: number, depositPaid: boolean) => void;
   onLoad?: (quote: Quote) => void;
   ecoProfiles?: EcoProfile[];
+  userGender?: string;
+  ecoPrices?: { price12: number; price22: number };
 }
 
 interface SavedQuotesListProps {
   onLoad?: (quote: Quote) => void;
 }
 
-function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit, onLoad, ecoProfiles = [] }: QuoteItemProps) {
+function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit, onLoad, ecoProfiles = [], userGender, ecoPrices = { price12: 220, price22: 380 } }: QuoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [depositPaid, setDepositPaid] = useState(quote.depositPaid || false);
@@ -57,13 +62,24 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
 
   type PriorityPicks = { first: number[]; second: number[]; third: number[] };
   type EcoPicksMap = Record<string, PriorityPicks>;
+  type EcoSelection = { date: string; hours: string; count: number };
   const priorityLabels = language === "ko" ? ["1지망", "2지망", "3지망"] : ["1st", "2nd", "3rd"];
   const priorityKeys: Array<keyof PriorityPicks> = ["first", "second", "third"];
   const priorityColors = ["bg-pink-500", "bg-orange-400", "bg-blue-400"];
 
-  const ecoSelections = useMemo(() => {
-    return ((breakdown as any)?.ecoGirl?.selections || []) as Array<{ date: string; hours: string; count: number }>;
+  const isMaleUser = userGender === "male";
+
+  const origEcoSelections = useMemo(() => {
+    return ((breakdown as any)?.ecoGirl?.selections || []) as EcoSelection[];
   }, [breakdown]);
+
+  const [editableEcoSelections, setEditableEcoSelections] = useState<EcoSelection[]>([...origEcoSelections]);
+
+  useEffect(() => {
+    setEditableEcoSelections([...origEcoSelections]);
+  }, [origEcoSelections]);
+
+  const ecoSelections = editableEcoSelections;
 
   const initEcoPicks = (): EcoPicksMap => {
     const raw = quote.ecoPicks as any;
@@ -79,8 +95,8 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       }
       return result;
     }
-    if (Array.isArray(raw) && raw.length > 0 && ecoSelections.length > 0) {
-      return { [ecoSelections[0].date]: { first: raw as number[], second: [], third: [] } };
+    if (Array.isArray(raw) && raw.length > 0 && origEcoSelections.length > 0) {
+      return { [origEcoSelections[0].date]: { first: raw as number[], second: [], third: [] } };
     }
     return {};
   };
@@ -97,28 +113,6 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     }
   }, [ecoSelections]);
 
-  useEffect(() => {
-    const raw = quote.ecoPicks as any;
-    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-      const migrated: EcoPicksMap = {};
-      let needsMigration = false;
-      for (const [date, val] of Object.entries(raw)) {
-        const v = val as any;
-        if (Array.isArray(v)) {
-          migrated[date] = { first: v as number[], second: [], third: [] };
-          needsMigration = true;
-        }
-      }
-      if (needsMigration) {
-        setSelectedEcoPicks(prev => {
-          const hasAny = Object.values(prev).some(p => p.first?.length > 0 || p.second?.length > 0 || p.third?.length > 0);
-          if (!hasAny) return { ...prev, ...migrated };
-          return prev;
-        });
-      }
-    }
-  }, [quote.ecoPicks]);
-
   const allPickedProfileIds = useMemo(() => {
     const ids: number[] = [];
     Object.values(selectedEcoPicks).forEach(p => {
@@ -126,6 +120,72 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     });
     return ids;
   }, [selectedEcoPicks]);
+
+  const ecoTotalPrice = useMemo(() => {
+    let total = 0;
+    for (const sel of editableEcoSelections) {
+      const rate = sel.hours === "22" ? ecoPrices.price22 : ecoPrices.price12;
+      total += rate * sel.count;
+    }
+    return total;
+  }, [editableEcoSelections, ecoPrices]);
+
+  const handleAddEcoSelection = () => {
+    const checkIn = quote.checkInDate || "";
+    const checkOut = quote.checkOutDate || "";
+    let newDate = "";
+    if (checkIn) {
+      const existingDates = editableEcoSelections.map(s => s.date);
+      const start = new Date(checkIn);
+      const end = checkOut ? new Date(checkOut) : new Date(start.getTime() + 7 * 86400000);
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const ds = d.toISOString().split("T")[0];
+        if (!existingDates.includes(ds)) { newDate = ds; break; }
+      }
+      if (!newDate) newDate = new Date(end.getTime() + 86400000).toISOString().split("T")[0];
+    } else {
+      newDate = new Date().toISOString().split("T")[0];
+    }
+    const newSel: EcoSelection = { date: newDate, hours: "12", count: 1 };
+    setEditableEcoSelections(prev => [...prev, newSel]);
+    setActivePickDate(newDate);
+  };
+
+  const handleRemoveEcoSelection = (date: string) => {
+    setEditableEcoSelections(prev => prev.filter(s => s.date !== date));
+    setSelectedEcoPicks(prev => {
+      const updated = { ...prev };
+      delete updated[date];
+      return updated;
+    });
+    if (activePickDate === date) {
+      const remaining = editableEcoSelections.filter(s => s.date !== date);
+      setActivePickDate(remaining[0]?.date || "");
+    }
+  };
+
+  const handleUpdateEcoSelection = (date: string, field: "hours" | "count" | "date", value: string | number) => {
+    setEditableEcoSelections(prev => prev.map(s => {
+      if (s.date !== date) return s;
+      if (field === "date") {
+        const newDate = String(value);
+        if (editableEcoSelections.some(es => es.date === newDate && es.date !== date)) return s;
+        setSelectedEcoPicks(prevPicks => {
+          const updated = { ...prevPicks };
+          if (updated[date]) {
+            updated[newDate] = updated[date];
+            delete updated[date];
+          }
+          return updated;
+        });
+        if (activePickDate === date) setActivePickDate(newDate);
+        return { ...s, date: newDate };
+      }
+      if (field === "count") return { ...s, count: Math.max(1, Number(value)) };
+      if (field === "hours") return { ...s, hours: String(value) };
+      return s;
+    }));
+  };
 
   const handleToggleEcoPick = (profileId: number, date: string, priority: keyof PriorityPicks) => {
     setSelectedEcoPicks(prev => {
@@ -151,7 +211,10 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const handleSaveEcoPicks = async () => {
     setIsSavingEcoPicks(true);
     try {
-      await apiRequest("PATCH", `/api/quotes/${quote.id}/eco-picks`, { ecoPicks: selectedEcoPicks });
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/eco-schedule`, {
+        ecoSelections: editableEcoSelections.map(s => ({ date: s.date, hours: s.hours, count: s.count })),
+        ecoPicks: selectedEcoPicks,
+      });
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       setEcoPickOpen(false);
     } catch (error) {
@@ -943,7 +1006,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   </div>
                 )}
 
-                {breakdown?.ecoGirl?.price > 0 && (
+                {(breakdown?.ecoGirl?.price > 0 || ((isMaleUser || isAdmin) && depositPaid)) && (
                   <div className="space-y-1">
                     <div className="flex justify-between items-center font-semibold text-sm text-slate-800">
                       <div className="flex items-center gap-2">
@@ -961,9 +1024,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                           </Button>
                         )}
                       </div>
-                      <span>${breakdown.ecoGirl.price.toLocaleString()}</span>
+                      <span>${(ecoTotalPrice || breakdown?.ecoGirl?.price || 0).toLocaleString()}</span>
                     </div>
-                    {breakdown.ecoGirl.details && breakdown.ecoGirl.details.length > 0 && (
+                    {breakdown?.ecoGirl?.details && breakdown.ecoGirl.details.length > 0 && (
                       <div className="text-[10px] text-muted-foreground pl-2">
                         {breakdown.ecoGirl.details.map((detail: string, idx: number) => (
                           <div key={idx} className="flex items-center gap-1">
@@ -971,6 +1034,11 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                             <span>{detail}</span>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    {(!breakdown?.ecoGirl?.details || breakdown.ecoGirl.details.length === 0) && ecoTotalPrice === 0 && (isMaleUser || isAdmin) && depositPaid && (
+                      <div className="text-[10px] text-muted-foreground pl-2">
+                        {language === "ko" ? "픽하기를 눌러 에코 일정을 추가하세요" : "Click Pick to add eco schedule"}
                       </div>
                     )}
                     {Object.keys(selectedEcoPicks).some(d => {
@@ -1135,7 +1203,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open && ecoSelections.length > 0) { setActivePickDate(ecoSelections[0].date); setActivePickPriority("first"); } }}>
+      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePickPriority("first"); } }}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1143,13 +1211,47 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               {language === "ko" ? "에코 픽하기" : "Eco Pick"}
             </DialogTitle>
           </DialogHeader>
-          {ecoSelections.length === 0 ? (
-            <div className="text-center text-sm text-muted-foreground py-8">
-              {language === "ko" ? "에코 일정이 없습니다" : "No eco schedule"}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold">{language === "ko" ? "에코 일정" : "Eco Schedule"}</span>
+              <Button variant="outline" size="sm" onClick={handleAddEcoSelection} data-testid="button-add-eco-schedule">
+                <Plus className="w-3 h-3 mr-1" />
+                {language === "ko" ? "일정 추가" : "Add"}
+              </Button>
             </div>
-          ) : (
+            {editableEcoSelections.length === 0 && (
+              <div className="text-center text-sm text-muted-foreground py-4">
+                {language === "ko" ? "일정 추가를 눌러 에코 일정을 추가하세요" : "Click Add to create an eco schedule"}
+              </div>
+            )}
+            {editableEcoSelections.map((sel, idx) => (
+              <div key={`${sel.date}-${idx}`} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                <Input type="date" value={sel.date} onChange={(e) => handleUpdateEcoSelection(sel.date, "date", e.target.value)} className="flex-1 text-xs h-8" data-testid={`eco-schedule-date-${idx}`} />
+                <Select value={sel.hours} onValueChange={(v) => handleUpdateEcoSelection(sel.date, "hours", v)}>
+                  <SelectTrigger className="w-20 h-8 text-xs" data-testid={`eco-schedule-hours-${idx}`}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12">12h</SelectItem>
+                    <SelectItem value="22">22h</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", Math.max(1, sel.count - 1))} data-testid={`eco-schedule-count-minus-${idx}`}><Minus className="w-3 h-3" /></Button>
+                  <span className="text-xs w-4 text-center">{sel.count}</span>
+                  <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", sel.count + 1)} data-testid={`eco-schedule-count-plus-${idx}`}><Plus className="w-3 h-3" /></Button>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => handleRemoveEcoSelection(sel.date)} data-testid={`eco-schedule-remove-${idx}`}><Trash2 className="w-3 h-3" /></Button>
+              </div>
+            ))}
+            {editableEcoSelections.length > 0 && (
+              <div className="text-right text-sm font-semibold text-pink-500">
+                {language === "ko" ? "에코 합계" : "Eco Total"}: ${ecoTotalPrice.toLocaleString()}
+              </div>
+            )}
+          </div>
+          {editableEcoSelections.length > 0 && (
             <>
-              <div className="flex gap-1 flex-wrap mt-2">
+              <div className="border-t pt-3 mt-2" />
+              <div className="flex gap-1 flex-wrap">
                 {ecoSelections.map(sel => {
                   const dp = selectedEcoPicks[sel.date] || { first: [], second: [], third: [] };
                   const totalPicked = dp.first.length + dp.second.length + dp.third.length;
@@ -1168,16 +1270,16 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                 const datePicks = selectedEcoPicks[activePickDate] || { first: [], second: [], third: [] };
                 const currentArr = datePicks[activePickPriority] || [];
                 return (
-                  <div className="mt-3 space-y-3">
+                  <div className="space-y-3">
                     <div className="text-xs text-muted-foreground">
                       {activeSel.date} | {activeSel.hours}{language === "ko" ? "시간" : "h"} | {activeSel.count}{language === "ko" ? "명" : " people"}
                     </div>
                     <div className="flex gap-1">
                       {priorityKeys.map((pk, i) => {
                         const arr = datePicks[pk] || [];
-                        const isActive = activePickPriority === pk;
+                        const isActivePri = activePickPriority === pk;
                         return (
-                          <Button key={pk} variant={isActive ? "default" : "outline"} size="sm" onClick={() => setActivePickPriority(pk)} data-testid={`eco-pick-priority-${pk}`}>
+                          <Button key={pk} variant={isActivePri ? "default" : "outline"} size="sm" onClick={() => setActivePickPriority(pk)} data-testid={`eco-pick-priority-${pk}`}>
                             <span className={`w-2 h-2 rounded-full ${priorityColors[i]} mr-1`} />
                             {priorityLabels[i]} ({arr.length}/{activeSel.count})
                           </Button>
@@ -1246,6 +1348,7 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { data: quotes, isLoading } = useQuotes();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: adminCheck } = useQuery<{ isAdmin: boolean; userId?: string; adminUserIds?: string[] }>({
     queryKey: ["/api/admin/check"],
@@ -1262,6 +1365,15 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
   const { data: ecoProfilesData } = useQuery<EcoProfile[]>({
     queryKey: ["/api/eco-profiles"],
   });
+
+  const { data: siteSettingsData } = useQuery<Record<string, string>>({
+    queryKey: ["/api/site-settings"],
+    staleTime: 1000 * 60 * 30,
+  });
+  const ecoPrices = useMemo(() => ({
+    price12: Number(siteSettingsData?.["eco_price_12"]) || 220,
+    price22: Number(siteSettingsData?.["eco_price_22"]) || 380,
+  }), [siteSettingsData]);
 
   const languageCurrencyMap: Record<string, { code: string; symbol: string; locale: string }> = {
     ko: { code: "KRW", symbol: "₩", locale: "ko-KR" },
@@ -1357,6 +1469,8 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                         onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
                         onLoad={onLoad}
                         ecoProfiles={ecoProfilesData || []}
+                        userGender={user?.gender || undefined}
+                        ecoPrices={ecoPrices}
                       />
                     ))}
                   </div>
@@ -1384,6 +1498,8 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                         onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
                         onLoad={onLoad}
                         ecoProfiles={ecoProfilesData || []}
+                        userGender={user?.gender || undefined}
+                        ecoPrices={ecoPrices}
                       />
                     ))}
                   </div>
@@ -1403,6 +1519,8 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                   onToggleDeposit={(id, depositPaid) => depositMutation.mutate({ id, depositPaid })}
                   onLoad={onLoad}
                   ecoProfiles={ecoProfilesData || []}
+                  userGender={user?.gender || undefined}
+                  ecoPrices={ecoPrices}
                 />
               ))
             )}
