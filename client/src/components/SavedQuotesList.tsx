@@ -59,6 +59,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const [ecoPickOpen, setEcoPickOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSavingEcoPicks, setIsSavingEcoPicks] = useState(false);
 
   type PersonPick = { first: number | null; second: number | null; third: number | null };
@@ -1398,7 +1399,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                           const isSelectedByOther = persons.some((p, idx) => idx !== activePersonIndex && p.first === profile.id);
                           return (
                             <div key={profile.id} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedPriority ? "border-pink-500 ring-2 ring-pink-300" : isSelectedByOther ? "border-slate-200 dark:border-slate-600 opacity-30" : "border-slate-200 dark:border-slate-600"}`} data-testid={`eco-pick-profile-${profile.id}`}>
-                              <div className="aspect-[3/4] relative">
+                              <div className="aspect-[3/4] relative cursor-pointer" onClick={() => setPreviewImage(profile.imageUrl)}>
                                 <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
                                 {selectedPriority && (
                                   <div className={`absolute top-1 right-1 w-6 h-6 ${priorityColors[priorityKeys.indexOf(selectedPriority)]} rounded-full flex items-center justify-center`}>
@@ -1455,6 +1456,12 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           </div>
         </DialogContent>
       </Dialog>
+      {previewImage && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center" onClick={() => setPreviewImage(null)} data-testid="eco-preview-overlay">
+          <img src={previewImage} alt="preview" className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg" />
+          <button className="absolute top-4 right-4 text-white bg-black/50 rounded-full w-8 h-8 flex items-center justify-center text-lg" onClick={() => setPreviewImage(null)} data-testid="button-close-preview">&times;</button>
+        </div>
+      )}
     </div>
   );
 }
