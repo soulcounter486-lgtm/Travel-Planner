@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -60,12 +61,13 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [ecoPickOpen, setEcoPickOpen] = useState(false);
   const [isSavingEcoPicks, setIsSavingEcoPicks] = useState(false);
 
-  type PriorityPicks = { first: number[]; second: number[]; third: number[] };
-  type EcoPicksMap = Record<string, PriorityPicks>;
+  type PersonPick = { first: number | null; second: number | null; third: number | null };
+  type EcoPicksMap = Record<string, PersonPick[]>;
   type EcoSelection = { date: string; hours: string; count: number };
   const priorityLabels = language === "ko" ? ["1지망", "2지망", "3지망"] : ["1st", "2nd", "3rd"];
-  const priorityKeys: Array<keyof PriorityPicks> = ["first", "second", "third"];
+  const priorityKeys: Array<keyof PersonPick> = ["first", "second", "third"];
   const priorityColors = ["bg-pink-500", "bg-orange-400", "bg-blue-400"];
+  const personLabels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   const isMaleUser = userGender === "male";
 
@@ -96,42 +98,77 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
 
   const ecoSelections = editableEcoSelections;
 
+  const migrateOldPicks = (raw: any, selections: EcoSelection[]): EcoPicksMap => {
+    if (!raw || typeof raw !== "object") return {};
+    const result: EcoPicksMap = {};
+    for (const [date, val] of Object.entries(raw)) {
+      const v = val as any;
+      if (Array.isArray(v)) {
+        result[date] = v.map((item: any) => {
+          if (item && typeof item === "object" && !Array.isArray(item) && ("first" in item || "second" in item || "third" in item)) {
+            return { first: item.first ?? null, second: item.second ?? null, third: item.third ?? null };
+          }
+          return { first: null, second: null, third: null };
+        });
+      } else if (v && typeof v === "object" && !Array.isArray(v) && (v.first || v.second || v.third)) {
+        const firstArr = Array.isArray(v.first) ? v.first : [];
+        const secondArr = Array.isArray(v.second) ? v.second : [];
+        const thirdArr = Array.isArray(v.third) ? v.third : [];
+        const sel = selections.find(s => s.date === date);
+        const cnt = sel?.count || Math.max(firstArr.length, secondArr.length, thirdArr.length, 1);
+        const persons: PersonPick[] = [];
+        for (let i = 0; i < cnt; i++) {
+          persons.push({
+            first: firstArr[i] ?? null,
+            second: secondArr[i] ?? null,
+            third: thirdArr[i] ?? null,
+          });
+        }
+        result[date] = persons;
+      }
+    }
+    return result;
+  };
+
   const initEcoPicks = (): EcoPicksMap => {
     const raw = quote.ecoPicks as any;
     if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-      const result: EcoPicksMap = {};
-      for (const [date, val] of Object.entries(raw)) {
-        const v = val as any;
-        if (v && typeof v === "object" && !Array.isArray(v) && (v.first || v.second || v.third)) {
-          result[date] = { first: v.first || [], second: v.second || [], third: v.third || [] };
-        } else if (Array.isArray(v)) {
-          result[date] = { first: v as number[], second: [], third: [] };
-        }
-      }
-      return result;
+      return migrateOldPicks(raw, origEcoSelections);
     }
     if (Array.isArray(raw) && raw.length > 0 && origEcoSelections.length > 0) {
-      return { [origEcoSelections[0].date]: { first: raw as number[], second: [], third: [] } };
+      return migrateOldPicks({ [origEcoSelections[0].date]: { first: raw, second: [], third: [] } }, origEcoSelections);
     }
     return {};
   };
   const [selectedEcoPicks, setSelectedEcoPicks] = useState<EcoPicksMap>(initEcoPicks);
   const [activePickDate, setActivePickDate] = useState<string>(ecoSelections[0]?.date || "");
-  const [activePickPriority, setActivePickPriority] = useState<keyof PriorityPicks>("first");
+  const [activePersonIndex, setActivePersonIndex] = useState<number>(0);
 
   useEffect(() => {
     if (ecoSelections.length > 0) {
       const validDates = ecoSelections.map(s => s.date);
       if (!activePickDate || !validDates.includes(activePickDate)) {
         setActivePickDate(ecoSelections[0].date);
+        setActivePersonIndex(0);
       }
     }
   }, [ecoSelections]);
 
+  const ensurePersonSlots = (picks: EcoPicksMap, date: string, count: number): PersonPick[] => {
+    const existing = picks[date] || [];
+    const result = [...existing];
+    while (result.length < count) result.push({ first: null, second: null, third: null });
+    return result.slice(0, count);
+  };
+
   const allPickedProfileIds = useMemo(() => {
     const ids: number[] = [];
-    Object.values(selectedEcoPicks).forEach(p => {
-      ids.push(...(p.first || []), ...(p.second || []), ...(p.third || []));
+    Object.values(selectedEcoPicks).forEach(persons => {
+      persons.forEach(p => {
+        if (p.first) ids.push(p.first);
+        if (p.second) ids.push(p.second);
+        if (p.third) ids.push(p.third);
+      });
     });
     return ids;
   }, [selectedEcoPicks]);
@@ -164,6 +201,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     const newSel: EcoSelection = { date: newDate, hours: "12", count: 1 };
     setEditableEcoSelections(prev => [...prev, newSel]);
     setActivePickDate(newDate);
+    setActivePersonIndex(0);
   };
 
   const handleRemoveEcoSelection = (date: string) => {
@@ -176,6 +214,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     if (activePickDate === date) {
       const remaining = editableEcoSelections.filter(s => s.date !== date);
       setActivePickDate(remaining[0]?.date || "");
+      setActivePersonIndex(0);
     }
   };
 
@@ -196,30 +235,44 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         if (activePickDate === date) setActivePickDate(newDate);
         return { ...s, date: newDate };
       }
-      if (field === "count") return { ...s, count: Math.max(1, Number(value)) };
+      if (field === "count") {
+        const newCount = Math.max(1, Number(value));
+        if (newCount < s.count) {
+          setSelectedEcoPicks(prevPicks => {
+            const persons = (prevPicks[date] || []).slice(0, newCount);
+            return { ...prevPicks, [date]: persons };
+          });
+          if (activePersonIndex >= newCount) setActivePersonIndex(newCount - 1);
+        }
+        return { ...s, count: newCount };
+      }
       if (field === "hours") return { ...s, hours: String(value) };
       return s;
     }));
   };
 
-  const handleToggleEcoPick = (profileId: number, date: string, priority: keyof PriorityPicks) => {
+  const handleToggleEcoPick = (profileId: number, date: string, personIdx: number, priority: keyof PersonPick) => {
     setSelectedEcoPicks(prev => {
-      const current = prev[date] || { first: [], second: [], third: [] };
-      const arr = current[priority] || [];
       const sel = ecoSelections.find(s => s.date === date);
-      const maxCount = sel?.count || 1;
-      if (arr.includes(profileId)) {
-        return { ...prev, [date]: { ...current, [priority]: arr.filter(id => id !== profileId) } };
-      }
-      if (arr.length >= maxCount) return prev;
-      const updated = { ...current };
-      for (const pk of priorityKeys) {
-        if (pk !== priority && (updated[pk] || []).includes(profileId)) {
-          updated[pk] = updated[pk].filter(id => id !== profileId);
+      const cnt = sel?.count || 1;
+      const persons = ensurePersonSlots(prev, date, cnt).map(p => ({ ...p }));
+      const person = persons[personIdx];
+      if (person[priority] === profileId) {
+        person[priority] = null;
+      } else {
+        for (let i = 0; i < persons.length; i++) {
+          if (i !== personIdx) {
+            for (const pk of priorityKeys) {
+              if (persons[i][pk] === profileId) persons[i][pk] = null;
+            }
+          }
         }
+        for (const pk of priorityKeys) {
+          if (person[pk] === profileId) person[pk] = null;
+        }
+        person[priority] = profileId;
       }
-      updated[priority] = [...(updated[priority] || []), profileId];
-      return { ...prev, [date]: updated };
+      return { ...prev, [date]: persons };
     });
   };
 
@@ -1218,7 +1271,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePickPriority("first"); } }}>
+      <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); } }}>
         <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1268,11 +1321,11 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               <div className="border-t pt-3 mt-2" />
               <div className="flex gap-1 flex-wrap">
                 {ecoSelections.map(sel => {
-                  const dp = selectedEcoPicks[sel.date] || { first: [], second: [], third: [] };
-                  const totalPicked = dp.first.length + dp.second.length + dp.third.length;
+                  const persons = ensurePersonSlots(selectedEcoPicks, sel.date, sel.count);
+                  const totalPicked = persons.reduce((sum, p) => sum + (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0), 0);
                   const isActive = activePickDate === sel.date;
                   return (
-                    <Button key={sel.date} variant={isActive ? "default" : "outline"} size="sm" onClick={() => setActivePickDate(sel.date)} data-testid={`eco-pick-tab-${sel.date}`}>
+                    <Button key={sel.date} variant={isActive ? "default" : "outline"} size="sm" onClick={() => { setActivePickDate(sel.date); setActivePersonIndex(0); }} data-testid={`eco-pick-tab-${sel.date}`}>
                       <span>{sel.date.slice(5)}</span>
                       {totalPicked > 0 && <span className="ml-1 text-[10px] opacity-70">({totalPicked})</span>}
                     </Button>
@@ -1282,47 +1335,71 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
               {(() => {
                 const activeSel = ecoSelections.find(s => s.date === activePickDate);
                 if (!activeSel) return null;
-                const datePicks = selectedEcoPicks[activePickDate] || { first: [], second: [], third: [] };
-                const currentArr = datePicks[activePickPriority] || [];
+                const persons = ensurePersonSlots(selectedEcoPicks, activePickDate, activeSel.count);
+                const currentPerson = persons[activePersonIndex] || { first: null, second: null, third: null };
                 return (
                   <div className="space-y-3">
                     <div className="text-xs text-muted-foreground">
                       {activeSel.date} | {activeSel.hours}{language === "ko" ? "시간" : "h"} | {activeSel.count}{language === "ko" ? "명" : " people"}
                     </div>
-                    <div className="flex gap-1">
+                    {activeSel.count > 1 && (
+                      <div className="flex gap-1 flex-wrap">
+                        {Array.from({ length: activeSel.count }, (_, i) => {
+                          const p = persons[i] || { first: null, second: null, third: null };
+                          const pickCount = (p.first ? 1 : 0) + (p.second ? 1 : 0) + (p.third ? 1 : 0);
+                          const isActivePerson = activePersonIndex === i;
+                          return (
+                            <Button key={i} variant={isActivePerson ? "default" : "outline"} size="sm" onClick={() => setActivePersonIndex(i)} data-testid={`eco-pick-person-${i}`}>
+                              {personLabels[i]}
+                              {pickCount > 0 && <span className="ml-1 text-[10px] opacity-70">({pickCount}/3)</span>}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <div className="flex gap-1 flex-wrap">
                       {priorityKeys.map((pk, i) => {
-                        const arr = datePicks[pk] || [];
-                        const isActivePri = activePickPriority === pk;
+                        const selectedId = currentPerson[pk];
+                        const profile = selectedId ? ecoProfiles.find(p => p.id === selectedId) : null;
                         return (
-                          <Button key={pk} variant={isActivePri ? "default" : "outline"} size="sm" onClick={() => setActivePickPriority(pk)} data-testid={`eco-pick-priority-${pk}`}>
-                            <span className={`w-2 h-2 rounded-full ${priorityColors[i]} mr-1`} />
-                            {priorityLabels[i]} ({arr.length}/{activeSel.count})
-                          </Button>
+                          <Badge key={pk} variant={selectedId ? "default" : "outline"} className={`text-xs ${selectedId ? priorityColors[i] + " text-white border-transparent" : ""}`}>
+                            <span className={`w-2 h-2 rounded-full ${priorityColors[i]} mr-1 inline-block`} />
+                            {priorityLabels[i]}: {profile ? profile.name : "-"}
+                          </Badge>
                         );
                       })}
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       {ecoProfiles.map(profile => {
-                        const isSelected = currentArr.includes(profile.id);
-                        const isFull = currentArr.length >= activeSel.count && !isSelected;
-                        const otherPriority = priorityKeys.filter(pk => pk !== activePickPriority).find(pk => (datePicks[pk] || []).includes(profile.id));
+                        const selectedPriority = priorityKeys.find(pk => currentPerson[pk] === profile.id);
+                        const isSelectedByOther = persons.some((p, idx) => idx !== activePersonIndex && (p.first === profile.id || p.second === profile.id || p.third === profile.id));
                         return (
-                          <div key={profile.id} className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${isSelected ? "border-pink-500 ring-2 ring-pink-300" : isFull ? "border-slate-200 dark:border-slate-600 opacity-40" : "border-slate-200 dark:border-slate-600"}`} onClick={() => handleToggleEcoPick(profile.id, activePickDate, activePickPriority)} data-testid={`eco-pick-profile-${profile.id}`}>
+                          <div key={profile.id} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedPriority ? "border-pink-500 ring-2 ring-pink-300" : isSelectedByOther ? "border-slate-200 dark:border-slate-600 opacity-30" : "border-slate-200 dark:border-slate-600"}`} data-testid={`eco-pick-profile-${profile.id}`}>
                             <div className="aspect-[3/4] relative">
                               <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
-                              {isSelected && (
-                                <div className={`absolute top-1 right-1 w-6 h-6 ${priorityColors[priorityKeys.indexOf(activePickPriority)]} rounded-full flex items-center justify-center`}>
+                              {selectedPriority && (
+                                <div className={`absolute top-1 right-1 w-6 h-6 ${priorityColors[priorityKeys.indexOf(selectedPriority)]} rounded-full flex items-center justify-center`}>
                                   <Check className="w-4 h-4 text-white" />
                                 </div>
                               )}
-                              {otherPriority && !isSelected && (
-                                <div className={`absolute top-1 left-1 ${priorityColors[priorityKeys.indexOf(otherPriority)]} rounded-full px-1.5 py-0.5`}>
-                                  <span className="text-[8px] text-white font-bold">{priorityLabels[priorityKeys.indexOf(otherPriority)]}</span>
+                              {isSelectedByOther && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <span className="text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">{language === "ko" ? "다른 인원 선택됨" : "Taken"}</span>
                                 </div>
                               )}
                             </div>
-                            <div className="p-1 text-center">
-                              <span className="text-xs font-medium truncate block">{profile.name}</span>
+                            <div className="p-1 space-y-0.5">
+                              <span className="text-xs font-medium truncate block text-center">{profile.name}</span>
+                              <div className="flex gap-0.5 justify-center">
+                                {priorityKeys.map((pk, i) => {
+                                  const isThisPri = currentPerson[pk] === profile.id;
+                                  return (
+                                    <button key={pk} className={`w-6 h-5 rounded text-[9px] font-bold transition-all ${isThisPri ? priorityColors[i] + " text-white" : "bg-muted text-muted-foreground"}`} onClick={(e) => { e.stopPropagation(); handleToggleEcoPick(profile.id, activePickDate, activePersonIndex, pk); }} data-testid={`eco-pick-${profile.id}-${pk}`}>
+                                      {(i + 1)}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         );

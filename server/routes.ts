@@ -1681,13 +1681,17 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
           return res.status(400).json({ message: "ecoPicks must be an object" });
         }
         for (const [key, val] of Object.entries(ecoPicks)) {
-          const v = val as any;
-          if (typeof v !== "object" || v === null || Array.isArray(v)) {
-            return res.status(400).json({ message: `ecoPicks[${key}] must have first/second/third` });
+          if (!Array.isArray(val)) {
+            return res.status(400).json({ message: `ecoPicks[${key}] must be an array of person picks` });
           }
-          for (const priority of ["first", "second", "third"]) {
-            if (v[priority] && (!Array.isArray(v[priority]) || !v[priority].every((pid: any) => typeof pid === "number"))) {
-              return res.status(400).json({ message: `ecoPicks[${key}].${priority} must be number array` });
+          for (const person of val as any[]) {
+            if (typeof person !== "object" || person === null || Array.isArray(person)) {
+              return res.status(400).json({ message: `ecoPicks[${key}] person must have first/second/third` });
+            }
+            for (const priority of ["first", "second", "third"]) {
+              if (person[priority] !== null && person[priority] !== undefined && typeof person[priority] !== "number") {
+                return res.status(400).json({ message: `ecoPicks[${key}].${priority} must be number or null` });
+              }
             }
           }
         }
