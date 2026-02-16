@@ -200,7 +200,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     } else {
       newDate = new Date().toISOString().split("T")[0];
     }
-    const newSel: EcoSelection = { date: newDate, hours: "12", count: 1 };
+    const lastCount = editableEcoSelections.length > 0 ? editableEcoSelections[editableEcoSelections.length - 1].count : 1;
+    const lastHours = editableEcoSelections.length > 0 ? editableEcoSelections[editableEcoSelections.length - 1].hours : "12";
+    const newSel: EcoSelection = { date: newDate, hours: lastHours, count: lastCount };
     setEditableEcoSelections(prev => [...prev, newSel]);
     setActivePickDate(newDate);
     setActivePersonIndex(0);
