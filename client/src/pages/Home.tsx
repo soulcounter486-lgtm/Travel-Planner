@@ -2951,7 +2951,7 @@ export default function Home() {
                               )}
                               <Label className="text-xs font-semibold text-slate-500">{count > 1 ? `${activePerson}${language === "ko" ? "님 선택 (1지망~3지망)" : " Pick (1st~3rd)"}` : (language === "ko" ? "선택 (1지망~3지망)" : "Pick (1st~3rd)")}</Label>
                               <div className="relative">
-                                <div className={`grid grid-cols-4 gap-2 ${!canViewEcoPhotos ? "blur-md pointer-events-none select-none" : ""}`}>
+                                <div className={`grid grid-cols-4 gap-2 max-h-[320px] overflow-y-auto pr-1 ${!canViewEcoPhotos ? "blur-md pointer-events-none select-none" : ""}`}>
                                   {ecoProfilesList.map((profile) => {
                                     const rank = getRankForProfile(profile.id);
                                     const rankLabels = ["", "1", "2", "3"];
