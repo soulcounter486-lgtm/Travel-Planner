@@ -339,6 +339,10 @@ export default function Home() {
   const heroTitle = siteSettingsData["hero_title"] || t("header.title");
   const heroSubtitle = siteSettingsData["hero_subtitle"] || (language === "ko" ? "실시간 여행견적" : "Live Travel Quote");
   const heroDescription = siteSettingsData["hero_description"] || t("header.description");
+  const ecoPrice12 = Number(siteSettingsData["eco_price_12"]) || 220;
+  const ecoPrice22 = Number(siteSettingsData["eco_price_22"]) || 380;
+  const ecoDescriptionText = siteSettingsData["eco_description"] || "";
+  const ecoImageUrl = siteSettingsData["eco_image_url"] || "";
   const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
   const [amenityFilters, setAmenityFilters] = useState<VillaAmenity[]>([]);
   const [showAmenityFilters, setShowAmenityFilters] = useState(false);
@@ -794,21 +798,21 @@ export default function Home() {
     if (!values.ecoGirl?.enabled || !values.ecoGirl?.selections || values.ecoGirl.selections.length === 0) {
       return { price: 0, details: [] as { date: string; count: number; hours: string; price: number }[] };
     }
-    const priceMap = { "12": 220, "22": 380 }; // 12시간: $220, 22시간: $380
+    const priceMap = { "12": ecoPrice12, "22": ecoPrice22 };
     const details: { date: string; count: number; hours: string; price: number }[] = [];
     let totalPrice = 0;
     
     for (const selection of values.ecoGirl.selections) {
       const count = Number(selection.count) || 0;
       const hours = selection.hours || "12";
-      const pricePerPerson = priceMap[hours as "12" | "22"] || 220;
+      const pricePerPerson = priceMap[hours as "12" | "22"] || ecoPrice12;
       const price = count * pricePerPerson;
       details.push({ date: selection.date, count, hours, price });
       totalPrice += price;
     }
     
     return { price: totalPrice, details };
-  }, [values.ecoGirl?.enabled, JSON.stringify(values.ecoGirl?.selections)]);
+  }, [values.ecoGirl?.enabled, JSON.stringify(values.ecoGirl?.selections), ecoPrice12, ecoPrice22]);
 
   const handleAddVehicleDay = () => {
     const currentSelections = form.getValues("vehicle.selections") || [];
@@ -2815,13 +2819,21 @@ export default function Home() {
                   onToggle={field.onChange} 
                   gradient="from-pink-500/10"
                 >
+                  {ecoImageUrl && (
+                    <div className="mb-4 rounded-xl overflow-hidden">
+                      <img src={ecoImageUrl} alt="에코" className="w-full h-40 object-cover" />
+                    </div>
+                  )}
+                  {ecoDescriptionText && (
+                    <p className="mb-3 text-sm text-muted-foreground">{ecoDescriptionText}</p>
+                  )}
                   <div className="mb-4 text-sm text-pink-600 dark:text-pink-400 font-medium space-y-1">
                     <div className="flex items-baseline gap-2">
-                      <span>$220/인</span>
+                      <span>${ecoPrice12}/인</span>
                       <span className="text-xs text-pink-400 dark:text-pink-500">{language === "ko" ? "12시간 기준, 18~06시" : "12h, 18:00-06:00"}</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <span>$380/인</span>
+                      <span>${ecoPrice22}/인</span>
                       <span className="text-xs text-pink-400 dark:text-pink-500">{language === "ko" ? "22시간 기준, 12~10시" : "22h, 12:00-10:00"}</span>
                     </div>
                   </div>
@@ -2849,8 +2861,8 @@ export default function Home() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="12">{language === "ko" ? "12시간 ($220)" : "12h ($220)"}</SelectItem>
-                                  <SelectItem value="22">{language === "ko" ? "22시간 ($380)" : "22h ($380)"}</SelectItem>
+                                  <SelectItem value="12">{language === "ko" ? `12시간 ($${ecoPrice12})` : `12h ($${ecoPrice12})`}</SelectItem>
+                                  <SelectItem value="22">{language === "ko" ? `22시간 ($${ecoPrice22})` : `22h ($${ecoPrice22})`}</SelectItem>
                                 </SelectContent>
                               </Select>
                             )} 

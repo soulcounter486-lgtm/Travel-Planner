@@ -1431,14 +1431,22 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
 
       // 4. Eco Calculation
       if (input.ecoGirl?.enabled && input.ecoGirl.selections && input.ecoGirl.selections.length > 0) {
-        const priceMap: Record<string, number> = { "12": 220, "22": 380 };
+        const ecoSettings = await db.select().from(siteSettings).where(
+          sql`${siteSettings.key} IN ('eco_price_12', 'eco_price_22')`
+        );
+        const ecoSettingsMap: Record<string, string> = {};
+        ecoSettings.forEach(s => { ecoSettingsMap[s.key] = s.value; });
+        const ecoPriceMap: Record<string, number> = {
+          "12": Number(ecoSettingsMap["eco_price_12"]) || 220,
+          "22": Number(ecoSettingsMap["eco_price_22"]) || 380
+        };
         let totalEcoPrice = 0;
         const ecoDetails: string[] = [];
         
         for (const selection of input.ecoGirl.selections) {
           const count = Number(selection.count) || 1;
           const hours = (selection as any).hours || "12";
-          const rate = priceMap[hours] || 220;
+          const rate = ecoPriceMap[hours] || ecoPriceMap["12"];
           const price = count * rate;
           totalEcoPrice += price;
           ecoDetails.push(`${selection.date}: ${hours}시간 x ${count}명 x $${rate} = $${price}`);

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Loader2, Globe, Type, Search } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Globe, Type, Search, Users, ImageIcon, DollarSign, Upload, X } from "lucide-react";
 import { Link } from "wouter";
 
 export default function AdminSettings() {
@@ -27,6 +27,11 @@ export default function AdminSettings() {
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [seoKeywords, setSeoKeywords] = useState("");
+  const [ecoPrice12, setEcoPrice12] = useState("220");
+  const [ecoPrice22, setEcoPrice22] = useState("380");
+  const [ecoDescription, setEcoDescription] = useState("");
+  const [ecoImageUrl, setEcoImageUrl] = useState("");
+  const [ecoImageUploading, setEcoImageUploading] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -36,6 +41,10 @@ export default function AdminSettings() {
       setSeoTitle(settings["seo_title"] || "");
       setSeoDescription(settings["seo_description"] || "");
       setSeoKeywords(settings["seo_keywords"] || "");
+      setEcoPrice12(settings["eco_price_12"] || "220");
+      setEcoPrice22(settings["eco_price_22"] || "380");
+      setEcoDescription(settings["eco_description"] || "");
+      setEcoImageUrl(settings["eco_image_url"] || "");
     }
   }, [settings]);
 
@@ -59,6 +68,10 @@ export default function AdminSettings() {
         ["seo_title", seoTitle],
         ["seo_description", seoDescription],
         ["seo_keywords", seoKeywords],
+        ["eco_price_12", ecoPrice12],
+        ["eco_price_22", ecoPrice22],
+        ["eco_description", ecoDescription],
+        ["eco_image_url", ecoImageUrl],
       ];
       for (const [key, value] of entries) {
         await saveSetting(key, value.trim());
@@ -69,6 +82,29 @@ export default function AdminSettings() {
       toast({ title: "저장 실패", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEcoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEcoImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/upload-image", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setEcoImageUrl(data.url);
+      toast({ title: "이미지 업로드 완료" });
+    } catch {
+      toast({ title: "이미지 업로드 실패", variant: "destructive" });
+    } finally {
+      setEcoImageUploading(false);
     }
   };
 
@@ -106,6 +142,105 @@ export default function AdminSettings() {
       </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6 max-w-2xl">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              에코 설정
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">에코 서비스 이미지, 설명, 가격을 관리합니다</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>에코 이미지</Label>
+              {ecoImageUrl ? (
+                <div className="relative w-full aspect-video rounded-md overflow-hidden border">
+                  <img src={ecoImageUrl} alt="에코" className="w-full h-full object-cover" data-testid="img-eco-preview" />
+                  <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-black/50 text-white" onClick={() => setEcoImageUrl("")} data-testid="button-remove-eco-image">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer hover:bg-muted/30 transition-colors" data-testid="label-eco-image-upload">
+                  {ecoImageUploading ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                      <span className="text-sm text-muted-foreground">이미지 업로드</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleEcoImageUpload} data-testid="input-eco-image-upload" />
+                </label>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ecoDescription">에코 설명</Label>
+              <Textarea
+                id="ecoDescription"
+                value={ecoDescription}
+                onChange={(e) => setEcoDescription(e.target.value)}
+                placeholder="에코 서비스에 대한 설명을 입력하세요"
+                rows={3}
+                data-testid="input-eco-description"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ecoPrice12" className="flex items-center gap-1">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  12시간 가격 (USD)
+                </Label>
+                <Input
+                  id="ecoPrice12"
+                  type="number"
+                  min="0"
+                  value={ecoPrice12}
+                  onChange={(e) => setEcoPrice12(e.target.value)}
+                  placeholder="220"
+                  data-testid="input-eco-price-12"
+                />
+                <p className="text-xs text-muted-foreground">기본값: $220 (18~06시)</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ecoPrice22" className="flex items-center gap-1">
+                  <DollarSign className="w-3.5 h-3.5" />
+                  22시간 가격 (USD)
+                </Label>
+                <Input
+                  id="ecoPrice22"
+                  type="number"
+                  min="0"
+                  value={ecoPrice22}
+                  onChange={(e) => setEcoPrice22(e.target.value)}
+                  placeholder="380"
+                  data-testid="input-eco-price-22"
+                />
+                <p className="text-xs text-muted-foreground">기본값: $380 (12~10시)</p>
+              </div>
+            </div>
+            <div className="border rounded-md p-4 bg-muted/30">
+              <p className="text-sm font-medium mb-2">미리보기</p>
+              {ecoImageUrl && (
+                <img src={ecoImageUrl} alt="에코 미리보기" className="w-full h-24 object-cover rounded-md mb-2" />
+              )}
+              {ecoDescription && (
+                <p className="text-xs text-muted-foreground mb-2">{ecoDescription}</p>
+              )}
+              <div className="text-sm space-y-1">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-medium text-pink-600 dark:text-pink-400">${ecoPrice12 || "220"}/인</span>
+                  <span className="text-xs text-muted-foreground">12시간 기준, 18~06시</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-medium text-pink-600 dark:text-pink-400">${ecoPrice22 || "380"}/인</span>
+                  <span className="text-xs text-muted-foreground">22시간 기준, 12~10시</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
