@@ -1150,7 +1150,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                                             const profile = ecoProfiles.find(p => p.id === profileId);
                                             if (!profile) return null;
                                             return (
-                                              <div key={pk} className="relative w-9 h-9 rounded-md overflow-hidden border border-pink-300/50 flex-shrink-0">
+                                              <div key={pk} className="relative w-9 h-9 rounded-md overflow-hidden border border-pink-300/50 flex-shrink-0 cursor-pointer" onClick={() => setPreviewImage(profile.imageUrl)}>
                                                 <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
                                                 <div className={`absolute top-0 left-0 w-3 h-3 ${priorityColors[pri]} rounded-br-sm flex items-center justify-center`}>
                                                   <span className="text-[6px] font-bold text-white">{pri + 1}</span>
@@ -1499,6 +1499,27 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           )}
         </DialogContent>
       </Dialog>
+      {previewImage && !ecoPickOpen && (
+        <div
+          data-testid="eco-card-preview-overlay"
+          style={{ position: "fixed", inset: 0, zIndex: 2147483647, background: "rgba(0,0,0,0.95)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 24 }}
+          onClick={() => closePreview()}
+        >
+          <img
+            src={previewImage}
+            alt="preview"
+            style={{ maxWidth: "92vw", maxHeight: "72vh", objectFit: "contain", borderRadius: 8, pointerEvents: "none", userSelect: "none" }}
+            draggable={false}
+          />
+          <button
+            type="button"
+            style={{ color: "white", background: "rgba(255,255,255,0.3)", border: "2px solid rgba(255,255,255,0.6)", borderRadius: "50%", width: 60, height: 60, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+            onClick={(e) => { e.stopPropagation(); closePreview(); }}
+          >
+            {"\u2715"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
