@@ -260,10 +260,10 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       if (person[priority] === profileId) {
         person[priority] = null;
       } else {
-        for (let i = 0; i < persons.length; i++) {
-          if (i !== personIdx) {
-            for (const pk of priorityKeys) {
-              if (persons[i][pk] === profileId) persons[i][pk] = null;
+        if (priority === "first") {
+          for (let i = 0; i < persons.length; i++) {
+            if (i !== personIdx && persons[i].first === profileId) {
+              persons[i].first = null;
             }
           }
         }
@@ -1392,7 +1392,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                       <div className="grid grid-cols-3 gap-3">
                         {ecoProfiles.map(profile => {
                           const selectedPriority = priorityKeys.find(pk => currentPerson[pk] === profile.id);
-                          const isSelectedByOther = persons.some((p, idx) => idx !== activePersonIndex && (p.first === profile.id || p.second === profile.id || p.third === profile.id));
+                          const isSelectedByOther = persons.some((p, idx) => idx !== activePersonIndex && p.first === profile.id);
                           return (
                             <div key={profile.id} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedPriority ? "border-pink-500 ring-2 ring-pink-300" : isSelectedByOther ? "border-slate-200 dark:border-slate-600 opacity-30" : "border-slate-200 dark:border-slate-600"}`} data-testid={`eco-pick-profile-${profile.id}`}>
                               <div className="aspect-[3/4] relative">
@@ -1404,7 +1404,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                                 )}
                                 {isSelectedByOther && (
                                   <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">{language === "ko" ? "다른 인원 선택됨" : "Taken"}</span>
+                                    <span className="text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">{language === "ko" ? "1지망 선택됨" : "1st Taken"}</span>
                                   </div>
                                 )}
                               </div>
