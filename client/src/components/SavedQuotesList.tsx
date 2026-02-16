@@ -20,28 +20,98 @@ import html2canvas from "html2canvas";
 import logoImage from "@assets/BackgroundEraser_20240323_103507859_1768997960669.png";
 
 function EcoPreviewOverlay({ src, onClose }: { src: string | null; onClose: () => void }) {
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-    if (!src) return;
+    if (!src) {
+      if (overlayRef.current) {
+        overlayRef.current.remove();
+        overlayRef.current = null;
+      }
+      return;
+    }
+    if (overlayRef.current) return;
+
     const overlay = document.createElement("div");
     overlay.id = "eco-preview-overlay";
-    overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;touch-action:none;";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;touch-action:none;-webkit-tap-highlight-color:transparent;";
+
     const img = document.createElement("img");
     img.src = src;
-    img.style.cssText = "max-width:90vw;max-height:75vh;object-fit:contain;border-radius:8px;pointer-events:none;";
+    img.style.cssText = "max-width:90vw;max-height:75vh;object-fit:contain;border-radius:8px;pointer-events:none;user-select:none;-webkit-user-drag:none;";
+
     const closeBtn = document.createElement("div");
-    closeBtn.innerHTML = "&times;";
+    closeBtn.textContent = "\u2715";
     closeBtn.style.cssText = "color:white;background:rgba(255,255,255,0.25);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;";
+
     overlay.appendChild(img);
     overlay.appendChild(closeBtn);
-    const close = (e: Event) => { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); onClose(); };
-    overlay.addEventListener("click", close, true);
-    overlay.addEventListener("touchstart", (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
-    overlay.addEventListener("touchend", close, true);
-    overlay.addEventListener("pointerdown", (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
-    overlay.addEventListener("pointerup", close, true);
+    overlayRef.current = overlay;
+
+    let closing = false;
+    const doClose = () => {
+      if (closing) return;
+      closing = true;
+      setTimeout(() => { onCloseRef.current(); }, 50);
+    };
+
+    const blockAll = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    };
+
+    overlay.addEventListener("touchstart", blockAll, true);
+    overlay.addEventListener("touchmove", blockAll, true);
+    overlay.addEventListener("touchend", (e: Event) => { blockAll(e); doClose(); }, true);
+    overlay.addEventListener("touchcancel", blockAll, true);
+    overlay.addEventListener("pointerdown", blockAll, true);
+    overlay.addEventListener("pointermove", blockAll, true);
+    overlay.addEventListener("pointerup", (e: Event) => { blockAll(e); doClose(); }, true);
+    overlay.addEventListener("pointercancel", blockAll, true);
+    overlay.addEventListener("mousedown", blockAll, true);
+    overlay.addEventListener("mousemove", blockAll, true);
+    overlay.addEventListener("mouseup", blockAll, true);
+    overlay.addEventListener("click", (e: Event) => { blockAll(e); doClose(); }, true);
+    overlay.addEventListener("contextmenu", blockAll, true);
+
+    const docBlocker = (e: Event) => {
+      if (overlayRef.current && document.body.contains(overlayRef.current)) {
+        const t = e.target as Node;
+        if (!overlayRef.current.contains(t)) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }
+      }
+    };
+    document.addEventListener("touchstart", docBlocker, true);
+    document.addEventListener("touchend", docBlocker, true);
+    document.addEventListener("pointerdown", docBlocker, true);
+    document.addEventListener("pointerup", docBlocker, true);
+    document.addEventListener("click", docBlocker, true);
+    document.addEventListener("mousedown", docBlocker, true);
+    document.addEventListener("mouseup", docBlocker, true);
+
     document.body.appendChild(overlay);
-    return () => { document.body.removeChild(overlay); };
-  }, [src, onClose]);
+
+    return () => {
+      document.removeEventListener("touchstart", docBlocker, true);
+      document.removeEventListener("touchend", docBlocker, true);
+      document.removeEventListener("pointerdown", docBlocker, true);
+      document.removeEventListener("pointerup", docBlocker, true);
+      document.removeEventListener("click", docBlocker, true);
+      document.removeEventListener("mousedown", docBlocker, true);
+      document.removeEventListener("mouseup", docBlocker, true);
+      if (overlayRef.current) {
+        overlayRef.current.remove();
+        overlayRef.current = null;
+      }
+    };
+  }, [src]);
+
   return null;
 }
 
@@ -1447,7 +1517,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                           const isSelectedByOther = persons.some((p, idx) => idx !== activePersonIndex && p.first === profile.id);
                           return (
                             <div key={profile.id} className={`relative rounded-lg overflow-hidden border-2 transition-all ${selectedPriority ? "border-pink-500 ring-2 ring-pink-300" : isSelectedByOther ? "border-slate-200 dark:border-slate-600 opacity-30" : "border-slate-200 dark:border-slate-600"}`} data-testid={`eco-pick-profile-${profile.id}`}>
-                              <div className="aspect-[3/4] relative cursor-pointer" onClick={() => setPreviewImage(profile.imageUrl)}>
+                              <div className="aspect-[3/4] relative cursor-pointer" onClick={(e) => { e.stopPropagation(); e.preventDefault(); e.nativeEvent.stopImmediatePropagation(); setPreviewImage(profile.imageUrl); }}>
                                 <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
                                 {selectedPriority && (
                                   <div className={`absolute top-1 right-1 w-6 h-6 ${priorityColors[priorityKeys.indexOf(selectedPriority)]} rounded-full flex items-center justify-center`}>
