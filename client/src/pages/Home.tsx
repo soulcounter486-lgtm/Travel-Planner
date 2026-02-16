@@ -337,6 +337,13 @@ export default function Home() {
   const { data: ecoProfilesList = [] } = useQuery<EcoProfile[]>({
     queryKey: ["/api/eco-profiles"],
   });
+
+  // 예약확정 여부 조회 (에코 사진 공개 판단용)
+  const { data: depositStatus } = useQuery<{ confirmed: boolean }>({
+    queryKey: ["/api/my-deposit-confirmed"],
+    enabled: isAuthenticated,
+  });
+  const canViewEcoPhotos = isAdmin || (depositStatus?.confirmed === true);
   
   // 기본값 설정
   const villaPriceNote = siteSettingsData["villa_price_note"] || "가격은 방 오픈 갯수와 성수기(6,7,8,9월) 공휴일에 따라 상이 할 수 있습니다.";
@@ -2840,6 +2847,7 @@ export default function Home() {
                   {ecoDescriptionText && (
                     <p className="mb-3 text-sm text-muted-foreground">{ecoDescriptionText}</p>
                   )}
+                  <p className="mb-3 text-xs text-pink-500 dark:text-pink-400 font-medium">* 예약확정시 사진 초이스 가능</p>
                   <div className="mb-4 text-sm text-pink-600 dark:text-pink-400 font-medium space-y-1">
                     <div className="flex items-baseline gap-2">
                       <span>${ecoPrice12}/인</span>
@@ -2942,33 +2950,42 @@ export default function Home() {
                                 </div>
                               )}
                               <Label className="text-xs font-semibold text-slate-500">{count > 1 ? `${activePerson}${language === "ko" ? "님 선택 (1지망~3지망)" : " Pick (1st~3rd)"}` : (language === "ko" ? "선택 (1지망~3지망)" : "Pick (1st~3rd)")}</Label>
-                              <div className="grid grid-cols-4 gap-2">
-                                {ecoProfilesList.map((profile) => {
-                                  const rank = getRankForProfile(profile.id);
-                                  const rankLabels = ["", "1", "2", "3"];
-                                  const rankColors = ["", "bg-pink-500", "bg-orange-500", "bg-yellow-500"];
-                                  return (
-                                    <div key={profile.id} className={`relative cursor-pointer rounded-lg overflow-visible border-2 transition-all ${rank > 0 ? "border-pink-500 ring-2 ring-pink-500/30" : "border-transparent hover:border-slate-300"}`} data-testid={`eco-pick-${index}-${profile.id}`}>
-                                      <div onClick={() => setEcoPhotoModal({ dayIndex: index, person: activePerson, profile })} className="rounded-lg overflow-hidden">
-                                        {profile.imageUrl ? (
-                                          <img src={profile.imageUrl} alt={profile.name || ""} className="w-full aspect-square object-cover" />
-                                        ) : (
-                                          <div className="w-full aspect-square bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                                            <Users className="w-6 h-6 text-slate-400" />
+                              <div className="relative">
+                                <div className={`grid grid-cols-4 gap-2 ${!canViewEcoPhotos ? "blur-md pointer-events-none select-none" : ""}`}>
+                                  {ecoProfilesList.map((profile) => {
+                                    const rank = getRankForProfile(profile.id);
+                                    const rankLabels = ["", "1", "2", "3"];
+                                    const rankColors = ["", "bg-pink-500", "bg-orange-500", "bg-yellow-500"];
+                                    return (
+                                      <div key={profile.id} className={`relative cursor-pointer rounded-lg overflow-visible border-2 transition-all ${rank > 0 ? "border-pink-500 ring-2 ring-pink-500/30" : "border-transparent hover:border-slate-300"}`} data-testid={`eco-pick-${index}-${profile.id}`}>
+                                        <div onClick={() => canViewEcoPhotos && setEcoPhotoModal({ dayIndex: index, person: activePerson, profile })} className="rounded-lg overflow-hidden">
+                                          {profile.imageUrl ? (
+                                            <img src={profile.imageUrl} alt={profile.name || ""} className="w-full aspect-square object-cover" />
+                                          ) : (
+                                            <div className="w-full aspect-square bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                              <Users className="w-6 h-6 text-slate-400" />
+                                            </div>
+                                          )}
+                                        </div>
+                                        {profile.name && (
+                                          <div className="text-center py-0.5 text-xs truncate bg-white/90 dark:bg-slate-800/90">{profile.name}</div>
+                                        )}
+                                        {rank > 0 && (
+                                          <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${rankColors[rank]} text-white text-xs font-bold flex items-center justify-center shadow z-10`}>
+                                            {rankLabels[rank]}
                                           </div>
                                         )}
                                       </div>
-                                      {profile.name && (
-                                        <div className="text-center py-0.5 text-xs truncate bg-white/90 dark:bg-slate-800/90">{profile.name}</div>
-                                      )}
-                                      {rank > 0 && (
-                                        <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${rankColors[rank]} text-white text-xs font-bold flex items-center justify-center shadow z-10`}>
-                                          {rankLabels[rank]}
-                                        </div>
-                                      )}
+                                    );
+                                  })}
+                                </div>
+                                {!canViewEcoPhotos && (
+                                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                                    <div className="bg-black/60 text-white text-sm font-medium px-4 py-2 rounded-lg text-center shadow-lg">
+                                      {language === "ko" ? "예약확정 후 사진 선택이 가능합니다" : "Photo selection available after reservation confirmation"}
                                     </div>
-                                  );
-                                })}
+                                  </div>
+                                )}
                               </div>
                               {allPersonsDone && count > 1 && (
                                 <div className="mt-3 space-y-2 p-3 bg-pink-50 dark:bg-pink-950/20 rounded-lg border border-pink-200 dark:border-pink-800">

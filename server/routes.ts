@@ -1681,6 +1681,25 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  app.get("/api/my-deposit-confirmed", async (req, res) => {
+    try {
+      const user = (req as any).user;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      if (!userId) {
+        return res.json({ confirmed: false });
+      }
+      const userEmail = user?.claims?.email || user?.email;
+      if (isUserAdmin(userId, userEmail)) {
+        return res.json({ confirmed: true });
+      }
+      const quotes = await storage.getQuotesByUser(userId);
+      const hasConfirmed = quotes.some((q: any) => q.depositPaid === true);
+      return res.json({ confirmed: hasConfirmed });
+    } catch (err) {
+      res.json({ confirmed: false });
+    }
+  });
+
   app.get(api.quotes.list.path, async (req, res) => {
     const user = (req as any).user;
     const userId = user?.claims?.sub;
