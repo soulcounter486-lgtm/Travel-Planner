@@ -1722,16 +1722,28 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
 
   app.get(api.quotes.list.path, async (req, res) => {
     const user = (req as any).user;
-    const userId = user?.claims?.sub;
+    const claimsSub = user?.claims?.sub;
+    const userId = claimsSub || user?.id || (req.session as any)?.userId;
     const userEmail = user?.claims?.email || user?.email;
-    // isUserAdmin 함수를 사용하여 ID 또는 이메일로 관리자 확인
     const isAdmin = isUserAdmin(userId, userEmail);
     
-    // 관리자는 전체 목록, 일반 사용자는 자신의 것만
-    const quotes = isAdmin 
-      ? await storage.getAllQuotes()
-      : await storage.getQuotesByUser(userId);
-    res.json(quotes);
+    console.log("[QUOTES LIST] claimsSub:", claimsSub, "user.id:", user?.id, "session.userId:", (req.session as any)?.userId, "resolved:", userId, "isAdmin:", isAdmin);
+    
+    if (isAdmin) {
+      const quotes = await storage.getAllQuotes();
+      return res.json(quotes);
+    }
+
+    const allUserIds = [userId, claimsSub, user?.id, (req.session as any)?.userId].filter(Boolean);
+    const uniqueIds = Array.from(new Set(allUserIds.map(String)));
+    let allQuotes: any[] = [];
+    for (const uid of uniqueIds) {
+      const q = await storage.getQuotesByUser(uid);
+      allQuotes.push(...q);
+    }
+    const seen = new Set<number>();
+    allQuotes = allQuotes.filter(q => { if (seen.has(q.id)) return false; seen.add(q.id); return true; });
+    res.json(allQuotes);
   });
 
   app.delete("/api/quotes/:id", async (req, res) => {
