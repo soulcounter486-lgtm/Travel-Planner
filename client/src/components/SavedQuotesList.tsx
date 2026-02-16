@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2 } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuotes } from "@/hooks/use-quotes";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -55,12 +55,19 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     return match ? parseInt(match[1]) : 0;
   };
 
+  const villaDetailsPriceOnly = useMemo(() => {
+    if (!breakdown?.villa?.details) return [];
+    return breakdown.villa.details
+      .map((d: string, origIdx: number) => ({ detail: d, origIdx }))
+      .filter((item: { detail: string; origIdx: number }) => item.detail.includes(": $"));
+  }, [breakdown?.villa?.details]);
+
   const getAdjustedVillaTotal = () => {
-    if (!breakdown?.villa?.details) return breakdown?.villa?.price || 0;
+    if (!villaDetailsPriceOnly.length) return breakdown?.villa?.price || 0;
     let total = 0;
-    breakdown.villa.details.forEach((detail, idx) => {
-      const originalPrice = parsePrice(detail);
-      total += villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
+    villaDetailsPriceOnly.forEach((item: { detail: string; origIdx: number }) => {
+      const originalPrice = parsePrice(item.detail);
+      total += villaAdjustments[item.origIdx] !== undefined ? villaAdjustments[item.origIdx] : originalPrice;
     });
     return total;
   };
@@ -266,6 +273,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       if (breakdown?.villa) {
         const villaDetails = breakdown.villa.details || [];
         const updatedVillaDetails = villaDetails.map((detail: string, idx: number) => {
+          if (!detail.includes(": $")) return detail;
           if (villaAdjustments[idx] !== undefined) {
             const dayMatch = detail.match(/^([^:]+):/);
             const dayName = dayMatch ? dayMatch[1] : "";
@@ -628,14 +636,14 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                       </div>
                     )}
                     <div className="text-[10px] text-muted-foreground space-y-1 pl-2">
-                      {breakdown.villa.details.map((detail, idx) => {
-                        const originalPrice = parsePrice(detail);
-                        const currentPrice = villaAdjustments[idx] !== undefined ? villaAdjustments[idx] : originalPrice;
-                        const dateMatch = detail.match(/^([^:]+):/);
-                        const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
+                      {villaDetailsPriceOnly.map((item: { detail: string; origIdx: number }) => {
+                        const originalPrice = parsePrice(item.detail);
+                        const currentPrice = villaAdjustments[item.origIdx] !== undefined ? villaAdjustments[item.origIdx] : originalPrice;
+                        const dateMatch = item.detail.match(/^([^:]+):/);
+                        const dateLabel = dateMatch ? dateMatch[1] : "";
                         
                         return (
-                          <div key={idx} className="flex items-center gap-1">
+                          <div key={item.origIdx} className="flex items-center gap-1">
                             <span className="w-1 h-1 rounded-full bg-primary/40" />
                             <span className="flex-1">{dateLabel}</span>
                             {isEditing && !isCapturing ? (
@@ -647,7 +655,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                                   value={currentPrice === 0 ? "" : currentPrice}
                                   onChange={(e) => {
                                     const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                                    setVillaAdjustments(prev => ({ ...prev, [idx]: val }));
+                                    setVillaAdjustments(prev => ({ ...prev, [item.origIdx]: val }));
                                   }}
                                   className="w-14 text-center text-[10px] font-medium bg-white border border-slate-300 rounded px-1"
                                   onClick={(e) => e.stopPropagation()}
