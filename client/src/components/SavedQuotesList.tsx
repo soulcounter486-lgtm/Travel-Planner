@@ -1465,9 +1465,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </DialogContent>
       </Dialog>
       {previewImage && ReactDOM.createPortal(
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center" style={{ zIndex: 99999 }} onPointerDown={() => setPreviewImage(null)} data-testid="eco-preview-overlay">
-          <img src={previewImage} alt="preview" className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg" onPointerDown={(e) => e.stopPropagation()} />
-          <div className="absolute top-4 right-4 text-white bg-black/60 rounded-full w-10 h-10 flex items-center justify-center text-xl cursor-pointer" onPointerDown={(e) => { e.stopPropagation(); setPreviewImage(null); }} data-testid="button-close-preview">&times;</div>
+        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center gap-4" style={{ zIndex: 99999 }} onPointerDown={() => setPreviewImage(null)} data-testid="eco-preview-overlay">
+          <img src={previewImage} alt="preview" className="max-w-[90vw] max-h-[75vh] object-contain rounded-lg" onPointerDown={(e) => e.stopPropagation()} />
+          <button className="text-white bg-white/20 rounded-full w-10 h-10 flex items-center justify-center text-xl" onPointerDown={(e) => { e.stopPropagation(); setPreviewImage(null); }} data-testid="button-close-preview">&times;</button>
         </div>,
         document.body
       )}
