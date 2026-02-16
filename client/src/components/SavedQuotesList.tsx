@@ -70,7 +70,22 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const isMaleUser = userGender === "male";
 
   const origEcoSelections = useMemo(() => {
-    return ((breakdown as any)?.ecoGirl?.selections || []) as EcoSelection[];
+    const eco = (breakdown as any)?.ecoGirl;
+    if (!eco) return [] as EcoSelection[];
+    if (Array.isArray(eco.selections) && eco.selections.length > 0) {
+      return eco.selections as EcoSelection[];
+    }
+    if (Array.isArray(eco.details) && eco.details.length > 0) {
+      const parsed: EcoSelection[] = [];
+      for (const detail of eco.details) {
+        const m = String(detail).match(/^(\d{4}-\d{2}-\d{2}):\s*(\d+)시간\s*x\s*(\d+)명/);
+        if (m) {
+          parsed.push({ date: m[1], hours: m[2] as "12" | "22", count: parseInt(m[3]) });
+        }
+      }
+      if (parsed.length > 0) return parsed;
+    }
+    return [] as EcoSelection[];
   }, [breakdown]);
 
   const [editableEcoSelections, setEditableEcoSelections] = useState<EcoSelection[]>([...origEcoSelections]);
