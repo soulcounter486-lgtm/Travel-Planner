@@ -5,7 +5,7 @@ import fs from "fs";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans, customerChatRooms, customerChatMessages, shopProducts, insertShopProductSchema, ecoProfiles, insertEcoProfileSchema } from "@shared/schema";
+import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpenseGroupSchema, insertExpenseSchema, posts, comments, insertPostSchema, insertCommentSchema, instagramSyncedPosts, pushSubscriptions, userLocations, insertUserLocationSchema, users, villas, insertVillaSchema, places, insertPlaceSchema, placeCategories, insertPlaceCategorySchema, siteSettings, adminMessages, insertAdminMessageSchema, coupons, insertCouponSchema, userCoupons, insertUserCouponSchema, announcements, insertAnnouncementSchema, adminNotifications, quoteCategories, insertQuoteCategorySchema, savedTravelPlans, customerChatRooms, customerChatMessages, shopProducts, insertShopProductSchema, ecoProfiles, insertEcoProfileSchema, quotes } from "@shared/schema";
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
@@ -1551,7 +1551,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   app.post(api.quotes.create.path, async (req, res) => {
     try {
       const input = api.quotes.create.input.parse(req.body);
-      const userId = (req as any).user?.claims?.sub;
+      const user = (req as any).user;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
       
       // breakdown에서 체크인/체크아웃 날짜 추출
       const breakdown = input.breakdown as any;
@@ -1563,6 +1564,25 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     } catch (err) {
       if (err instanceof z.ZodError) { res.status(400).json({ message: err.errors[0].message }); }
       else { res.status(500).json({ message: "Internal server error" }); }
+    }
+  });
+
+  app.patch("/api/quotes/:id/user", isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const adminId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const adminEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(adminId, adminEmail)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const id = parseInt(req.params.id);
+      const { userId } = req.body;
+      if (!userId) return res.status(400).json({ message: "userId required" });
+      const [updated] = await db.update(quotes).set({ userId }).where(eq(quotes.id, id)).returning();
+      if (!updated) return res.status(404).json({ message: "Quote not found" });
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
