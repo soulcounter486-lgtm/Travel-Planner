@@ -1299,24 +1299,26 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   {language === "ko" ? "일정 추가를 눌러 에코 일정을 추가하세요" : "Click Add to create an eco schedule"}
                 </div>
               )}
-              {editableEcoSelections.map((sel, idx) => (
-                <div key={`${sel.date}-${idx}`} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                  <Input type="date" value={sel.date} onChange={(e) => handleUpdateEcoSelection(sel.date, "date", e.target.value)} className="flex-1 text-xs h-8" data-testid={`eco-schedule-date-${idx}`} />
-                  <Select value={sel.hours} onValueChange={(v) => handleUpdateEcoSelection(sel.date, "hours", v)}>
-                    <SelectTrigger className="w-20 h-8 text-xs" data-testid={`eco-schedule-hours-${idx}`}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="12">12h</SelectItem>
-                      <SelectItem value="22">22h</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center gap-1">
-                    <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", Math.max(1, sel.count - 1))} data-testid={`eco-schedule-count-minus-${idx}`}><Minus className="w-3 h-3" /></Button>
-                    <span className="text-xs w-4 text-center">{sel.count}</span>
-                    <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", sel.count + 1)} data-testid={`eco-schedule-count-plus-${idx}`}><Plus className="w-3 h-3" /></Button>
+              <div className={editableEcoSelections.length > 2 ? "max-h-[96px] overflow-y-auto space-y-2 pr-1" : "space-y-2"}>
+                {editableEcoSelections.map((sel, idx) => (
+                  <div key={`${sel.date}-${idx}`} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <Input type="date" value={sel.date} onChange={(e) => handleUpdateEcoSelection(sel.date, "date", e.target.value)} className="flex-1 text-xs h-8" data-testid={`eco-schedule-date-${idx}`} />
+                    <Select value={sel.hours} onValueChange={(v) => handleUpdateEcoSelection(sel.date, "hours", v)}>
+                      <SelectTrigger className="w-20 h-8 text-xs" data-testid={`eco-schedule-hours-${idx}`}><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="12">12h</SelectItem>
+                        <SelectItem value="22">22h</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", Math.max(1, sel.count - 1))} data-testid={`eco-schedule-count-minus-${idx}`}><Minus className="w-3 h-3" /></Button>
+                      <span className="text-xs w-4 text-center">{sel.count}</span>
+                      <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateEcoSelection(sel.date, "count", sel.count + 1)} data-testid={`eco-schedule-count-plus-${idx}`}><Plus className="w-3 h-3" /></Button>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => handleRemoveEcoSelection(sel.date)} data-testid={`eco-schedule-remove-${idx}`}><Trash2 className="w-3 h-3" /></Button>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => handleRemoveEcoSelection(sel.date)} data-testid={`eco-schedule-remove-${idx}`}><Trash2 className="w-3 h-3" /></Button>
-                </div>
-              ))}
+                ))}
+              </div>
               {editableEcoSelections.length > 0 && (
                 <div className="text-right text-sm font-semibold text-pink-500">
                   {language === "ko" ? "에코 합계" : "Eco Total"}: ${ecoTotalPrice.toLocaleString()}
@@ -1377,6 +1379,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                           );
                         })}
                       </div>
+                      <p className="text-[10px] text-muted-foreground">{language === "ko" ? "사진 밑 숫자 클릭으로 1,2,3지망 선택" : "Click 1/2/3 below photo to pick"}</p>
                     </>
                   );
                 })()}
