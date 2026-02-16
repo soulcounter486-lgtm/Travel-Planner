@@ -1465,9 +1465,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         </DialogContent>
       </Dialog>
       {previewImage && ReactDOM.createPortal(
-        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center gap-4" style={{ zIndex: 99999 }} onPointerDown={() => setPreviewImage(null)} data-testid="eco-preview-overlay">
-          <img src={previewImage} alt="preview" className="max-w-[90vw] max-h-[75vh] object-contain rounded-lg" onPointerDown={(e) => e.stopPropagation()} />
-          <button className="text-white bg-white/20 rounded-full w-10 h-10 flex items-center justify-center text-xl" onPointerDown={(e) => { e.stopPropagation(); setPreviewImage(null); }} data-testid="button-close-preview">&times;</button>
+        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center gap-4" style={{ zIndex: 99999, touchAction: "none" }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} data-testid="eco-preview-overlay">
+          <img src={previewImage} alt="preview" className="max-w-[90vw] max-h-[75vh] object-contain rounded-lg" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); }} />
+          <div className="text-white bg-white/20 rounded-full w-12 h-12 flex items-center justify-center text-2xl cursor-pointer select-none" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} data-testid="button-close-preview">&times;</div>
         </div>,
         document.body
       )}
