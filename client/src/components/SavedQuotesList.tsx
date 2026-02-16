@@ -1,4 +1,3 @@
-import ReactDOM from "react-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { EcoProfile } from "@shared/schema";
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useQuotes } from "@/hooks/use-quotes";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -19,6 +18,32 @@ import { format } from "date-fns";
 import { type QuoteBreakdown, type Quote } from "@shared/schema";
 import html2canvas from "html2canvas";
 import logoImage from "@assets/BackgroundEraser_20240323_103507859_1768997960669.png";
+
+function EcoPreviewOverlay({ src, onClose }: { src: string | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!src) return;
+    const overlay = document.createElement("div");
+    overlay.id = "eco-preview-overlay";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;touch-action:none;";
+    const img = document.createElement("img");
+    img.src = src;
+    img.style.cssText = "max-width:90vw;max-height:75vh;object-fit:contain;border-radius:8px;pointer-events:none;";
+    const closeBtn = document.createElement("div");
+    closeBtn.innerHTML = "&times;";
+    closeBtn.style.cssText = "color:white;background:rgba(255,255,255,0.25);border-radius:50%;width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;";
+    overlay.appendChild(img);
+    overlay.appendChild(closeBtn);
+    const close = (e: Event) => { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); onClose(); };
+    overlay.addEventListener("click", close, true);
+    overlay.addEventListener("touchstart", (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
+    overlay.addEventListener("touchend", close, true);
+    overlay.addEventListener("pointerdown", (e) => { e.stopPropagation(); e.stopImmediatePropagation(); }, true);
+    overlay.addEventListener("pointerup", close, true);
+    document.body.appendChild(overlay);
+    return () => { document.body.removeChild(overlay); };
+  }, [src, onClose]);
+  return null;
+}
 
 interface QuoteItemProps {
   quote: Quote;
@@ -61,6 +86,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const queryClient = useQueryClient();
   const [ecoPickOpen, setEcoPickOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const closePreview = useCallback(() => setPreviewImage(null), []);
   const [isSavingEcoPicks, setIsSavingEcoPicks] = useState(false);
 
   type PersonPick = { first: number | null; second: number | null; third: number | null };
@@ -1464,13 +1490,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           )}
         </DialogContent>
       </Dialog>
-      {previewImage && ReactDOM.createPortal(
-        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-center gap-4" style={{ zIndex: 99999, touchAction: "none" }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} data-testid="eco-preview-overlay">
-          <img src={previewImage} alt="preview" className="max-w-[90vw] max-h-[75vh] object-contain rounded-lg" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); }} />
-          <div className="text-white bg-white/20 rounded-full w-12 h-12 flex items-center justify-center text-2xl cursor-pointer select-none" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewImage(null); }} data-testid="button-close-preview">&times;</div>
-        </div>,
-        document.body
-      )}
+      <EcoPreviewOverlay src={previewImage} onClose={closePreview} />
     </div>
   );
 }
