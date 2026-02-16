@@ -349,6 +349,8 @@ export default function Home() {
   const ecoDescriptionText = siteSettingsData["eco_description"] || "";
   const ecoImageUrl = siteSettingsData["eco_image_url"] || "";
   const [selectedVillaId, setSelectedVillaId] = useState<number | null>(null);
+  const [ecoActivePerson, setEcoActivePerson] = useState<Record<number, string>>({});
+  const [ecoPhotoModal, setEcoPhotoModal] = useState<{ dayIndex: number; person: string; profile: any } | null>(null);
   const [amenityFilters, setAmenityFilters] = useState<VillaAmenity[]>([]);
   const [showAmenityFilters, setShowAmenityFilters] = useState(false);
   const [villaSortMode, setVillaSortMode] = useState<"default" | "priceLow" | "priceHigh" | "rooms">("default");
@@ -1208,6 +1210,12 @@ export default function Home() {
                       <Link href="/admin/shop-products" className="flex items-center cursor-pointer" data-testid="link-admin-shop-products">
                         <ShoppingBag className="w-4 h-4 mr-2" />
                         상품관리
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/eco-profiles" className="flex items-center cursor-pointer" data-testid="link-admin-eco-profiles">
+                        <Users className="w-4 h-4 mr-2" />
+                        에코프로필
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -2845,32 +2853,47 @@ export default function Home() {
                   <div className="space-y-6">
                     {values.ecoGirl?.selections?.map((selection, index) => {
                       const currentPicks = selection.picks || [];
+                      const count = Number(selection.count) || 1;
+                      const personLabels = Array.from({ length: Math.min(count, 10) }, (_, i) => String.fromCharCode(65 + i));
+                      const storedPerson = ecoActivePerson[index];
+                      const activePerson = (storedPerson && personLabels.includes(storedPerson)) ? storedPerson : (personLabels[0] || "A");
+                      const personPicks = currentPicks.filter(p => p.person === activePerson);
                       const getRankForProfile = (profileId: number) => {
-                        const pick = currentPicks.find(p => p.profileId === profileId);
+                        const pick = personPicks.find(p => p.profileId === profileId);
                         return pick ? pick.rank : 0;
                       };
-                      const handlePickProfile = (profileId: number) => {
-                        const existing = currentPicks.find(p => p.profileId === profileId);
-                        let newPicks;
+                      const handlePickProfile = (profileId: number, fromModal?: boolean) => {
+                        const existing = personPicks.find(p => p.profileId === profileId);
+                        let updatedPersonPicks;
                         if (existing) {
-                          newPicks = currentPicks.filter(p => p.profileId !== profileId);
+                          updatedPersonPicks = personPicks.filter(p => p.profileId !== profileId);
                           const removedRank = existing.rank;
-                          newPicks = newPicks.map(p => p.rank > removedRank ? { ...p, rank: p.rank - 1 } : p);
+                          updatedPersonPicks = updatedPersonPicks.map(p => p.rank > removedRank ? { ...p, rank: p.rank - 1 } : p);
                         } else {
-                          const nextRank = currentPicks.length + 1;
+                          const nextRank = personPicks.length + 1;
                           if (nextRank > 3) return;
-                          newPicks = [...currentPicks, { profileId, rank: nextRank }];
+                          updatedPersonPicks = [...personPicks, { person: activePerson, profileId, rank: nextRank }];
                         }
+                        const otherPicks = currentPicks.filter(p => p.person !== activePerson);
+                        const newPicks = [...otherPicks, ...updatedPersonPicks];
                         const sels = form.getValues("ecoGirl.selections") || [];
                         const updated = [...sels];
                         updated[index] = { ...updated[index], picks: newPicks };
                         form.setValue("ecoGirl.selections", updated, { shouldDirty: true });
+                        if (fromModal && ecoPhotoModal) {
+                          const newRank = getRankForProfile(profileId) > 0 ? 0 : (personPicks.length + 1);
+                          setEcoPhotoModal({ ...ecoPhotoModal, profile: ecoPhotoModal.profile });
+                        }
                       };
+                      const allPersonsDone = personLabels.every(person => {
+                        const pp = currentPicks.filter(p => p.person === person);
+                        return pp.length >= 1;
+                      });
                       return (
                         <div key={`eco-day-${index}`} className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
                           <div className="flex items-center justify-between gap-2 flex-wrap">
                             <span className="text-xs font-bold text-pink-600 dark:text-pink-400">{language === "ko" ? `${index + 1}일차` : `Day ${index + 1}`}</span>
-                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-rose-500" onClick={() => handleRemoveEcoDay(index)} type="button" data-testid={`button-remove-eco-day-${index}`}>
+                            <Button variant="ghost" size="icon" className="text-slate-400" onClick={() => handleRemoveEcoDay(index)} type="button" data-testid={`button-remove-eco-day-${index}`}>
                               <X className="w-4 h-4" />
                             </Button>
                           </div>
@@ -2898,32 +2921,48 @@ export default function Home() {
                             <div className="space-y-1">
                               <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "인원" : "Count"}</Label>
                               <Controller control={form.control} name={`ecoGirl.selections.${index}.count`} render={({ field: f }) => (
-                                <Input type="number" min="1" {...f} value={f.value ?? ""} onChange={(e) => { const val = e.target.value; f.onChange(val === "" ? "" : parseInt(val)); }} className="h-9 rounded-lg text-xs border-slate-200" data-testid={`input-eco-count-${index}`} />
+                                <Input type="number" min="1" max="10" {...f} value={f.value ?? ""} onChange={(e) => { const val = e.target.value; f.onChange(val === "" ? "" : parseInt(val)); }} className="h-9 rounded-lg text-xs border-slate-200" data-testid={`input-eco-count-${index}`} />
                               )} />
                             </div>
                           </div>
-                          {ecoProfilesList.length > 0 && (
+                          {ecoProfilesList.length > 0 && count > 0 && (
                             <div className="space-y-2">
-                              <Label className="text-xs font-semibold text-slate-500">{language === "ko" ? "선택 (1지망~3지망)" : "Pick (1st~3rd)"}</Label>
+                              {count > 1 && (
+                                <div className="flex gap-1 flex-wrap">
+                                  {personLabels.map((person) => {
+                                    const pp = currentPicks.filter(p => p.person === person);
+                                    const done = pp.length >= 1;
+                                    const isActive = activePerson === person;
+                                    return (
+                                      <button key={person} type="button" onClick={() => setEcoActivePerson(prev => ({ ...prev, [index]: person }))} className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${isActive ? "bg-pink-500 text-white shadow" : done ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-300 dark:border-green-700" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600"}`} data-testid={`eco-tab-${index}-${person}`}>
+                                        {person} {done ? "\u2713" : ""}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                              <Label className="text-xs font-semibold text-slate-500">{count > 1 ? `${activePerson}${language === "ko" ? "님 선택 (1지망~3지망)" : " Pick (1st~3rd)"}` : (language === "ko" ? "선택 (1지망~3지망)" : "Pick (1st~3rd)")}</Label>
                               <div className="grid grid-cols-4 gap-2">
                                 {ecoProfilesList.map((profile) => {
                                   const rank = getRankForProfile(profile.id);
                                   const rankLabels = ["", "1", "2", "3"];
                                   const rankColors = ["", "bg-pink-500", "bg-orange-500", "bg-yellow-500"];
                                   return (
-                                    <div key={profile.id} className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${rank > 0 ? "border-pink-500 ring-2 ring-pink-500/30" : "border-transparent hover:border-slate-300"}`} onClick={() => handlePickProfile(profile.id)} data-testid={`eco-pick-${index}-${profile.id}`}>
-                                      {profile.imageUrl ? (
-                                        <img src={profile.imageUrl} alt={profile.name || ""} className="w-full aspect-square object-cover" />
-                                      ) : (
-                                        <div className="w-full aspect-square bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                                          <Users className="w-6 h-6 text-slate-400" />
-                                        </div>
-                                      )}
+                                    <div key={profile.id} className={`relative cursor-pointer rounded-lg overflow-visible border-2 transition-all ${rank > 0 ? "border-pink-500 ring-2 ring-pink-500/30" : "border-transparent hover:border-slate-300"}`} data-testid={`eco-pick-${index}-${profile.id}`}>
+                                      <div onClick={() => setEcoPhotoModal({ dayIndex: index, person: activePerson, profile })} className="rounded-lg overflow-hidden">
+                                        {profile.imageUrl ? (
+                                          <img src={profile.imageUrl} alt={profile.name || ""} className="w-full aspect-square object-cover" />
+                                        ) : (
+                                          <div className="w-full aspect-square bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                                            <Users className="w-6 h-6 text-slate-400" />
+                                          </div>
+                                        )}
+                                      </div>
                                       {profile.name && (
                                         <div className="text-center py-0.5 text-xs truncate bg-white/90 dark:bg-slate-800/90">{profile.name}</div>
                                       )}
                                       {rank > 0 && (
-                                        <div className={`absolute top-1 right-1 w-5 h-5 rounded-full ${rankColors[rank]} text-white text-xs font-bold flex items-center justify-center shadow`}>
+                                        <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${rankColors[rank]} text-white text-xs font-bold flex items-center justify-center shadow z-10`}>
                                           {rankLabels[rank]}
                                         </div>
                                       )}
@@ -2931,6 +2970,30 @@ export default function Home() {
                                   );
                                 })}
                               </div>
+                              {allPersonsDone && count > 1 && (
+                                <div className="mt-3 space-y-2 p-3 bg-pink-50 dark:bg-pink-950/20 rounded-lg border border-pink-200 dark:border-pink-800">
+                                  <p className="text-xs font-bold text-pink-700 dark:text-pink-300">{language === "ko" ? "선택 결과" : "Selection Results"}</p>
+                                  {personLabels.map(person => {
+                                    const pp = currentPicks.filter(p => p.person === person).sort((a, b) => a.rank - b.rank);
+                                    return (
+                                      <div key={person} className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-xs font-bold text-pink-600 dark:text-pink-400 w-5">{person}</span>
+                                        {pp.map(pick => {
+                                          const prof = ecoProfilesList.find(pr => pr.id === pick.profileId);
+                                          const rankLabel = pick.rank === 1 ? "1st" : pick.rank === 2 ? "2nd" : "3rd";
+                                          return (
+                                            <div key={pick.profileId} className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-md px-1.5 py-0.5 border border-slate-200 dark:border-slate-700">
+                                              {prof?.imageUrl && <img src={prof.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover" />}
+                                              <span className="text-xs text-slate-600 dark:text-slate-300">{prof?.name || "?"}</span>
+                                              <span className="text-xs text-pink-500 font-bold">{rankLabel}</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -2975,6 +3038,69 @@ export default function Home() {
                 </SectionCard>
               )} />
             )}
+            {ecoPhotoModal && (() => {
+              const sel = values.ecoGirl?.selections?.[ecoPhotoModal.dayIndex];
+              const allPicks = sel?.picks || [];
+              const personPicks = allPicks.filter(p => p.person === ecoPhotoModal.person);
+              const currentRank = personPicks.find(p => p.profileId === ecoPhotoModal.profile.id)?.rank || 0;
+              const rankLabels = ["", "1", "2", "3"];
+              const rankColors = ["", "bg-pink-500", "bg-orange-500", "bg-yellow-500"];
+              const handleModalPick = () => {
+                const existing = personPicks.find(p => p.profileId === ecoPhotoModal.profile.id);
+                let updatedPersonPicks;
+                if (existing) {
+                  updatedPersonPicks = personPicks.filter(p => p.profileId !== ecoPhotoModal.profile.id);
+                  const removedRank = existing.rank;
+                  updatedPersonPicks = updatedPersonPicks.map(p => p.rank > removedRank ? { ...p, rank: p.rank - 1 } : p);
+                } else {
+                  const nextRank = personPicks.length + 1;
+                  if (nextRank > 3) return;
+                  updatedPersonPicks = [...personPicks, { person: ecoPhotoModal.person, profileId: ecoPhotoModal.profile.id, rank: nextRank }];
+                }
+                const otherPicks = allPicks.filter(p => p.person !== ecoPhotoModal.person);
+                const newPicks = [...otherPicks, ...updatedPersonPicks];
+                const sels = form.getValues("ecoGirl.selections") || [];
+                const updated = [...sels];
+                updated[ecoPhotoModal.dayIndex] = { ...updated[ecoPhotoModal.dayIndex], picks: newPicks };
+                form.setValue("ecoGirl.selections", updated, { shouldDirty: true });
+              };
+              return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setEcoPhotoModal(null)} data-testid="eco-photo-modal">
+                  <div className="relative max-w-sm w-full bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+                    {ecoPhotoModal.profile.imageUrl ? (
+                      <img src={ecoPhotoModal.profile.imageUrl} alt={ecoPhotoModal.profile.name || ""} className="w-full aspect-[3/4] object-cover" />
+                    ) : (
+                      <div className="w-full aspect-[3/4] bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                        <Users className="w-16 h-16 text-slate-400" />
+                      </div>
+                    )}
+                    {currentRank > 0 && (
+                      <div className={`absolute top-3 right-3 w-8 h-8 rounded-full ${rankColors[currentRank]} text-white text-sm font-bold flex items-center justify-center shadow-lg`}>
+                        {rankLabels[currentRank]}
+                      </div>
+                    )}
+                    <div className="p-4 space-y-3">
+                      {ecoPhotoModal.profile.name && (
+                        <p className="text-center text-lg font-bold">{ecoPhotoModal.profile.name}</p>
+                      )}
+                      <div className="flex gap-2">
+                        <Button
+                          className={`flex-1 ${currentRank > 0 ? "bg-pink-500 hover:bg-pink-600 text-white" : ""}`}
+                          variant={currentRank > 0 ? "default" : "outline"}
+                          onClick={handleModalPick}
+                          data-testid="button-modal-pick"
+                        >
+                          {currentRank > 0 ? `${rankLabels[currentRank]}${language === "ko" ? "지망 선택됨 (해제)" : " Selected (Remove)"}` : (personPicks.length >= 3 ? (language === "ko" ? "3개 모두 선택됨" : "All 3 Selected") : (language === "ko" ? "선택하기" : "Select"))}
+                        </Button>
+                        <Button variant="ghost" onClick={() => setEcoPhotoModal(null)} data-testid="button-modal-close">
+                          {language === "ko" ? "닫기" : "Close"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           <div className="lg:col-span-4">
             <QuoteSummary breakdown={breakdown} isLoading={calculateMutation.isPending} onSave={handleSaveQuote} isSaving={createQuoteMutation.isPending} />

@@ -108,6 +108,7 @@ export const calculateQuoteSchema = z.object({
       count: z.number().min(1).default(1),
       hours: z.enum(["12", "22"]).default("12"),
       picks: z.array(z.object({
+        person: z.string(),
         profileId: z.number(),
         rank: z.number().min(1).max(3),
       })).optional(),

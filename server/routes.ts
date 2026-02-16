@@ -1455,11 +1455,11 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         breakdown.ecoGirl.price = totalEcoPrice;
         breakdown.ecoGirl.details = ecoDetails;
         breakdown.ecoGirl.description = `${input.ecoGirl.selections.length}일`;
-        breakdown.ecoGirl.selections = input.ecoGirl.selections.map(s => ({
+        breakdown.ecoGirl.selections = input.ecoGirl.selections.map((s: any) => ({
           date: s.date,
-          hours: (s as any).hours || "12",
+          hours: s.hours || "12",
           count: Number(s.count) || 1,
-          picks: (s as any).picks || [],
+          picks: s.picks || [],
         }));
       }
 
