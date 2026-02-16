@@ -1128,43 +1128,45 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                       const savedNames = (quote.ecoPicks as any)?.personNames;
                       const pNames: string[] = Array.isArray(savedNames) ? savedNames : defaultPersonLabels;
                       return (
-                        <div className="mt-2 pt-2 border-t border-pink-200/30 space-y-2">
-                          {ecoSelections.map(sel => {
-                            const persons = selectedEcoPicks[sel.date];
-                            if (!Array.isArray(persons)) return null;
-                            const hasAny = persons.some(p => p.first || p.second || p.third);
-                            if (!hasAny) return null;
-                            return (
-                              <div key={sel.date}>
-                                <div className="text-[10px] font-semibold text-muted-foreground mb-1">{sel.date.slice(5)}</div>
-                                {persons.map((person, pi) => {
-                                  if (!person.first && !person.second && !person.third) return null;
-                                  return (
-                                    <div key={pi} className="mb-1.5">
-                                      <div className="text-[9px] font-medium text-muted-foreground mb-0.5 pl-1">{pNames[pi] || `${String.fromCharCode(65 + pi)}`}</div>
-                                      <div className="flex gap-1 flex-wrap pl-1">
-                                        {priorityKeys.map((pk, pri) => {
-                                          const profileId = person[pk];
-                                          if (!profileId) return null;
-                                          const profile = ecoProfiles.find(p => p.id === profileId);
-                                          if (!profile) return null;
-                                          return (
-                                            <div key={pk} className="relative w-10 h-10 rounded-md overflow-hidden border border-pink-300/50 flex-shrink-0">
-                                              <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
-                                              <div className={`absolute top-0 left-0 w-3.5 h-3.5 ${priorityColors[pri]} rounded-br-md flex items-center justify-center`}>
-                                                <span className="text-[7px] font-bold text-white">{pri + 1}</span>
+                        <div className="mt-2 pt-2 border-t border-pink-200/30">
+                          <div className="flex gap-3 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+                            {ecoSelections.map(sel => {
+                              const persons = selectedEcoPicks[sel.date];
+                              if (!Array.isArray(persons)) return null;
+                              const hasAny = persons.some(p => p.first || p.second || p.third);
+                              if (!hasAny) return null;
+                              return (
+                                <div key={sel.date} className="flex-shrink-0 min-w-0">
+                                  <div className="text-[10px] font-semibold text-muted-foreground mb-1">{sel.date.slice(5)}</div>
+                                  {persons.map((person, pi) => {
+                                    if (!person.first && !person.second && !person.third) return null;
+                                    return (
+                                      <div key={pi} className="mb-1">
+                                        <div className="text-[9px] font-medium text-muted-foreground mb-0.5">{pNames[pi] || `${String.fromCharCode(65 + pi)}`}</div>
+                                        <div className="flex gap-1">
+                                          {priorityKeys.map((pk, pri) => {
+                                            const profileId = person[pk];
+                                            if (!profileId) return null;
+                                            const profile = ecoProfiles.find(p => p.id === profileId);
+                                            if (!profile) return null;
+                                            return (
+                                              <div key={pk} className="relative w-9 h-9 rounded-md overflow-hidden border border-pink-300/50 flex-shrink-0">
+                                                <img src={profile.imageUrl} alt={profile.name} className="w-full h-full object-cover" />
+                                                <div className={`absolute top-0 left-0 w-3 h-3 ${priorityColors[pri]} rounded-br-sm flex items-center justify-center`}>
+                                                  <span className="text-[6px] font-bold text-white">{pri + 1}</span>
+                                                </div>
+                                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[5px] text-white text-center leading-tight py-px truncate">{profile.name}</div>
                                               </div>
-                                              <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[6px] text-white text-center leading-tight py-px truncate">{profile.name}</div>
-                                            </div>
-                                          );
-                                        })}
+                                            );
+                                          })}
+                                        </div>
                                       </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            );
-                          })}
+                                    );
+                                  })}
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })()}
