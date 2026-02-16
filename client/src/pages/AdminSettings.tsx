@@ -98,20 +98,33 @@ export default function AdminSettings() {
     if (!file) return;
     setEcoImageUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch("/api/upload-image", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setEcoImageUrl(data.url);
-      toast({ title: "이미지 업로드 완료" });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result as string;
+          const res = await fetch("/api/upload-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ base64Data, fileName: file.name, contentType: file.type }),
+          });
+          if (!res.ok) throw new Error("Upload failed");
+          const data = await res.json();
+          setEcoImageUrl(data.url);
+          toast({ title: "이미지 업로드 완료" });
+        } catch {
+          toast({ title: "이미지 업로드 실패", variant: "destructive" });
+        } finally {
+          setEcoImageUploading(false);
+        }
+      };
+      reader.onerror = () => {
+        toast({ title: "이미지 업로드 실패", variant: "destructive" });
+        setEcoImageUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch {
       toast({ title: "이미지 업로드 실패", variant: "destructive" });
-    } finally {
       setEcoImageUploading(false);
     }
   };
@@ -171,20 +184,33 @@ export default function AdminSettings() {
     if (!file) return;
     setProfileUploading(profileId);
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch("/api/upload-image", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      await handleUpdateProfile(profileId, { imageUrl: data.url });
-      toast({ title: "사진 업로드 완료" });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result as string;
+          const res = await fetch("/api/upload-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ base64Data, fileName: file.name, contentType: file.type }),
+          });
+          if (!res.ok) throw new Error("Upload failed");
+          const data = await res.json();
+          await handleUpdateProfile(profileId, { imageUrl: data.url });
+          toast({ title: "사진 업로드 완료" });
+        } catch {
+          toast({ title: "사진 업로드 실패", variant: "destructive" });
+        } finally {
+          setProfileUploading(null);
+        }
+      };
+      reader.onerror = () => {
+        toast({ title: "사진 업로드 실패", variant: "destructive" });
+        setProfileUploading(null);
+      };
+      reader.readAsDataURL(file);
     } catch {
       toast({ title: "사진 업로드 실패", variant: "destructive" });
-    } finally {
       setProfileUploading(null);
     }
   };

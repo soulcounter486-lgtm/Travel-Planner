@@ -1251,7 +1251,7 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
         villa: { price: 0, details: [] as string[], checkIn: "", checkOut: "", rooms: 1, villaId: undefined as number | undefined, villaName: "" },
         vehicle: { price: 0, description: "" },
         golf: { price: 0, description: "" },
-        ecoGirl: { price: 0, description: "", details: [] as string[] },
+        ecoGirl: { price: 0, description: "", details: [] as string[], selections: [] as any[] },
         guide: { price: 0, description: "" },
         fastTrack: { price: 0, description: "" },
         total: 0
