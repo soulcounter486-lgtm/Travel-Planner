@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck, Settings, Moon, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Ticket, Bell, Send, Trash2, Plus, Gift, Megaphone, GripVertical, Edit2, Shield, ShieldCheck, Settings, Moon, Sparkles, Check, Leaf } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import {
@@ -272,13 +272,7 @@ export default function AdminMembers() {
         credentials: "include",
         body: JSON.stringify({ canViewNightlife18: enabled }),
       });
-      const res2 = await fetch(`/api/admin/users/${userId}/eco`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ canViewEco: enabled }),
-      });
-      if (!res1.ok || !res2.ok) {
+      if (!res1.ok) {
         throw new Error("권한 변경 실패");
       }
       return { success: true };
@@ -289,6 +283,28 @@ export default function AdminMembers() {
     },
     onError: (error: Error) => {
       toast({ title: "권한 변경 실패", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const toggleEcoMutation = useMutation({
+    mutationFn: async ({ userId, enabled }: { userId: string; enabled: boolean }) => {
+      const res = await fetch(`/api/admin/users/${userId}/eco`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ canViewEco: enabled }),
+      });
+      if (!res.ok) {
+        throw new Error("에코 권한 변경 실패");
+      }
+      return { success: true };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "에코 프로필 권한이 변경되었습니다" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "에코 권한 변경 실패", description: error.message, variant: "destructive" });
     },
   });
 
@@ -760,26 +776,38 @@ export default function AdminMembers() {
                           <Button
                             size="icon"
                             variant={
-                              (member.canViewNightlife18 && member.canViewEco) ? "default" : 
+                              member.canViewNightlife18 ? "default" : 
                               (member.gender === 'male' && member.loginMethod === 'kakao') ? "outline" : "ghost"
                             }
                             className={
-                              (member.canViewNightlife18 && member.canViewEco) ? "bg-rose-500" : 
+                              member.canViewNightlife18 ? "bg-rose-500" : 
                               (member.gender === 'male' && member.loginMethod === 'kakao') ? "border-rose-400 text-rose-500" : ""
                             }
                             onClick={() => {
-                              const currentEnabled = member.canViewNightlife18 && member.canViewEco;
-                              toggleAdultContentMutation.mutate({ userId: member.id, enabled: !currentEnabled });
+                              toggleAdultContentMutation.mutate({ userId: member.id, enabled: !member.canViewNightlife18 });
                             }}
                             disabled={toggleAdultContentMutation.isPending}
                             title={
-                              (member.canViewNightlife18 && member.canViewEco) ? "성인 콘텐츠 권한 해제" : 
+                              member.canViewNightlife18 ? "성인 콘텐츠 권한 해제" : 
                               (member.gender === 'male' && member.loginMethod === 'kakao') ? "카카오 남성 자동 권한" : 
                               "성인 콘텐츠 권한 부여"
                             }
                             data-testid={`toggle-adult-${member.id}`}
                           >
                             <Sparkles className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant={member.canViewEco ? "default" : "ghost"}
+                            className={member.canViewEco ? "bg-emerald-500" : ""}
+                            onClick={() => {
+                              toggleEcoMutation.mutate({ userId: member.id, enabled: !member.canViewEco });
+                            }}
+                            disabled={toggleEcoMutation.isPending}
+                            title={member.canViewEco ? "에코 프로필 권한 해제" : "에코 프로필 권한 부여"}
+                            data-testid={`toggle-eco-${member.id}`}
+                          >
+                            <Leaf className="w-3.5 h-3.5" />
                           </Button>
                           <Button
                             size="icon"
