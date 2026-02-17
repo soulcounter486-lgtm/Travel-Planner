@@ -79,6 +79,13 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     queryKey: ["/api/villas"],
     enabled: villaLinkOpen,
   });
+  useEffect(() => {
+    if (villaPhotoOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+      return () => { document.body.style.overflow = ""; document.body.style.touchAction = ""; };
+    }
+  }, [villaPhotoOpen]);
   const handleVillaClick = () => {
     if (linkedVillaId) {
       setVillaPhotoIndex(0);
@@ -1677,8 +1684,9 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
         return (
           <div
             data-testid={`villa-photo-overlay-${quote.id}`}
-            style={{ position: "fixed", inset: 0, zIndex: 2147483647, background: "rgba(0,0,0,0.95)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}
+            style={{ position: "fixed", inset: 0, zIndex: 2147483647, background: "rgba(0,0,0,0.95)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, overscrollBehavior: "contain" }}
             onClick={() => setVillaPhotoOpen(false)}
+            onTouchMove={(e) => e.preventDefault()}
           >
             <div className="text-white text-sm font-medium mb-1">{linkedVilla.name} ({villaPhotoIndex + 1}/{photos.length})</div>
             <div className="relative flex items-center justify-center" style={{ maxWidth: "94vw", maxHeight: "70vh" }}>
