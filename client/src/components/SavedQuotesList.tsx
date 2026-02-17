@@ -1033,13 +1033,15 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         const currentPrice = vehicleAdjustments[idx] !== undefined ? vehicleAdjustments[idx] : originalPrice;
                         const dateMatch = detail.match(/^(\d{4}-\d{2}-\d{2})/);
                         const dateLabel = dateMatch ? dateMatch[1] : `Day ${idx + 1}`;
+                        const typeMatch = detail.match(/^\d{4}-\d{2}-\d{2}:\s*(.+?)\s*\(/);
+                        const vehicleTypeName = typeMatch ? typeMatch[1] : "";
                         const routeMatch = detail.match(/\((.*?)\)/);
                         const routeInfo = routeMatch ? routeMatch[1] : "";
                         
                         return (
                           <div key={idx} className="flex items-center gap-1">
                             <span className="w-1 h-1 rounded-full bg-primary/40" />
-                            <span className="flex-1">{dateLabel} {routeInfo && `(${routeInfo})`}</span>
+                            <span className="flex-1">{dateLabel} {vehicleTypeName && <span className="text-primary font-medium">{vehicleTypeName}</span>} {routeInfo && `(${routeInfo})`}</span>
                             {isEditing && !isCapturing ? (
                               <div className="flex items-center">
                                 <span className="font-medium">$</span>
