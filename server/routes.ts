@@ -1767,6 +1767,22 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
   });
 
   // 메모 이미지 업데이트 (관리자 전용)
+  app.patch("/api/quotes/:id/user-memo", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const { userMemo } = req.body;
+      const [quote] = await db.select().from(quotes).where(eq(quotes.id, id)).limit(1);
+      if (!quote) return res.status(404).json({ message: "Quote not found" });
+      if (quote.userId !== userId) return res.status(403).json({ message: "권한이 없습니다" });
+      const [updated] = await db.update(quotes).set({ userMemo: userMemo || "" }).where(eq(quotes.id, id)).returning();
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.patch("/api/quotes/:id/memo-images", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1883,7 +1899,8 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
     const seen = new Set<number>();
     allQuotes = allQuotes.filter(q => { if (seen.has(q.id)) return false; seen.add(q.id); return true; });
-    res.json(allQuotes);
+    const sanitized = allQuotes.map(q => ({ ...q, memo: "", memoImages: [] }));
+    res.json(sanitized);
   });
 
   app.delete("/api/quotes/:id", async (req, res) => {

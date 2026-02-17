@@ -56,6 +56,8 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [guideAdjustment, setGuideAdjustment] = useState<number | null>(null);
   const [memo, setMemo] = useState<string>(quote.memo || "");
   const [isSavingMemo, setIsSavingMemo] = useState(false);
+  const [userMemo, setUserMemo] = useState<string>((quote as any).userMemo || "");
+  const [isSavingUserMemo, setIsSavingUserMemo] = useState(false);
   const [memoImages, setMemoImages] = useState<string[]>((quote.memoImages as string[]) || []);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -481,6 +483,18 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
       console.error("Failed to save memo:", error);
     } finally {
       setIsSavingMemo(false);
+    }
+  };
+
+  const handleSaveUserMemo = async () => {
+    setIsSavingUserMemo(true);
+    try {
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/user-memo`, { userMemo });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+    } catch (error) {
+      console.error("Failed to save user memo:", error);
+    } finally {
+      setIsSavingUserMemo(false);
     }
   };
 
@@ -1233,6 +1247,42 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                 </div>
               </div>
             </div>
+
+            {!isAdmin && (
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  {language === "ko" ? "내 메모" : "My Memo"}
+                </label>
+                <textarea
+                  value={userMemo}
+                  onChange={(e) => setUserMemo(e.target.value)}
+                  placeholder={language === "ko" ? "메모를 입력하세요..." : "Enter memo..."}
+                  className="w-full p-2 text-sm border rounded-md resize-none bg-white dark:bg-slate-900 dark:text-white"
+                  rows={4}
+                  data-testid={`textarea-user-memo-${quote.id}`}
+                />
+                <Button
+                  onClick={handleSaveUserMemo}
+                  size="sm"
+                  className="mt-2"
+                  disabled={isSavingUserMemo || userMemo === ((quote as any).userMemo || "")}
+                  data-testid={`button-save-user-memo-${quote.id}`}
+                >
+                  {isSavingUserMemo
+                    ? (language === "ko" ? "저장 중..." : "Saving...")
+                    : (language === "ko" ? "메모 저장" : "Save Memo")}
+                </Button>
+              </div>
+            )}
+
+            {isAdmin && (quote as any).userMemo && (
+              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  {language === "ko" ? "회원 메모" : "Member Memo"}
+                </label>
+                <p className="text-sm whitespace-pre-wrap" data-testid={`text-user-memo-readonly-${quote.id}`}>{(quote as any).userMemo}</p>
+              </div>
+            )}
 
             {isAdmin && (
               <div className="mt-3 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
