@@ -93,7 +93,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
     const s = assignSearch.toLowerCase();
     return membersList.filter((m: any) => (m.nickname || "").toLowerCase().includes(s) || (m.email || "").toLowerCase().includes(s) || (m.firstName || "").toLowerCase().includes(s));
   }, [membersList, assignSearch]);
-  const handleAssignToUser = async (targetUserId: string) => {
+  const handleAssignToUser = async (targetUserId: string | null) => {
     setIsAssigning(true);
     try {
       await apiRequest("PATCH", `/api/quotes/${quote.id}/user`, { userId: targetUserId });
@@ -725,43 +725,45 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   <Download className="w-4 h-4 rotate-180" />
                 </Button>
               )}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8"
-                    onClick={(e) => e.stopPropagation()}
-                    disabled={isDeleting}
-                    data-testid={`button-delete-quote-${quote.id}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {language === "ko" ? "견적서 삭제" : "Delete Quote"}
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {language === "ko" 
-                        ? `"${customerName}" 견적서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.` 
-                        : `Are you sure you want to delete the quote for "${customerName}"? This action cannot be undone.`}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>
-                      {language === "ko" ? "취소" : "Cancel"}
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => onDelete(quote.id)}
-                      className="bg-red-500 hover:bg-red-600"
+              {(isAdmin || !(quote as any).assignedBy) && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 w-8"
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={isDeleting}
+                      data-testid={`button-delete-quote-${quote.id}`}
                     >
-                      {language === "ko" ? "삭제" : "Delete"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {language === "ko" ? "견적서 삭제" : "Delete Quote"}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {language === "ko" 
+                          ? `"${customerName}" 견적서를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.` 
+                          : `Are you sure you want to delete the quote for "${customerName}"? This action cannot be undone.`}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>
+                        {language === "ko" ? "취소" : "Cancel"}
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => onDelete(quote.id)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        {language === "ko" ? "삭제" : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           </div>
         </CollapsibleTrigger>
@@ -1338,9 +1340,15 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder={language === "ko" ? "이름/이메일 검색..." : "Search name/email..."} value={assignSearch} onChange={(e) => setAssignSearch(e.target.value)} className="pl-8" data-testid="input-assign-search" />
           </div>
-          {quote.userId && (
-            <div className="text-xs text-muted-foreground mb-1">
-              {language === "ko" ? `현재 배정: ${quote.userId.slice(0, 8)}...` : `Currently: ${quote.userId.slice(0, 8)}...`}
+          {(quote as any).assignedBy && quote.userId && (
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-xs text-muted-foreground">
+                {language === "ko" ? `현재 배정됨` : `Currently assigned`}
+              </div>
+              <Button variant="outline" size="sm" className="h-7 text-xs text-orange-600 border-orange-300" onClick={() => handleAssignToUser(null as any)} disabled={isAssigning} data-testid={`button-recall-quote-${quote.id}`}>
+                {isAssigning ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <X className="w-3 h-3 mr-1" />}
+                {language === "ko" ? "배정 회수" : "Recall"}
+              </Button>
             </div>
           )}
           <div className="flex-1 overflow-y-auto space-y-1">

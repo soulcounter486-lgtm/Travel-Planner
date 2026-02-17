@@ -1577,8 +1577,13 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       }
       const id = parseInt(req.params.id);
       const { userId } = req.body;
+      if (userId === null) {
+        const [updated] = await db.update(quotes).set({ userId: null, assignedBy: null }).where(eq(quotes.id, id)).returning();
+        if (!updated) return res.status(404).json({ message: "Quote not found" });
+        return res.json(updated);
+      }
       if (!userId) return res.status(400).json({ message: "userId required" });
-      const [updated] = await db.update(quotes).set({ userId }).where(eq(quotes.id, id)).returning();
+      const [updated] = await db.update(quotes).set({ userId, assignedBy: adminId }).where(eq(quotes.id, id)).returning();
       if (!updated) return res.status(404).json({ message: "Quote not found" });
       res.json(updated);
     } catch (err) {
@@ -1897,6 +1902,10 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       if (isAdmin) {
         await storage.deleteQuoteAdmin(id);
       } else {
+        const [quote] = await db.select({ assignedBy: quotes.assignedBy }).from(quotes).where(eq(quotes.id, id)).limit(1);
+        if (quote?.assignedBy) {
+          return res.status(403).json({ message: "관리자가 배정한 견적서는 삭제할 수 없습니다" });
+        }
         await storage.deleteQuote(id, userId);
       }
       res.status(204).send();
