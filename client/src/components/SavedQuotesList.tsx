@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2, Heart, Plus, Minus, UserPlus, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, ChevronLeft, Pencil, Check, X, ImagePlus, Loader2, Heart, Plus, Minus, UserPlus, Search, Link, Image } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
@@ -64,8 +64,38 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const queryClient = useQueryClient();
   const [ecoPickOpen, setEcoPickOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [villaPhotoOpen, setVillaPhotoOpen] = useState(false);
+  const [villaLinkOpen, setVillaLinkOpen] = useState(false);
+  const [villaPhotoIndex, setVillaPhotoIndex] = useState(0);
   const closePreview = useCallback(() => setPreviewImage(null), []);
   const [isSavingEcoPicks, setIsSavingEcoPicks] = useState(false);
+
+  const linkedVillaId = breakdown?.villa?.villaId;
+  const { data: linkedVilla } = useQuery<any>({
+    queryKey: ["/api/villas", linkedVillaId],
+    enabled: !!linkedVillaId,
+  });
+  const { data: allVillas = [] } = useQuery<any[]>({
+    queryKey: ["/api/villas"],
+    enabled: villaLinkOpen,
+  });
+  const handleVillaClick = () => {
+    if (linkedVillaId) {
+      setVillaPhotoIndex(0);
+      setVillaPhotoOpen(true);
+    } else if (isAdmin) {
+      setVillaLinkOpen(true);
+    }
+  };
+  const handleLinkVilla = async (villaId: number) => {
+    try {
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/link-villa`, { villaId });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      setVillaLinkOpen(false);
+    } catch (err) {
+      console.error("Failed to link villa:", err);
+    }
+  };
 
   type PersonPick = { first: number | null; second: number | null; third: number | null };
   type EcoPicksMap = Record<string, PersonPick[]>;
@@ -931,7 +961,16 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                 {breakdown?.villa?.price > 0 && (
                   <div className="space-y-1">
                     <div className="flex justify-between font-semibold text-sm text-slate-800">
-                      <span>{language === "ko" ? "풀빌라" : "Villa"}{breakdown.villa.rooms && breakdown.villa.rooms > 0 ? ` (${breakdown.villa.rooms}룸)` : ""}</span>
+                      <span
+                        className={`${linkedVillaId ? "text-primary underline cursor-pointer" : isAdmin ? "text-orange-500 underline cursor-pointer" : ""}`}
+                        onClick={(e) => { e.stopPropagation(); if (linkedVillaId || isAdmin) handleVillaClick(); }}
+                        data-testid={`text-villa-link-${quote.id}`}
+                      >
+                        {language === "ko" ? "풀빌라" : "Villa"}{breakdown.villa.rooms && breakdown.villa.rooms > 0 ? ` (${breakdown.villa.rooms}룸)` : ""}
+                        {breakdown.villa.villaName ? ` - ${breakdown.villa.villaName}` : ""}
+                        {!linkedVillaId && isAdmin && <Link className="inline w-3 h-3 ml-1" />}
+                        {linkedVillaId && <Image className="inline w-3 h-3 ml-1" />}
+                      </span>
                       <span>${villaTotal.toLocaleString()}</span>
                     </div>
                     {breakdown.villa.checkIn && breakdown.villa.checkOut && (
@@ -1630,6 +1669,98 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           )}
         </DialogContent>
       </Dialog>
+      {villaPhotoOpen && linkedVilla && (() => {
+        const photos: string[] = [];
+        if (linkedVilla.mainImage) photos.push(linkedVilla.mainImage);
+        if (Array.isArray(linkedVilla.images)) photos.push(...linkedVilla.images.filter((img: string) => img !== linkedVilla.mainImage));
+        if (photos.length === 0) return null;
+        return (
+          <div
+            data-testid={`villa-photo-overlay-${quote.id}`}
+            style={{ position: "fixed", inset: 0, zIndex: 2147483647, background: "rgba(0,0,0,0.95)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}
+            onClick={() => setVillaPhotoOpen(false)}
+          >
+            <div className="text-white text-sm font-medium mb-1">{linkedVilla.name} ({villaPhotoIndex + 1}/{photos.length})</div>
+            <div className="relative flex items-center justify-center" style={{ maxWidth: "94vw", maxHeight: "70vh" }}>
+              {photos.length > 1 && (
+                <button
+                  type="button"
+                  className="absolute left-1 z-10 bg-black/50 text-white rounded-full p-2"
+                  onClick={(e) => { e.stopPropagation(); setVillaPhotoIndex((villaPhotoIndex - 1 + photos.length) % photos.length); }}
+                  data-testid={`button-villa-photo-prev-${quote.id}`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+              <img
+                src={photos[villaPhotoIndex]}
+                alt={`${linkedVilla.name} ${villaPhotoIndex + 1}`}
+                style={{ maxWidth: "88vw", maxHeight: "68vh", objectFit: "contain", borderRadius: 8, pointerEvents: "none", userSelect: "none" }}
+                draggable={false}
+                onClick={(e) => e.stopPropagation()}
+              />
+              {photos.length > 1 && (
+                <button
+                  type="button"
+                  className="absolute right-1 z-10 bg-black/50 text-white rounded-full p-2"
+                  onClick={(e) => { e.stopPropagation(); setVillaPhotoIndex((villaPhotoIndex + 1) % photos.length); }}
+                  data-testid={`button-villa-photo-next-${quote.id}`}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            <div className="flex gap-1 overflow-x-auto max-w-[90vw] py-1">
+              {photos.map((p: string, i: number) => (
+                <img
+                  key={i}
+                  src={p}
+                  alt={`thumb ${i + 1}`}
+                  className={`w-12 h-12 object-cover rounded cursor-pointer border-2 ${i === villaPhotoIndex ? "border-primary" : "border-transparent opacity-60"}`}
+                  onClick={(e) => { e.stopPropagation(); setVillaPhotoIndex(i); }}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              style={{ color: "white", background: "rgba(255,255,255,0.3)", border: "2px solid rgba(255,255,255,0.6)", borderRadius: "50%", width: 50, height: 50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, cursor: "pointer" }}
+              onClick={(e) => { e.stopPropagation(); setVillaPhotoOpen(false); }}
+            >
+              {"\u2715"}
+            </button>
+          </div>
+        );
+      })()}
+
+      <Dialog open={villaLinkOpen} onOpenChange={setVillaLinkOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{language === "ko" ? "빌라 연결" : "Link Villa"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {allVillas.map((v: any) => (
+              <div
+                key={v.id}
+                className="flex items-center gap-3 p-2 rounded-md hover-elevate cursor-pointer border"
+                onClick={() => handleLinkVilla(v.id)}
+                data-testid={`button-link-villa-${v.id}`}
+              >
+                {v.mainImage ? (
+                  <img src={v.mainImage} alt={v.name} className="w-14 h-14 object-cover rounded" />
+                ) : (
+                  <div className="w-14 h-14 bg-muted rounded flex items-center justify-center"><Image className="w-5 h-5 text-muted-foreground" /></div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{v.name}</div>
+                  <div className="text-xs text-muted-foreground">${v.weekdayPrice}~${v.weekendPrice}</div>
+                </div>
+              </div>
+            ))}
+            {allVillas.length === 0 && <div className="text-sm text-muted-foreground text-center py-4">{language === "ko" ? "등록된 빌라가 없습니다" : "No villas available"}</div>}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {previewImage && !ecoPickOpen && (
         <div
           data-testid="eco-card-preview-overlay"

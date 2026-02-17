@@ -1783,6 +1783,33 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
     }
   });
 
+  app.patch("/api/quotes/:id/link-villa", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = req.user as any;
+      const userId = user?.claims?.sub || user?.id || (req.session as any)?.userId;
+      const userEmail = user?.claims?.email || user?.email;
+      if (!isUserAdmin(userId, userEmail)) return res.status(403).json({ message: "Admin only" });
+      const { villaId } = req.body;
+      const [quote] = await db.select().from(quotes).where(eq(quotes.id, id)).limit(1);
+      if (!quote) return res.status(404).json({ message: "Quote not found" });
+      const bd = quote.breakdown as any;
+      if (villaId) {
+        const [villa] = await db.select().from(villas).where(eq(villas.id, villaId)).limit(1);
+        if (!villa) return res.status(404).json({ message: "Villa not found" });
+        bd.villa.villaId = villaId;
+        bd.villa.villaName = villa.name;
+      } else {
+        delete bd.villa.villaId;
+        delete bd.villa.villaName;
+      }
+      const [updated] = await db.update(quotes).set({ breakdown: bd }).where(eq(quotes.id, id)).returning();
+      res.json(updated);
+    } catch (err) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.patch("/api/quotes/:id/memo-images", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
