@@ -1843,6 +1843,10 @@ Sitemap: https://vungtau.blog/sitemap.xml`);
       if (isUserAdmin(userId, userEmail)) {
         return res.json({ confirmed: true });
       }
+      const [dbUser] = await db.select({ canViewEco: users.canViewEco }).from(users).where(eq(users.id, String(userId))).limit(1);
+      if (dbUser?.canViewEco) {
+        return res.json({ confirmed: true });
+      }
       const quotes = await storage.getQuotesByUser(userId);
       const hasConfirmed = quotes.some((q: any) => q.depositPaid === true);
       return res.json({ confirmed: hasConfirmed });

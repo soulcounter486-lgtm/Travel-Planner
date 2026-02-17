@@ -804,7 +804,7 @@ export default function AdminMembers() {
                               toggleEcoMutation.mutate({ userId: member.id, enabled: !member.canViewEco });
                             }}
                             disabled={toggleEcoMutation.isPending}
-                            title={member.canViewEco ? "에코 프로필 권한 해제" : "에코 프로필 권한 부여"}
+                            title={member.canViewEco ? "에코 사진 블러 적용" : "에코 사진 블러 해제"}
                             data-testid={`toggle-eco-${member.id}`}
                           >
                             <Leaf className="w-3.5 h-3.5" />
