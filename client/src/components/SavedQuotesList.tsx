@@ -32,6 +32,7 @@ interface QuoteItemProps {
   ecoProfiles?: EcoProfile[];
   userGender?: string;
   canViewEco?: boolean;
+  canViewNightlife18?: boolean;
   ecoPrices?: { price12: number; price22: number };
 }
 
@@ -39,7 +40,7 @@ interface SavedQuotesListProps {
   onLoad?: (quote: Quote) => void;
 }
 
-function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit, onLoad, ecoProfiles = [], userGender, canViewEco = false, ecoPrices = { price12: 220, price22: 380 } }: QuoteItemProps) {
+function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDeleting, isAdmin, onToggleDeposit, onLoad, ecoProfiles = [], userGender, canViewEco = false, canViewNightlife18 = false, ecoPrices = { price12: 220, price22: 380 } }: QuoteItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [depositPaid, setDepositPaid] = useState(quote.depositPaid || false);
@@ -1119,7 +1120,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   </div>
                 )}
 
-                {(breakdown?.ecoGirl?.price > 0 || ((isMaleUser || isAdmin || canViewEco) && depositPaid)) && (
+                {(breakdown?.ecoGirl?.price > 0 || ((isMaleUser || isAdmin || (canViewNightlife18 && canViewEco)) && depositPaid)) && (
                   <div className="space-y-1">
                     <div className="flex justify-between items-center font-semibold text-sm text-slate-800">
                       <div className="flex items-center gap-2">
@@ -1149,7 +1150,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                         ))}
                       </div>
                     )}
-                    {(!breakdown?.ecoGirl?.details || breakdown.ecoGirl.details.length === 0) && ecoTotalPrice === 0 && (isMaleUser || isAdmin || canViewEco) && depositPaid && (
+                    {(!breakdown?.ecoGirl?.details || breakdown.ecoGirl.details.length === 0) && ecoTotalPrice === 0 && (isMaleUser || isAdmin || (canViewNightlife18 && canViewEco)) && depositPaid && (
                       <div className="text-[10px] text-muted-foreground pl-2">
                         {language === "ko" ? "픽하기를 눌러 에코 일정을 추가하세요" : "Click Pick to add eco schedule"}
                       </div>
@@ -1724,6 +1725,7 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                         ecoProfiles={ecoProfilesData || []}
                         userGender={user?.gender || undefined}
                         canViewEco={user?.canViewEco || false}
+                        canViewNightlife18={user?.canViewNightlife18 || false}
                         ecoPrices={ecoPrices}
                       />
                     ))}
@@ -1754,6 +1756,7 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                         ecoProfiles={ecoProfilesData || []}
                         userGender={user?.gender || undefined}
                         canViewEco={user?.canViewEco || false}
+                        canViewNightlife18={user?.canViewNightlife18 || false}
                         ecoPrices={ecoPrices}
                       />
                     ))}
@@ -1776,6 +1779,7 @@ export function SavedQuotesList({ onLoad }: SavedQuotesListProps) {
                   ecoProfiles={ecoProfilesData || []}
                   userGender={user?.gender || undefined}
                   canViewEco={user?.canViewEco || false}
+                  canViewNightlife18={user?.canViewNightlife18 || false}
                   ecoPrices={ecoPrices}
                 />
               ))
