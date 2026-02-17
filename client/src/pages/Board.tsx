@@ -290,6 +290,8 @@ export default function Board() {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [isEditUploading, setIsEditUploading] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
   const [videoThumbnailUrl, setVideoThumbnailUrl] = useState<string | null>(null);
@@ -626,6 +628,35 @@ export default function Board() {
       await uploadFile(files[i]);
     }
     e.target.value = "";
+  };
+
+  const handleEditFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setIsEditUploading(true);
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const res = await fetch("/api/uploads/request-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type || "application/octet-stream" }),
+        });
+        if (!res.ok) { toast({ title: "업로드 실패", variant: "destructive" }); continue; }
+        const data = await res.json();
+        const putRes = await fetch(data.uploadURL, { method: "PUT", body: file, headers: { "Content-Type": file.type || "application/octet-stream" } });
+        if (!putRes.ok) { toast({ title: "업로드 실패", variant: "destructive" }); continue; }
+        const isVideo = file.type.startsWith("video/");
+        const mdTag = isVideo ? `\n![동영상](${data.objectPath})\n` : `\n![이미지](${data.objectPath})\n`;
+        setEditContent(prev => prev + mdTag);
+        toast({ title: isVideo ? "동영상이 삽입되었습니다" : "이미지가 삽입되었습니다" });
+      }
+    } catch {
+      toast({ title: "파일 업로드 실패", variant: "destructive" });
+    } finally {
+      setIsEditUploading(false);
+      if (editFileInputRef.current) editFileInputRef.current.value = "";
+    }
   };
 
   const renderTextWithLinks = (text: string, keyPrefix: string) => {
@@ -1059,7 +1090,28 @@ export default function Board() {
                       className="min-h-[200px]"
                       data-testid="input-edit-content"
                     />
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex gap-2 justify-between flex-wrap">
+                      <label className="cursor-pointer">
+                        <input
+                          ref={editFileInputRef}
+                          type="file"
+                          accept="image/*,video/*"
+                          multiple
+                          onChange={handleEditFileUpload}
+                          className="hidden"
+                          data-testid="input-edit-file"
+                        />
+                        <Button variant="outline" size="sm" asChild disabled={isEditUploading}>
+                          <span className="gap-1.5 cursor-pointer">
+                            {isEditUploading ? (
+                              <><Loader2 className="w-3.5 h-3.5 animate-spin" /></>
+                            ) : (
+                              <><ImagePlus className="w-3.5 h-3.5" />{labels.addMedia}</>
+                            )}
+                          </span>
+                        </Button>
+                      </label>
+                      <div className="flex gap-2">
                       <Button
                         variant="outline"
                         onClick={() => {
@@ -1087,6 +1139,7 @@ export default function Board() {
                       >
                         {updatePostMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : labels.save}
                       </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (

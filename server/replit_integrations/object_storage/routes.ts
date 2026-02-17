@@ -73,7 +73,40 @@ export function registerObjectStorageRoutes(app: Express): void {
   app.get("/objects/:objectPath(*)", async (req, res) => {
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      await objectStorageService.downloadObject(objectFile, res);
+      const [metadata] = await objectFile.getMetadata();
+      const contentType = metadata.contentType || "application/octet-stream";
+      const fileSize = parseInt(String(metadata.size || "0"), 10);
+
+      if (contentType.startsWith("video/") && req.headers.range && fileSize > 0) {
+        const range = req.headers.range;
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + 5 * 1024 * 1024, fileSize - 1);
+
+        if (isNaN(start) || start < 0 || start >= fileSize || end >= fileSize || start > end) {
+          res.writeHead(416, { "Content-Range": `bytes */${fileSize}` });
+          return res.end();
+        }
+
+        const chunkSize = end - start + 1;
+
+        res.writeHead(206, {
+          "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+          "Accept-Ranges": "bytes",
+          "Content-Length": chunkSize,
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=3600",
+        });
+
+        const stream = objectFile.createReadStream({ start, end });
+        stream.on("error", (err) => {
+          console.error("Range stream error:", err);
+          if (!res.headersSent) res.status(500).end();
+        });
+        stream.pipe(res);
+      } else {
+        await objectStorageService.downloadObject(objectFile, res);
+      }
     } catch (error) {
       console.error("Error serving object:", error);
       if (error instanceof ObjectNotFoundError) {
