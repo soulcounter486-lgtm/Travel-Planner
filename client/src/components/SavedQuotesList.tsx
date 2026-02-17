@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2, Heart, Plus, Minus } from "lucide-react";
+import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, Pencil, Check, X, ImagePlus, Loader2, Heart, Plus, Minus, UserPlus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
@@ -79,6 +79,29 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
   const [editingPersonName, setEditingPersonName] = useState("");
 
   const isMaleUser = userGender === "male";
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [assignSearch, setAssignSearch] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
+  const { data: membersList } = useQuery<any[]>({
+    queryKey: ["/api/admin/members"],
+    enabled: isAdmin && assignDialogOpen,
+  });
+  const filteredMembers = useMemo(() => {
+    if (!membersList) return [];
+    if (!assignSearch.trim()) return membersList;
+    const s = assignSearch.toLowerCase();
+    return membersList.filter((m: any) => (m.nickname || "").toLowerCase().includes(s) || (m.email || "").toLowerCase().includes(s) || (m.firstName || "").toLowerCase().includes(s));
+  }, [membersList, assignSearch]);
+  const handleAssignToUser = async (targetUserId: string) => {
+    setIsAssigning(true);
+    try {
+      await apiRequest("PATCH", `/api/quotes/${quote.id}/user`, { userId: targetUserId });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      setAssignDialogOpen(false);
+      setAssignSearch("");
+    } catch { }
+    setIsAssigning(false);
+  };
 
   const origEcoSelections = useMemo(() => {
     const eco = (breakdown as any)?.ecoGirl;
@@ -787,6 +810,16 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                     <Pencil className="w-3 h-3 mr-1" />
                     {language === "ko" ? "수정" : "Edit"}
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAssignDialogOpen(true)}
+                    className="h-7 text-xs text-blue-600 border-blue-300"
+                    data-testid={`button-assign-quote-${quote.id}`}
+                  >
+                    <UserPlus className="w-3 h-3 mr-1" />
+                    {language === "ko" ? "배정" : "Assign"}
+                  </Button>
                 </>
               ) : null}
             </div>
@@ -1291,6 +1324,44 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
           </div>
         </CollapsibleContent>
       </Collapsible>
+
+      <Dialog open={assignDialogOpen} onOpenChange={(open) => { setAssignDialogOpen(open); if (!open) setAssignSearch(""); }}>
+        <DialogContent className="max-w-sm max-h-[70vh] flex flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-blue-500" />
+              {language === "ko" ? "회원에게 견적서 배정" : "Assign Quote to Member"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative mb-2">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder={language === "ko" ? "이름/이메일 검색..." : "Search name/email..."} value={assignSearch} onChange={(e) => setAssignSearch(e.target.value)} className="pl-8" data-testid="input-assign-search" />
+          </div>
+          {quote.userId && (
+            <div className="text-xs text-muted-foreground mb-1">
+              {language === "ko" ? `현재 배정: ${quote.userId.slice(0, 8)}...` : `Currently: ${quote.userId.slice(0, 8)}...`}
+            </div>
+          )}
+          <div className="flex-1 overflow-y-auto space-y-1">
+            {!membersList ? (
+              <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+            ) : filteredMembers.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-4">{language === "ko" ? "검색 결과 없음" : "No results"}</div>
+            ) : (
+              filteredMembers.map((m: any) => (
+                <div key={m.id} className={`flex items-center justify-between p-2 rounded-md cursor-pointer hover-elevate ${quote.userId === m.id ? "bg-blue-50 dark:bg-blue-950/30 border border-blue-300 dark:border-blue-700" : "border border-transparent"}`} onClick={() => handleAssignToUser(m.id)} data-testid={`assign-member-${m.id}`}>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium truncate">{m.nickname || m.firstName || m.email || m.id.slice(0, 8)}</span>
+                    <span className="text-[10px] text-muted-foreground truncate">{m.email || ""} {m.gender === "male" ? "(남)" : m.gender === "female" ? "(여)" : ""}</span>
+                  </div>
+                  {quote.userId === m.id && <Badge variant="outline" className="text-[10px] shrink-0">{language === "ko" ? "현재" : "Current"}</Badge>}
+                  {isAssigning && <Loader2 className="w-3 h-3 animate-spin ml-1" />}
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={ecoPickOpen} onOpenChange={(open) => { setEcoPickOpen(open); if (open) { setEditableEcoSelections([...origEcoSelections]); setSelectedEcoPicks(initEcoPicks()); if (origEcoSelections.length > 0) { setActivePickDate(origEcoSelections[0].date); } setActivePersonIndex(0); setEditingPersonIdx(null); const savedNames = (quote.ecoPicks as any)?.personNames; setPersonNames(Array.isArray(savedNames) ? savedNames : [...defaultPersonLabels]); } }}>
         <DialogContent className="max-w-md max-h-[90vh] flex flex-col overflow-hidden p-0">
