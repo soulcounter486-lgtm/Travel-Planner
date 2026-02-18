@@ -102,8 +102,15 @@ export default function MyPage() {
       } else {
         toast({ title: data.message || "닉네임 변경에 실패했습니다.", variant: "destructive" });
       }
-    } catch (err) {
-      toast({ title: "닉네임 변경에 실패했습니다.", variant: "destructive" });
+    } catch (err: any) {
+      let msg = "닉네임 변경에 실패했습니다.";
+      try {
+        const errText = err?.message || "";
+        const jsonPart = errText.includes("{") ? errText.substring(errText.indexOf("{")) : errText;
+        const parsed = JSON.parse(jsonPart);
+        if (parsed?.message) msg = parsed.message;
+      } catch {}
+      toast({ title: msg, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }

@@ -3706,6 +3706,13 @@ ${adultContext}`;
       }
 
       const trimmedNickname = nickname.trim();
+      const currentUserId = sessionUserId || oauthUserId;
+      if (!currentUserId) return res.status(401).json({ message: "Unauthorized" });
+
+      const [existing] = await db.select().from(users).where(sql`${users.nickname} = ${trimmedNickname} AND ${users.id} != ${currentUserId}`).limit(1);
+      if (existing) {
+        return res.status(409).json({ message: "이미 사용 중인 닉네임입니다." });
+      }
 
       if (sessionUserId) {
         const [updated] = await db.update(users)
@@ -3732,6 +3739,11 @@ ${adultContext}`;
           await db.update(users)
             .set({ nickname: trimmedNickname })
             .where(eq(users.id, dbUser.id));
+        }
+
+        if ((req.session as any)?.user) {
+          (req.session as any).user.name = trimmedNickname;
+          req.session.save(() => {});
         }
           
         await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${oauthUserId}`);
