@@ -3753,9 +3753,11 @@ ${adultContext}`;
       } else {
         return res.status(401).json({ message: "Unauthorized" });
       }
-    } catch (err) {
-      console.error("Update nickname error:", err);
-      res.status(500).json({ message: "닉네임 변경에 실패했습니다." });
+    } catch (err: any) {
+      console.error("Update nickname error:", err?.message || err);
+      if (!res.headersSent) {
+        res.status(500).json({ message: "닉네임 변경에 실패했습니다." });
+      }
     }
   });
 

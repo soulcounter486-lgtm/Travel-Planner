@@ -98,8 +98,10 @@ export default function MyPage() {
         body: JSON.stringify({ nickname: newNickname.trim() }),
         credentials: "include",
       });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const text = await res.text();
+      let data: any = {};
+      try { data = JSON.parse(text); } catch {}
+      if (res.ok) {
         toast({ title: "닉네임이 변경되었습니다." });
         setIsEditingName(false);
         queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
