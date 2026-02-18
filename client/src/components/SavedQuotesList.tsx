@@ -1184,7 +1184,7 @@ function QuoteItem({ quote, language, currencyInfo, exchangeRate, onDelete, isDe
                   </div>
                 )}
 
-                {(breakdown?.ecoGirl?.price > 0 || ((isMaleUser || isAdmin || (canViewNightlife18 && canViewEco)) && depositPaid)) && (
+                {(breakdown?.ecoGirl?.price > 0 || ((isMaleUser || isAdmin || (canViewNightlife18 && canViewEco)) && depositPaid)) && !(isCapturing && (ecoTotalPrice || breakdown?.ecoGirl?.price || 0) === 0 && (!breakdown?.ecoGirl?.selections || breakdown.ecoGirl.selections.length === 0)) && (
                   <div className="space-y-1">
                     <div className="flex justify-between items-center font-semibold text-sm text-slate-800">
                       <div className="flex items-center gap-2">
