@@ -8,7 +8,7 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
+    createTableIfMissing: true, // 테이블이 없으면 자동으로 생성하도록 변경
     ttl: sessionTtl,
     tableName: "sessions",
   });
