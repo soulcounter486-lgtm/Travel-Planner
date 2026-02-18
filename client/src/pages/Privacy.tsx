@@ -44,7 +44,8 @@ export default function Privacy() {
               <h2 className="text-xl font-semibold border-b pb-2">제3조 (개인정보의 수집 방법)</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>카카오 로그인을 통한 OAuth 인증</li>
-                <li>Replit 로그인을 통한 OAuth 인증</li>
+                <li>구글 로그인을 통한 OAuth 인증</li>
+                <li>이메일/비밀번호를 통한 회원가입</li>
                 <li>서비스 이용 과정에서 자동 수집</li>
               </ul>
             </section>

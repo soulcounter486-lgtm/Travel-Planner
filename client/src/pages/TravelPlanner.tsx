@@ -482,7 +482,7 @@ export default function TravelPlanner() {
                       : "Log in to save your travel plans and access them anytime!"}
                   </p>
                 </div>
-                <a href="/api/login">
+                <a href="/">
                   <Button size="sm" data-testid="btn-login-promo">
                     <LogIn className="h-3 w-3 mr-1" />
                     {language === "ko" ? "로그인" : "Log In"}

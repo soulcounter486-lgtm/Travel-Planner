@@ -990,7 +990,7 @@ export default function ExpenseTracker() {
             <LogIn className="h-16 w-16 mx-auto mb-6 text-primary" />
             <h2 className="text-2xl font-bold mb-4">{t.loginRequired}</h2>
             <p className="text-muted-foreground mb-6">{t.loginDescription}</p>
-            <Button size="lg" className="w-full" onClick={() => window.location.href = "/api/login"} data-testid="button-login">
+            <Button size="lg" className="w-full" onClick={() => window.location.href = "/"} data-testid="button-login">
               <LogIn className="h-5 w-5 mr-2" />
               {t.login}
             </Button>

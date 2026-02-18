@@ -90,7 +90,7 @@ export function AppHeader() {
     if (registerData.email || registerData.nickname || registerData.gender || registerData.birthDate) {
       localStorage.setItem('pendingRegistration', JSON.stringify(registerData));
     }
-    window.location.href = provider === 'kakao' ? '/api/auth/kakao' : '/api/login';
+    window.location.href = provider === 'kakao' ? '/api/auth/kakao' : '/api/auth/google/login';
   };
 
   // 이메일로 회원가입
@@ -652,7 +652,7 @@ export function AppHeader() {
                             카카오로 로그인
                           </Button>
                         </a>
-                        <a href="/api/login" className="block" data-testid="button-login-google">
+                        <a href="/api/auth/google/login" className="block" data-testid="button-login-google">
                           <Button
                             variant="outline"
                             className="w-full h-9"

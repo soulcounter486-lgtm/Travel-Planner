@@ -70,7 +70,7 @@ export default function MyPage() {
     if (userData?.loginMethod === "kakao") return "카카오";
     if (userData?.loginMethod === "google") return "Google";
     if (userData?.loginMethod === "email") return "이메일";
-    if (userData?.loginMethod === "replit") return "Replit";
+    if (userData?.loginMethod === "replit") return "Google";
     return "이메일";
   };
 

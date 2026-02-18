@@ -453,7 +453,7 @@ export default function ChatRoom() {
                       {language === "ko" ? "단체 채팅방은 로그인 후 이용 가능합니다." : "Please log in to join the group chat."}
                     </p>
                     <Button
-                      onClick={() => window.location.href = "/api/login"}
+                      onClick={() => window.location.href = "/"}
                       className="w-full bg-gradient-to-r from-primary to-purple-600"
                       data-testid="btn-login-for-chat"
                     >
