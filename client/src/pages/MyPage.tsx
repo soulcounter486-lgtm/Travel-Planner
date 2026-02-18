@@ -92,9 +92,14 @@ export default function MyPage() {
 
     setIsSaving(true);
     try {
-      const res = await apiRequest("PATCH", "/api/user/nickname", { nickname: newNickname.trim() });
+      const res = await fetch("/api/user/nickname", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: newNickname.trim() }),
+        credentials: "include",
+      });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         toast({ title: "닉네임이 변경되었습니다." });
         setIsEditingName(false);
         queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
@@ -103,14 +108,7 @@ export default function MyPage() {
         toast({ title: data.message || "닉네임 변경에 실패했습니다.", variant: "destructive" });
       }
     } catch (err: any) {
-      let msg = "닉네임 변경에 실패했습니다.";
-      try {
-        const errText = err?.message || "";
-        const jsonPart = errText.includes("{") ? errText.substring(errText.indexOf("{")) : errText;
-        const parsed = JSON.parse(jsonPart);
-        if (parsed?.message) msg = parsed.message;
-      } catch {}
-      toast({ title: msg, variant: "destructive" });
+      toast({ title: "닉네임 변경에 실패했습니다.", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
