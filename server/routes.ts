@@ -9,7 +9,7 @@ import { calculateQuoteSchema, visitorCount, expenseGroups, expenses, insertExpe
 import { addDays, getDay, parseISO, format, addHours } from "date-fns";
 import { db } from "./db";
 import { eq, sql, desc, and } from "drizzle-orm";
-import { setupAuth, registerAuthRoutes, isAuthenticated, getSession } from "./replit_integrations/auth";
+import { setupAuth, isAuthenticated, getSession } from "./replit_integrations/auth";
 import { setupGoogleAuth } from "./auth/googleAuth";
 import { GoogleGenAI } from "@google/genai";
 import { WebSocketServer, WebSocket } from "ws";
@@ -302,7 +302,6 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Setup authentication (MUST be before other routes)
   await setupAuth(app);
-  registerAuthRoutes(app);
   await setupGoogleAuth(app);
 
   // === 카카오 로그인 OAuth ===
