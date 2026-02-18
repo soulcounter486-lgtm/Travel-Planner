@@ -3729,8 +3729,7 @@ ${adultContext}`;
           req.session.save(() => {});
         }
 
-        await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${String(sessionUserId)}`);
-        await db.execute(sql`UPDATE comments SET author_name = ${trimmedNickname} WHERE author_id = ${String(sessionUserId)}`);
+        try { await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${String(sessionUserId)}`); } catch {}
 
         res.json({ success: true, nickname: trimmedNickname });
       } else if (oauthUserId) {
@@ -3746,8 +3745,7 @@ ${adultContext}`;
           req.session.save(() => {});
         }
           
-        await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${oauthUserId}`);
-        await db.execute(sql`UPDATE comments SET author_name = ${trimmedNickname} WHERE author_id = ${oauthUserId}`);
+        try { await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${oauthUserId}`); } catch {}
 
         res.json({ success: true, nickname: trimmedNickname });
       } else {
@@ -3784,13 +3782,11 @@ ${adultContext}`;
 
       const newName = dbUser.nickname;
       const userIdStr = String(userId);
-      await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${userIdStr}`);
-      await db.execute(sql`UPDATE comments SET author_name = ${newName} WHERE author_id = ${userIdStr}`);
+      try { await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${userIdStr}`); } catch {}
       
       const numericId = userIdStr.replace(/^kakao_/, "");
       if (numericId !== userIdStr) {
-        await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${numericId}`);
-        await db.execute(sql`UPDATE comments SET author_name = ${newName} WHERE author_id = ${numericId}`);
+        try { await db.execute(sql`UPDATE posts SET author_name = ${newName} WHERE author_id = ${numericId}`); } catch {}
       }
 
       res.json({ success: true, newName });
