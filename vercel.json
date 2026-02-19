@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(api|auth)/:path*",
+      "destination": "/dist/index.cjs"
+    },
+    {
+      "source": "/assets/:path*",
+      "destination": "/dist/public/assets/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/dist/public/index.html"
+    }
+  ]
+}
