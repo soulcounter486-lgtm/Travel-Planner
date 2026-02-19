@@ -2436,7 +2436,7 @@ export default function Home() {
               render={({ field }) => (
                 <SectionCard title={t("golf.title")} icon={Flag} isEnabled={field.value ?? false} onToggle={field.onChange} gradient="from-emerald-600/10">
                   <div className="max-h-[600px] overflow-y-auto p-1 pr-2 custom-scrollbar flex flex-col gap-4">
-                    <div className="p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100 shadow-sm sticky top-0 z-20">
+                    <div className="p-4 bg-emerald-50 rounded-xl text-xs text-emerald-800 space-y-1 border border-emerald-100 shadow-sm">
                       <p><strong>{t("golf.info.included")}</strong></p>
                       <p><strong>{t("golf.info.notIncluded")}</strong></p>
                       <p><strong>{t("golf.info.weekend")}</strong></p>
