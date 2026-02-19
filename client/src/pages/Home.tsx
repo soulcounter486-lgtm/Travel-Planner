@@ -835,9 +835,11 @@ export default function Home() {
       : (values.villa?.checkIn ? values.villa.checkIn : format(new Date(), "yyyy-MM-dd"));
     const lastDate = new Date(lastDateStr);
     const nextDate = addDays(lastDate, currentSelections.length > 0 ? 1 : 0);
+    const lastType = currentSelections.length > 0 ? currentSelections[currentSelections.length - 1].type : "7_seater";
+    const lastRoute = currentSelections.length > 0 ? currentSelections[currentSelections.length - 1].route : "city";
     const newSelections = [
       ...currentSelections,
-      { date: format(nextDate, "yyyy-MM-dd"), type: "7_seater" as const, route: "city" as const }
+      { date: format(nextDate, "yyyy-MM-dd"), type: lastType as any, route: lastRoute as any }
     ];
     form.setValue("vehicle.selections", [...newSelections], { shouldValidate: true, shouldDirty: true, shouldTouch: true });
   };
