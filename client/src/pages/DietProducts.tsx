@@ -404,6 +404,9 @@ export default function DietProducts() {
           </div>
         </Card>
 
+        <div className="text-center text-xs text-muted-foreground mt-8 pb-4">
+          사업자등록번호: 붕따우 도깨비 350-70-00679
+        </div>
       </main>
 
       <FixedBottomBar />
