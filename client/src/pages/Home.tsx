@@ -3215,7 +3215,23 @@ export default function Home() {
               <span className="hover:text-slate-300 cursor-pointer transition-colors">이용약관</span>
               <Link href="/privacy" className="hover:text-slate-300 cursor-pointer transition-colors" data-testid="link-privacy">개인정보처리방침</Link>
             </div>
-            <div className="text-xs text-slate-400 mt-2">사업자등록번호: 붕따우 도깨비 350-70-00679</div>
+            {siteSettingsData["biz_enabled"] !== "false" && (
+              <div className="text-xs text-slate-400 mt-2 space-y-0.5" data-testid="text-biz-info">
+                {(siteSettingsData["biz_name"] || siteSettingsData["biz_number"]) ? (
+                  <>
+                    {siteSettingsData["biz_name"] && <span>상호: {siteSettingsData["biz_name"]}</span>}
+                    {siteSettingsData["biz_name"] && siteSettingsData["biz_number"] && <span> | </span>}
+                    {siteSettingsData["biz_number"] && <span>사업자등록번호: {siteSettingsData["biz_number"]}</span>}
+                    {siteSettingsData["biz_owner"] && <span> | 대표: {siteSettingsData["biz_owner"]}</span>}
+                    {siteSettingsData["biz_address"] && <><br /><span>{siteSettingsData["biz_address"]}</span></>}
+                    {siteSettingsData["biz_phone"] && <span> | {siteSettingsData["biz_phone"]}</span>}
+                    {siteSettingsData["biz_email"] && <span> | {siteSettingsData["biz_email"]}</span>}
+                  </>
+                ) : (
+                  <span>사업자등록번호: 붕따우 도깨비 350-70-00679</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </footer>

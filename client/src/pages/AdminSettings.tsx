@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Loader2, Globe, Type, Search, Users, DollarSign, Upload, X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Save, Loader2, Globe, Type, Search, Users, DollarSign, Upload, X, Building2 } from "lucide-react";
 import { Link } from "wouter";
 
 export default function AdminSettings() {
@@ -32,6 +33,13 @@ export default function AdminSettings() {
   const [ecoDescription, setEcoDescription] = useState("");
   const [ecoImageUrl, setEcoImageUrl] = useState("");
   const [ecoImageUploading, setEcoImageUploading] = useState(false);
+  const [bizEnabled, setBizEnabled] = useState(true);
+  const [bizName, setBizName] = useState("");
+  const [bizNumber, setBizNumber] = useState("");
+  const [bizOwner, setBizOwner] = useState("");
+  const [bizAddress, setBizAddress] = useState("");
+  const [bizPhone, setBizPhone] = useState("");
+  const [bizEmail, setBizEmail] = useState("");
 
   useEffect(() => {
     if (settings) {
@@ -45,6 +53,13 @@ export default function AdminSettings() {
       setEcoPrice22(settings["eco_price_22"] || "380");
       setEcoDescription(settings["eco_description"] || "");
       setEcoImageUrl(settings["eco_image_url"] || "");
+      setBizEnabled(settings["biz_enabled"] !== "false");
+      setBizName(settings["biz_name"] || "");
+      setBizNumber(settings["biz_number"] || "");
+      setBizOwner(settings["biz_owner"] || "");
+      setBizAddress(settings["biz_address"] || "");
+      setBizPhone(settings["biz_phone"] || "");
+      setBizEmail(settings["biz_email"] || "");
     }
   }, [settings]);
 
@@ -72,9 +87,16 @@ export default function AdminSettings() {
         ["eco_price_22", ecoPrice22],
         ["eco_description", ecoDescription],
         ["eco_image_url", ecoImageUrl],
+        ["biz_enabled", bizEnabled ? "true" : "false"],
+        ["biz_name", bizName],
+        ["biz_number", bizNumber],
+        ["biz_owner", bizOwner],
+        ["biz_address", bizAddress],
+        ["biz_phone", bizPhone],
+        ["biz_email", bizEmail],
       ];
       for (const [key, value] of entries) {
-        await saveSetting(key, value.trim());
+        await saveSetting(key, String(value).trim());
       }
       queryClient.invalidateQueries({ queryKey: ["/api/site-settings"] });
       toast({ title: "설정이 저장되었습니다" });
@@ -343,6 +365,59 @@ export default function AdminSettings() {
               />
               <p className="text-xs text-muted-foreground">쉼표(,)로 구분하여 입력. 구글/네이버에서 검색될 단어들</p>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5" />
+              사업자 등록정보
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">홈 화면 하단에 표시되는 사업자 등록정보를 수정합니다</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="bizEnabled">사업자 정보 표시</Label>
+              <Switch id="bizEnabled" checked={bizEnabled} onCheckedChange={setBizEnabled} data-testid="switch-biz-enabled" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bizName">상호명</Label>
+              <Input id="bizName" value={bizName} onChange={(e) => setBizName(e.target.value)} placeholder="붕따우 도깨비" data-testid="input-biz-name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bizNumber">사업자등록번호</Label>
+              <Input id="bizNumber" value={bizNumber} onChange={(e) => setBizNumber(e.target.value)} placeholder="350-70-00679" data-testid="input-biz-number" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bizOwner">대표자명</Label>
+              <Input id="bizOwner" value={bizOwner} onChange={(e) => setBizOwner(e.target.value)} placeholder="대표자 이름" data-testid="input-biz-owner" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bizAddress">사업장 주소</Label>
+              <Input id="bizAddress" value={bizAddress} onChange={(e) => setBizAddress(e.target.value)} placeholder="사업장 주소 입력" data-testid="input-biz-address" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bizPhone">연락처</Label>
+                <Input id="bizPhone" value={bizPhone} onChange={(e) => setBizPhone(e.target.value)} placeholder="089-932-6273" data-testid="input-biz-phone" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bizEmail">이메일</Label>
+                <Input id="bizEmail" value={bizEmail} onChange={(e) => setBizEmail(e.target.value)} placeholder="email@example.com" data-testid="input-biz-email" />
+              </div>
+            </div>
+            {bizEnabled && (bizName || bizNumber) && (
+              <div className="border rounded-md p-3 bg-slate-900 text-white text-xs space-y-1">
+                <p className="text-slate-400 font-semibold mb-1">미리보기</p>
+                {bizName && <p>상호: {bizName}</p>}
+                {bizNumber && <p>사업자등록번호: {bizNumber}</p>}
+                {bizOwner && <p>대표: {bizOwner}</p>}
+                {bizAddress && <p>주소: {bizAddress}</p>}
+                {bizPhone && <p>연락처: {bizPhone}</p>}
+                {bizEmail && <p>이메일: {bizEmail}</p>}
+              </div>
+            )}
           </CardContent>
         </Card>
 
