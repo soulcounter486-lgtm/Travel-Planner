@@ -1,19 +1,28 @@
 import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
+import connectPg from "connect-pg-simple";
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  // DB 테이블 없이 메모리에 세션을 저장하도록 변경 (배포 에러 해결용)
+  const sessionTtl = 30 * 24 * 60 * 60; // 30 days in seconds
+  const pgStore = connectPg(session);
+  const sessionStore = new pgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+    ttl: sessionTtl,
+    tableName: "sessions",
+    pruneSessionInterval: 60 * 15,
+  });
   return session({
     secret: process.env.SESSION_SECRET || "travel-planner-secret",
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: sessionTtl,
+      maxAge: sessionTtl * 1000,
     },
   });
 }
@@ -32,7 +41,6 @@ export async function setupAuth(app: Express) {
     cb(null, user);
   });
 
-  // Replit 전용 API 엔드포인트들을 빈 핸들러로 대체하거나 에러 메시지 반환
   app.get("/api/login", (req, res) => {
     res.status(400).json({ message: "Replit login is no longer supported. Please use Google, Kakao, or Email login." });
   });
@@ -54,28 +62,23 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
-  const session = req.session as any;
+  const sessionData = req.session as any;
 
-  // 1. 이메일 로그인 세션 확인
-  if (session?.userId) {
+  if (sessionData?.userId) {
     if (!req.user) {
-      (req as any).user = { 
-        id: session.userId,
+      (req as any).user = {
+        id: sessionData.userId,
+        claims: { sub: sessionData.userId },
         provider: 'email',
-        ...session.user 
+        ...sessionData.user
       };
     }
     return next();
   }
 
-  // 2. Passport (Google, Kakao) 인증 확인
   if (req.isAuthenticated()) {
     return next();
   }
 
   return res.status(401).json({ message: "Unauthorized" });
 };
-
-export function registerAuthRoutes(app: Express) {
-  // 기존에 이 함수가 호출되고 있었다면 빈 함수로 유지하여 에러 방지
-}
