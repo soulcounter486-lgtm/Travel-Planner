@@ -3215,7 +3215,6 @@ export default function Home() {
               <span className="hover:text-slate-300 cursor-pointer transition-colors">이용약관</span>
               <Link href="/privacy" className="hover:text-slate-300 cursor-pointer transition-colors" data-testid="link-privacy">개인정보처리방침</Link>
             </div>
-            <div className="text-xs text-slate-400 mt-2">사업자등록번호: 붕따우 도깨비 350-70-00679</div>
           </div>
         </div>
       </footer>
