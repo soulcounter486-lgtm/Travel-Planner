@@ -1,17 +1,1 @@
-{
-  "version": 2,
-  "rewrites": [
-    {
-      "source": "/(api|auth)/:path*",
-      "destination": "server/index.ts"
-    },
-    {
-      "source": "/assets/:path*",
-      "destination": "/dist/public/assets/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "server/index.ts"
-    }
-  ]
-}
+{"version":2,"buildCommand":"npm run build","outputDirectory":"dist/public","rewrites":[{"source":"/(api|auth)/:path*","destination":"server/index.ts"},{"source":"/assets/:path*","destination":"/dist/public/assets/:path*"},{"source":"/(.*)","destination":"server/index.ts"}]}
