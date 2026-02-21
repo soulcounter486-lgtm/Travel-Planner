@@ -15,7 +15,7 @@
       "destination": "/dist/public/assets/:path*"
     },
     {
-      "source": "/(.*))",
+      "source": "/(.*)",
       "destination": "server/index.ts"
     }
   ],
