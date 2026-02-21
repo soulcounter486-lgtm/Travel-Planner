@@ -6,14 +6,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { ChevronDown, ChevronUp, FileText, Calendar, Trash2, Download, ChevronRight, ChevronLeft, Pencil, Check, X, ImagePlus, Loader2, Heart, Plus, Minus, UserPlus, Search, Link, Image } from "lucide-react";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useAuth } from "./hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import type { EcoProfile } from "@shared/schema";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
-import { useLanguage } from "./lib/i18n";
-import { useQuotes } from "./hooks/use-quotes";
+import { useLanguage } from "@/lib/i18n";
+import { useQuotes } from "@/hooks/use-quotes";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "./lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { type QuoteBreakdown, type Quote } from "@shared/schema";
 import html2canvas from "html2canvas";

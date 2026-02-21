@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { AppHeader } from "../components/AppHeader";
-import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Send, X, ArrowLeft, RefreshCw } from "lucide-react";
 import type { CustomerChatRoom, CustomerChatMessage } from "@shared/schema";
-import { apiRequest, queryClient as qc } from "../lib/queryClient";
+import { apiRequest, queryClient as qc } from "@/lib/queryClient";
 
 export default function AdminChat() {
   const { user, isAdmin, isAuthenticated } = useAuth();

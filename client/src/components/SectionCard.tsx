@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Switch } from "./ui/switch";
 import { LucideIcon } from "lucide-react";
-import { cn } from "./lib/utils";
+import { cn } from "@/lib/utils";
 
 interface SectionCardProps {
   title: ReactNode;

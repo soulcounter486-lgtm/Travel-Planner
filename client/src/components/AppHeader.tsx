@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
-import { useLanguage } from "./lib/i18n";
-import { useAuth } from "./hooks/use-auth";
+import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/hooks/use-auth";
 import { WeatherWidget } from "./components/WeatherWidget";
 import { ExchangeRateWidget } from "./components/ExchangeRateWidget";
 import { useQuery } from "@tanstack/react-query";
@@ -14,7 +14,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Link } from "wouter";
-import { useToast } from "./hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 
 interface Notifications {
