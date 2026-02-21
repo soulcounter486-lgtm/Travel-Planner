@@ -1,8 +1,8 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { Separator } from "./ui/separator";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Loader2, FileText, Info, Save, Users, AlertTriangle } from "lucide-react";
 import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";

@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Pencil, Trash2, Image, MapPin, Phone, Clock, DollarSign, Tag, Loader2, Upload, GripVertical, EyeOff, Folder, ChevronUp, ChevronDown, LocateFixed } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import type { Place, PlaceCategory } from "@shared/schema";
-import { placesData, type HardcodedPlace } from "./PlacesGuide";
+import { placesData, type HardcodedPlace } from "@/pages/PlacesGuide";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";

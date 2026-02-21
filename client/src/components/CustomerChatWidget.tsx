@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageCircle, X, Send, Minimize2, AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "./ui/button";
-import { Card } from "./ui/card";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import type { CustomerChatMessage } from "@shared/schema";
 

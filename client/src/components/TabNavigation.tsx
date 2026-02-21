@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Calculator,
   MapPin,

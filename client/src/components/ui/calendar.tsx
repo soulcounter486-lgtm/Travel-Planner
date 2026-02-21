@@ -5,7 +5,7 @@ import { addMonths, subMonths, format } from "date-fns"
 import { motion, AnimatePresence } from "framer-motion"
 
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "./button"
+import { buttonVariants } from "@/components/ui/button"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   onMonthChange?: (month: Date) => void;
