@@ -1,0 +1,73 @@
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+✓ 3121 modules transformed.
+rendering chunks...
+computing gzip size...
+../dist/public/index.html                                                                                            5.16 kB │ gzip:   1.68 kB
+../dist/public/assets/20230318＿130556_1768452191689-C_MIrIvi.jpg                                                    70.50 kB
+../dist/public/assets/736414b25966415e9006dd674ec2aecf_1768452191679-CA6v-nbW.jpeg                                 107.95 kB
+../dist/public/assets/c3d3213f-cho-vung-tau-2_1768452191743-ClnMzhcp.jpg                                           133.79 kB
+../dist/public/assets/Things-to-do-in-Vung-Tau-2_1768452191711-C6JQ-saG.jpg                                        162.90 kB
+../dist/public/assets/154eaed7-b483-43eb-983f-b52566331719_(1)_1768452191696-Cr-GQrO5.jpeg                         178.82 kB
+../dist/public/assets/cho-dem-vung-tau-2_1768452191738-Yz-iP6NJ.jpg                                                190.64 kB
+../dist/public/assets/Vung-Tau-3_1768452191715-CradB0t0.jpg                                                        195.69 kB
+../dist/public/assets/붕따우호메이파크입장권_1768452191701-DRCm6P3j.jpg                                                       220.07 kB
+../dist/public/assets/Photo＿1725451852943-1_1768289649378-BJdJwWNn.jpg                                             223.99 kB
+../dist/public/assets/900＿IMG＿1762947034771＿1762948444789_1768281401898-ChDS2oPY.jpg                               254.38 kB
+../dist/public/assets/12-doi-con-heo-vung-tau_1768452191730-DJ87iHss.jpg                                           361.17 kB
+../dist/public/assets/z40559387093017e7b56d8300d82363ef9c08685c1f765-167436802698717_1768452191734-BOY8C1yP.jpg    418.55 kB
+../dist/public/assets/Screenshot_20260121_234910_Maps_1769014231476-BfW4mbTX.jpg                                   482.80 kB
+../dist/public/assets/Screenshot_20260122_001100_Maps_1769015581829-e6snUxt_.jpg                                   484.55 kB
+../dist/public/assets/BackgroundEraser_20240323_103507859_1768275315346-lDRcPWNh.png                               506.91 kB
+../dist/public/assets/Screenshot_20260116_184507_Maps_1768564285854-yQOQTuXu.jpg                                   578.95 kB
+../dist/public/assets/Screenshot_20260122_000631_Maps_1769015581781-EiLZFAaR.jpg                                   614.51 kB
+../dist/public/assets/Screenshot_20260122_002254_Maps_1769016389688-B5LocZ47.jpg                                   636.48 kB
+../dist/public/assets/Screenshot_20260122_002241_Maps_1769016389683-JK7YT1Fn.jpg                                   641.57 kB
+../dist/public/assets/Screenshot_20260115_210807_Maps_1768486311141-iRWABCOg.jpg                                   645.62 kB
+../dist/public/assets/Screenshot_20260115_210934_Maps_1768486311164-Um7rHrwN.jpg                                   653.26 kB
+../dist/public/assets/Screenshot_20260115_210959_Maps_1768486311167-J6UVOlcN.jpg                                   658.04 kB
+../dist/public/assets/Screenshot_20260122_000835_Maps_1769015581806-2x7dRL4S.jpg                                   681.64 kB
+../dist/public/assets/2442f46d1c7d42b49c86ad80e4bec041_1768452191724-D2n9pV5c.jpeg                                 697.66 kB
+../dist/public/assets/Screenshot_20260122_000040_Maps_1769016584832-BMcAWl1Q.jpg                                   751.23 kB
+../dist/public/assets/Screenshot_20260122_002226_Maps_1769016389675-D3HhY80G.jpg                                   791.28 kB
+../dist/public/assets/Screenshot_20260122_002507_Maps_1769016389702-BMTla6eG.jpg                                   795.78 kB
+../dist/public/assets/Screenshot_20260122_002412_Maps_1769016389696-QEve-LZS.jpg                                   828.68 kB
+../dist/public/assets/Screenshot_20260115_113154_Gallery_1768451530261-5NPJ3_Wg.jpg                                839.89 kB
+../dist/public/assets/Screenshot_20260122_000818_Maps_1769015581803-CVFbnaBn.jpg                                   844.34 kB
+../dist/public/assets/Screenshot_20260122_000952_Maps_1769015581817-YL5-Meha.jpg                                   848.23 kB
+../dist/public/assets/Screenshot_20260122_002546_Maps_1769016389710-BJ2-TMVG.jpg                                   849.51 kB
+../dist/public/assets/Screenshot_20260122_000613_Maps_1769015581776-Bek8pBOO.jpg                                   856.49 kB
+../dist/public/assets/Screenshot_20260122_000550_Maps_1769015581771-CgNj_fhW.jpg                                   910.55 kB
+../dist/public/assets/Screenshot_20260122_001013_Maps_1769015581823-sleWlmXa.jpg                                   911.92 kB
+../dist/public/assets/Screenshot_20260122_000535_Maps_1769015581719-74VA6JJR.jpg                                   912.05 kB
+../dist/public/assets/static-images.vnncdn.net-vps_images_publish-000001-000003-2025_1768452191705-0WLfnP07.jpg    919.80 kB
+../dist/public/assets/Screenshot_20260122_000755_Maps_1769015581799-DLjOvv4r.jpg                                   923.87 kB
+../dist/public/assets/Screenshot_20260122_000711_Maps_1769015581789-Cdhi79fq.jpg                                   928.98 kB
+../dist/public/assets/Screenshot_20260115_210912_Maps_1768486311161-Bq_e9UVG.jpg                                   954.27 kB
+../dist/public/assets/Screenshot_20260122_000727_Maps_1769015581794-Cvpxc2AT.jpg                                   968.64 kB
+../dist/public/assets/Screenshot_20260123_141912_Maps_1769152870673-RnP0oJKP.jpg                                 1,005.39 kB
+../dist/public/assets/Screenshot_20260122_000856_Maps_1769015581809-C93BWQbq.jpg                                 1,078.08 kB
+../dist/public/assets/Screenshot_20260116_184659_Maps_1768564285873-nh2uHXje.jpg                                 1,093.64 kB
+../dist/public/assets/Screenshot_20260116_184614_Maps_1768564285861-BzUpb8Mr.jpg                                 1,107.75 kB
+../dist/public/assets/Screenshot_20260122_000924_Maps_1769015581814-CU1pZuJN.jpg                                 1,217.92 kB
+../dist/public/assets/Screenshot_20260115_211048_Maps_1768486311169-CQBcAZ9L.jpg                                 1,305.68 kB
+../dist/public/assets/Screenshot_20260116_185045_Maps_1768564285866-bUVRaEPU.jpg                                 1,764.96 kB
+../dist/public/assets/20260117_220334_1768668092372-XPKjGPtA.jpg                                                 9,029.36 kB
+../dist/public/assets/index-DgILovQ4.css                                                                           161.69 kB │ gzip:  28.37 kB
+../dist/public/assets/index-DV4i1dJs.js                                                                          1,879.89 kB │ gzip: 534.43 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 11.71s
+building server...
+
+  dist/index.cjs  1.5mb ⚠️
+
+⚡ Done in 159ms
