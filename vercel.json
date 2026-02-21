@@ -1,21 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist/public",
-  "builds": [
-    {
-      "src": "dist/index.cjs",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "dist/public/**/*",
-      "use": "@vercel/static"
-    }
-  ],
   "rewrites": [
     {
       "source": "/(api|auth)/:path*",
-      "destination": "/dist/index.cjs"
+      "destination": "server/index.ts"
     },
     {
       "source": "/assets/:path*",
@@ -23,7 +11,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/dist/index.cjs"
+      "destination": "server/index.ts"
     }
   ]
 }
