@@ -8,7 +8,7 @@
   "rewrites": [
     {
       "source": "/(api|auth)/:path*",
-      "destination": "server/index.ts"
+      "destination": "dist/index.cjs"
     },
     {
       "source": "/assets/:path*",
@@ -16,7 +16,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "server/index.ts"
+      "destination": "dist/index.cjs"
     }
   ],
   "headers": [

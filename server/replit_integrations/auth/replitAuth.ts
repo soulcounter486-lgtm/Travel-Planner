@@ -2,12 +2,13 @@ import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
+import { pool } from "../../db";
 
 export function getSession() {
   const sessionTtl = 30 * 24 * 60 * 60; // 30 days in seconds
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    pool: pool,
     createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
@@ -18,9 +19,10 @@ export function getSession() {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production", // Vercel은 항상 HTTPS를 사용하므로 true로 설정
       sameSite: "lax",
       maxAge: sessionTtl * 1000,
     },

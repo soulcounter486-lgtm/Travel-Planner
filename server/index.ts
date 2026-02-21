@@ -63,7 +63,7 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+const initPromise = (async () => {
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -160,14 +160,28 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+  if (process.env.NODE_ENV !== "production") {
+    httpServer.listen(
+      {
+        port,
+        host: "0.0.0.0",
+        reusePort: true,
+      },
+      () => {
+        log(`serving on port ${port}`);
+      },
+    );
+  }
 })();
+
+export default app;
+export { initPromise };
+
+if (process.env.NODE_ENV === "production") {
+  // Vercel 환경에서 비동기 초기화 완료를 보장하기 위한 미들웨어
+  app.use(async (req, res, next) => {
+    await initPromise;
+    next();
+  });
+  module.exports = app;
+}
