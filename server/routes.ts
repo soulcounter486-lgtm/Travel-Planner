@@ -320,7 +320,7 @@ export async function registerRoutes(
           }
           console.log("Session saved successfully - sessionID:", req.sessionID);
       // 항상 vungtau.blog 도메인 사용 (카카오 개발자 콘솔에 등록된 URI)
-      const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
+      const redirectUri = process.env.KAKAO_CALLBACK_URL || "https://vungtau.blog/api/auth/kakao/callback";
       console.log("Kakao auth start - redirectUri:", redirectUri);
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}`;
       res.redirect(kakaoAuthUrl);
@@ -337,7 +337,7 @@ export async function registerRoutes(
             return res.status(500).send("Session save failed");
           }
           console.log("Session saved successfully - sessionID:", req.sessionID);
-      const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
+      const redirectUri = process.env.KAKAO_CALLBACK_URL || "https://vungtau.blog/api/auth/kakao/callback";
       console.log("Kakao relogin start - redirectUri:", redirectUri);
       // prompt=login 파라미터로 항상 카카오 로그인 화면 표시
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=${state}&prompt=login`;
@@ -366,7 +366,7 @@ export async function registerRoutes(
       }
       
       // 항상 vungtau.blog 도메인 사용 (카카오 개발자 콘솔에 등록된 URI)
-      const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
+      const redirectUri = process.env.KAKAO_CALLBACK_URL || "https://vungtau.blog/api/auth/kakao/callback";
       
       console.log("Kakao callback - redirectUri:", redirectUri, "code:", code?.toString().substring(0, 10) + "...");
 
