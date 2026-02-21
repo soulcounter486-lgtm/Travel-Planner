@@ -1,11 +1,6 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
 import { rm, readFile } from "fs/promises";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -40,7 +35,7 @@ const allowlist = [
 async function buildAll() {
     await rm("dist", { recursive: true, force: true });
     console.log("building client...");
-    await viteBuild({ root: path.resolve(__dirname, "client"), });
+    await viteBuild({ root: "client" });
 
     console.log("building server...");
     const pkg = JSON.parse(await readFile("package.json", "utf-8"));
