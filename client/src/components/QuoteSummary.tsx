@@ -1,17 +1,17 @@
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./components/ui/card";
+import { Separator } from "./components/ui/separator";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Label } from "./components/ui/label";
 import { Loader2, FileText, Info, Save, Users, AlertTriangle } from "lucide-react";
 import { type QuoteBreakdown } from "@shared/schema";
 import { motion, AnimatePresence } from "framer-motion";
 import html2canvas from "html2canvas";
 import { useRef, useState } from "react";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "./lib/i18n";
 import { useQuery } from "@tanstack/react-query";
 import logoImage from "@assets/BackgroundEraser_20240323_103507859_1768997960669.png";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "./hooks/use-auth";
 
 interface QuoteSummaryProps {
   breakdown: QuoteBreakdown | null;

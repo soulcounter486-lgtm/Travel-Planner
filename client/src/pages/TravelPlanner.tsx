@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLanguage } from "@/lib/i18n";
+import { apiRequest, queryClient } from "./lib/queryClient";
+import { useAuth } from "./hooks/use-auth";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { Badge } from "./components/ui/badge";
+import { Calendar } from "./components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { useLanguage } from "./lib/i18n";
 import { 
   Utensils, 
   Palmtree, 
@@ -55,10 +55,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, addDays, getMonth } from "date-fns";
 import type { Locale } from "date-fns";
 import { ko, enUS, zhCN, vi, ru, ja } from "date-fns/locale";
-import { useToast } from "@/hooks/use-toast";
-import { AppHeader } from "@/components/AppHeader";
-import { TabNavigation } from "@/components/TabNavigation";
-import { FixedBottomBar } from "@/components/FixedBottomBar";
+import { useToast } from "./hooks/use-toast";
+import { AppHeader } from "./components/AppHeader";
+import { TabNavigation } from "./components/TabNavigation";
+import { FixedBottomBar } from "./components/FixedBottomBar";
 import type { Villa } from "@shared/schema";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";

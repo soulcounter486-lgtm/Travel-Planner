@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { useLanguage } from "@/lib/i18n";
+import { Button } from "./components/ui/button";
+import { Card, CardContent } from "./components/ui/card";
+import { useLanguage } from "./lib/i18n";
 import {
   ShoppingBag,
   Check,
@@ -16,9 +16,9 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { SiKakaotalk } from "react-icons/si";
-import { AppHeader } from "@/components/AppHeader";
-import { FixedBottomBar } from "@/components/FixedBottomBar";
-import { TabNavigation } from "@/components/TabNavigation";
+import { AppHeader } from "./components/AppHeader";
+import { FixedBottomBar } from "./components/FixedBottomBar";
+import { TabNavigation } from "./components/TabNavigation";
 import type { ShopProduct } from "@shared/schema";
 
 const translations: Record<string, {

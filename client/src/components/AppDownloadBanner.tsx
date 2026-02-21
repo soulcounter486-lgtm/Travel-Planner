@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "./components/ui/button";
 
 export function AppDownloadBanner() {
   const [isVisible, setIsVisible] = useState(true);

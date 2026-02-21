@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Switch } from "./components/ui/switch";
 import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "./lib/utils";
 
 interface SectionCardProps {
   title: ReactNode;

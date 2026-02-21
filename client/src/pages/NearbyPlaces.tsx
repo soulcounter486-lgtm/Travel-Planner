@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage } from "@/lib/i18n";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { Badge } from "./components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import { useLanguage } from "./lib/i18n";
 import { MapPin, Star, Navigation, Phone, Clock, ExternalLink, Loader2, AlertCircle, Coffee, Utensils, Building, Pill, CreditCard, ShoppingBag, Scissors, Car, Hospital, Home } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "./lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "./components/ui/dialog";
 
 interface NearbyPlace {
   placeId: string;

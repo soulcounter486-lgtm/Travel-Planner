@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "./components/ui/button";
 import { UserPlus, MessageCircle, Eye, Users, Headphones } from "lucide-react";
-import { useLanguage } from "@/lib/i18n";
-import { useAuth } from "@/hooks/use-auth";
-import { CustomerChatWindow } from "@/components/CustomerChatWidget";
-import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "./lib/i18n";
+import { useAuth } from "./hooks/use-auth";
+import { CustomerChatWindow } from "./components/CustomerChatWidget";
+import { useToast } from "./hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 

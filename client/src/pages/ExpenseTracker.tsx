@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useLanguage } from "@/lib/i18n";
-import { useAuth } from "@/hooks/use-auth";
+import { queryClient, apiRequest } from "./lib/queryClient";
+import { useLanguage } from "./lib/i18n";
+import { useAuth } from "./hooks/use-auth";
 import { Link } from "wouter";
-import { FixedBottomBar } from "@/components/FixedBottomBar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { FixedBottomBar } from "./components/FixedBottomBar";
+import { Button } from "./components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Input } from "./components/ui/input";
+import { Label } from "./components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog";
+import { Badge } from "./components/ui/badge";
+import { Checkbox } from "./components/ui/checkbox";
+import { Progress } from "./components/ui/progress";
+import { useToast } from "./hooks/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from "./components/ui/avatar";
 import { 
   Home as HomeIcon, 
   Plus, 
@@ -39,8 +39,8 @@ import {
   ShoppingBag
 } from "lucide-react";
 import type { ExpenseGroup, Expense } from "@shared/schema";
-import { AppHeader } from "@/components/AppHeader";
-import { TabNavigation } from "@/components/TabNavigation";
+import { AppHeader } from "./components/AppHeader";
+import { TabNavigation } from "./components/TabNavigation";
 
 const navLabels: Record<string, Record<string, string>> = {
   calculator: { ko: "견적", en: "Quote", zh: "报价", vi: "Báo giá", ru: "Расчёт", ja: "見積" },

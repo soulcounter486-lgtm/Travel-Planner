@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
+import { useAuth } from "./hooks/use-auth";
+import { Button } from "./components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Input } from "./components/ui/input";
+import { Textarea } from "./components/ui/textarea";
+import { Label } from "./components/ui/label";
+import { useToast } from "./hooks/use-toast";
+import { Switch } from "./components/ui/switch";
 import { ArrowLeft, Save, Loader2, Globe, Type, Search, Users, DollarSign, Upload, X, Building2 } from "lucide-react";
 import { Link } from "wouter";
 

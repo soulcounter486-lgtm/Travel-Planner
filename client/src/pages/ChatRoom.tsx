@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useLanguage } from "@/lib/i18n";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+import { Badge } from "./components/ui/badge";
+import { ScrollArea } from "./components/ui/scroll-area";
+import { useLanguage } from "./lib/i18n";
 import { 
   Calculator,
   Eye,
@@ -27,12 +27,12 @@ import {
   Clock,
   ExternalLink
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "./lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
-import { AppHeader } from "@/components/AppHeader";
-import { TabNavigation } from "@/components/TabNavigation";
-import { FixedBottomBar } from "@/components/FixedBottomBar";
-import { useAuth } from "@/hooks/use-auth";
+import { AppHeader } from "./components/AppHeader";
+import { TabNavigation } from "./components/TabNavigation";
+import { FixedBottomBar } from "./components/FixedBottomBar";
+import { useAuth } from "./hooks/use-auth";
 import type { UserLocation } from "@shared/schema";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";

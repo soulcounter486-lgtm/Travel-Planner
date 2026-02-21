@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
+import { Calendar } from "./components/ui/calendar";
 import { CalendarDays } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useLanguage } from "@/lib/i18n";
+import { useLanguage } from "./lib/i18n";
 import { type Quote } from "@shared/schema";
 import { format, parseISO, isWithinInterval, startOfDay } from "date-fns";
 import { ko } from "date-fns/locale";
