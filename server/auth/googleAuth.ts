@@ -144,6 +144,7 @@ export async function setupGoogleAuth(app: Express) {
       }
       
       req.logIn(user, (loginErr) => {
+        console.log("Google login - User logged in, sessionID:", req.sessionID);
         if (loginErr) {
           console.error("Login error:", loginErr);
           return res.redirect("/?error=login&message=" + encodeURIComponent(loginErr.message || "Login failed"));
@@ -153,6 +154,7 @@ export async function setupGoogleAuth(app: Express) {
           if (saveErr) {
             console.error("Session save error:", saveErr);
             return res.redirect("/?error=session");
+          console.log("Google login - Session saved successfully, sessionID:", req.sessionID);
           }
           res.redirect(returnTo);
         });

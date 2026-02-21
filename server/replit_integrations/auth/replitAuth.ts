@@ -33,12 +33,18 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Passport 직렬화: 사용자 ID만 저장
   passport.serializeUser((user: any, cb) => {
-    cb(null, user);
+    console.log("Serializing user:", user?.claims?.sub);
+    // 사용자 ID만 세션에 저장
+    cb(null, user?.claims?.sub || user?.id);
   });
 
-  passport.deserializeUser((user: any, cb) => {
-    cb(null, user);
+  // Passport 역직렬화: 세션에서 사용자 ID를 읽어서 전체 사용자 객체 복원
+  passport.deserializeUser((id: string, cb) => {
+    console.log("Deserializing user:", id);
+    // 여기서는 단순히 ID를 반환하고, 실제 사용자 정보는 /api/auth/user에서 조회
+    cb(null, { claims: { sub: id }, id });
   });
 
   app.get("/api/login", (req, res) => {
@@ -50,20 +56,42 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect("/");
+    // 세션 데이터 초기화
+    (req.session as any).userId = null;
+    (req.session as any).user = null;
+    
+    req.logout((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+      }
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          console.error("Session destroy error:", destroyErr);
+        }
+        res.clearCookie('connect.sid');
+        res.redirect("/");
+      });
     });
   });
 
   app.get("/api/auth/replit/relogin", (req, res) => {
-    res.redirect("/");
+    // 세션 데이터 초기화
+    (req.session as any).userId = null;
+    (req.session as any).user = null;
+    
+    req.logout((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+      }
+      res.redirect("/");
+    });
   });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
   const sessionData = req.session as any;
 
+  // 1. 세션 기반 인증 확인 (이메일 로그인)
   if (sessionData?.userId) {
     if (!req.user) {
       (req as any).user = {
@@ -76,7 +104,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return next();
   }
 
-  if (req.isAuthenticated()) {
+  // 2. Passport.js 인증 확인 (OAuth 로그인)
+  if (req.isAuthenticated?.()) {
     return next();
   }
 

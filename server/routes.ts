@@ -313,7 +313,12 @@ export async function registerRoutes(
   app.get("/api/auth/kakao", (req, res) => {
     const state = crypto.randomBytes(16).toString("hex");
     (req.session as any).kakaoState = state;
-    req.session.save(() => {
+    req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return res.status(500).send("Session save failed");
+          }
+          console.log("Session saved successfully - sessionID:", req.sessionID);
       // 항상 vungtau.blog 도메인 사용 (카카오 개발자 콘솔에 등록된 URI)
       const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
       console.log("Kakao auth start - redirectUri:", redirectUri);
@@ -326,7 +331,12 @@ export async function registerRoutes(
   app.get("/api/auth/kakao/relogin", (req, res) => {
     const state = crypto.randomBytes(16).toString("hex");
     (req.session as any).kakaoState = state;
-    req.session.save(() => {
+    req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return res.status(500).send("Session save failed");
+          }
+          console.log("Session saved successfully - sessionID:", req.sessionID);
       const redirectUri = "https://vungtau.blog/api/auth/kakao/callback";
       console.log("Kakao relogin start - redirectUri:", redirectUri);
       // prompt=login 파라미터로 항상 카카오 로그인 화면 표시
@@ -508,7 +518,12 @@ export async function registerRoutes(
           return res.status(500).send("Login failed");
         }
         console.log("Kakao login successful - userId:", kakaoUserId, "email:", email, "nickname:", nickname);
-        req.session.save(() => {
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return res.status(500).send("Session save failed");
+          }
+          console.log("Session saved successfully - sessionID:", req.sessionID);
           res.redirect("/");
         });
       });
@@ -687,10 +702,12 @@ export async function registerRoutes(
       };
       
       req.session.save((err) => {
+        console.log("Email verification - Session save called, userId:", user.id);
         if (err) {
           console.error("Session save error:", err);
           return res.status(500).json({ error: "세션 저장 실패" });
         }
+        console.log("Email verification - Session saved successfully, sessionID:", req.sessionID);
         res.json({ success: true, message: "이메일 인증이 완료되었습니다.", user: { id: user.id, email: user.email, nickname: user.nickname } });
       });
     } catch (error) {
@@ -853,10 +870,12 @@ export async function registerRoutes(
       };
       
       req.session.save((err) => {
+        console.log("Email login - Session save called, userId:", user.id);
         if (err) {
           console.error("Session save error:", err);
           return res.status(500).json({ error: "세션 저장 실패" });
         }
+        console.log("Email login - Session saved successfully, sessionID:", req.sessionID);
         res.json({ success: true, user: { id: user.id, email: user.email, nickname: user.nickname } });
       });
     } catch (error) {
@@ -3727,7 +3746,12 @@ ${adultContext}`;
 
         if ((req.session as any)?.user) {
           (req.session as any).user.name = trimmedNickname;
-          req.session.save(() => {});
+          req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return res.status(500).send("Session save failed");
+          }
+          console.log("Session saved successfully - sessionID:", req.sessionID);});
         }
 
         try { await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${String(sessionUserId)}`); } catch {}
@@ -3743,7 +3767,12 @@ ${adultContext}`;
 
         if ((req.session as any)?.user) {
           (req.session as any).user.name = trimmedNickname;
-          req.session.save(() => {});
+          req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return res.status(500).send("Session save failed");
+          }
+          console.log("Session saved successfully - sessionID:", req.sessionID);});
         }
           
         try { await db.execute(sql`UPDATE posts SET author_name = ${trimmedNickname} WHERE author_id = ${oauthUserId}`); } catch {}
