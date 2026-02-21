@@ -1,0 +1,21 @@
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+✓ 0 modules transformed.
+✗ Build failed in 396ms
+[vite:build-html] Failed to resolve /src/main.tsx from /home/ubuntu/Travel-Planner/client/index.html
+file: /home/ubuntu/Travel-Planner/client/index.html
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:23918:64)
+    at async Promise.all (index 0)
+    at async Object.handler (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:24015:5)
+    at async transform (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21206:16)
+    at async ModuleLoader.addModuleSource (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21420:36) {
+  code: 'PLUGIN_ERROR',
+  plugin: 'vite:build-html',
+  hook: 'transform',
+  id: '/home/ubuntu/Travel-Planner/client/index.html',
+  watchFiles: [ '/home/ubuntu/Travel-Planner/client/index.html' ]
+}

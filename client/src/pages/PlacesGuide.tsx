@@ -6,14 +6,14 @@ import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "./lib/queryClient";
-import { useToast } from "./hooks/use-toast";
+import { apiRequest } from "../lib/queryClient";
+import { useToast } from "../hooks/use-toast";
 import type { Place as DBPlace, PlaceCategory } from "@shared/schema";
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Button } from "./components/ui/button";
-import { Badge } from "./components/ui/badge";
-import { useLanguage } from "./lib/i18n";
-import { useAuth } from "./hooks/use-auth";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { useLanguage } from "../lib/i18n";
+import { useAuth } from "../hooks/use-auth";
 import { MapPin, Phone, ExternalLink, Utensils, Coffee, Scissors, Building2, Camera, ChevronDown, ChevronUp, AlertTriangle, Calculator, MessageCircle, Eye, Wallet, Sparkles, Music, FileText, ShoppingBag, UserPlus, Settings, Pencil, ChevronLeft, ChevronRight, X, BookOpen, Map, List, DollarSign, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -24,9 +24,9 @@ function darkenHex(hex: string, amount: number = 30): string {
   const b = Math.max(0, (num & 0x0000FF) - amount);
   return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, "0")}`;
 }
-import { AppHeader } from "./components/AppHeader";
-import { TabNavigation } from "./components/TabNavigation";
-import { FixedBottomBar } from "./components/FixedBottomBar";
+import { AppHeader } from "../components/AppHeader";
+import { TabNavigation } from "../components/TabNavigation";
+import { FixedBottomBar } from "../components/FixedBottomBar";
 import jesusStatueImg from "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg";
 import lighthouseImg from "@assets/736414b25966415e9006dd674ec2aecf_1768452191679.jpeg";
 import warMuseumImg from "@assets/20230318＿130556_1768452191689.jpg";

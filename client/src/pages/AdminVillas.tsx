@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "./hooks/use-auth";
-import { Button } from "./components/ui/button";
-import { Card, CardContent } from "./components/ui/card";
-import { Input } from "./components/ui/input";
-import { Textarea } from "./components/ui/textarea";
-import { Label } from "./components/ui/label";
-import { Switch } from "./components/ui/switch";
-import { useToast } from "./hooks/use-toast";
-import { apiRequest } from "./lib/queryClient";
+import { useAuth } from "../hooks/use-auth";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { Label } from "../components/ui/label";
+import { Switch } from "../components/ui/switch";
+import { useToast } from "../hooks/use-toast";
+import { apiRequest } from "../lib/queryClient";
 import { ArrowLeft, Plus, Pencil, Trash2, Image, Save, X, GripVertical, Upload, Loader2, MapPin } from "lucide-react";
-import { cn } from "./lib/utils";
+import { cn } from "../lib/utils";
 import { Link } from "wouter";
 import type { Villa, VillaAmenity } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
-import { Checkbox } from "./components/ui/checkbox";
-import { useUpload } from "./hooks/use-upload";
+import { Checkbox } from "../components/ui/checkbox";
+import { useUpload } from "../hooks/use-upload";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
@@ -27,7 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./components/ui/dialog";
+} from "../components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "./components/ui/alert-dialog";
+} from "../components/ui/alert-dialog";
 
 export default function AdminVillas() {
   const { user, isAdmin } = useAuth();

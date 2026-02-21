@@ -1,0 +1,127 @@
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+✓ 160 modules transformed.
+✗ Build failed in 3.56s
+[vite]: Rollup failed to resolve import "@assets/BackgroundEraser_20240323_103507859_1768275315346.png" from "/home/ubuntu/Travel-Planner/client/src/components/AppHeader.tsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+    at viteLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33634:57)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33668:73)
+    at onwarn (/home/ubuntu/Travel-Planner/node_modules/@vitejs/plugin-react/dist/index.js:90:7)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33668:28)
+    at onRollupLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33663:63)
+    at onLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33466:4)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21004:32)
+    at Object.logger (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:22891:9)
+    at ModuleLoader.handleInvalidResolvedId (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21635:26)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21593:26) {
+  watchFiles: [
+    '/home/ubuntu/Travel-Planner/client/index.html',
+    '/home/ubuntu/Travel-Planner/client/src/main.tsx',
+    '/home/ubuntu/Travel-Planner/package.json',
+    '/home/ubuntu/Travel-Planner/node_modules/react/jsx-runtime.js',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/client.js',
+    '/home/ubuntu/Travel-Planner/client/src/App.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/index.css',
+    '/home/ubuntu/Travel-Planner/node_modules/react/cjs/react-jsx-runtime.production.min.js',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/wouter/esm/index.js',
+    '/home/ubuntu/Travel-Planner/client/src/lib/queryClient.ts',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/index.js',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/toaster-new.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/tooltip.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/hooks/use-auth.ts',
+    '/home/ubuntu/Travel-Planner/client/src/lib/i18n.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/hooks/use-push-notifications.ts',
+    '/home/ubuntu/Travel-Planner/client/src/pages/ExpenseTracker.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/PlacesGuide.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/NearbyPlaces.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Home.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/TravelPlanner.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/ChatRoom.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Board.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/DietProducts.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/LocationShare.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Privacy.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminVillas.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminPlaces.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminMembers.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminSettings.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminChat.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminQuoteCategories.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminShopProducts.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminEcoProfiles.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/MyPage.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/MyCoupons.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/PushDebug.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/not-found.tsx',
+    '/home/ubuntu/Travel-Planner/node_modules/react/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/wouter/esm/use-browser-location.js',
+    '/home/ubuntu/Travel-Planner/node_modules/wouter/esm/react-deps.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/query-core/build/modern/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/types.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useQueries.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useSuspenseQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/regexparam/dist/index.mjs',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/cjs/react-dom.production.min.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useSuspenseInfiniteQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useSuspenseQueries.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/usePrefetchQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/usePrefetchInfiniteQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/queryOptions.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/infiniteQueryOptions.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/HydrationBoundary.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useIsFetching.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useMutationState.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useMutation.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/isRestoring.js',
+    '/home/ubuntu/Travel-Planner/node_modules/react/cjs/react.production.min.js',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/badge.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/card.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/tabs.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/button.tsx',
+    '/home/ubuntu/Travel-Planner/node_modules/framer-motion/dist/es/index.mjs',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/dialog.tsx',
+    '/home/ubuntu/Travel-Planner/node_modules/lucide-react/dist/esm/lucide-react.js',
+    '/home/ubuntu/Travel-Planner/client/src/components/FixedBottomBar.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/input.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/checkbox.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/select.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/progress.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/label.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/AppHeader.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/hooks/use-toast.ts',
+    '/home/ubuntu/Travel-Planner/client/src/components/TabNavigation.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/scroll-area.tsx',
+    '/home/ubuntu/Travel-Planner/node_modules/leaflet/dist/leaflet.css',
+    'src/assets/736414b25966415e9006dd674ec2aecf_1768452191679.jpeg',
+    'src/assets/20230318＿130556_1768452191689.jpg',
+    'src/assets/154eaed7-b483-43eb-983f-b52566331719_(1)_1768452191696.jpeg',
+    '/home/ubuntu/Travel-Planner/node_modules/leaflet/dist/leaflet-src.js',
+    'src/assets/붕따우호메이파크입장권_1768452191701.jpg',
+    'src/assets/Things-to-do-in-Vung-Tau-2_1768452191711.jpg',
+    'src/assets/z40559387093017e7b56d8300d82363ef9c08685c1f765-167436802698717_1768452191734.jpg',
+    'src/assets/12-doi-con-heo-vung-tau_1768452191730.jpg',
+    'src/assets/c3d3213f-cho-vung-tau-2_1768452191743.jpg',
+    'src/assets/cho-dem-vung-tau-2_1768452191738.jpg',
+    'src/assets/Vung-Tau-3_1768452191715.jpg',
+    'src/assets/Screenshot_20260121_234910_Maps_1769014231476.jpg',
+    'src/assets/Screenshot_20260122_001100_Maps_1769015581829.jpg',
+    '/home/ubuntu/Travel-Planner/node_modules/leaflet.markercluster/dist/leaflet.markercluster-src.js',
+    '/home/ubuntu/Travel-Planner/node_modules/leaflet.markercluster/dist/MarkerCluster.css',
+    '/home/ubuntu/Travel-Planner/tailwind.config.ts',
+    '/home/ubuntu/Travel-Planner/node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/calendar.tsx',
+    ... 113 more items
+  ]
+}

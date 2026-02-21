@@ -1,0 +1,88 @@
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+node_modules/@tanstack/react-query/build/modern/useQueries.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useQueries.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/useQuery.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/useQuery.js" was ignored.
+node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js (1:0): Module level directives cause errors when bundled, "use client" in "node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js" was ignored.
+✓ 56 modules transformed.
+✗ Build failed in 1.75s
+[vite]: Rollup failed to resolve import "@assets/Screenshot_20260115_113154_Gallery_1768451530261.jpg" from "/home/ubuntu/Travel-Planner/client/src/pages/PlacesGuide.tsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+    at viteLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33634:57)
+    at onRollupLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33664:7)
+    at onLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33466:4)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21004:32)
+    at Object.logger (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:22891:9)
+    at ModuleLoader.handleInvalidResolvedId (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21635:26)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21593:26) {
+  watchFiles: [
+    '/home/ubuntu/Travel-Planner/client/index.html',
+    '/home/ubuntu/Travel-Planner/client/src/main.tsx',
+    '/home/ubuntu/Travel-Planner/package.json',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/client.js',
+    '/home/ubuntu/Travel-Planner/client/src/App.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/index.css',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/wouter/esm/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/index.js',
+    '/home/ubuntu/Travel-Planner/client/src/lib/queryClient.ts',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/toaster-new.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/tooltip.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/hooks/use-auth.ts',
+    '/home/ubuntu/Travel-Planner/client/src/hooks/use-push-notifications.ts',
+    '/home/ubuntu/Travel-Planner/client/src/lib/i18n.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/ExpenseTracker.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/NearbyPlaces.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/PlacesGuide.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/TravelPlanner.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/ChatRoom.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/DietProducts.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Board.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Home.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/LocationShare.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Privacy.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminVillas.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminSettings.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminMembers.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminPlaces.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminQuoteCategories.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminChat.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminShopProducts.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminEcoProfiles.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/MyPage.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/MyCoupons.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/PushDebug.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/not-found.tsx',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/cjs/react-dom.production.min.js',
+    '/home/ubuntu/Travel-Planner/node_modules/wouter/esm/use-browser-location.js',
+    '/home/ubuntu/Travel-Planner/node_modules/wouter/esm/react-deps.js',
+    '/home/ubuntu/Travel-Planner/node_modules/regexparam/dist/index.mjs',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/query-core/build/modern/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/types.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useQueries.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useSuspenseInfiniteQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useSuspenseQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/usePrefetchQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useSuspenseQueries.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/usePrefetchInfiniteQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/infiniteQueryOptions.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/queryOptions.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/QueryClientProvider.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/HydrationBoundary.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/QueryErrorResetBoundary.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useIsFetching.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useMutationState.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useMutation.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/useInfiniteQuery.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/isRestoring.js',
+    '/home/ubuntu/Travel-Planner/node_modules/react/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/scheduler/index.js'
+  ]
+}

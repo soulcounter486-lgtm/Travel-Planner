@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "./hooks/use-auth";
-import { Button } from "./components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Input } from "./components/ui/input";
-import { useToast } from "./hooks/use-toast";
+import { useAuth } from "../hooks/use-auth";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { useToast } from "../hooks/use-toast";
 import { ArrowLeft, Loader2, Users, Upload, Plus, Trash2, CheckSquare, Square, XSquare } from "lucide-react";
 import { Link } from "wouter";
 import type { EcoProfile } from "@shared/schema";

@@ -49,33 +49,33 @@ import { motion } from "framer-motion";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 
-import { useLanguage } from "./lib/i18n";
-import { useCalculateQuote, useCreateQuote } from "./hooks/use-quotes";
+import { useLanguage } from "../lib/i18n";
+import { useCalculateQuote, useCreateQuote } from "../hooks/use-quotes";
 import { calculateQuoteSchema, type CalculateQuoteRequest, type QuoteBreakdown } from "@shared/schema";
 
-import { SectionCard } from "./components/SectionCard";
-import { QuoteSummary } from "./components/QuoteSummary";
-import { SavedQuotesList } from "./components/SavedQuotesList";
-import { DepositCalendar } from "./components/DepositCalendar";
-import { LanguageSelector } from "./components/LanguageSelector";
-import { Calendar } from "./components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
-import { Button } from "./components/ui/button";
-import { Input } from "./components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select";
-import { Label } from "./components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./components/ui/dialog";
-import { useToast } from "./hooks/use-toast";
-import { cn } from "./lib/utils";
+import { SectionCard } from "../components/SectionCard";
+import { QuoteSummary } from "../components/QuoteSummary";
+import { SavedQuotesList } from "../components/SavedQuotesList";
+import { DepositCalendar } from "../components/DepositCalendar";
+import { LanguageSelector } from "../components/LanguageSelector";
+import { Calendar } from "../components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Label } from "../components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { useToast } from "../hooks/use-toast";
+import { cn } from "../lib/utils";
 
 import logoImg from "@assets/BackgroundEraser_20240323_103507859_1768275315346.png";
 import villaImg from "@assets/900＿IMG＿1762947034771＿1762948444789_1768281401898.jpg";
 import vehicleImg from "@assets/Photo＿1725451852943-1_1768289649378.jpg";
-import { WeatherWidget } from "./components/WeatherWidget";
-import { ExchangeRateWidget } from "./components/ExchangeRateWidget";
-import { TabNavigation } from "./components/TabNavigation";
-import { FixedBottomBar } from "./components/FixedBottomBar";
-import { AnnouncementBanner } from "./components/AnnouncementBanner";
+import { WeatherWidget } from "../components/WeatherWidget";
+import { ExchangeRateWidget } from "../components/ExchangeRateWidget";
+import { TabNavigation } from "../components/TabNavigation";
+import { FixedBottomBar } from "../components/FixedBottomBar";
+import { AnnouncementBanner } from "../components/AnnouncementBanner";
 
 import { 
   Plane, 
@@ -107,13 +107,13 @@ import {
   Trash2,
   CalendarDays
 } from "lucide-react";
-import { apiRequest, queryClient } from "./lib/queryClient";
-import { useAuth } from "./hooks/use-auth";
+import { apiRequest, queryClient } from "../lib/queryClient";
+import { useAuth } from "../hooks/use-auth";
 import { LogIn, LogOut, ChevronRight, ChevronLeft, Settings, X, List, Pencil, ChevronDown, RefreshCw, Mail, Ticket, ArrowUpDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "./components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "../components/ui/dropdown-menu";
 import type { Villa, VillaAmenity, EcoProfile } from "@shared/schema";
 import { villaAmenities, villaAmenityLabels } from "@shared/schema";
-import { Checkbox } from "./components/ui/checkbox";
+import { Checkbox } from "../components/ui/checkbox";
 
 export default function Home() {
   const { toast } = useToast();

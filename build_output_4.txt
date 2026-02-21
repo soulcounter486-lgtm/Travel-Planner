@@ -1,0 +1,61 @@
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming...
+✓ 16 modules transformed.
+✗ Build failed in 1.04s
+[vite]: Rollup failed to resolve import "@assets/BackgroundEraser_20240323_103507859_1768275315346.png" from "/home/ubuntu/Travel-Planner/client/src/pages/LocationShare.tsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+    at viteLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33634:57)
+    at onRollupLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33664:7)
+    at onLog (/home/ubuntu/Travel-Planner/node_modules/vite/dist/node/chunks/config.js:33466:4)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21004:32)
+    at Object.logger (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:22891:9)
+    at ModuleLoader.handleInvalidResolvedId (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21635:26)
+    at <anonymous> (/home/ubuntu/Travel-Planner/node_modules/rollup/dist/es/shared/node-entry.js:21593:26) {
+  watchFiles: [
+    '/home/ubuntu/Travel-Planner/client/index.html',
+    '/home/ubuntu/Travel-Planner/client/src/main.tsx',
+    '/home/ubuntu/Travel-Planner/package.json',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/client.js',
+    '/home/ubuntu/Travel-Planner/client/src/App.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/index.css',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/wouter/esm/index.js',
+    '/home/ubuntu/Travel-Planner/node_modules/@tanstack/react-query/build/modern/index.js',
+    '/home/ubuntu/Travel-Planner/client/src/lib/queryClient.ts',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/toaster-new.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/components/ui/tooltip.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/hooks/use-auth.ts',
+    '/home/ubuntu/Travel-Planner/client/src/hooks/use-push-notifications.ts',
+    '/home/ubuntu/Travel-Planner/client/src/lib/i18n.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/NearbyPlaces.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/ExpenseTracker.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/ChatRoom.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/PlacesGuide.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/DietProducts.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/TravelPlanner.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Privacy.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/LocationShare.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Home.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/Board.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminVillas.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminSettings.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminPlaces.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminQuoteCategories.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminChat.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminMembers.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminShopProducts.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/AdminEcoProfiles.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/MyPage.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/MyCoupons.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/PushDebug.tsx',
+    '/home/ubuntu/Travel-Planner/client/src/pages/not-found.tsx',
+    '/home/ubuntu/Travel-Planner/node_modules/react-dom/cjs/react-dom.production.min.js'
+  ]
+}
