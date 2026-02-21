@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./components/ui/card";
-import { Calendar } from "./components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Calendar } from "./ui/calendar";
 import { CalendarDays } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";

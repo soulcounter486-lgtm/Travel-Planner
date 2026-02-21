@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from "./components/ui/button";
+import { Button } from "./ui/button";
 import { UserPlus, MessageCircle, Eye, Users, Headphones } from "lucide-react";
 import { useLanguage } from "./lib/i18n";
 import { useAuth } from "./hooks/use-auth";

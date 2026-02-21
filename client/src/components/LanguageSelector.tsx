@@ -1,5 +1,5 @@
 import { useLanguage, Language, languageNames } from "./lib/i18n";
-import { Button } from "./components/ui/button";
+import { Button } from "./ui/button";
 import { cn } from "./lib/utils";
 
 const languages: { code: Language; flag: string }[] = [
